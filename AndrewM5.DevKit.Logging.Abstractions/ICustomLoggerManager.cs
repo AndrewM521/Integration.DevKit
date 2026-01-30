@@ -6,5 +6,5 @@ public interface ICustomLoggerManager
 {
     public LoggerManagerSettings RuntimeSettings { get; }
     public ICustomLogger GetLogger(string categoryName);
-    public void DisplayRuntimeSettings();
+    public void OutputRuntimeSettings();
 }

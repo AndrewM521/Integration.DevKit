@@ -1,16 +1,18 @@
 ﻿using AndrewM5.DevKit.Logging.Abstractions;
 using AndrewM5.DevKit.Logging.Abstractions.Settings;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace AndrewM5.DevKit.Logging;
+namespace AndrewM5.DevKit.Logging.Services;
 
 public class CustomLoggerManager : ICustomLoggerManager
 {
-    private readonly ConcurrentDictionary<string, CustomLogger> _loggers = new ConcurrentDictionary<string, CustomLogger>(StringComparer.OrdinalIgnoreCase);
+    public LoggerManagerSettings RuntimeSettings { get; init; }
 
-    public LoggerManagerSettings RuntimeSettings { get; internal set; }
+    private readonly ConcurrentDictionary<string, CustomLogger> _loggers = new ConcurrentDictionary<string, CustomLogger>(StringComparer.OrdinalIgnoreCase);
+    private readonly ICustomLogger? _logger;
 
     public CustomLoggerManager(IOptions<LoggerManagerSettings> settings) 
     {
@@ -20,6 +22,8 @@ public class CustomLoggerManager : ICustomLoggerManager
         }
 
         RuntimeSettings = settings.Value.Clone();
+
+        _logger = GetLogger("LoggerManager");
     }
 
     public ICustomLogger GetLogger(string categoryName)
@@ -29,9 +33,9 @@ public class CustomLoggerManager : ICustomLoggerManager
         });
     }
 
-    public void DisplayRuntimeSettings()
+    public void OutputRuntimeSettings()
     {
-        Console.WriteLine($"--- Logger Manager Settings ---");
+        _logger?.LogDebug($"--- Logger Manager Settings ---");
 
         Type type = RuntimeSettings.GetType();
         PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -39,7 +43,7 @@ public class CustomLoggerManager : ICustomLoggerManager
         foreach (var property in properties)
         {
             object? value = property.GetValue(RuntimeSettings);
-            Console.WriteLine($"  {property.Name}: {value}");
+            _logger?.LogDebug($"  {property.Name}: {value}");
         }
     }
 }

@@ -1,8 +1,9 @@
 ﻿using AndrewM5.DevKit.Logging.Abstractions;
+using AndrewM5.DevKit.Logging.Utilities;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
-namespace AndrewM5.DevKit.Logging;
+namespace AndrewM5.DevKit.Logging.Services;
 
 public class CustomLogger : ICustomLogger
 {

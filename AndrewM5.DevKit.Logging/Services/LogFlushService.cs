@@ -1,6 +1,7 @@
 ﻿using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Logging.Abstractions;
 using AndrewM5.DevKit.Logging.Abstractions.Settings;
+using AndrewM5.DevKit.Logging.Utilities;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -8,15 +9,17 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 
-namespace AndrewM5.DevKit.Logging;
+namespace AndrewM5.DevKit.Logging.Services;
 
 public class LogFlushService : BackgroundService, ILogFlushService
 {
-    public LogFlushServiceSettings RuntimeSettings { get; private set; }
+    public LogFlushServiceSettings RuntimeSettings { get; init; }
 
+    private readonly ICustomLogger? _logger;
     private readonly bool _runningInContainer;
 
-    public LogFlushService(IOptions<LogFlushServiceSettings> settings)
+
+    public LogFlushService(IOptions<LogFlushServiceSettings> settings, ICustomLoggerManager loggerManager)
     {
         if (settings == null)
         {
@@ -24,6 +27,8 @@ public class LogFlushService : BackgroundService, ILogFlushService
         }
 
         RuntimeSettings = settings.Value.Clone();
+
+        _logger = loggerManager.GetLogger("LogFlushService");
         _runningInContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
     }
 
@@ -87,9 +92,9 @@ public class LogFlushService : BackgroundService, ILogFlushService
         }
     }
 
-    public void DisplayRuntimeSettings()
+    public void OutputRuntimeSettings()
     {
-        Console.WriteLine($"--- Log Flush Service Settings ---");
+        _logger?.LogDebug($"--- Log Flush Service Settings ---");
 
         Type type = RuntimeSettings.GetType();
         PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -97,7 +102,7 @@ public class LogFlushService : BackgroundService, ILogFlushService
         foreach (var property in properties)
         {
             object? value = property.GetValue(RuntimeSettings);
-            Console.WriteLine($"  {property.Name}: {value}");
+            _logger?.LogDebug($"  {property.Name}: {value}");
         }
     }
 }

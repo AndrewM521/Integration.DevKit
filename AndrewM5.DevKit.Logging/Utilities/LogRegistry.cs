@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
 
-namespace AndrewM5.DevKit.Logging;
+namespace AndrewM5.DevKit.Logging.Utilities;
 
-public static class LogRegistry
+internal static class LogRegistry
 {
     private static readonly ConcurrentQueue<string> _logFileQueue = new ConcurrentQueue<string>();
 

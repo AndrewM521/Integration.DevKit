@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace AndrewM5.DevKit.Logging;
+namespace AndrewM5.DevKit.Logging.Utilities;
 
 internal static class LogFormatter
 {
