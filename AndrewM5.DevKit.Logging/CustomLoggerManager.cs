@@ -1,11 +1,12 @@
-﻿using AndrewM5.DevKit.Logging.Abstractions.Settings;
+﻿using AndrewM5.DevKit.Logging.Abstractions;
+using AndrewM5.DevKit.Logging.Abstractions.Settings;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace AndrewM5.DevKit.Logging;
 
-public class CustomLoggerManager
+public class CustomLoggerManager : ICustomLoggerManager
 {
     private readonly ConcurrentDictionary<string, CustomLogger> _loggers = new ConcurrentDictionary<string, CustomLogger>(StringComparer.OrdinalIgnoreCase);
 
@@ -21,10 +22,10 @@ public class CustomLoggerManager
         RuntimeSettings = settings.Value.Clone();
     }
 
-    public CustomLogger GetLogger(string categoryName)
+    public ICustomLogger GetLogger(string categoryName)
     {
-        return _loggers.GetOrAdd(categoryName, (name) => { 
-            return new CustomLogger(this, name); 
+        return _loggers.GetOrAdd(categoryName, (name) => {
+            return new CustomLogger(this, name);
         });
     }
 

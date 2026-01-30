@@ -1,11 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AndrewM5.DevKit.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
 namespace AndrewM5.DevKit.Logging;
 
-public class CustomLogger : ILogger
+public class CustomLogger : ICustomLogger
 {
-    private readonly LoggerManager _loggerManager;
+    private readonly ICustomLoggerManager _loggerManager;
 
     private bool _isLoggerEnabled = true;
     private string _categoryName = string.Empty;
@@ -14,7 +15,7 @@ public class CustomLogger : ILogger
     public string CategoryName => _categoryName;
     public bool IsLoggerEnabled => _isLoggerEnabled;
 
-    public CustomLogger(LoggerManager loggerManager, string categoryName = "Unknown Category")
+    public CustomLogger(ICustomLoggerManager loggerManager, string categoryName = "Unknown Category")
     {
         if (loggerManager == null)
         {
