@@ -1,4 +1,4 @@
-﻿namespace AndrewM5.DevKit.Logging.Settings;
+﻿namespace AndrewM5.DevKit.Logging.Abstractions.Settings;
 
 public class LogFlushServiceSettings
 {
@@ -12,11 +12,11 @@ public class LogFlushServiceSettings
     {
         return new LogFlushServiceSettings
         {
-            CreateLogFile = this.CreateLogFile,
-            LogFilePath = this.LogFilePath,
-            MaxBufferCount = this.MaxBufferCount,
-            FlushIntervalSeconds = this.FlushIntervalSeconds,
-            AllowCreateFileInContainer = this.AllowCreateFileInContainer,
+            CreateLogFile = CreateLogFile,
+            LogFilePath = LogFilePath,
+            MaxBufferCount = MaxBufferCount,
+            FlushIntervalSeconds = FlushIntervalSeconds,
+            AllowCreateFileInContainer = AllowCreateFileInContainer,
         };
     }
 }

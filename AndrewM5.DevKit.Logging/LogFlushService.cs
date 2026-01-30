@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Logging.Abstractions;
-using AndrewM5.DevKit.Logging.Settings;
+using AndrewM5.DevKit.Logging.Abstractions.Settings;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

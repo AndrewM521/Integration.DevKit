@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace AndrewM5.DevKit.Logging.Settings;
+namespace AndrewM5.DevKit.Logging.Abstractions.Settings;
 
 public class LoggerManagerSettings
 {

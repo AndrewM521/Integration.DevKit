@@ -1,4 +1,4 @@
-﻿using AndrewM5.DevKit.Logging.Settings;
+﻿using AndrewM5.DevKit.Logging.Abstractions.Settings;
 
 namespace AndrewM5.DevKit.Logging.Abstractions;
 
