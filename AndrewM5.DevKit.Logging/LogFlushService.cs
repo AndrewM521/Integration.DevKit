@@ -10,7 +10,7 @@ using System.Text;
 
 namespace AndrewM5.DevKit.Logging;
 
-public class LogFlushService : BackgroundService, ILogFlushService
+public class LogFlushService : BackgroundService
 {
     public LogFlushServiceSettings RuntimeSettings { get; private set; }
 

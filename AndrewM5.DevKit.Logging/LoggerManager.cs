@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace AndrewM5.DevKit.Logging;
 
-public class LoggerManager : ICustomLoggerManager
+public class LoggerManager
 {
     private readonly ConcurrentDictionary<string, CustomLogger> _loggers = new ConcurrentDictionary<string, CustomLogger>(StringComparer.OrdinalIgnoreCase);
 
@@ -22,7 +22,7 @@ public class LoggerManager : ICustomLoggerManager
         RuntimeSettings = settings.Value.Clone();
     }
 
-    public ICustomLogger GetLogger(string categoryName)
+    public CustomLogger GetLogger(string categoryName)
     {
         return _loggers.GetOrAdd(categoryName, (name) => { 
             return new CustomLogger(this, name); 
