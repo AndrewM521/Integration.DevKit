@@ -23,13 +23,13 @@ public static class LoggingHost
         _loggerManager = _serviceProvider.GetService<ICustomLoggerManager>();
         if (_loggerManager == null)
         {
-            throw new InvalidOperationException($"{nameof(ICustomLoggerManager)} is not registered. Make sure you call AddCustomLogging() when configuring services before initializing LoggingHost.");
+            throw new InvalidOperationException($"{nameof(ICustomLoggerManager)} is not registered. Make sure you call AddCustomLogging() when configuring services before initializing {nameof(LoggingHost)}.");
         }
 
         _logFlushService = _serviceProvider.GetService<ILogFlushService>();
         if (_logFlushService == null)
         {
-            throw new InvalidOperationException($"{nameof(ILogFlushService)} is not registered. Make sure you call AddCustomLoggingFlushService() when configuring services before initializing LoggingHost.");
+            throw new InvalidOperationException($"{nameof(ILogFlushService)} is not registered. Make sure you call AddCustomLoggingFlushService() when configuring services before initializing {nameof(LoggingHost)}.");
         }
     }
 

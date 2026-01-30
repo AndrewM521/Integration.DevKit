@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace AndrewM5.DevKit.Logging.Extensions;
+namespace AndrewM5.DevKit.Logging;
 
 public static class LoggingServiceCollection
 {
