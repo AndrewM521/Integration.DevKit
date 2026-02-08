@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace AndrewM5.DevKit.Logging.Utilities;
+namespace AndrewM5.DevKit.Logging.Services;
 
-internal static class LogFormatter
+public static class LogFormatter
 {
     public static string Format(bool includePrefix, string category, string message, LogLevel logLevel = LogLevel.Information, Exception? ex = null)
     {

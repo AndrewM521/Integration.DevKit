@@ -9,11 +9,11 @@ public interface ITaskManager
 
     public Task<OperationResult<ITaskHandle>> StartTask(IManagedTask managedTask, TaskExecutionMode mode);
     
-    public OperationResult<bool> CancelTask(string taskKey, bool forceCancel = false);
+    public NullOperationResult CancelTask(string taskKey, bool forceCancel = false);
     
-    public OperationResult<bool> CancelAllTasks(bool forceCancel = false);
+    public NullOperationResult CancelAllTasks(bool forceCancel = false);
 
-    public Task<OperationResult<bool>> RestartTask(string taskKey);
+    public Task<NullOperationResult> RestartTask(string taskKey);
 
     public OperationResult<bool> IsTaskRunning(string taskKey);
     

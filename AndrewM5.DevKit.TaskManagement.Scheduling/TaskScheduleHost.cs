@@ -1,49 +1,47 @@
-﻿using AndrewM5.DevKit.TaskManagement.Abstractions;
+﻿using AndrewM5.DevKit.Logging.Abstractions;
+using AndrewM5.DevKit.TaskManagement.Abstractions;
 using AndrewM5.DevKit.TaskManagement.Scheduling.Abstractions;
+using AndrewM5.DevKit.TaskManagement.Services;
+using AndrewM5.DevKit.ThreadLocks.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AndrewM5.DevKit.TaskManagement.Scheduling;
 
 public static class TaskScheduleHost
 {
-    private const string NotInitializedMsg = "ThreadingSchedulerHost has not been initialized.";
+    private const string NoInit = "TaskScheduleHost has not been initialized.";
 
-    private static IServiceProvider? _serviceProvider;
     private static ITaskScheduleService? _schedulerService;
     private static ITaskScheduleRegistry? _taskScheduleRegistry;
 
-    public static void Initialize(IServiceProvider serviceProvider)
+    public static void Initialize(IServiceProvider sp)
     {
-        if (serviceProvider == null)
+        if (sp == null)
         {
-            throw new ArgumentNullException(nameof(serviceProvider));
+            throw new ArgumentNullException(nameof(sp));
         }
 
-        _serviceProvider = serviceProvider;
-        
-        _schedulerService = _serviceProvider.GetService<ITaskScheduleService>();
+        try
+        {
+            _ = sp.GetRequiredService<ITaskRegistry>();
+            _ = sp.GetRequiredService<ITaskManager>();
+            _ = sp.GetRequiredService<IThreadLockManager>();   
+        }
+        catch (Exception)
+        {
+            throw new InvalidOperationException($"{nameof(TaskScheduleServiceCollection)} requires the TaskManagement module. Call AddTaskManagement() before AddTaskScheduling()");
+        }
+
+        _schedulerService = sp.GetService<ITaskScheduleService>();
         if (_schedulerService == null)
         {
-            throw new InvalidOperationException($"{nameof(ITaskScheduleService)} is not registered. Make sure you call ... when configuring services before initializing {nameof(TaskScheduleHost)}.");
+            throw new InvalidOperationException($"{nameof(ITaskScheduleService)} is not registered. Make sure you call AddTaskScheduling() when configuring services.");
         }
 
-        _taskScheduleRegistry = _serviceProvider.GetService<ITaskScheduleRegistry>();
+        _taskScheduleRegistry = sp.GetService<ITaskScheduleRegistry>();
         if (_taskScheduleRegistry == null)
         {
-            throw new InvalidOperationException($"{nameof(ITaskScheduleRegistry)} is not registered. Make sure you call AddTaskManager() when configuring services before initializing {nameof(TaskScheduleHost)}.");
-        }
-    }
-
-    public static IServiceProvider ServiceProvider
-    {
-        get
-        {
-            if (_serviceProvider == null)
-            {
-                throw new InvalidOperationException(NotInitializedMsg);
-            }
-
-            return _serviceProvider;
+            throw new InvalidOperationException($"{nameof(ITaskScheduleRegistry)} is not registered. Make sure you call AddTaskScheduling() when configuring services.");
         }
     }
 
@@ -53,7 +51,7 @@ public static class TaskScheduleHost
         {
             if (_schedulerService == null)
             {
-                throw new InvalidOperationException(NotInitializedMsg);
+                throw new InvalidOperationException(NoInit);
             }
 
             return _schedulerService;
@@ -66,7 +64,7 @@ public static class TaskScheduleHost
         {
             if (_taskScheduleRegistry == null)
             {
-                throw new InvalidOperationException(NotInitializedMsg);
+                throw new InvalidOperationException(NoInit);
             }
 
             return _taskScheduleRegistry;

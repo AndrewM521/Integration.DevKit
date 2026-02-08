@@ -9,9 +9,9 @@ public interface IProcessManager
 
     public OperationResult<IManagedProcess> StartProcess(IManagedProcessConfig config);
     
-    public OperationResult<bool> CancelProcess(string processKey, bool forceKill = false);
+    public NullOperationResult CancelProcess(string processKey, bool forceKill = false);
     
-    public OperationResult<bool> CancelAllProcesses(bool forceKill = false);
+    public NullOperationResult CancelAllProcesses(bool forceKill = false);
     
     public OperationResult<bool> IsRunning(string processKey);
 

@@ -2,7 +2,7 @@
 
 namespace AndrewM5.DevKit.Logging.Abstractions;
 
-public interface ILogFlushService
+public interface ILogFlusher
 {
     public LogFlushServiceSettings RuntimeSettings { get; }
     public void OutputRuntimeSettings();

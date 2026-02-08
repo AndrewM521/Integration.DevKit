@@ -1,48 +1,31 @@
 ﻿using AndrewM5.DevKit.Logging.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 namespace AndrewM5.DevKit.Logging;
 
 public static class LoggingHost
 {
-    private const string NotInitializedMsg = "LoggingHost has not been initialized.";
+    private const string NoInit = "LoggingHost has not been initialized.";
 
-    private static IServiceProvider? _serviceProvider;
+    private static ILogRegistry? _logRegistry;
     private static ICustomLoggerManager? _loggerManager;
-    private static ILogFlushService? _logFlushService;
-
-    public static void Initialize(IServiceProvider serviceProvider)
+    
+    public static void Initialize(IServiceProvider sp)
     {
-        if (serviceProvider == null)
+        if (sp == null)
         {
-            throw new ArgumentNullException(nameof(serviceProvider));
+            throw new ArgumentNullException(nameof(sp));
         }
 
-        _serviceProvider = serviceProvider;
+        _logRegistry = sp.GetService<ILogRegistry>();
+        if (_logRegistry == null)
+        {
+            throw new InvalidOperationException($"{nameof(ILogRegistry)} is not registered, make sure to call AddCustomLogging() when configuring services.");
+        }
 
-        _loggerManager = _serviceProvider.GetService<ICustomLoggerManager>();
+        _loggerManager = sp.GetService<ICustomLoggerManager>();
         if (_loggerManager == null)
         {
-            throw new InvalidOperationException($"{nameof(ICustomLoggerManager)} is not registered. Make sure you call AddCustomLogging() when configuring services before initializing {nameof(LoggingHost)}.");
-        }
-
-        _logFlushService = _serviceProvider.GetService<ILogFlushService>();
-        if (_logFlushService == null)
-        {
-            throw new InvalidOperationException($"{nameof(ILogFlushService)} is not registered. Make sure you call AddCustomLoggingFlushService() when configuring services before initializing {nameof(LoggingHost)}.");
-        }
-    }
-
-    public static IServiceProvider ServiceProvider
-    {
-        get
-        {
-            if (_serviceProvider == null)
-            {
-                throw new InvalidOperationException(NotInitializedMsg);
-            }
-
-            return _serviceProvider;
+            throw new InvalidOperationException($"{nameof(ICustomLoggerManager)} is not registered, make sure to call AddCustomLogging() when configuring services.");
         }
     }
 
@@ -52,30 +35,23 @@ public static class LoggingHost
         {
             if (_loggerManager == null)
             {
-                throw new InvalidOperationException(NotInitializedMsg);
+                throw new InvalidOperationException(NoInit);
             }
 
             return _loggerManager;
         }
     }
 
-    public static ILogFlushService LogFlushService
+    public static ILogRegistry LogRegistry
     {
         get
         {
-            if (_logFlushService == null)
+            if (_logRegistry == null)
             {
-                throw new InvalidOperationException(NotInitializedMsg);
+                throw new InvalidOperationException(NoInit);
             }
 
-            return _logFlushService;
+            return _logRegistry;
         }
-    }
-
-    internal static void Reset()
-    {
-        _serviceProvider = null;
-        _loggerManager = null;
-        _logFlushService = null;
     }
 }

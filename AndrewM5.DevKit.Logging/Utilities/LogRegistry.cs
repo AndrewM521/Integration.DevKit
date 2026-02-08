@@ -1,19 +1,34 @@
-﻿using System.Collections.Concurrent;
+﻿using AndrewM5.DevKit.Logging.Abstractions;
+using System.Collections.Concurrent;
 
 namespace AndrewM5.DevKit.Logging.Utilities;
 
-internal static class LogRegistry
+internal class LogRegistry : ILogRegistry
 {
-    private static readonly ConcurrentQueue<string> _logFileQueue = new ConcurrentQueue<string>();
+    public int Count => _logFileQueue.Count;
 
-    public static void EnqueueToLogFileBuffer(string message)
+    private ConcurrentQueue<string> _logFileQueue = new ConcurrentQueue<string>();
+    private readonly int _maxEntries;
+
+    public LogRegistry(int maxEntries = 2000)
+    {
+        if (maxEntries <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxEntries));
+        }
+
+        _maxEntries = maxEntries;
+    }
+
+    public void EnqueueToLogFileBuffer(string message)
     {
         if (!string.IsNullOrWhiteSpace(message))
         {
             _logFileQueue.Enqueue(message);
         }
     }
-    public static string[] DequeueFromLogFileBuffer()
+
+    public string[] DequeueFromLogFileBuffer()
     {
         List<string> list = new List<string>();
 
@@ -25,7 +40,7 @@ internal static class LogRegistry
         return list.ToArray();
     }
 
-    public static int GetLogFileQueueCount()
+    public int GetLogFileQueueCount()
     {
         return _logFileQueue.Count;
     }

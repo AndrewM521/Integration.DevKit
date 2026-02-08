@@ -13,9 +13,9 @@ public interface IManagedProcess : IAsyncDisposable
 
     public DateTime StartTime { get; }
 
-    public OperationResult<bool> Start();
+    public NullOperationResult Start();
 
-    public OperationResult<bool> Cancel(bool forceKill);
+    public NullOperationResult Cancel(bool forceKill);
     
     public OperationResult<string> GetOutput();
 

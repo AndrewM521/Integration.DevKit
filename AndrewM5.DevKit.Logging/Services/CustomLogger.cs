@@ -1,5 +1,4 @@
 ﻿using AndrewM5.DevKit.Logging.Abstractions;
-using AndrewM5.DevKit.Logging.Utilities;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
@@ -8,6 +7,7 @@ namespace AndrewM5.DevKit.Logging.Services;
 public class CustomLogger : ICustomLogger
 {
     private readonly ICustomLoggerManager _loggerManager;
+    private readonly ILogRegistry _logRegistry;
 
     private bool _isLoggerEnabled = true;
     private string _categoryName = string.Empty;
@@ -16,7 +16,7 @@ public class CustomLogger : ICustomLogger
     public string CategoryName => _categoryName;
     public bool IsLoggerEnabled => _isLoggerEnabled;
 
-    public CustomLogger(ICustomLoggerManager loggerManager, string categoryName = "Unknown Category")
+    public CustomLogger(ICustomLoggerManager loggerManager, ILogRegistry logRegistry, string categoryName = "Unknown Category")
     {
         if (loggerManager == null)
         {
@@ -24,6 +24,7 @@ public class CustomLogger : ICustomLogger
         }
 
         _loggerManager = loggerManager;
+        _logRegistry = logRegistry;
         _categoryName = categoryName;
     }
 
@@ -53,7 +54,7 @@ public class CustomLogger : ICustomLogger
 
         string formattedMsg = LogFormatter.Format(true, CategoryName, message, logLevel, exception);
 
-        LogRegistry.EnqueueToLogFileBuffer(formattedMsg);
+        _logRegistry.EnqueueToLogFileBuffer(formattedMsg);
 
         Debug.WriteLine(formattedMsg);
 

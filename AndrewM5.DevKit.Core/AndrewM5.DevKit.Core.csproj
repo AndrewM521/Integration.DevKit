@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Abstractions\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\AndrewM5.DevKit.Logging.Abstractions\AndrewM5.DevKit.Logging.Abstractions.csproj" />
   </ItemGroup>
 

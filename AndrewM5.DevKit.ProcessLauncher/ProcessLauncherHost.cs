@@ -5,37 +5,21 @@ namespace AndrewM5.DevKit.ProcessLauncher;
 
 public static class ProcessLauncherHost
 {
-    private const string NotInitializedMsg = "ProcessLauncherHost has not been initialized.";
+    private const string NoInit = "ProcessLauncherHost has not been initialized.";
 
-    private static IServiceProvider? _serviceProvider;
     private static IProcessManager? _processManager;
 
-    public static void Initialize(IServiceProvider serviceProvider)
+    public static void Initialize(IServiceProvider sp)
     {
-        if (serviceProvider == null)
+        if (sp == null)
         {
-            throw new ArgumentNullException(nameof(serviceProvider));
+            throw new ArgumentNullException(nameof(sp));
         }
 
-        _serviceProvider = serviceProvider;
-
-        _processManager = _serviceProvider.GetService<IProcessManager>();
+        _processManager = sp.GetService<IProcessManager>();
         if (_processManager == null)
         {
-            throw new InvalidOperationException($"{nameof(IProcessManager)} is not registered. Make sure you call AddProcessLauncher() when configuring services before initializing {nameof(ProcessLauncherHost)}.");
-        }
-    }
-
-    public static IServiceProvider ServiceProvider
-    {
-        get
-        {
-            if (_serviceProvider == null)
-            {
-                throw new InvalidOperationException(NotInitializedMsg);
-            }
-
-            return _serviceProvider;
+            throw new InvalidOperationException($"{nameof(IProcessManager)} is not registered. Make sure you call AddProcessLauncher() when configuring services.");
         }
     }
 
@@ -45,16 +29,10 @@ public static class ProcessLauncherHost
         {
             if (_processManager == null)
             {
-                throw new InvalidOperationException(NotInitializedMsg);
+                throw new InvalidOperationException(NoInit);
             }
 
             return _processManager;
         }
-    }
-
-    internal static void Reset()
-    {
-        _serviceProvider = null;
-        _processManager = null;
     }
 }

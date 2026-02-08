@@ -1,7 +1,7 @@
 ﻿using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Logging.Abstractions;
 using AndrewM5.DevKit.Logging.Abstractions.Settings;
-using AndrewM5.DevKit.Logging.Utilities;
+using AndrewM5.DevKit.Logging.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -9,17 +9,18 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 
-namespace AndrewM5.DevKit.Logging.Services;
+namespace AndrewM5.DevKit.Logging.Flusher.Services;
 
-public class LogFlushService : BackgroundService, ILogFlushService
+public class LogFlusher : BackgroundService, ILogFlusher
 {
     public LogFlushServiceSettings RuntimeSettings { get; init; }
 
+    private readonly ILogRegistry _logRegistry;
     private readonly ICustomLogger? _logger;
+
     private readonly bool _runningInContainer;
 
-
-    public LogFlushService(IOptions<LogFlushServiceSettings> settings, ICustomLoggerManager loggerManager)
+    public LogFlusher(IOptions<LogFlushServiceSettings> settings, ICustomLoggerManager loggerManager, ILogRegistry logRegistry)
     {
         if (settings == null)
         {
@@ -28,6 +29,7 @@ public class LogFlushService : BackgroundService, ILogFlushService
 
         RuntimeSettings = settings.Value.Clone();
 
+        _logRegistry = logRegistry;
         _logger = loggerManager.GetLogger("LogFlushService");
         _runningInContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
     }
@@ -40,7 +42,7 @@ public class LogFlushService : BackgroundService, ILogFlushService
         {
             TimeSpan elapsedTime = DateTime.UtcNow - lastFlushTime;
 
-            if (LogRegistry.GetLogFileQueueCount() >= RuntimeSettings.MaxBufferCount || elapsedTime.TotalSeconds >= RuntimeSettings.FlushIntervalSeconds)
+            if (_logRegistry.GetLogFileQueueCount() >= RuntimeSettings.MaxBufferCount || elapsedTime.TotalSeconds >= RuntimeSettings.FlushIntervalSeconds)
             {
                 FlushBuffer();
                 lastFlushTime = DateTime.UtcNow;
@@ -61,7 +63,7 @@ public class LogFlushService : BackgroundService, ILogFlushService
                 return;
             }
 
-            var messages = LogRegistry.DequeueFromLogFileBuffer();
+            var messages = _logRegistry.DequeueFromLogFileBuffer();
             if (messages.Length == 0)
             {
                 return;
@@ -88,7 +90,7 @@ public class LogFlushService : BackgroundService, ILogFlushService
         }
         catch (Exception ex) 
         {
-            Debug.WriteLine(LogFormatter.Format(true, nameof(LogFlushService),"Failed to flush logs", LogLevel.Error, ex));
+            Debug.WriteLine(LogFormatter.Format(true, nameof(LogFlusher),"Failed to flush logs", LogLevel.Error, ex));
         }
     }
 

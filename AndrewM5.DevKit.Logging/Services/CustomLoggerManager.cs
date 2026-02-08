@@ -13,8 +13,9 @@ public class CustomLoggerManager : ICustomLoggerManager
 
     private readonly ConcurrentDictionary<string, CustomLogger> _loggers = new ConcurrentDictionary<string, CustomLogger>(StringComparer.OrdinalIgnoreCase);
     private readonly ICustomLogger? _logger;
+    private readonly ILogRegistry _logRegistry;
 
-    public CustomLoggerManager(IOptions<LoggerManagerSettings> settings) 
+    public CustomLoggerManager(IOptions<LoggerManagerSettings> settings, ILogRegistry logRegistry) 
     {
         if (settings == null)
         {
@@ -23,13 +24,14 @@ public class CustomLoggerManager : ICustomLoggerManager
 
         RuntimeSettings = settings.Value.Clone();
 
+        _logRegistry = logRegistry;
         _logger = GetLogger("LoggerManager");
     }
 
     public ICustomLogger GetLogger(string categoryName)
     {
         return _loggers.GetOrAdd(categoryName, (name) => {
-            return new CustomLogger(this, name);
+            return new CustomLogger(this, _logRegistry, name);
         });
     }
 

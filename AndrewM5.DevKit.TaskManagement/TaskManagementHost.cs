@@ -6,50 +6,35 @@ namespace AndrewM5.DevKit.TaskManagement;
 
 public static class TaskManagementHost
 {
-    private const string NotInitializedMsg = "ThreadingHost has not been initialized.";
+    private const string NoInit = "TaskManagementHost has not been initialized.";
 
-    private static IServiceProvider? _serviceProvider;
     private static ITaskManager? _taskManager;
     private static IThreadLockManager? _threadLockManager;
     private static ITaskRegistry? _taskRegistry;
 
-    public static void Initialize(IServiceProvider serviceProvider)
+    public static void Initialize(IServiceProvider sp)
     {
-        if (serviceProvider == null)
+        if (sp == null)
         {
-            throw new ArgumentNullException(nameof(serviceProvider));
+            throw new ArgumentNullException(nameof(sp));
         }
 
-        _serviceProvider = serviceProvider;
-        _taskManager = _serviceProvider.GetService<ITaskManager>();
-        if (_taskManager == null)
-        {
-            throw new InvalidOperationException($"{nameof(ITaskManager)} is not registered. Make sure you call AddTaskManager() when configuring services before initializing {nameof(TaskManagementHost)}.");
-        }
-
-        _threadLockManager = _serviceProvider.GetService<IThreadLockManager>();
-        if (_threadLockManager == null)
-        {
-            throw new InvalidOperationException($"{nameof(IThreadLockManager)} is not registered. Make sure you call AddTaskManager() when configuring services before initializing {nameof(TaskManagementHost)}.");
-        }
-
-        _taskRegistry = _serviceProvider.GetService<ITaskRegistry>();
+        _taskRegistry = sp.GetService<ITaskRegistry>();
         if (_taskRegistry == null)
         {
-            throw new InvalidOperationException($"{nameof(ITaskRegistry)} is not registered. Make sure you call AddTaskManager() when configuring services before initializing {nameof(TaskManagementHost)}.");
+            throw new InvalidOperationException($"{nameof(ITaskRegistry)} is not registered. Make sure you call AddTaskManager() when configuring services.");
         }
-    }
 
-    public static IServiceProvider ServiceProvider
-    {
-        get
+        _taskManager = sp.GetService<ITaskManager>();
+        if (_taskManager == null)
         {
-            if (_serviceProvider == null)
-            {
-                throw new InvalidOperationException(NotInitializedMsg);
-            }
+            throw new InvalidOperationException($"{nameof(ITaskManager)} is not registered. Make sure you call AddTaskManager() when configuring services.");
+        }
 
-            return _serviceProvider;
+        _threadLockManager = sp.GetService<IThreadLockManager>();
+        if (_threadLockManager == null)
+        {
+            throw new InvalidOperationException($"{nameof(IThreadLockManager)} is not registered. Make sure you call AddTaskManager() when configuring services.");
         }
     }
 
@@ -59,7 +44,7 @@ public static class TaskManagementHost
         {
             if (_taskManager == null)
             {
-                throw new InvalidOperationException(NotInitializedMsg);
+                throw new InvalidOperationException(NoInit);
             }
 
             return _taskManager;
@@ -72,7 +57,7 @@ public static class TaskManagementHost
         {
             if (_threadLockManager == null)
             {
-                throw new InvalidOperationException(NotInitializedMsg);
+                throw new InvalidOperationException(NoInit);
             }
 
             return _threadLockManager;
@@ -85,17 +70,10 @@ public static class TaskManagementHost
         {
             if (_taskRegistry == null)
             {
-                throw new InvalidOperationException(NotInitializedMsg);
+                throw new InvalidOperationException(NoInit);
             }
 
             return _taskRegistry;
         }
-    }
-
-    internal static void Reset()
-    {
-        _serviceProvider = null;
-        _taskManager = null;
-        _threadLockManager = null;
     }
 }
