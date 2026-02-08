@@ -1,4 +1,5 @@
-﻿using AndrewM5.DevKit.Core.Results;
+﻿using AndrewM5.DevKit.Core;
+using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.Logging.Abstractions;
 using AndrewM5.DevKit.TaskManagement.Abstractions;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Settings;
@@ -464,8 +465,7 @@ public class TaskManager : ITaskManager
 
             _taskLimiter.Release();
 
-            Console.WriteLine("TODO: Add CallGC_Collect");
-            //GCManager.CallGC_Collect($"Task '{managedTask._taskKey}' Complete");
+            GCManager.CallGC_Collect($"Task '{managedTaskRuntime.UserTask.TaskKey}' Complete", _logger);
         }
     }
     #endregion
