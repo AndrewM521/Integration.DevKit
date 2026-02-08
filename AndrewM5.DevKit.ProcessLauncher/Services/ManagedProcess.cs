@@ -1,12 +1,13 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.Logging.Abstractions;
+using AndrewM5.DevKit.ProcessLauncher.Abstractions;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text;
 
 namespace AndrewM5.DevKit.ProcessLauncher.Services;
 
-public class ManagedProcess : IAsyncDisposable
+public class ManagedProcess : IManagedProcess
 {
     private readonly ICustomLogger? _logger;
     private readonly ProcessStartInfo _startInfo;
@@ -23,7 +24,7 @@ public class ManagedProcess : IAsyncDisposable
 
     public DateTime StartTime { get; private set; }
 
-    public ManagedProcess(ManagedProcessConfig config, ICustomLogger? logger = null)
+    public ManagedProcess(IManagedProcessConfig config, ICustomLogger? logger = null)
     {
         ProcessKey = config.ProcessKey;
         _logger = logger;
@@ -31,7 +32,7 @@ public class ManagedProcess : IAsyncDisposable
 
         _startInfo = new ProcessStartInfo
         {
-            FileName = config.FileName,
+            FileName = config.Command,
             Arguments = config.Arguments,
             UseShellExecute = config.ShowWindow,
             RedirectStandardOutput = !config.ShowWindow,

@@ -38,9 +38,9 @@ public class ProcessManager : IProcessManager
         }
     }
 
-    public OperationResult<ManagedProcess> StartProcess(ManagedProcessConfig config)
+    public OperationResult<IManagedProcess> StartProcess(IManagedProcessConfig config)
     {
-        var result = new OperationResult<ManagedProcess>();
+        var result = new OperationResult<IManagedProcess>();
 
         try
         {

@@ -1,9 +1,9 @@
-﻿namespace AndrewM5.DevKit.ProcessLauncher.Services;
+﻿using AndrewM5.DevKit.ProcessLauncher.Abstractions;
 
-public class ManagedProcessConfig
+namespace AndrewM5.DevKit.ProcessLauncher.Services;
+
+public class ManagedProcessConfig : IManagedProcessConfig
 {
-    internal string FileName => Command;
-
     public string ProcessKey { get; init; } = Guid.NewGuid().ToString();
 
     public string Command { get; init; } = string.Empty;
