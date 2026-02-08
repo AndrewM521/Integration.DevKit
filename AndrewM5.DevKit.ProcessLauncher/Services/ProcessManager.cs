@@ -79,9 +79,9 @@ public class ProcessManager : IProcessManager
         }
     }
 
-    public OperationResult<bool> CancelProcess(string processKey, bool forceKill = false)
+    public NullOperationResult CancelProcess(string processKey, bool forceKill = false)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -93,7 +93,7 @@ public class ProcessManager : IProcessManager
                     throw cancelProcess.Exception;
                 }
 
-                return result.SetMethodSuccess(true);
+                return result.SetMethodSuccess();
             }
             else
             {
@@ -108,9 +108,9 @@ public class ProcessManager : IProcessManager
         }
     }
     
-    public OperationResult<bool> CancelAllProcesses(bool forceKill = false)
+    public NullOperationResult CancelAllProcesses(bool forceKill = false)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
         List<Exception> errors = new List<Exception>();
 
         foreach (var key in _processes.Keys)
@@ -129,7 +129,7 @@ public class ProcessManager : IProcessManager
             return result.SetMethodFailure(new AggregateException(errors));
         }
 
-        return result.SetMethodSuccess(true);
+        return result.SetMethodSuccess();
     }
 
     public OperationResult<bool> IsRunning(string processKey)

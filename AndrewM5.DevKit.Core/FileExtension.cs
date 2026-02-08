@@ -9,9 +9,9 @@ public static class FileExtension
     private static readonly string RequiredFilePathErrorMsg = "Path must be a File Path.";
 
     #region Asyncronous Methods
-    public static async Task<OperationResult<bool>> WriteToFileAsync(string path, string content, bool append = false, Encoding? encoding = null)
+    public static async Task<NullOperationResult> WriteToFileAsync(string path, string content, bool append = false, Encoding? encoding = null)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
         Encoding encoder = Encoding.UTF8;
 
         try
@@ -34,7 +34,7 @@ public static class FileExtension
 
             if (string.IsNullOrEmpty(content))
             {
-                return result.SetMethodSuccess(true);
+                return result.SetMethodSuccess();
             }
 
             var directory = Path.GetDirectoryName(path);
@@ -93,7 +93,7 @@ public static class FileExtension
                 }
             }
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -101,15 +101,15 @@ public static class FileExtension
         }
     }
     
-    public static async Task<OperationResult<bool>> WriteToFileAsync(string path, string[] content, bool append = false, Encoding? encoding = null)
+    public static async Task<NullOperationResult> WriteToFileAsync(string path, string[] content, bool append = false, Encoding? encoding = null)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
             if (content == null || content.Length == 0)
             {
-                return result.SetMethodSuccess(true);
+                return result.SetMethodSuccess();
             }
 
             string combinedContent = string.Join(Environment.NewLine, content);
@@ -120,7 +120,7 @@ public static class FileExtension
                 throw writeToFile.Exception;
             }
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -157,9 +157,9 @@ public static class FileExtension
     #endregion
 
     #region Syncronous Methods
-    public static OperationResult<bool> CreateFile(string path)
+    public static NullOperationResult CreateFile(string path)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -176,7 +176,7 @@ public static class FileExtension
 
             File.Create(path).Dispose();
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -184,9 +184,9 @@ public static class FileExtension
         }
     }
     
-    public static OperationResult<bool> DeleteFile(string path)
+    public static NullOperationResult DeleteFile(string path)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -206,7 +206,7 @@ public static class FileExtension
                 File.Delete(path);
             }
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -214,9 +214,9 @@ public static class FileExtension
         }
     }
     
-    public static OperationResult<bool> DeleteFiles(string path, string searchPattern)
+    public static NullOperationResult DeleteFiles(string path, string searchPattern)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -251,7 +251,7 @@ public static class FileExtension
                 }
             }
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -259,9 +259,9 @@ public static class FileExtension
         }
     }
     
-    public static OperationResult<bool> CopyFile(string sourcePath, string destinationPath, bool overwrite = false)
+    public static NullOperationResult CopyFile(string sourcePath, string destinationPath, bool overwrite = false)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -296,7 +296,7 @@ public static class FileExtension
 
             File.Copy(sourcePath, destinationFilePath, overwrite);
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -304,9 +304,9 @@ public static class FileExtension
         }
     }
     
-    public static OperationResult<bool> MoveFile(string sourcePath, string destinationPath, bool overwrite = false)
+    public static NullOperationResult MoveFile(string sourcePath, string destinationPath, bool overwrite = false)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -336,7 +336,7 @@ public static class FileExtension
 
             File.Move(sourcePath, destinationFilePath, overwrite);
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -344,12 +344,12 @@ public static class FileExtension
         }
     }
     
-    public static OperationResult<bool> WriteToFile(string path, string content, bool append = false, Encoding? encoding = null)
+    public static NullOperationResult WriteToFile(string path, string content, bool append = false, Encoding? encoding = null)
     {
         return WriteToFileAsync(path, content, append, encoding).GetAwaiter().GetResult();
     }
 
-    public static OperationResult<bool> WriteToFile(string path, string[] content, bool append = false, Encoding? encoding = null)
+    public static NullOperationResult WriteToFile(string path, string[] content, bool append = false, Encoding? encoding = null)
     {
         return WriteToFileAsync(path, content, append, encoding).GetAwaiter().GetResult();
     }

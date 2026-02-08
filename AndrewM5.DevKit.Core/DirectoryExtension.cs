@@ -7,9 +7,9 @@ public static class DirectoryExtension
     private static readonly string RequiredDirectoryPathErrorMsg = "Path must be a Directory.";
 
     #region Main Methods
-    public static OperationResult<bool> CreateDirectory(string path)
+    public static NullOperationResult CreateDirectory(string path)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -29,7 +29,7 @@ public static class DirectoryExtension
                 Directory.CreateDirectory(path);
             }
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -37,9 +37,9 @@ public static class DirectoryExtension
         }
     }
     
-    public static OperationResult<bool> DeleteDirectory(string path, bool recursive = false)
+    public static NullOperationResult DeleteDirectory(string path, bool recursive = false)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -59,7 +59,7 @@ public static class DirectoryExtension
                 Directory.Delete(path, recursive);
             }
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {

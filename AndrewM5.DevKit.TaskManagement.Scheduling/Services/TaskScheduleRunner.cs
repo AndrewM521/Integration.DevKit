@@ -69,9 +69,9 @@ internal class TaskScheduleRunner : IDisposable
         _maxRunCount = maxRunCount;
     }
 
-    public OperationResult<bool> StartSchedule()
+    public NullOperationResult StartSchedule()
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -154,7 +154,7 @@ internal class TaskScheduleRunner : IDisposable
                 }
             }, _cts.Token);
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -162,16 +162,16 @@ internal class TaskScheduleRunner : IDisposable
         }
     }
 
-    public OperationResult<bool> StopSchedule()
+    public NullOperationResult StopSchedule()
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
             _cts?.Cancel();
             _runnerTask = null;
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {

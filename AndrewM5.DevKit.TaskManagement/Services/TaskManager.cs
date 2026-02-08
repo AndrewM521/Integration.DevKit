@@ -127,9 +127,9 @@ public class TaskManager : ITaskManager
         }
     }
 
-    public OperationResult<bool> CancelTask(string taskKey, bool forceCancel = false)
+    public NullOperationResult CancelTask(string taskKey, bool forceCancel = false)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -157,7 +157,7 @@ public class TaskManager : ITaskManager
                 }
             }
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -165,9 +165,9 @@ public class TaskManager : ITaskManager
         }
     }
 
-    public OperationResult<bool> CancelAllTasks(bool forceCancel = false)
+    public NullOperationResult CancelAllTasks(bool forceCancel = false)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
         var errors = new List<Exception>();
 
         foreach (var taskKey in _tasks.Keys.ToList())
@@ -184,12 +184,12 @@ public class TaskManager : ITaskManager
             return result.SetMethodFailure(new AggregateException(errors));
         }
 
-        return result.SetMethodSuccess(true);
+        return result.SetMethodSuccess();
     }
 
-    public async Task<OperationResult<bool>> RestartTask(string taskKey)
+    public async Task<NullOperationResult> RestartTask(string taskKey)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -206,7 +206,7 @@ public class TaskManager : ITaskManager
 
             await CreateTask(managedTaskRuntime);
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {

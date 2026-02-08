@@ -13,9 +13,9 @@ public class ThreadLockManager : IThreadLockManager
     public ThreadLockManager() {}
 
     #region Syncronous Methods
-    public OperationResult<bool> TryEnterSyncLock(string key, int timeoutMilliseconds = -1)
+    public NullOperationResult TryEnterSyncLock(string key, int timeoutMilliseconds = -1)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -38,7 +38,7 @@ public class ThreadLockManager : IThreadLockManager
 
             lockInfo.UpdateLastAccessTime();
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -46,9 +46,9 @@ public class ThreadLockManager : IThreadLockManager
         }
     }
 
-    public OperationResult<bool> TryExitSyncLock(string key)
+    public NullOperationResult TryExitSyncLock(string key)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -71,7 +71,7 @@ public class ThreadLockManager : IThreadLockManager
                 }
             }
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -81,9 +81,9 @@ public class ThreadLockManager : IThreadLockManager
     #endregion
 
     #region Asyncronous Methods
-    public async Task<OperationResult<bool>> TryEnterAsyncLock(string key, int timeoutMilliseconds = -1)
+    public async Task<NullOperationResult> TryEnterAsyncLock(string key, int timeoutMilliseconds = -1)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -110,7 +110,7 @@ public class ThreadLockManager : IThreadLockManager
 
             lockInfo.UpdateLastAccessTime();
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -118,9 +118,9 @@ public class ThreadLockManager : IThreadLockManager
         }
     }
 
-    public OperationResult<bool> TryExitAsyncLock(string key)
+    public NullOperationResult TryExitAsyncLock(string key)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -148,7 +148,7 @@ public class ThreadLockManager : IThreadLockManager
                 }
             }
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {

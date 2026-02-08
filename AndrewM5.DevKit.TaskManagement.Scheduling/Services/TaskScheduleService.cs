@@ -54,9 +54,9 @@ internal sealed class TaskScheduleService : ITaskScheduleService
         }
     }
 
-    public OperationResult<bool> CancelScheduledTask(string taskKey)
+    public NullOperationResult CancelScheduledTask(string taskKey)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -73,9 +73,9 @@ internal sealed class TaskScheduleService : ITaskScheduleService
         }
     }
 
-    public OperationResult<bool> StartAllSchedules()
+    public NullOperationResult StartAllSchedules()
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -94,7 +94,7 @@ internal sealed class TaskScheduleService : ITaskScheduleService
                 throw new AggregateException(errors);
             }
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -102,9 +102,9 @@ internal sealed class TaskScheduleService : ITaskScheduleService
         }
     }
 
-    public OperationResult<bool> StopAllSchedules()
+    public NullOperationResult StopAllSchedules()
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -123,7 +123,7 @@ internal sealed class TaskScheduleService : ITaskScheduleService
                 throw new AggregateException(errors);
             }
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {

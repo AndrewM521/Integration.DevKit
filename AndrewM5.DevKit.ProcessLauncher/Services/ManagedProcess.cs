@@ -51,9 +51,9 @@ public class ManagedProcess : IManagedProcess
         }
     }
 
-    public OperationResult<bool> Start()
+    public NullOperationResult Start()
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
         
         try
         {
@@ -119,7 +119,7 @@ public class ManagedProcess : IManagedProcess
                 }
             });
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -127,9 +127,9 @@ public class ManagedProcess : IManagedProcess
         }
     }
 
-    public OperationResult<bool> Cancel(bool forceKill)
+    public NullOperationResult Cancel(bool forceKill)
     {
-        var result = new OperationResult<bool>();
+        var result = new NullOperationResult();
 
         try
         {
@@ -137,7 +137,7 @@ public class ManagedProcess : IManagedProcess
 
             if (Process == null || Process.HasExited)
             {
-                return result.SetMethodSuccess(true);
+                return result.SetMethodSuccess();
             }
 
             if (forceKill)
@@ -159,7 +159,7 @@ public class ManagedProcess : IManagedProcess
                 }
             }
 
-            return result.SetMethodSuccess(true);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
