@@ -128,7 +128,7 @@ public static class FileExtension
         }
     }
     
-    public static async Task<OperationResult<string[]>> ReadFileAsync(string path)
+    public static async Task<OperationResult<string[]>> ReadFileLinesAsync(string path)
     {
         var result = new OperationResult<string[]>();
 
@@ -148,6 +148,33 @@ public static class FileExtension
             string[] lines = await File.ReadAllLinesAsync(path);
 
             return result.SetMethodSuccess(lines);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+
+    public static async Task<OperationResult<string>> ReadFileTextAsync(string path)
+    {
+        var result = new OperationResult<string>();
+
+        try
+        {
+            var validatePath = IsStringValidFilePath(path);
+            if (!validatePath.MethodSuccess)
+            {
+                throw validatePath.Exception;
+            }
+
+            if (!validatePath.Result)
+            {
+                throw new ArgumentException(RequiredFilePathErrorMsg);
+            }
+
+            string line = await File.ReadAllTextAsync(path);
+
+            return result.SetMethodSuccess(line);
         }
         catch (Exception ex)
         {
@@ -354,9 +381,14 @@ public static class FileExtension
         return WriteToFileAsync(path, content, append, encoding).GetAwaiter().GetResult();
     }
 
-    public static OperationResult<string[]> ReadFile(string path)
+    public static OperationResult<string[]> ReadFileLines(string path)
     {
-        return ReadFileAsync(path).GetAwaiter().GetResult();
+        return ReadFileLinesAsync(path).GetAwaiter().GetResult();
+    }
+
+    public static OperationResult<string> ReadFileText(string path)
+    {
+        return ReadFileTextAsync(path).GetAwaiter().GetResult();
     }
 
     public static OperationResult<string> GetExtension(string path)

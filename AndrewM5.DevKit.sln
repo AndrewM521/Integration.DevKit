@@ -19,8 +19,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ThreadLocks", "AndrewM5.DevKit.ThreadLocks\AndrewM5.DevKit.ThreadLocks.csproj", "{231CC5FE-BD5A-48C3-BAFF-EBEF2EAF47BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ThreadSafeFileIO", "AndrewM5.DevKit.ThreadSafeFileIO\AndrewM5.DevKit.ThreadSafeFileIO.csproj", "{5D145956-F811-0973-A05B-090F656626ED}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ThreadLocks.Abstractions", "AndrewM5.DevKit.ThreadLocks.Abstractions\AndrewM5.DevKit.ThreadLocks.Abstractions.csproj", "{E0EB1B1E-1BD5-47CC-A860-0552E05D7EEF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.TaskManagement", "AndrewM5.DevKit.TaskManagement\AndrewM5.DevKit.TaskManagement.csproj", "{1A88B2AD-B4EB-411A-A56C-FCB2F39FEDFF}"
@@ -32,6 +30,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ProcessLauncher.Abstractions", "AndrewM5.DevKit.ProcessLauncher.Abstractions\AndrewM5.DevKit.ProcessLauncher.Abstractions.csproj", "{77C9E3E8-5ECA-474F-BA58-7E7E83CD50F5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.Logging.Flusher", "AndrewM5.DevKit.Logging.Flusher\AndrewM5.DevKit.Logging.Flusher.csproj", "{8A4562E1-78E7-C177-99CF-D382E56DA76B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ThreadSafeItems", "AndrewM5.DevKit.ThreadSafeItems\AndrewM5.DevKit.ThreadSafeItems.csproj", "{4801EBCA-71A8-4315-B8E3-C70FDFB51BFF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,10 +71,6 @@ Global
 		{231CC5FE-BD5A-48C3-BAFF-EBEF2EAF47BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{231CC5FE-BD5A-48C3-BAFF-EBEF2EAF47BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{231CC5FE-BD5A-48C3-BAFF-EBEF2EAF47BF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5D145956-F811-0973-A05B-090F656626ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5D145956-F811-0973-A05B-090F656626ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5D145956-F811-0973-A05B-090F656626ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5D145956-F811-0973-A05B-090F656626ED}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E0EB1B1E-1BD5-47CC-A860-0552E05D7EEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E0EB1B1E-1BD5-47CC-A860-0552E05D7EEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E0EB1B1E-1BD5-47CC-A860-0552E05D7EEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -99,6 +95,10 @@ Global
 		{8A4562E1-78E7-C177-99CF-D382E56DA76B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A4562E1-78E7-C177-99CF-D382E56DA76B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8A4562E1-78E7-C177-99CF-D382E56DA76B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4801EBCA-71A8-4315-B8E3-C70FDFB51BFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4801EBCA-71A8-4315-B8E3-C70FDFB51BFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4801EBCA-71A8-4315-B8E3-C70FDFB51BFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4801EBCA-71A8-4315-B8E3-C70FDFB51BFF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

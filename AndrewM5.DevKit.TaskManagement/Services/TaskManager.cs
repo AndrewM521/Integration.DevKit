@@ -465,7 +465,7 @@ public class TaskManager : ITaskManager
 
             _taskLimiter.Release();
 
-            GCManager.CallGC_Collect($"Task '{managedTaskRuntime.UserTask.TaskKey}' Complete", _logger);
+            await GCManager.CallGC_Collect($"Task '{managedTaskRuntime.UserTask.TaskKey}' Complete");
         }
     }
     #endregion
