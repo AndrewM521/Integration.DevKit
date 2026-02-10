@@ -5,36 +5,21 @@ namespace AndrewM5.DevKit.ThreadLocks;
 
 public static class ThreadLocksHost
 {
-    private const string NotInitializedMsg = "ThreadLocksHost has not been initialized.";
+    private const string NoInit = "ThreadLocksHost has not been initialized.";
 
-    private static IServiceProvider? _serviceProvider;
     private static IThreadLockManager? _threadLockManager;
 
-    public static void Initialize(IServiceProvider serviceProvider)
+    public static void Initialize(IServiceProvider sp)
     {
-        if (serviceProvider == null)
+        if (sp == null)
         {
-            throw new ArgumentNullException(nameof(serviceProvider));
+            throw new ArgumentNullException(nameof(sp));
         }
 
-        _serviceProvider = serviceProvider;
-        _threadLockManager = _serviceProvider.GetService<IThreadLockManager>();
+        _threadLockManager = sp.GetService<IThreadLockManager>();
         if (_threadLockManager == null)
         {
             throw new InvalidOperationException($"{nameof(IThreadLockManager)} is not registered. Make sure you call AddThreadLocks() when configuring services before initializing {nameof(ThreadLocksHost)}.");
-        }
-    }
-
-    public static IServiceProvider ServiceProvider
-    {
-        get
-        {
-            if (_serviceProvider == null)
-            {
-                throw new InvalidOperationException(NotInitializedMsg);
-            }
-
-            return _serviceProvider;
         }
     }
 
@@ -44,7 +29,7 @@ public static class ThreadLocksHost
         {
             if (_threadLockManager == null)
             {
-                throw new InvalidOperationException(NotInitializedMsg);
+                throw new InvalidOperationException(NoInit);
             }
 
             return _threadLockManager;
