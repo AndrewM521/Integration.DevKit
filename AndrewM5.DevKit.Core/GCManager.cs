@@ -1,19 +1,24 @@
-﻿using AndrewM5.DevKit.Logging.Abstractions;
-using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics;
 
 namespace AndrewM5.DevKit.Core;
 
 public static class GCManager
 {
     private static readonly TimeSpan _maxElapsedFromLastCall = TimeSpan.FromMinutes(20);
-    
+    private static int _gcRunning = 0;
+
     private static DateTime _lastCallToCollect = DateTime.MinValue;
     private static long _lastHeapBaseline;
     
     private const long _maxHeapDelta = 20L * 1024 * 1024; // 20 MB
 
-    public static void CallGC_Collect(string? description = null, ICustomLogger? logger = null)
+    public static async Task CallGC_Collect(string? description = null)
     {
+        if (Interlocked.Exchange(ref _gcRunning, 1) == 1)
+        {
+            return; // already running
+        }
+
         try
         {
             bool collectFromElapsedLastCall = false;
@@ -82,7 +87,8 @@ public static class GCManager
                 reclaimedPercentage = reclaimed * 100.0 / memoryBefore;
             }
 
-            string msg = @$"{headerMsg}
+            string msg = @$"
+                {headerMsg}
                 Time since last force GC: {timeElapsed.TotalMinutes:F1} minutes
                 Heap growth since last GC: {heapDelta / (1024.0 * 1024.0):N2} MB
                     Baseline: {_lastHeapBaseline / (1024.0 * 1024.0):N2} MB
@@ -91,14 +97,20 @@ public static class GCManager
                     {reclaimedPercentage:F1}% of pre-GC heap
             ";
 
-            logger?.LogDebug(msg);
+            Debug.WriteLine(msg);
 
             _lastHeapBaseline = GC.GetGCMemoryInfo().HeapSizeBytes;
             _lastCallToCollect = DateTime.UtcNow;
+
+            await Task.Delay(1000);
         }
         catch (Exception ex)
         {
-            logger?.LogError($"[GCManager] Exception during GC: {ex}");
+            Debug.WriteLine($"[GCManager] Exception during GC: {ex}");
+        }
+        finally
+        {
+            Volatile.Write(ref _gcRunning, 0);
         }
     }
 }
