@@ -27,7 +27,7 @@ public class ApiOperationResult<T> : NullableOperationResult<T>
         }
     }
 
-    public IOperationResult<T?> SetApiSuccess(T? result, HttpStatusCode statusCode, string? responseBody = null, string? displaySummary = null)
+    public ApiOperationResult<T> SetApiSuccess(T? result, HttpStatusCode statusCode, string? responseBody = null, string? displaySummary = null)
     {
         SetMethodSuccess(result);
 
@@ -43,7 +43,7 @@ public class ApiOperationResult<T> : NullableOperationResult<T>
         return this;
     }
 
-    public IOperationResult<T?> SetApiFailure(HttpStatusCode statusCode, Exception ex, string? responseBody = null, string? displaySummary = null)
+    public ApiOperationResult<T> SetApiFailure(HttpStatusCode statusCode, Exception ex, string? responseBody = null, string? displaySummary = null)
     {
         SetMethodFailure(ex);
 

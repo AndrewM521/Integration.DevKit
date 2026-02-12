@@ -149,7 +149,7 @@ public static class JsonExtension
         }
     }
     
-    public static OperationResult<string> SerializeObjectToJson(object obj)
+    public static OperationResult<string> ParseObjectToJson(object obj)
     {
         var result = new OperationResult<string>();
 
@@ -170,7 +170,7 @@ public static class JsonExtension
     {
         var result = new OperationResult<List<Dictionary<string, object>>>();
 
-        var json = SerializeObjectToJson(originalDictionary);
+        var json = ParseObjectToJson(originalDictionary);
         if (!json.MethodSuccess)
         {
             return result.SetMethodFailure(json.Exception);

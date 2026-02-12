@@ -21,7 +21,7 @@ public static class ProcessLauncherServiceCollection
         }
 
         // Bind LoggerManagerSettings
-        services.Configure<ProcessManagerSettings>(config.GetSection("ProcessManagerSettings"));
+        services.Configure<ProcessManagerSettings>(config.GetSection("AndrewM5.DevKit:ProcessManager"));
 
         // Register the concrete class
         services.AddSingleton<IProcessManager, ProcessManager>();

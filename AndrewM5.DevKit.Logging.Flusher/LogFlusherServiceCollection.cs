@@ -22,7 +22,7 @@ public static class LogFlusherServiceCollection
         }
 
         // Bind LogFlushServiceSettings
-        services.Configure<LogFlushServiceSettings>(config.GetSection("LogFlushServiceSettings"));
+        services.Configure<LogFlushServiceSettings>(config.GetSection("AndrewM5.DevKit:LogFlushService"));
 
         // Register the concrete class and inject ICustomLoggerManager
         services.AddSingleton(sp =>

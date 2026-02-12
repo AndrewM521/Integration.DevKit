@@ -22,7 +22,7 @@ public static class LoggingServiceCollection
         }
 
         // Bind LoggerManagerSettings
-        services.Configure<LoggerManagerSettings>(config.GetSection("LoggerManagerSettings"));
+        services.Configure<LoggerManagerSettings>(config.GetSection("AndrewM5.DevKit:LoggerManager"));
 
         // Register the concrete class
         services.AddSingleton<ICustomLoggerManager, CustomLoggerManager>();
