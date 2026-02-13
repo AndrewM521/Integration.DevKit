@@ -18,7 +18,6 @@ public class ApiClient : IApiClient
     public ApiClientSettings RuntimeSettings { get; private set; }
     public IApiClientMetrics ClientMetrics => _metrics;
 
-    private readonly IApiManager _apiManager;
     private readonly HttpClient _httpClient;
     private readonly SemaphoreSlim _rateLimiter;
     private readonly ApiClientMetrics _metrics;
@@ -27,7 +26,6 @@ public class ApiClient : IApiClient
     public ApiClient(IApiManager apiManager, string clientName, ApiClientSettings clientSettings, HttpClient httpClient, ICustomLogger? logger = null)
     {
         ClientName = clientName;
-        _apiManager = apiManager;
         _logger = logger;
 
         RuntimeSettings = clientSettings;
@@ -46,7 +44,7 @@ public class ApiClient : IApiClient
         }
         else
         {
-            RuntimeSettings.TimeoutSeconds = _apiManager.RuntimeSettings.DefaultTimeoutSeconds;
+            RuntimeSettings.TimeoutSeconds = apiManager.RuntimeSettings.DefaultTimeoutSeconds;
         }
 
         _httpClient = httpClient;
