@@ -1,5 +1,6 @@
 ﻿using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Core.Results;
+using AndrewM5.DevKit.CredentialManagement.Abstractions;
 using AndrewM5.DevKit.Logging.Abstractions;
 using AndrewM5.DevKit.SqlManagement.Abstractions;
 using AndrewM5.DevKit.SqlManagement.Abstractions.Settings;
@@ -19,10 +20,16 @@ public class SqlDBClient : ISqlDBClient
     private readonly SemaphoreSlim _rateLimiter;
     private readonly ICustomLogger? _logger;
 
+    private const string NoSecretStore = "SecretStore has not been set. Call SetSecretStore()";
+    private readonly string _secretStoreFileName;
+    private ISecretStore? _secretStore;
+
     public SqlDBClient(ISqlDBManager sqlDBManager, string clientName, SqlDBClientSettings settings, ICustomLogger? logger = null)
     {
-        _logger = logger;
         ClientName = clientName;
+
+        _secretStoreFileName = $"ApiClient({ClientName})";
+        _logger = logger;
 
         RuntimeSettings = settings;
 
@@ -46,6 +53,11 @@ public class SqlDBClient : ISqlDBClient
         _rateLimiter = new SemaphoreSlim(RuntimeSettings.MaxConcurrentQueries);
     }
 
+    public void SetSecretStore(ISecretStore secretStore)
+    {
+        _secretStore = secretStore;
+    }
+
     #region Asyncronous Methods
     public async Task<OperationResult<bool>> TestSqlConnectionAsync(CancellationToken cancellationToken = default)
     {
@@ -55,7 +67,13 @@ public class SqlDBClient : ISqlDBClient
 
         try
         {
-            await using (var conn = new SqlConnection(GetConnectionString()))
+            var getConnectionStr = GetConnectionString();
+            if (!getConnectionStr.MethodSuccess)
+            {
+                throw getConnectionStr.Exception;
+            }
+
+            await using (var conn = new SqlConnection(getConnectionStr.Result))
             {
                 await conn.OpenAsync(cancellationToken);
 
@@ -82,7 +100,13 @@ public class SqlDBClient : ISqlDBClient
 
         await _rateLimiter.WaitAsync(cancellationToken);
 
-        await using var conn = new SqlConnection(GetConnectionString());
+        var getConnectionStr = GetConnectionString();
+        if (!getConnectionStr.MethodSuccess)
+        {
+            return result.SetMethodFailure(getConnectionStr.Exception);
+        }
+
+        await using var conn = new SqlConnection(getConnectionStr.Result);
 
         await using var cmd = new SqlCommand(sqlStatement, conn)
         {
@@ -123,7 +147,13 @@ public class SqlDBClient : ISqlDBClient
 
         await _rateLimiter.WaitAsync(cancellationToken);
 
-        await using var conn = new SqlConnection(GetConnectionString());
+        var getConnectionStr = GetConnectionString();
+        if (!getConnectionStr.MethodSuccess)
+        {
+            return result.SetMethodFailure(getConnectionStr.Exception);
+        }
+
+        await using var conn = new SqlConnection(getConnectionStr.Result);
 
         await using var cmd = new SqlCommand(sqlStatement, conn)
         {
@@ -160,7 +190,13 @@ public class SqlDBClient : ISqlDBClient
 
         await _rateLimiter.WaitAsync(cancellationToken);
 
-        await using var conn = new SqlConnection(GetConnectionString());
+        var getConnectionStr = GetConnectionString();
+        if (!getConnectionStr.MethodSuccess)
+        {
+            return result.SetMethodFailure(getConnectionStr.Exception);
+        }
+
+        await using var conn = new SqlConnection(getConnectionStr.Result);
 
         await using var cmd = new SqlCommand(sqlStatement, conn)
         {
@@ -227,17 +263,162 @@ public class SqlDBClient : ISqlDBClient
     }
     #endregion
 
-    private string GetConnectionString()
+    #region Credentials
+    public NullOperationResult SetCredentials(string server, string database, string username, string password)
     {
-        return @$"
-            Server={RuntimeSettings.Server};
-            Database={RuntimeSettings.Database};
-            User Id={RuntimeSettings.Username};
-            Password={RuntimeSettings.Password};
-            MultipleActiveResultSets={RuntimeSettings.MultipleActiveResultSets};
-            TrustServerCertificate={RuntimeSettings.TrustServerCertificate};
-            Connect Timeout={RuntimeSettings.ConnectionTimeoutSeconds};
-        ";
+        var result = new NullOperationResult();
+
+        try
+        {
+            if (_secretStore == null)
+            {
+                throw new ArgumentNullException(NoSecretStore);
+            }
+
+            var setServerKey = _secretStore.SetKey(_secretStoreFileName, "server", username);
+            if (!setServerKey.MethodSuccess)
+            {
+                throw setServerKey.Exception;
+            }
+
+            var setDatabaseKey = _secretStore.SetKey(_secretStoreFileName, "database", username);
+            if (!setDatabaseKey.MethodSuccess)
+            {
+                throw setDatabaseKey.Exception;
+            }
+
+            var setUsernameKey = _secretStore.SetKey(_secretStoreFileName, "username", username);
+            if (!setUsernameKey.MethodSuccess)
+            {
+                throw setUsernameKey.Exception;
+            }
+
+            var setPasswordKey = _secretStore.SetKey(_secretStoreFileName, "password", password);
+            if (!setUsernameKey.MethodSuccess)
+            {
+                throw setUsernameKey.Exception;
+            }
+
+            return result.SetMethodSuccess();
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+
+    public NullOperationResult DeleteCredential(string key)
+    {
+        var result = new NullOperationResult();
+
+        try
+        {
+            if (_secretStore == null)
+            {
+                throw new ArgumentNullException(NoSecretStore);
+            }
+
+            return _secretStore.DeleteKey(_secretStoreFileName, key);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+
+    public NullOperationResult DeleteAllCredentials()
+    {
+        var result = new NullOperationResult();
+
+        try
+        {
+            if (_secretStore == null)
+            {
+                throw new ArgumentNullException(NoSecretStore);
+            }
+
+            return _secretStore.DeleteSecret(_secretStoreFileName);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+
+    private OperationResult<string> GetCredentials(string key, string defaultStr)
+    {
+        var result = new OperationResult<string>();
+
+        try
+        {
+            if (_secretStore != null)
+            {
+                var getKey = _secretStore.GetKey(_secretStoreFileName, key);
+                if (!getKey.MethodSuccess)
+                {
+                    throw getKey.Exception;
+                }
+
+                return result.SetMethodSuccess(getKey.Result);
+            }
+            else
+            {
+                return result.SetMethodSuccess(defaultStr);
+            }
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+    #endregion
+
+    private OperationResult<string> GetConnectionString()
+    {
+        var result = new OperationResult<string>();
+
+        try
+        {
+            var getServer = GetCredentials("server", RuntimeSettings.Server);
+            if (!getServer.MethodSuccess)
+            {
+                throw getServer.Exception;
+            }
+
+            var getDatabase = GetCredentials("database", RuntimeSettings.Database);
+            if (!getDatabase.MethodSuccess)
+            {
+                throw getDatabase.Exception;
+            }
+
+            var getUsername = GetCredentials("username", RuntimeSettings.Username);
+            if (!getUsername.MethodSuccess)
+            {
+                throw getUsername.Exception;
+            }
+
+            var getPassword = GetCredentials("password", RuntimeSettings.Password);
+            if (!getPassword.MethodSuccess)
+            {
+                throw getPassword.Exception;
+            }
+
+            string connectionStr = @$"
+                Server={RuntimeSettings.Server};
+                Database={RuntimeSettings.Database};
+                User Id={RuntimeSettings.Username};
+                Password={RuntimeSettings.Password};
+                MultipleActiveResultSets={RuntimeSettings.MultipleActiveResultSets};
+                TrustServerCertificate={RuntimeSettings.TrustServerCertificate};
+                Connect Timeout={RuntimeSettings.ConnectionTimeoutSeconds};
+            ";
+
+            return result.SetMethodSuccess(connectionStr);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
     }
 
     public void OutputRuntimeSettings(bool calledFromManager = false)

@@ -2,6 +2,7 @@
 using AndrewM5.DevKit.ApiManagement.Abstractions.Settings;
 using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Core.Results;
+using AndrewM5.DevKit.CredentialManagement.Abstractions;
 using AndrewM5.DevKit.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
 using System.Net;
@@ -23,9 +24,15 @@ public class ApiClient : IApiClient
     private readonly ApiClientMetrics _metrics;
     private readonly ICustomLogger? _logger;
 
+    private const string NoSecretStore = "SecretStore has not been set. Call SetSecretStore()";
+    private readonly string _secretStoreFileName;
+    private ISecretStore? _secretStore;
+
     public ApiClient(IApiManager apiManager, string clientName, ApiClientSettings clientSettings, HttpClient httpClient, ICustomLogger? logger = null)
     {
         ClientName = clientName;
+
+        _secretStoreFileName = $"ApiClient({ClientName})";
         _logger = logger;
 
         RuntimeSettings = clientSettings;
@@ -370,6 +377,7 @@ public class ApiClient : IApiClient
             return result.SetMethodFailure(ex);
         }
     }
+
     private OperationResult<bool> AddRequestHeaders(HttpRequestMessage request, Dictionary<string, string>? requestHeaders = null)
     {
         var result = new OperationResult<bool>();
@@ -487,6 +495,118 @@ public class ApiClient : IApiClient
         }
 
         return HttpMetricNames.Other;
+    }
+    #endregion
+
+    #region Credentials
+    public void SetSecretStore(ISecretStore secretStore)
+    {
+        _secretStore = secretStore;
+    }
+    public NullOperationResult SetCredentials(string username, string password)
+    {
+        var result = new NullOperationResult();
+
+        try
+        {
+            if (_secretStore == null)
+            {
+                throw new ArgumentNullException(NoSecretStore);
+            }
+
+            var setUsernameKey = _secretStore.SetKey(_secretStoreFileName, "username", username);
+            if (!setUsernameKey.MethodSuccess)
+            {
+                throw setUsernameKey.Exception;
+            }
+
+            var setPasswordKey = _secretStore.SetKey(_secretStoreFileName, "password", password);
+            if (!setUsernameKey.MethodSuccess)
+            {
+                throw setUsernameKey.Exception;
+            }
+
+            return result.SetMethodSuccess();
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+
+    public OperationResult<string> GetUsername()
+    {
+        return GetCredentials("username", RuntimeSettings.Username);
+    }
+
+    public OperationResult<string> GetPassword()
+    {
+        return GetCredentials("password", RuntimeSettings.Password);
+    }
+
+    public NullOperationResult DeleteCredential(string key)
+    {
+        var result = new NullOperationResult();
+
+        try
+        {
+            if (_secretStore == null)
+            {
+                throw new ArgumentNullException(NoSecretStore);
+            }
+
+            return _secretStore.DeleteKey(_secretStoreFileName, key);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+
+    public NullOperationResult DeleteAllCredentials()
+    {
+        var result = new NullOperationResult();
+
+        try
+        {
+            if (_secretStore == null)
+            {
+                throw new ArgumentNullException(NoSecretStore);
+            }
+
+            return _secretStore.DeleteSecret(_secretStoreFileName);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+
+    private OperationResult<string> GetCredentials(string key, string defaultStr)
+    {
+        var result = new OperationResult<string>();
+
+        try
+        {
+            if (_secretStore != null)
+            {
+                var getKey = _secretStore.GetKey(_secretStoreFileName, key);
+                if (!getKey.MethodSuccess)
+                {
+                    throw getKey.Exception;
+                }
+
+                return result.SetMethodSuccess(getKey.Result);
+            }
+            else
+            {
+                return result.SetMethodSuccess(defaultStr);
+            }
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
     }
     #endregion
 

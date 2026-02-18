@@ -1,4 +1,5 @@
 ﻿using AndrewM5.DevKit.Core.Results;
+using AndrewM5.DevKit.CredentialManagement.Abstractions;
 using AndrewM5.DevKit.SqlManagement.Abstractions.Settings;
 using Microsoft.Data.SqlClient;
 using System.Data;
@@ -29,6 +30,16 @@ public interface ISqlDBClient : IDisposable
     public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, int> processCommand);
 
     public OperationResult<T> RunDataReader<T>(string sqlStatement, CommandType commandType, Func<SqlDataReader, T> processReader, SqlParameter[]? parameters = null);
+    #endregion
+
+    #region Credentials
+    public void SetSecretStore(ISecretStore secretStore);
+    
+    public NullOperationResult SetCredentials(string server, string database, string username, string password);
+
+    public NullOperationResult DeleteCredential(string key);
+
+    public NullOperationResult DeleteAllCredentials();
     #endregion
 
     public void OutputRuntimeSettings(bool calledFromManager = false);
