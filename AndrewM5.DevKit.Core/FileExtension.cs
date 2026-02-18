@@ -348,18 +348,35 @@ public static class FileExtension
                 throw new ArgumentException(RequiredFilePathErrorMsg);
             }
 
-            var validateDestinationPath = DirectoryExtension.IsStringValidDirectoryPath(destinationPath);
-            if (!validateDestinationPath.MethodSuccess)
+            bool isDir = true;
+            var validateDestinationDirPath = DirectoryExtension.IsStringValidDirectoryPath(destinationPath);
+            if (!validateDestinationDirPath.MethodSuccess)
             {
-                throw validateDestinationPath.Exception;
+                throw validateDestinationDirPath.Exception;
             }
 
-            if (!validateDestinationPath.Result)
+            if (!validateDestinationDirPath.Result)
             {
-                throw new ArgumentException(RequiredDirectoryPathErrorMsg);
+                isDir = false;
+
+                var validateDestinationFilePath = IsStringValidFilePath(destinationPath);
+                if (!validateDestinationFilePath.MethodSuccess)
+                {
+                    throw validateDestinationFilePath.Exception;
+                }
+
+                if (!validateDestinationFilePath.Result)
+                {
+                    throw new ArgumentException("DestinationPath is neither a valid file path or directory path.");
+                }
             }
 
-            string destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(sourcePath));
+            string destinationFilePath = destinationPath;
+            
+            if (isDir)
+            {
+                destinationFilePath = Path.Combine(destinationPath, Path.GetFileName(sourcePath));
+            }
 
             File.Move(sourcePath, destinationFilePath, overwrite);
 

@@ -37,6 +37,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ApiManageme
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.SqlManagement.Abstractions", "AndrewM5.DevKit.SqlManagement.Abstractions\AndrewM5.DevKit.SqlManagement.Abstractions.csproj", "{4BDC26EC-1AD6-4626-8C75-FC81F54F4046}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.CredentialManagement", "AndrewM5.DevKit.CredentialManagement\AndrewM5.DevKit.CredentialManagement.csproj", "{250707CF-9820-43BD-B0BB-76D34844116A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.CredentialManagement.Abstractions", "AndrewM5.DevKit.CredentialManagement.Abstractions\AndrewM5.DevKit.CredentialManagement.Abstractions.csproj", "{F9540540-3B92-44D6-8BA1-A58AB4DF57B6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +115,14 @@ Global
 		{4BDC26EC-1AD6-4626-8C75-FC81F54F4046}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4BDC26EC-1AD6-4626-8C75-FC81F54F4046}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4BDC26EC-1AD6-4626-8C75-FC81F54F4046}.Release|Any CPU.Build.0 = Release|Any CPU
+		{250707CF-9820-43BD-B0BB-76D34844116A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{250707CF-9820-43BD-B0BB-76D34844116A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{250707CF-9820-43BD-B0BB-76D34844116A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{250707CF-9820-43BD-B0BB-76D34844116A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9540540-3B92-44D6-8BA1-A58AB4DF57B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9540540-3B92-44D6-8BA1-A58AB4DF57B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9540540-3B92-44D6-8BA1-A58AB4DF57B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9540540-3B92-44D6-8BA1-A58AB4DF57B6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

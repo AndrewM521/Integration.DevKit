@@ -125,6 +125,59 @@ public static class DirectoryExtension
         }
     }
 
+    public static OperationResult<string> GetSafeDirectoryName(string directoryName, char replacement = '_')
+    {
+        var result = new OperationResult<string>();
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(directoryName))
+            {
+                throw new ArgumentException("Directory name cannot be null or whitespace.");
+            }
+
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+            char[] buffer = new char[directoryName.Length];
+
+            for (int i = 0; i < directoryName.Length; i++)
+            {
+                char current = directoryName[i];
+                bool isInvalid = false;
+
+                for (int j = 0; j < invalidChars.Length; j++)
+                {
+                    if (current == invalidChars[j])
+                    {
+                        isInvalid = true;
+                        break;
+                    }
+                }
+
+                if (isInvalid)
+                {
+                    buffer[i] = replacement;
+                }
+                else
+                {
+                    buffer[i] = current;
+                }
+            }
+
+            string sanitized = new string(buffer).TrimEnd('.', ' ');
+
+            if (string.IsNullOrWhiteSpace(sanitized))
+            {
+                throw new ArgumentException("Directory name contains no valid characters.");
+            }
+
+            return result.SetMethodSuccess(sanitized);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+
     public static bool DoesDirectoryExist(string path)
     {
         return Directory.Exists(path);
