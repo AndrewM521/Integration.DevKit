@@ -94,7 +94,7 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
-    public async Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, SqlParameter[]? parameters = null, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default)
     {
         var result = new OperationResult<int>();
 
@@ -118,10 +118,7 @@ public class SqlDBClient : ISqlDBClient
         {
             await conn.OpenAsync(cancellationToken);
 
-            if (parameters != null && parameters.Length > 0)
-            {
-                cmd.Parameters.AddRange(parameters);
-            }
+            configureParameters?.Invoke(cmd.Parameters);
 
             int count = await cmd.ExecuteNonQueryAsync(cancellationToken);
 
@@ -183,8 +180,8 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
-    public async Task<OperationResult<T>> RunDataReaderAsync<T>(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task<T>> processReader, 
-        SqlParameter[]? parameters = null, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<T>> RunDataReaderAsync<T>(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task<T>> processReader,
+        Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default)
     {
         var result = new OperationResult<T>();
 
@@ -208,10 +205,7 @@ public class SqlDBClient : ISqlDBClient
         {
             await conn.OpenAsync(cancellationToken);
 
-            if (parameters != null && parameters.Length > 0)
-            {
-                cmd.Parameters.AddRange(parameters);
-            }
+            configureParameters?.Invoke(cmd.Parameters);
 
             await using var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 
@@ -244,9 +238,9 @@ public class SqlDBClient : ISqlDBClient
         return TestSqlConnectionAsync().GetAwaiter().GetResult();
     }
 
-    public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, SqlParameter[]? parameters = null)
+    public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, Action<SqlParameterCollection>? configureParameters = null)
     {
-        return RunNonQueryCommandAsync(sqlStatement, commandType, parameters).GetAwaiter().GetResult();
+        return RunNonQueryCommandAsync(sqlStatement, commandType, configureParameters).GetAwaiter().GetResult();
     }
 
     public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, int> processCommand)
@@ -256,10 +250,10 @@ public class SqlDBClient : ISqlDBClient
     }
 
     public OperationResult<T> RunDataReader<T>(string sql, CommandType commandType,
-        Func<SqlDataReader, T> processReader, SqlParameter[]? parameters = null)
+        Func<SqlDataReader, T> processReader, Action<SqlParameterCollection>? configureParameters = null)
     {
         return RunDataReaderAsync(sql, commandType, 
-            reader => Task.FromResult(processReader(reader)), parameters).GetAwaiter().GetResult();
+            reader => Task.FromResult(processReader(reader)), configureParameters).GetAwaiter().GetResult();
     }
     #endregion
 
