@@ -1,4 +1,4 @@
-﻿namespace AndrewM5.DevKit.TaskManagement.Scheduling.Services.ScheduleStrategies;
+﻿namespace AndrewM5.DevKit.TaskManagement.Services.ScheduleStrategies;
 
 public class DailyScheduleStrategy : TaskScheduleStrategy
 {

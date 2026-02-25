@@ -1,5 +1,6 @@
 ﻿using AndrewM5.DevKit.TaskManagement.Abstractions;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Settings;
+using AndrewM5.DevKit.TaskManagement.Scheduling.Abstractions;
 using AndrewM5.DevKit.TaskManagement.Services;
 using AndrewM5.DevKit.TaskManagement.Utilities;
 using AndrewM5.DevKit.ThreadLocks.Abstractions;
@@ -34,6 +35,21 @@ public static class TaskManagementServiceCollection
 
         // Optionally, also register ThreadLockManager if you want it auto-resolved
         services.AddSingleton<IThreadLockManager, ThreadLockManager>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddTaskScheduling(this IServiceCollection services)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
+        // Optionally, also register ThreadLockManager if you want it auto-resolved
+        services.AddSingleton<ITaskScheduleService, TaskScheduleService>();
+
+        services.AddSingleton<ITaskScheduleRegistry, TaskScheduleRegistry>();
 
         return services;
     }

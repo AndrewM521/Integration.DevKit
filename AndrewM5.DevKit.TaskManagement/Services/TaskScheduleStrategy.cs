@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.TaskManagement.Abstractions;
 
-namespace AndrewM5.DevKit.TaskManagement.Scheduling.Services;
+namespace AndrewM5.DevKit.TaskManagement.Services;
 
 public abstract class TaskScheduleStrategy : ITaskScheduleStrategy
 {

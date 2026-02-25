@@ -25,8 +25,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.TaskManagem
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.TaskManagement.Abstractions", "AndrewM5.DevKit.TaskManagement.Abstractions\AndrewM5.DevKit.TaskManagement.Abstractions.csproj", "{0E091E51-E3F4-F608-744D-50337773AB0F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.TaskManagement.Scheduling", "AndrewM5.DevKit.TaskManagement.Scheduling\AndrewM5.DevKit.TaskManagement.Scheduling.csproj", "{6E6637A4-EDCE-FDDA-F10C-B93A1825888B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ProcessLauncher.Abstractions", "AndrewM5.DevKit.ProcessLauncher.Abstractions\AndrewM5.DevKit.ProcessLauncher.Abstractions.csproj", "{77C9E3E8-5ECA-474F-BA58-7E7E83CD50F5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.Logging.Flusher", "AndrewM5.DevKit.Logging.Flusher\AndrewM5.DevKit.Logging.Flusher.csproj", "{8A4562E1-78E7-C177-99CF-D382E56DA76B}"
@@ -91,10 +89,6 @@ Global
 		{0E091E51-E3F4-F608-744D-50337773AB0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E091E51-E3F4-F608-744D-50337773AB0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E091E51-E3F4-F608-744D-50337773AB0F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6E6637A4-EDCE-FDDA-F10C-B93A1825888B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6E6637A4-EDCE-FDDA-F10C-B93A1825888B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6E6637A4-EDCE-FDDA-F10C-B93A1825888B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6E6637A4-EDCE-FDDA-F10C-B93A1825888B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{77C9E3E8-5ECA-474F-BA58-7E7E83CD50F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{77C9E3E8-5ECA-474F-BA58-7E7E83CD50F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77C9E3E8-5ECA-474F-BA58-7E7E83CD50F5}.Release|Any CPU.ActiveCfg = Release|Any CPU

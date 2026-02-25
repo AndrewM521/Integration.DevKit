@@ -3,7 +3,7 @@ using AndrewM5.DevKit.TaskManagement.Abstractions;
 using AndrewM5.DevKit.ThreadLocks.Abstractions;
 using Microsoft.Extensions.Logging;
 
-namespace AndrewM5.DevKit.TaskManagement.Scheduling.Services;
+namespace AndrewM5.DevKit.TaskManagement.Services;
 
 internal class TaskScheduleRunner : IDisposable
 {

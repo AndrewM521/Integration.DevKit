@@ -1,9 +1,9 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.TaskManagement.Abstractions;
-using AndrewM5.DevKit.TaskManagement.Scheduling.Services;
+using AndrewM5.DevKit.TaskManagement.Services;
 using System.Collections.Concurrent;
 
-namespace AndrewM5.DevKit.TaskManagement.Scheduling.Utilities;
+namespace AndrewM5.DevKit.TaskManagement.Utilities;
 
 internal class TaskScheduleRegistry : ITaskScheduleRegistry
 {

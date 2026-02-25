@@ -5,7 +5,7 @@ using AndrewM5.DevKit.TaskManagement.Scheduling.Abstractions;
 using AndrewM5.DevKit.ThreadLocks.Abstractions;
 using System.Collections.Concurrent;
 
-namespace AndrewM5.DevKit.TaskManagement.Scheduling.Services;
+namespace AndrewM5.DevKit.TaskManagement.Services;
 
 internal sealed class TaskScheduleService : ITaskScheduleService
 {

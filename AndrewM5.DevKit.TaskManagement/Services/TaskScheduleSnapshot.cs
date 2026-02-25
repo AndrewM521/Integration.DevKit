@@ -3,7 +3,7 @@ using AndrewM5.DevKit.TaskManagement.Abstractions;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
-namespace AndrewM5.DevKit.TaskManagement.Scheduling.Services;
+namespace AndrewM5.DevKit.TaskManagement.Services;
 
 public sealed class TaskScheduleSnapshot : ITaskScheduleSnapshot
 {
