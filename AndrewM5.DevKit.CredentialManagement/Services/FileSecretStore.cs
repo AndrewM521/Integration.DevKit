@@ -20,7 +20,7 @@ public class FileSecretStore : SecretStoreBase
 
         try
         {
-            var getPath = GetFilePath(fileName);
+            var getPath = GetFilePath(fileName);  
             if (!getPath.MethodSuccess)
             {
                 throw getPath.Exception;

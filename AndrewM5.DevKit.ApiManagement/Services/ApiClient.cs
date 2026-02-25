@@ -521,9 +521,9 @@ public class ApiClient : IApiClient
             }
 
             var setPasswordKey = _secretStore.SetKey(_secretStoreFileName, "password", password);
-            if (!setUsernameKey.MethodSuccess)
+            if (!setPasswordKey.MethodSuccess)
             {
-                throw setUsernameKey.Exception;
+                throw setPasswordKey.Exception;
             }
 
             return result.SetMethodSuccess();
