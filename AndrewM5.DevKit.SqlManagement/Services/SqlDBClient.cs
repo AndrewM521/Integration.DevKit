@@ -94,7 +94,8 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
-    public async Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, 
+        Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default)
     {
         var result = new OperationResult<int>();
 
@@ -138,9 +139,10 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
-    public async Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, Func<SqlCommand, Task<int>> processCommand, CancellationToken cancellationToken = default)
+    public async Task<NullOperationResult> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, 
+            Func<SqlCommand, Task> processCommand, CancellationToken cancellationToken = default)
     {
-        var result = new OperationResult<int>();
+        var result = new NullOperationResult();
 
         await _rateLimiter.WaitAsync(cancellationToken);
 
@@ -162,9 +164,9 @@ public class SqlDBClient : ISqlDBClient
         {
             await conn.OpenAsync(cancellationToken);    
 
-            int count = await processCommand(cmd).ConfigureAwait(false);
+            await processCommand(cmd).ConfigureAwait(false);
 
-            return result.SetMethodSuccess(count);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -180,10 +182,10 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
-    public async Task<OperationResult<T>> RunDataReaderAsync<T>(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task<T>> processReader,
+    public async Task<NullOperationResult> RunDataReaderAsync(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader,
         Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default)
     {
-        var result = new OperationResult<T>();
+        var result = new NullOperationResult();
 
         await _rateLimiter.WaitAsync(cancellationToken);
 
@@ -213,9 +215,9 @@ public class SqlDBClient : ISqlDBClient
             // The reader is then disposed automatically when the callback completes ensuring the reader is released,
             // preventing leaks.
 
-            T retVal = await processReader(reader).ConfigureAwait(false);
+            await processReader(reader).ConfigureAwait(false);
 
-            return result.SetMethodSuccess(retVal);
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -243,17 +245,17 @@ public class SqlDBClient : ISqlDBClient
         return RunNonQueryCommandAsync(sqlStatement, commandType, configureParameters).GetAwaiter().GetResult();
     }
 
-    public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, int> processCommand)
+    public NullOperationResult RunNonQueryCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand)
     {
         return RunNonQueryCommandAsync(sqlStatement, commandType, 
-            command => Task.FromResult(processCommand(command))).GetAwaiter().GetResult();
+            command => processCommand(command)).GetAwaiter().GetResult();
     }
 
-    public OperationResult<T> RunDataReader<T>(string sql, CommandType commandType,
-        Func<SqlDataReader, T> processReader, Action<SqlParameterCollection>? configureParameters = null)
+    public NullOperationResult RunDataReader(string sql, CommandType commandType,
+        Func<SqlDataReader, Task> processReader, Action<SqlParameterCollection>? configureParameters = null)
     {
         return RunDataReaderAsync(sql, commandType, 
-            reader => Task.FromResult(processReader(reader)), configureParameters).GetAwaiter().GetResult();
+            reader => processReader(reader), configureParameters).GetAwaiter().GetResult();
     }
     #endregion
 
@@ -288,9 +290,9 @@ public class SqlDBClient : ISqlDBClient
             }
 
             var setPasswordKey = _secretStore.SetKey(_secretStoreFileName, "password", password);
-            if (!setUsernameKey.MethodSuccess)
+            if (!setPasswordKey.MethodSuccess)
             {
-                throw setUsernameKey.Exception;
+                throw setPasswordKey.Exception;
             }
 
             return result.SetMethodSuccess();
@@ -398,10 +400,10 @@ public class SqlDBClient : ISqlDBClient
             }
 
             string connectionStr = @$"
-                Server={RuntimeSettings.Server};
-                Database={RuntimeSettings.Database};
-                User Id={RuntimeSettings.Username};
-                Password={RuntimeSettings.Password};
+                Server={getServer.Result};
+                Database={getDatabase.Result};
+                User Id={getUsername.Result};
+                Password={getPassword.Result};
                 MultipleActiveResultSets={RuntimeSettings.MultipleActiveResultSets};
                 TrustServerCertificate={RuntimeSettings.TrustServerCertificate};
                 Connect Timeout={RuntimeSettings.ConnectionTimeoutSeconds};

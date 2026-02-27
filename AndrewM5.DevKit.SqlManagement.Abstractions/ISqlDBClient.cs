@@ -17,9 +17,9 @@ public interface ISqlDBClient : IDisposable
     
     public Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default);
 
-    public Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, Func<SqlCommand, Task<int>> processCommand, CancellationToken cancellationToken = default);
+    public Task<NullOperationResult> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand, CancellationToken cancellationToken = default);
 
-    public Task<OperationResult<T>> RunDataReaderAsync<T>(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task<T>> processReader, Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default);
+    public Task<NullOperationResult> RunDataReaderAsync(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader, Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default);
     #endregion
 
     #region Synchronous Methods
@@ -27,9 +27,9 @@ public interface ISqlDBClient : IDisposable
     
     public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, Action<SqlParameterCollection>? configureParameters = null);
 
-    public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, int> processCommand);
+    public NullOperationResult RunNonQueryCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand);
 
-    public OperationResult<T> RunDataReader<T>(string sqlStatement, CommandType commandType, Func<SqlDataReader, T> processReader, Action<SqlParameterCollection>? configureParameters = null);
+    public NullOperationResult RunDataReader(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader, Action<SqlParameterCollection>? configureParameters = null);
     #endregion
 
     #region Credentials
