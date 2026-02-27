@@ -37,7 +37,7 @@ public class FileSecretStore : SecretStoreBase
 
             getDecryptedContent.Result[key] = value;
 
-            var getJson = JsonExtension.ParseObjectToJson(getDecryptedContent.Result);
+            var getJson = JsonUtils.ParseObjectToJson(getDecryptedContent.Result);
             if (!getJson.MethodSuccess)
             {
                 throw getJson.Exception;
@@ -134,7 +134,7 @@ public class FileSecretStore : SecretStoreBase
 
             var tmpFilePath = filePath + ".tmp";
 
-            var getJson = JsonExtension.ParseObjectToJson(getDecryptedContent.Result);
+            var getJson = JsonUtils.ParseObjectToJson(getDecryptedContent.Result);
             if (!getJson.MethodSuccess)
             {
                 throw getJson.Exception;
@@ -210,7 +210,7 @@ public class FileSecretStore : SecretStoreBase
 
             var json = Decrypt(getContent.Result);
 
-            return JsonExtension.ParseJsonToDictionary(json);
+            return JsonUtils.ParseJsonToDictionary(json);
         }
         catch (Exception ex)
         {

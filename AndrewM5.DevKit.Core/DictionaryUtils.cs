@@ -2,45 +2,22 @@
 
 namespace AndrewM5.DevKit.Core;
 
-public static class DictionaryExtension
+public static class DictionaryUtils
 {
-    public static OperationResult<List<object>> TraverseByPath(object curObject, string[] path, int depth)
+    public static OperationResult<List<object>> TraverseByPath(object curObject, string[] path)
     {
         var result = new OperationResult<List<object>>();
         var matches = new List<object>();
 
         try
         {
-            TraverseInternal(curObject, path, depth, ref matches);
+            TraverseInternal(curObject, path, 0, ref matches);
 
             return result.SetMethodSuccess(matches);
         }
         catch (Exception ex)
         {
             return result.SetMethodFailure(ex);
-        }
-    }
-
-    private static void TraverseInternal(object current, string[] path, int depth, ref List<object> matches)
-    {
-        if (depth == path.Length)
-        {
-            matches.Add(current);
-            return;
-        }
-
-        string key = path[depth];
-
-        if (current is Dictionary<string, object> dictionary && dictionary.TryGetValue(key, out var next))
-        {
-            TraverseInternal(next, path, depth + 1, ref matches);
-        }
-        else if (current is List<object> list)
-        {
-            foreach (var item in list)
-            {
-                TraverseInternal(item, path, depth, ref matches);
-            }
         }
     }
 
@@ -156,5 +133,98 @@ public static class DictionaryExtension
         }
 
         return result.SetMethodSuccess(resultDict);
+    }
+
+    public static string? GetString(Dictionary<string, object> dict, string key)
+    {
+        if (!dict.TryGetValue(key, out var value))
+        {
+            return null;
+        }
+
+        return value.ToString();
+    }
+
+    public static Dictionary<string, object>? GetDictionary(Dictionary<string, object> dict, string key)
+    {
+        if (!dict.TryGetValue(key, out var value))
+        {
+            return null;
+        }
+
+        if (value is not Dictionary<string, object> nested)
+        {
+            return null;
+        }
+
+        return nested;
+    }
+
+    public static List<Dictionary<string, object>>? GetListDictionary(Dictionary<string, object> dict, string key)
+    {
+        if (!dict.TryGetValue(key, out var value))
+        {
+            return null;
+        }
+
+        if (value is not List<object> list)
+        {
+            return null;
+        }
+
+        var result = new List<Dictionary<string, object>>(list.Count);
+
+        foreach (var item in list)
+        {
+            if (item is Dictionary<string, object> dictionary)
+            {
+                result.Add(dictionary);
+            }
+        }
+
+        if (result.Count <= 0)
+        {
+            return null;
+        }
+
+        return result;
+    }
+
+    public static List<object>? GetList(Dictionary<string, object> dict, string key)
+    {
+        if (!dict.TryGetValue(key, out var value))
+        {
+            return null;
+        }
+
+        if (value is not List<object> list)
+        {
+            return null;
+        }
+
+        return list;
+    }
+
+    private static void TraverseInternal(object current, string[] path, int depth, ref List<object> matches)
+    {
+        if (depth == path.Length)
+        {
+            matches.Add(current);
+            return;
+        }
+
+        string key = path[depth];
+
+        if (current is Dictionary<string, object> dictionary && dictionary.TryGetValue(key, out var next))
+        {
+            TraverseInternal(next, path, depth + 1, ref matches);
+        }
+        else if (current is List<object> list)
+        {
+            foreach (var item in list)
+            {
+                TraverseInternal(item, path, depth, ref matches);
+            }
+        }
     }
 }

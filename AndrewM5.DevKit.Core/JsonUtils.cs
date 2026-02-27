@@ -3,12 +3,12 @@ using System.Text.Json;
 
 namespace AndrewM5.DevKit.Core;
 
-public static class JsonExtension
+public static class JsonUtils
 {
     public static OperationResult<List<Dictionary<string, object>>> ParseAndFilterJson(string rawJSON,
         IEnumerable<string>? FilterParentsListKey = null,
-        string? FilterListKey = null, IEnumerable<string>?
-        FilterPropertyKeys = null)
+        string? FilterListKey = null, 
+        IEnumerable<string>? FilterPropertyKeys = null)
     {
         var result = new OperationResult<List<Dictionary<string, object>>>();
 
@@ -81,12 +81,27 @@ public static class JsonExtension
         }
     }
 
+    public static OperationResult<List<Dictionary<string, object>>> FilterNestedDictionaries(Dictionary<string, object> originalDictionary,
+        IEnumerable<string>? FilterParentsListKey = null, string?
+        FilterListKey = null,
+        IEnumerable<string>? FilterPropertyKeys = null)
+    {
+        var result = new OperationResult<List<Dictionary<string, object>>>();
+
+        var json = ParseObjectToJson(originalDictionary);
+        if (!json.MethodSuccess)
+        {
+            return result.SetMethodFailure(json.Exception);
+        }
+
+        return ParseAndFilterJson(json.Result, FilterParentsListKey, FilterListKey, FilterPropertyKeys);
+    }
+
     public static object? ConvertJsonElementToNativeObject(JsonElement element)
     {
         switch (element.ValueKind)
         {
             case JsonValueKind.Object:
-                // Still recursive, but now only called for nested objects you actually need
                 var dict = new Dictionary<string, object?>();
                 foreach (var prop in element.EnumerateObject())
                 {
@@ -106,8 +121,6 @@ public static class JsonExtension
                 return element.GetString();
 
             case JsonValueKind.Number:
-                // Optimization: Use the built-in try methods instead of GetRawText() 
-                // to avoid extra string allocations on the heap.
                 if (element.TryGetInt32(out int intVal)) return intVal;
                 if (element.TryGetInt64(out long longVal)) return longVal;
                 if (element.TryGetDouble(out double doubleVal)) return doubleVal;
@@ -163,20 +176,6 @@ public static class JsonExtension
         {
             return result.SetMethodFailure(ex);
         }
-    }
-
-    public static OperationResult<List<Dictionary<string, object>>> FilterNestedDictionaries(Dictionary<string, object> originalDictionary, 
-        IEnumerable<string>? FilterParentsListKey = null, string? FilterListKey = null, IEnumerable<string>? FilterPropertyKeys = null)
-    {
-        var result = new OperationResult<List<Dictionary<string, object>>>();
-
-        var json = ParseObjectToJson(originalDictionary);
-        if (!json.MethodSuccess)
-        {
-            return result.SetMethodFailure(json.Exception);
-        }
-
-        return ParseAndFilterJson(json.Result, FilterParentsListKey, FilterListKey, FilterPropertyKeys);
     }
 
     private static Dictionary<string, object>? ConvertToFilteredDictionary(JsonElement element, IEnumerable<string>? propertyKeys)

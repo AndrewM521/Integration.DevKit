@@ -38,7 +38,7 @@ public static class FileExtension
             }
 
             var directory = Path.GetDirectoryName(path);
-            var createDir = DirectoryExtension.CreateDirectory(directory!);
+            var createDir = DirectoryUtils.CreateDirectory(directory!);
             if (!createDir.MethodSuccess)
             {
                 throw createDir.Exception;
@@ -247,12 +247,12 @@ public static class FileExtension
 
         try
         {
-            if (!DirectoryExtension.DoesDirectoryExist(path))
+            if (!DirectoryUtils.DoesDirectoryExist(path))
             {
-                DirectoryExtension.CreateDirectory(path);
+                DirectoryUtils.CreateDirectory(path);
             }
 
-            var getFiles = DirectoryExtension.GetFiles(path, searchPattern);
+            var getFiles = DirectoryUtils.GetFiles(path, searchPattern);
             if (!getFiles.MethodSuccess)
             {
                 throw getFiles.Exception;
@@ -308,7 +308,7 @@ public static class FileExtension
                 throw new FileNotFoundException("Source File Path does not exist.");
             }
 
-            var validateDestinationPath = DirectoryExtension.IsStringValidDirectoryPath(destinationPath);
+            var validateDestinationPath = DirectoryUtils.IsStringValidDirectoryPath(destinationPath);
             if (!validateDestinationPath.MethodSuccess)
             {
                 throw validateDestinationPath.Exception;
@@ -349,7 +349,7 @@ public static class FileExtension
             }
 
             bool isDir = true;
-            var validateDestinationDirPath = DirectoryExtension.IsStringValidDirectoryPath(destinationPath);
+            var validateDestinationDirPath = DirectoryUtils.IsStringValidDirectoryPath(destinationPath);
             if (!validateDestinationDirPath.MethodSuccess)
             {
                 throw validateDestinationDirPath.Exception;

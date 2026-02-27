@@ -2,7 +2,7 @@
 
 namespace AndrewM5.DevKit.Core;
 
-public static class DirectoryExtension
+public static class DirectoryUtils
 {
     private static readonly string RequiredDirectoryPathErrorMsg = "Path must be a Directory.";
 

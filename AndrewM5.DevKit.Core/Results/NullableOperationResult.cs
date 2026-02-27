@@ -21,7 +21,7 @@ public class NullableOperationResult<T> : IOperationResult<T?>
         }
     } 
     
-    public IOperationResult<T?> SetMethodSuccess(T? result)
+    public NullableOperationResult<T?> SetMethodSuccess(T? result)
     {
         _methodSuccess = true;
         _result = result;
@@ -30,7 +30,7 @@ public class NullableOperationResult<T> : IOperationResult<T?>
         return this;
     }
 
-    public IOperationResult<T?> SetMethodFailure(Exception ex)
+    public NullableOperationResult<T?> SetMethodFailure(Exception ex)
     {
         _methodSuccess = false;
         _result = default;
