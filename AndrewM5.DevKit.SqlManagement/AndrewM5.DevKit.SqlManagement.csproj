@@ -16,4 +16,8 @@
     <ProjectReference Include="..\AndrewM5.DevKit.SqlManagement.Abstractions\AndrewM5.DevKit.SqlManagement.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>

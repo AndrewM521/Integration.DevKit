@@ -21,7 +21,7 @@ public static class DictionaryUtils
         }
     }
 
-    public static OperationResult<List<Dictionary<string, object>>> ExtractSubsetByKeys(List<Dictionary<string, object>> source, IEnumerable<string> keys)
+    public static OperationResult<List<Dictionary<string, object>>> ExtractSubsetByKeys(List<Dictionary<string, object>> source, List<string> keys)
     {
         var result = new OperationResult<List<Dictionary<string, object>>>();
 
@@ -135,14 +135,27 @@ public static class DictionaryUtils
         return result.SetMethodSuccess(resultDict);
     }
 
-    public static string? GetString(Dictionary<string, object> dict, string key)
+    public static T GetValueOrDefault<T>(Dictionary<string, object> dict, string key, T defaultValue)
     {
-        if (!dict.TryGetValue(key, out var value))
+        if (dict.TryGetValue(key, out var value) && value != null)
         {
-            return null;
+            if (value is T result)
+            {
+                return result;
+            }
+
+            try
+            {
+                // Attempts to convert the object to the target type T
+                return (T)Convert.ChangeType(value, typeof(T));
+            }
+            catch
+            {
+                return defaultValue;
+            }
         }
 
-        return value.ToString();
+        return defaultValue;
     }
 
     public static Dictionary<string, object>? GetDictionary(Dictionary<string, object> dict, string key)

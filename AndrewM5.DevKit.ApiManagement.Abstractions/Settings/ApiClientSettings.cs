@@ -6,11 +6,11 @@ public class ApiClientSettings
 
     public string Password { get; set; } = string.Empty;
 
-    public string BaseUrl { get; set; } = "Unknown BaseURL";
+    public string BaseUrl { get; set; } = "https://YourUrl.com";
 
-    public int MaxConcurrentRequests { get; set; } = int.MaxValue;
+    public int RequestCountBeforeRateLimiting { get; set; } = int.MaxValue;
 
     public Dictionary<string, string> DefaultHeaders { get; init; } = new Dictionary<string, string>();
 
-    public int? TimeoutSeconds { get; set; } = null;
+    public int? HttpTimeout_Seconds { get; set; } = null;
 }

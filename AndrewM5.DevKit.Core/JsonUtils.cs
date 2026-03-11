@@ -6,9 +6,9 @@ namespace AndrewM5.DevKit.Core;
 public static class JsonUtils
 {
     public static OperationResult<List<Dictionary<string, object>>> ParseAndFilterJson(string rawJSON,
-        IEnumerable<string>? FilterParentsListKey = null,
-        string? FilterListKey = null, 
-        IEnumerable<string>? FilterPropertyKeys = null)
+        List<string>? FilterParentsListKey = null,
+        string? FilterListKey = null,
+        List<string>? FilterPropertyKeys = null)
     {
         var result = new OperationResult<List<Dictionary<string, object>>>();
 
@@ -82,9 +82,9 @@ public static class JsonUtils
     }
 
     public static OperationResult<List<Dictionary<string, object>>> FilterNestedDictionaries(Dictionary<string, object> originalDictionary,
-        IEnumerable<string>? FilterParentsListKey = null, string?
+        List<string>? FilterParentsListKey = null, string?
         FilterListKey = null,
-        IEnumerable<string>? FilterPropertyKeys = null)
+        List<string>? FilterPropertyKeys = null)
     {
         var result = new OperationResult<List<Dictionary<string, object>>>();
 
@@ -178,7 +178,7 @@ public static class JsonUtils
         }
     }
 
-    private static Dictionary<string, object>? ConvertToFilteredDictionary(JsonElement element, IEnumerable<string>? propertyKeys)
+    private static Dictionary<string, object>? ConvertToFilteredDictionary(JsonElement element, List<string>? propertyKeys)
     {
         if (element.ValueKind != JsonValueKind.Object)
         {
