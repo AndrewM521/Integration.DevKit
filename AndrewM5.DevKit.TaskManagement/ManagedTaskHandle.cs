@@ -1,9 +1,10 @@
 ﻿using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.TaskManagement.Abstractions;
+using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
+using AndrewM5.DevKit.TaskManagement.Services;
 
-namespace AndrewM5.DevKit.TaskManagement.Services;
+namespace AndrewM5.DevKit.TaskManagement;
 
-internal sealed class TaskHandle : ITaskHandle
+internal sealed class ManagedTaskHandle : ITaskHandle
 {
     public string TaskKey => _managedTaskRuntime.UserTask.TaskKey;
     public ManagedTaskState State => _managedTaskRuntime.State;
@@ -12,7 +13,7 @@ internal sealed class TaskHandle : ITaskHandle
 
     private readonly ManagedTaskRuntime _managedTaskRuntime;
 
-    public TaskHandle(ManagedTaskRuntime managedTaskRuntime)
+    public ManagedTaskHandle(ManagedTaskRuntime managedTaskRuntime)
     {
         _managedTaskRuntime = managedTaskRuntime;
     }

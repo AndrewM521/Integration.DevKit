@@ -1,10 +1,10 @@
 ﻿using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.TaskManagement.Abstractions;
+using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 using System.Collections.Concurrent;
 
-namespace AndrewM5.DevKit.TaskManagement.Utilities;
+namespace AndrewM5.DevKit.TaskManagement;
 
-internal class TaskRegistry : ITaskRegistry
+internal class ManagedTaskRegistry : IManagedTaskRegistry
 {
     public int Count => _snapshots.Count;
 
@@ -13,7 +13,7 @@ internal class TaskRegistry : ITaskRegistry
 
     private readonly int _maxEntries;
 
-    public TaskRegistry(int maxEntries = 2000)
+    public ManagedTaskRegistry(int maxEntries = 2000)
     {
         if (maxEntries <= 0)
         {

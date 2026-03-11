@@ -1,19 +1,18 @@
 ﻿using AndrewM5.DevKit.Core.Results;
+using AndrewM5.DevKit.TaskManagement.Abstractions.Models;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Settings;
 
-namespace AndrewM5.DevKit.TaskManagement.Abstractions;
+namespace AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 
 public interface ITaskManager
 {
     public TaskManagerSettings RuntimeSettings { get; }
 
-    public Task<OperationResult<ITaskHandle>> StartTask(IManagedTask managedTask, TaskExecutionMode mode);
-    
+    public Task<OperationResult<ITaskHandle>> StartTask(IManagedTask managedTask, ManagedTaskSettings settings, CancellationToken cancellationToken = default);
+
     public NullOperationResult CancelTask(string taskKey, bool forceCancel = false);
     
     public NullOperationResult CancelAllTasks(bool forceCancel = false);
-
-    public Task<NullOperationResult> RestartTask(string taskKey);
 
     public OperationResult<bool> IsTaskRunning(string taskKey);
     

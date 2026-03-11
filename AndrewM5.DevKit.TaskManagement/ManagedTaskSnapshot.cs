@@ -1,8 +1,8 @@
 ﻿using AndrewM5.DevKit.Logging.Abstractions;
-using AndrewM5.DevKit.TaskManagement.Abstractions;
+using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace AndrewM5.DevKit.TaskManagement.Services;
+namespace AndrewM5.DevKit.TaskManagement;
 
 public sealed class ManagedTaskSnapshot : IManagedTaskSnapshot
 {
@@ -17,7 +17,7 @@ public sealed class ManagedTaskSnapshot : IManagedTaskSnapshot
                 return TimeSpan.Zero;
             }
 
-            return ((EndUtc == DateTime.MinValue ? DateTime.UtcNow : EndUtc) - StartUtc);
+            return (EndUtc == DateTime.MinValue ? DateTime.UtcNow : EndUtc) - StartUtc;
         }
     }
     public string? ErrorMessage { get; init; }

@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 
-namespace AndrewM5.DevKit.TaskManagement.Abstractions;
+namespace AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 
 public interface ITaskHandle
 {

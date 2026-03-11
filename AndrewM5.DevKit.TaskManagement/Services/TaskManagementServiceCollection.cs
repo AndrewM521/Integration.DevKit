@@ -1,14 +1,11 @@
-﻿using AndrewM5.DevKit.TaskManagement.Abstractions;
+﻿using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Settings;
-using AndrewM5.DevKit.TaskManagement.Scheduling.Abstractions;
-using AndrewM5.DevKit.TaskManagement.Services;
-using AndrewM5.DevKit.TaskManagement.Utilities;
+using AndrewM5.DevKit.ThreadLocks;
 using AndrewM5.DevKit.ThreadLocks.Abstractions;
-using AndrewM5.DevKit.ThreadLocks.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AndrewM5.DevKit.TaskManagement;
+namespace AndrewM5.DevKit.TaskManagement.Services;
 
 public static class TaskManagementServiceCollection
 {
@@ -28,7 +25,7 @@ public static class TaskManagementServiceCollection
         services.Configure<TaskManagerSettings>(config.GetSection("AndrewM5.DevKit:TaskManager"));
 
         // Register Task Registry (holds snapshots/history of tasks)
-        services.AddSingleton<ITaskRegistry>(_ => new TaskRegistry(maxEntries: 5000));
+        services.AddSingleton<IManagedTaskRegistry>(_ => new ManagedTaskRegistry(maxEntries: 5000));
 
         // Register TaskManager as singleton
         services.AddSingleton<ITaskManager, TaskManager>();
@@ -46,10 +43,11 @@ public static class TaskManagementServiceCollection
             throw new ArgumentNullException(nameof(services));
         }
 
-        // Optionally, also register ThreadLockManager if you want it auto-resolved
-        services.AddSingleton<ITaskScheduleService, TaskScheduleService>();
+        //services.AddSingleton<OLD_TaskScheduleExecutor>();
 
-        services.AddSingleton<ITaskScheduleRegistry, TaskScheduleRegistry>();
+        //services.AddSingleton<ITaskScheduleService, OLD_TaskScheduleService>();
+
+        //services.AddSingleton<ITaskScheduleRegistry, OLD_TaskScheduleRegistry>();
 
         return services;
     }

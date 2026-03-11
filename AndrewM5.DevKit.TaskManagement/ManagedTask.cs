@@ -1,6 +1,6 @@
-﻿using AndrewM5.DevKit.TaskManagement.Abstractions;
+﻿using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 
-namespace AndrewM5.DevKit.TaskManagement.Services;
+namespace AndrewM5.DevKit.TaskManagement;
 
 public abstract class ManagedTask : IManagedTask
 {
