@@ -5,8 +5,6 @@ namespace AndrewM5.DevKit.TaskManagement.Abstractions.Models;
 public class ManagedTaskSettings
 {
     private int _maxIterations = 1;
-
-    public TaskExecutionMode ExecutionMode { get; set; } = TaskExecutionMode.Syncronous;
     public int MaxIterations 
     { 
         get
@@ -26,5 +24,15 @@ public class ManagedTaskSettings
 
     public bool StopIteratingOnException { get; set; } = true;
 
-    public NextTargetDTMStrategy? NextRunDelayStrategy { get; set; }
+    public NextRunStrategy? NextRunStrategy { get; set; }
+
+    public ManagedTaskSettings Clone()
+    {
+        return new ManagedTaskSettings
+        {
+            MaxIterations = _maxIterations,
+            NextRunStrategy = NextRunStrategy,
+            StopIteratingOnException = StopIteratingOnException
+        };
+    }
 }

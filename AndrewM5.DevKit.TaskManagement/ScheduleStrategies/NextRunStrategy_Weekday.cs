@@ -2,9 +2,9 @@
 
 namespace AndrewM5.DevKit.TaskManagement.ScheduleStrategies;
 
-public class WeekdayScheduleStrategy : NextTargetDTMStrategy
+public class NextRunStrategy_Weekday : NextRunStrategy
 {
-    public WeekdayScheduleStrategy(DateOnly? startDate = null, TimeSpan? startTime = null) : base(startDate, startTime) { }
+    public NextRunStrategy_Weekday(DateOnly? startDate = null, TimeSpan? startTime = null) : base(startDate, startTime) { }
 
     protected override DateTime ComputeNextTargetDTM(int currentIteration)
     {

@@ -2,13 +2,13 @@
 
 namespace AndrewM5.DevKit.TaskManagement.Abstractions;
 
-public abstract class NextTargetDTMStrategy
+public abstract class NextRunStrategy
 {
     public DateOnly? CustomStartDate { get; }
     public TimeSpan? CustomStartTime { get; }
     public DateTime LastTargetDTM { get; set; } = default;
 
-    protected NextTargetDTMStrategy(DateOnly? startDate = null, TimeSpan? startTime = null)
+    protected NextRunStrategy(DateOnly? startDate = null, TimeSpan? startTime = null)
     {
         CustomStartDate = startDate;
         CustomStartTime = startTime;

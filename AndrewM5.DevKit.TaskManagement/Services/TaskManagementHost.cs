@@ -10,9 +10,7 @@ public static class TaskManagementHost
 
     private static ITaskManager? _taskManager;
     private static IThreadLockManager? _threadLockManager;
-    private static IManagedTaskRegistry? _taskRegistry;
-    //private static ITaskScheduleService? _schedulerService;
-    //private static ITaskScheduleRegistry? _taskScheduleRegistry;
+    private static ITaskRegistry? _taskRegistry;
 
     public static void InitializeTaskManagement(IServiceProvider sp)
     {
@@ -21,10 +19,10 @@ public static class TaskManagementHost
             throw new ArgumentNullException(nameof(sp));
         }
 
-        _taskRegistry = sp.GetService<IManagedTaskRegistry>();
+        _taskRegistry = sp.GetService<ITaskRegistry>();
         if (_taskRegistry == null)
         {
-            throw new InvalidOperationException($"{nameof(IManagedTaskRegistry)} is not registered. Make sure you call AddTaskManager() when configuring services.");
+            throw new InvalidOperationException($"{nameof(ITaskRegistry)} is not registered. Make sure you call AddTaskManager() when configuring services.");
         }
 
         _taskManager = sp.GetService<ITaskManager>();
@@ -38,37 +36,6 @@ public static class TaskManagementHost
         {
             throw new InvalidOperationException($"{nameof(IThreadLockManager)} is not registered. Make sure you call AddTaskManager() when configuring services.");
         }
-    }
-
-    public static void InitializeTaskScheduling(IServiceProvider sp)
-    {
-        if (sp == null)
-        {
-            throw new ArgumentNullException(nameof(sp));
-        }
-
-        try
-        {
-            _ = sp.GetRequiredService<IManagedTaskRegistry>();
-            _ = sp.GetRequiredService<ITaskManager>();
-            _ = sp.GetRequiredService<IThreadLockManager>();
-        }
-        catch (Exception)
-        {
-            throw new InvalidOperationException($"Task Scheduling requires calling AddTaskManagement() before AddTaskScheduling()");
-        }
-
-        //_schedulerService = sp.GetService<ITaskScheduleService>();
-        //if (_schedulerService == null)
-        //{
-        //    throw new InvalidOperationException($"{nameof(ITaskScheduleService)} is not registered. Make sure you call AddTaskScheduling() when configuring services.");
-        //}
-
-        //_taskScheduleRegistry = sp.GetService<ITaskScheduleRegistry>();
-        //if (_taskScheduleRegistry == null)
-        //{
-        //    throw new InvalidOperationException($"{nameof(ITaskScheduleRegistry)} is not registered. Make sure you call AddTaskScheduling() when configuring services.");
-        //}
     }
 
     public static ITaskManager TaskManager
@@ -97,7 +64,7 @@ public static class TaskManagementHost
         }
     }
 
-    public static IManagedTaskRegistry TaskRegistry
+    public static ITaskRegistry TaskRegistry
     {
         get
         {
@@ -109,30 +76,4 @@ public static class TaskManagementHost
             return _taskRegistry;
         }
     }
-
-    //public static ITaskScheduleService SchedulerService
-    //{
-    //    get
-    //    {
-    //        if (_schedulerService == null)
-    //        {
-    //            throw new InvalidOperationException(NoInit);
-    //        }
-
-    //        return _schedulerService;
-    //    }
-    //}
-
-    //public static ITaskScheduleRegistry TaskScheduleRegistry
-    //{
-    //    get
-    //    {
-    //        if (_taskScheduleRegistry == null)
-    //        {
-    //            throw new InvalidOperationException(NoInit);
-    //        }
-
-    //        return _taskScheduleRegistry;
-    //    }
-    //}
 }

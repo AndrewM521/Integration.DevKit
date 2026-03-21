@@ -1,44 +1,35 @@
 ﻿using AndrewM5.DevKit.Logging.Abstractions;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
+using AndrewM5.DevKit.TaskManagement.Abstractions.Models;
 using Microsoft.Extensions.Logging;
 
 namespace AndrewM5.DevKit.TaskManagement;
 
 public sealed class ManagedTaskSnapshot : IManagedTaskSnapshot
 {
-    public required string TaskKey { get; init; }
-    public ManagedTaskState State { get; init; }
-    public DateTime StartUtc { get; init; }
-    public DateTime EndUtc { get; init; }
+    public string TaskKey { get; init; } = "";
+    public ManagedTaskSettings? Settings { get; init; }
+
+    public ManagedTaskState State { get; internal set; }
+    public int IterationCount { get; internal set; }
+    public DateTime StartTime { get; internal set; }
+    public DateTime EndTime { get; internal set; }
     public TimeSpan Runtime {
         get {
-            if (StartUtc == DateTime.MinValue)
+            if (StartTime == DateTime.MinValue)
             {
                 return TimeSpan.Zero;
             }
 
-            return (EndUtc == DateTime.MinValue ? DateTime.UtcNow : EndUtc) - StartUtc;
+            return (EndTime == DateTime.MinValue ? DateTime.UtcNow : EndTime) - StartTime;
         }
     }
-    public string? ErrorMessage { get; init; }
-    public string? ErrorType { get; init; }
+    public Exception? Exception { get; internal set; }
 
-    public static ManagedTaskSnapshot From(
-        string taskKey,
-        ManagedTaskState state,
-        DateTime startUtc,
-        DateTime endUtc,
-        Exception? ex = null)
+    public ManagedTaskSnapshot(string taskKey, ManagedTaskSettings settings)
     {
-        return new ManagedTaskSnapshot
-        {
-            TaskKey = taskKey,
-            State = state,
-            StartUtc = startUtc,
-            EndUtc = endUtc,
-            ErrorMessage = ex?.Message,
-            ErrorType = ex?.GetType().FullName
-        };
+        TaskKey = taskKey;
+        Settings = settings;
     }
 
     public void DisplaySnapshot(ICustomLogger? logger = null)
@@ -46,11 +37,12 @@ public sealed class ManagedTaskSnapshot : IManagedTaskSnapshot
         string msg = @$"
             TaskKey: {TaskKey}
             State: {State}
-            StartUtc: {StartUtc}
-            EndUtc: {EndUtc}
+            IterationCount: {IterationCount}
+            StartUtc: {StartTime}
+            EndUtc: {EndTime}
             Runtime: {Runtime}
-            ErrorMessage: {ErrorMessage}
-            ErrorType: {ErrorType}
+            ExceptionType: {Exception?.GetType()}
+            ExceptionMessage: {Exception?.Message}
         ";
 
         logger?.LogDebug(msg);

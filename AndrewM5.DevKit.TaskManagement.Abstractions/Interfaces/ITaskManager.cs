@@ -8,7 +8,7 @@ public interface ITaskManager
 {
     public TaskManagerSettings RuntimeSettings { get; }
 
-    public Task<OperationResult<ITaskHandle>> StartTask(IManagedTask managedTask, ManagedTaskSettings settings, CancellationToken cancellationToken = default);
+    public Task<OperationResult<ITaskHandle>> StartTask(IManagedTask managedTask, TaskExecutionMode executionMode, ManagedTaskSettings settings, CancellationToken cancellationToken = default);
 
     public NullOperationResult CancelTask(string taskKey, bool forceCancel = false);
     

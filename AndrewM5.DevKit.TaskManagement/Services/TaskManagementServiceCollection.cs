@@ -25,29 +25,13 @@ public static class TaskManagementServiceCollection
         services.Configure<TaskManagerSettings>(config.GetSection("AndrewM5.DevKit:TaskManager"));
 
         // Register Task Registry (holds snapshots/history of tasks)
-        services.AddSingleton<IManagedTaskRegistry>(_ => new ManagedTaskRegistry(maxEntries: 5000));
+        services.AddSingleton<ITaskRegistry, TaskRegistry>();
 
         // Register TaskManager as singleton
         services.AddSingleton<ITaskManager, TaskManager>();
 
         // Optionally, also register ThreadLockManager if you want it auto-resolved
         services.AddSingleton<IThreadLockManager, ThreadLockManager>();
-
-        return services;
-    }
-
-    public static IServiceCollection AddTaskScheduling(this IServiceCollection services)
-    {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
-
-        //services.AddSingleton<OLD_TaskScheduleExecutor>();
-
-        //services.AddSingleton<ITaskScheduleService, OLD_TaskScheduleService>();
-
-        //services.AddSingleton<ITaskScheduleRegistry, OLD_TaskScheduleRegistry>();
 
         return services;
     }

@@ -2,9 +2,9 @@
 
 namespace AndrewM5.DevKit.TaskManagement.ScheduleStrategies;
 
-public class DailyScheduleStrategy : NextTargetDTMStrategy
+public class NextRunStrategy_Daily : NextRunStrategy
 {
-    public DailyScheduleStrategy(DateOnly? startDate = null, TimeSpan? startTime = null) : base(startDate, startTime) { }
+    public NextRunStrategy_Daily(DateOnly? startDate = null, TimeSpan? startTime = null) : base(startDate, startTime) { }
 
     protected override DateTime ComputeNextTargetDTM(int currentIteration)
     {

@@ -7,12 +7,11 @@ public interface IManagedTaskSnapshot
     public string TaskKey { get; }
 
     public ManagedTaskState State { get; }
-    public DateTime StartUtc { get; }
-    public DateTime EndUtc { get; }
-    
+    public int IterationCount { get; }
+    public DateTime StartTime { get; }
+    public DateTime EndTime { get; }
     public TimeSpan Runtime { get; }
-    public string? ErrorMessage { get; }
-    public string? ErrorType { get; }
+    public Exception Exception { get; }
 
     public void DisplaySnapshot(ICustomLogger? logger = null);
 }
