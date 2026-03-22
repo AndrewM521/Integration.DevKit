@@ -23,12 +23,13 @@ internal sealed class ManagedTaskRuntime : IDisposable
     public DateTime StartTime { get; internal set; }
     public DateTime EndTime { get; internal set; }
 
-    internal CancellationTokenSource _linkedCTS;
-    internal CancellationTokenSource _internalCTS;
+    internal CancellationTokenSource _lifecycleCTS;
+    internal CancellationTokenSource _iterationCTS;
+    internal readonly CancellationToken _externalCT;
 
     private int _state = (int)ManagedTaskState.Idle;
     private int _iterationCount;
-    private readonly CancellationToken _externalCT;
+    
 
     public ManagedTaskRuntime(IManagedTask task, ManagedTaskSettings settings, CancellationToken cancellationToken = default)
     {
@@ -36,8 +37,9 @@ internal sealed class ManagedTaskRuntime : IDisposable
         RuntimeSettings = settings;
 
         _externalCT = cancellationToken;
-        _internalCTS = new CancellationTokenSource();
-        _linkedCTS = CancellationTokenSource.CreateLinkedTokenSource(_internalCTS.Token, _externalCT);
+
+        _lifecycleCTS = new CancellationTokenSource();
+        _iterationCTS = new CancellationTokenSource();
     }
 
     internal void IncrementIteration()
@@ -45,24 +47,21 @@ internal sealed class ManagedTaskRuntime : IDisposable
         Interlocked.Increment(ref _iterationCount);
     }
 
-    internal void ResetCancellationTokens()
+    internal void ResetIterationToken()
     {
-        _linkedCTS?.Dispose();
-        _internalCTS?.Dispose();
-        
-        _internalCTS = new CancellationTokenSource();
-        _linkedCTS = CancellationTokenSource.CreateLinkedTokenSource(_internalCTS.Token, _externalCT);
+        _iterationCTS?.Dispose();
+        _iterationCTS = new CancellationTokenSource();
     }
 
     public void Dispose()
     {
         try
         {
-            _internalCTS?.Cancel();
+            _lifecycleCTS?.Cancel();
         }
         catch { }
 
-        _internalCTS?.Dispose();
+        _lifecycleCTS?.Dispose();
 
         TaskToRun = null;
     }

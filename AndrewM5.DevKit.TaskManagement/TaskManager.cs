@@ -148,7 +148,7 @@ public class TaskManager : ITaskManager
 
             if (_tasks.TryGetValue(taskKey, out var managedTaskRuntime))
             {
-                managedTaskRuntime._internalCTS?.Cancel();
+                managedTaskRuntime._lifecycleCTS?.Cancel();
 
                 managedTaskRuntime.State = ManagedTaskState.CancelRequested;
 
@@ -294,7 +294,6 @@ public class TaskManager : ITaskManager
             managedTaskRuntime.StartTime = DateTime.UtcNow;
             managedTaskRuntime.State = ManagedTaskState.Running;
 
-            var token = managedTaskRuntime._linkedCTS!.Token;
             var runtimeSettings = managedTaskRuntime.RuntimeSettings;
             Task? workerTask = null;
 
@@ -304,8 +303,27 @@ public class TaskManager : ITaskManager
                 throw upsert.Exception;
             }
 
-            while (!token.IsCancellationRequested)
+            while (!managedTaskRuntime._lifecycleCTS.Token.IsCancellationRequested &&
+                !managedTaskRuntime._externalCT.IsCancellationRequested)
             {
+                int retryCount = 0;
+                bool firstRun = true;
+                bool needRetry = false;
+                bool maxRetriesHit = false;
+
+                managedTaskRuntime.ResetIterationToken();
+
+                var iterationCTS = managedTaskRuntime._iterationCTS;
+
+                // Create a *fresh linked token for THIS iteration*
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+                    iterationCTS.Token,
+                    managedTaskRuntime._lifecycleCTS.Token,
+                    managedTaskRuntime._externalCT
+                );
+
+                var token = linkedCts.Token;
+
                 // Wait until the next scheduled run
                 var strategy = managedTaskRuntime.RuntimeSettings.NextRunStrategy;
                 if (strategy != null)
@@ -324,75 +342,108 @@ public class TaskManager : ITaskManager
 
                 managedTaskRuntime.IncrementIteration();
 
-                workerTask = managedTaskRuntime.UserTask.DoTaskWork(token);
-
-                Task cancelWatcher = Task.Delay(Timeout.Infinite, token);
-
-                Task? timeoutWatchdog = null;
-                if (managedTaskRuntime.UserTask.Timeout.HasValue)
+                while (!token.IsCancellationRequested && (firstRun || needRetry))
                 {
-                    timeoutWatchdog = Task.Delay(managedTaskRuntime.UserTask.Timeout.Value, token);
-                }
+                    firstRun = false;
+                    needRetry = false;
 
-                List<Task> tasksToWatch = new List<Task> { workerTask, cancelWatcher };
-                if (timeoutWatchdog != null)
-                {
-                    tasksToWatch.Add(timeoutWatchdog);
-                }
+                    workerTask = managedTaskRuntime.UserTask.DoTaskWork(token);
 
-                // Wait for the first to complete
-                Task completedTask = await Task.WhenAny(tasksToWatch);
-
-                if (completedTask == cancelWatcher)
-                {
-                    _logger?.LogDebug($"Cancel watcher triggered for '{managedTaskRuntime.UserTask.TaskKey}'.");
-                }
-                else if (completedTask == timeoutWatchdog)
-                {
-                    managedTaskRuntime._linkedCTS?.Cancel();
-
-                    _logger?.LogDebug($"Timeout watchdog triggered for '{managedTaskRuntime.UserTask.TaskKey}'.");
-                }
-
-                _logger?.LogDebug($"Managed Task '{managedTaskRuntime.UserTask.TaskKey}' has run {managedTaskRuntime.IterationCount} iterations.");
-
-                Exception? runtimeException = null;
-                // Capture worker exceptions per iteration
-                if (workerTask.IsCompleted && workerTask.IsFaulted)
-                {
-                    runtimeException = new Exception("Unknown worker exception");
-
-                    if (workerTask.Exception != null)
+                    _ = workerTask.ContinueWith(t =>
                     {
-                        runtimeException = workerTask.Exception.InnerException;
-                    }
-                    
-                    exceptions.Add(runtimeException!);
+                        if (t.IsFaulted)
+                        {
+                            if (t.IsFaulted && t.Exception != null)
+                            {
+                                _logger?.LogError(t.Exception,
+                                    $"Background worker task faulted for '{managedTaskRuntime.UserTask.TaskKey}'.");
+                            }
+                        }
+                    }, TaskContinuationOptions.ExecuteSynchronously);
 
-                    _logger?.LogError($"Managed Task '{managedTaskRuntime.UserTask.TaskKey}' iteration faulted: {runtimeException.Message}");
+                    Task cancelWatcher = Task.Delay(Timeout.Infinite, token);
 
-                    if (runtimeSettings.StopIteratingOnException)
+                    Task? timeoutWatchdog = null;
+                    if (managedTaskRuntime.UserTask.Timeout.HasValue)
                     {
-                        managedTaskRuntime._internalCTS?.Cancel();
+                        timeoutWatchdog = Task.Delay(managedTaskRuntime.UserTask.Timeout.Value, token);
+                    }
 
-                        _logger?.LogWarning($"Managed Task '{managedTaskRuntime.UserTask.TaskKey}' is being canceled due to {nameof(managedTaskRuntime.RuntimeSettings.StopIteratingOnException)} option.");
+                    List<Task> tasksToWatch = new List<Task> { workerTask, cancelWatcher };
+                    if (timeoutWatchdog != null)
+                    {
+                        tasksToWatch.Add(timeoutWatchdog);
+                    }
+
+                    // Wait for the first to complete
+                    Task completedTask = await Task.WhenAny(tasksToWatch);
+
+                    if (completedTask == cancelWatcher)
+                    {
+                        _logger?.LogDebug($"Cancel watcher triggered for '{managedTaskRuntime.UserTask.TaskKey}'.");
+                    }
+                    else if (completedTask == timeoutWatchdog)
+                    {
+                        iterationCTS.Cancel();
+
+                        _logger?.LogDebug($"Timeout watchdog triggered for '{managedTaskRuntime.UserTask.TaskKey}'.");
+                    }
+
+                    Exception? runtimeException = null;
+
+                    // Capture worker exceptions per iteration
+                    if (workerTask.IsCompleted && workerTask.IsFaulted)
+                    {
+                        runtimeException = new Exception("Unknown worker exception");
+
+                        if (workerTask.Exception != null)
+                        {
+                            runtimeException = workerTask.Exception.InnerException;
+                        }
+
+                        exceptions.Add(runtimeException!);
+
+                        _logger?.LogError($"Managed Task '{managedTaskRuntime.UserTask.TaskKey}' iteration '{managedTaskRuntime.IterationCount}' faulted: {runtimeException.Message}");
+
+                        if (!runtimeSettings.RetryOnException)
+                        {
+                            break;
+                        }
+
+                        if (runtimeSettings.MaxRetryCount != -1 && retryCount >= runtimeSettings.MaxRetryCount)
+                        {
+                            maxRetriesHit = true;
+
+                            _logger?.LogWarning($"Retry limit reached for '{managedTaskRuntime.UserTask.TaskKey}'.");
+                            break;
+                        }
+
+                        retryCount++;
+
+                        needRetry = true;
+
+                        _logger?.LogWarning($"Retrying '{managedTaskRuntime.UserTask.TaskKey}' (attempt {retryCount}).");
+                    }
+
+                    var upsert1 = _taskRegistryRuntime.Upsert(managedTaskRuntime, runtimeException);
+                    if (!upsert1.MethodSuccess)
+                    {
+                        throw upsert1.Exception;
                     }
                 }
 
-                var upsert1 = _taskRegistryRuntime.Upsert(managedTaskRuntime, runtimeException);
-                if (!upsert1.MethodSuccess)
+                _logger?.LogDebug($"Managed Task '{managedTaskRuntime.UserTask.TaskKey}' has run {managedTaskRuntime.IterationCount} iteration(s).");
+
+                if (maxRetriesHit && runtimeSettings.StopIterationAfterMaxRetries)
                 {
-                    throw upsert1.Exception;
+                    _logger?.LogWarning($"Stopping further iterations for '{managedTaskRuntime.UserTask.TaskKey}' due to retry limit and {nameof(managedTaskRuntime.RuntimeSettings.StopIterationAfterMaxRetries)}.");
+                    break; // exits outer loop
                 }
 
                 if (!ShouldRunAgain(managedTaskRuntime))
                 {
                     break;
                 }
-
-                managedTaskRuntime.ResetCancellationTokens();
-
-                token = managedTaskRuntime._linkedCTS!.Token;
             }
 
             //This delay here is so that the workerTask has time to fully finish when canceled without having to await the workerTask.
@@ -516,7 +567,7 @@ public class TaskManager : ITaskManager
     {
         var runtimeSettings = managedTaskRuntime.RuntimeSettings;
 
-        if (managedTaskRuntime._internalCTS.IsCancellationRequested)
+        if (managedTaskRuntime._lifecycleCTS.IsCancellationRequested)
         {
             return false;
         }
