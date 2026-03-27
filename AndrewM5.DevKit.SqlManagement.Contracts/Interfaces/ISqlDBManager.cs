@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.SqlManagement.Abstractions.Settings;
 
-namespace AndrewM5.DevKit.SqlManagement.Abstractions;
+namespace AndrewM5.DevKit.SqlManagement.Contracts.Interfaces;
 
 public interface ISqlDBManager : IAsyncDisposable
 {

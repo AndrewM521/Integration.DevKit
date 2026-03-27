@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.ApiManagement.Abstractions.Settings;
 
-namespace AndrewM5.DevKit.ApiManagement.Services;
+namespace AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
 
 public interface IApiManager : IAsyncDisposable
 {

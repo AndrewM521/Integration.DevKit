@@ -1,4 +1,4 @@
-﻿using AndrewM5.DevKit.ProcessLauncher.Abstractions;
+﻿using AndrewM5.DevKit.ProcessLauncher.Contracts.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AndrewM5.DevKit.ProcessLauncher.Services;

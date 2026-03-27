@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.Logging.Abstractions;
-using AndrewM5.DevKit.ProcessLauncher.Abstractions;
+using AndrewM5.DevKit.Logging.Contracts.Interfaces;
+using AndrewM5.DevKit.ProcessLauncher.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 

@@ -1,6 +1,6 @@
-﻿using AndrewM5.DevKit.Logging.Abstractions;
-using AndrewM5.DevKit.SqlManagement.Abstractions;
+﻿using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using AndrewM5.DevKit.SqlManagement.Abstractions.Settings;
+using AndrewM5.DevKit.SqlManagement.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;

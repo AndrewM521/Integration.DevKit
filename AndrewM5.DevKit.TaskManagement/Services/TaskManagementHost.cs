@@ -1,5 +1,5 @@
 ﻿using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
-using AndrewM5.DevKit.ThreadLocks.Abstractions;
+using AndrewM5.DevKit.ThreadLocks.Contracts.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AndrewM5.DevKit.TaskManagement.Services;

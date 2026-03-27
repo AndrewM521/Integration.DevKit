@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 
-namespace AndrewM5.DevKit.ThreadLocks.Abstractions;
+namespace AndrewM5.DevKit.ThreadLocks.Contracts.Interfaces;
 
 public interface IThreadLockManager
 {

@@ -1,10 +1,9 @@
-﻿using AndrewM5.DevKit.ApiManagement.Abstractions;
-using AndrewM5.DevKit.ApiManagement.Abstractions.Settings;
-using AndrewM5.DevKit.ApiManagement.Services;
+﻿using AndrewM5.DevKit.ApiManagement.Abstractions.Settings;
+using AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.CredentialManagement.Abstractions;
-using AndrewM5.DevKit.Logging.Abstractions;
+using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Http.Headers;

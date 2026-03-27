@@ -1,4 +1,4 @@
-﻿using AndrewM5.DevKit.ApiManagement.Abstractions;
+﻿using AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
 
 namespace AndrewM5.DevKit.ApiManagement;
 

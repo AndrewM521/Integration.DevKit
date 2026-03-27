@@ -1,5 +1,5 @@
 ﻿using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.CredentialManagement.Abstractions;
+using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
 using Microsoft.AspNetCore.DataProtection;
 
 namespace AndrewM5.DevKit.CredentialManagement;

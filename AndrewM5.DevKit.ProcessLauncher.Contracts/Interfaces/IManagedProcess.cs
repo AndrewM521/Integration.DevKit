@@ -1,7 +1,7 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 using System.Diagnostics;
 
-namespace AndrewM5.DevKit.ProcessLauncher.Abstractions;
+namespace AndrewM5.DevKit.ProcessLauncher.Contracts.Interfaces;
 
 public interface IManagedProcess : IAsyncDisposable
 {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace AndrewM5.DevKit.ApiManagement.Abstractions.Settings;
+namespace AndrewM5.DevKit.ApiManagement.Abstractions.Options;
 
 public class ApiManagerSettings
 {

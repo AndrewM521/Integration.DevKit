@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.Logging.Abstractions.Settings;
 
-namespace AndrewM5.DevKit.Logging.Abstractions;
+namespace AndrewM5.DevKit.Logging.Contracts.Interfaces;
 
 public interface ILogFlusher
 {

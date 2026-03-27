@@ -1,5 +1,4 @@
-﻿
-namespace AndrewM5.DevKit.ApiManagement.Abstractions;
+﻿namespace AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
 
 public interface IApiClientMetrics
 {

@@ -1,4 +1,4 @@
-﻿namespace AndrewM5.DevKit.TaskManagement.Abstractions.Settings;
+﻿namespace AndrewM5.DevKit.TaskManagement.Abstractions.Options;
 
 public class TaskManagerSettings
 {

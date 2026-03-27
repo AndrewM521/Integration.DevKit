@@ -1,5 +1,5 @@
-﻿using AndrewM5.DevKit.Logging.Abstractions;
-using AndrewM5.DevKit.Logging.Abstractions.Settings;
+﻿using AndrewM5.DevKit.Logging.Abstractions.Settings;
+using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;

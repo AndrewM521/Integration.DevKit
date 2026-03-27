@@ -1,4 +1,4 @@
-﻿namespace AndrewM5.DevKit.Logging.Abstractions.Settings;
+﻿namespace AndrewM5.DevKit.Logging.Abstractions.Options;
 
 public class LogFlushServiceSettings
 {

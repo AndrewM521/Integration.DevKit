@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AndrewM5.DevKit.ApiManagement.Services;
 

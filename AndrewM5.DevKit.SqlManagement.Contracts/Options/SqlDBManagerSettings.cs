@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace AndrewM5.DevKit.SqlManagement.Abstractions.Settings;
+namespace AndrewM5.DevKit.SqlManagement.Abstractions.Options;
 
 public class SqlDBManagerSettings
 {

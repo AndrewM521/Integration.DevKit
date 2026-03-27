@@ -1,7 +1,7 @@
 ﻿using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.Logging.Abstractions;
-using AndrewM5.DevKit.ThreadLocks.Abstractions;
+using AndrewM5.DevKit.Logging.Contracts.Interfaces;
+using AndrewM5.DevKit.ThreadLocks.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Text;
 

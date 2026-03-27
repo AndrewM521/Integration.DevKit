@@ -1,4 +1,4 @@
-﻿using AndrewM5.DevKit.Logging.Abstractions;
+﻿using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 
 namespace AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 

@@ -1,10 +1,9 @@
-﻿using AndrewM5.DevKit.ApiManagement.Abstractions;
-using AndrewM5.DevKit.ApiManagement.Abstractions.Settings;
+﻿using AndrewM5.DevKit.ApiManagement.Abstractions.Settings;
 using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.CredentialManagement.Abstractions;
+using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
 using System.Text;
 
-namespace AndrewM5.DevKit.ApiManagement.Services;
+namespace AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
 
 public interface IApiClient : IAsyncDisposable
 {

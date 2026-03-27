@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 
-namespace AndrewM5.DevKit.CredentialManagement.Abstractions;
+namespace AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
 
 public interface ISecretStore
 {

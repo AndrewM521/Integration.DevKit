@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.ApiManagement.Abstractions.Settings;
-using AndrewM5.DevKit.ApiManagement.Services;
-using AndrewM5.DevKit.Logging.Abstractions;
+using AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;

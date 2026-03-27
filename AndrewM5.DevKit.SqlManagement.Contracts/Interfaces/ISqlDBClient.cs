@@ -1,10 +1,10 @@
 ﻿using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.CredentialManagement.Abstractions;
+using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.SqlManagement.Abstractions.Settings;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
-namespace AndrewM5.DevKit.SqlManagement.Abstractions;
+namespace AndrewM5.DevKit.SqlManagement.Contracts.Interfaces;
 
 public interface ISqlDBClient : IDisposable
 {

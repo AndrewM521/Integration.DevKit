@@ -1,7 +1,7 @@
 ﻿using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Settings;
 using AndrewM5.DevKit.ThreadLocks;
-using AndrewM5.DevKit.ThreadLocks.Abstractions;
+using AndrewM5.DevKit.ThreadLocks.Contracts.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
