@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AndrewM5.DevKit.ApiManagement\AndrewM5.DevKit.ApiManagement.csproj" />
+    <ProjectReference Include="..\AndrewM5.Devkit.OAuth.Contracts\AndrewM5.DevKit.OAuth.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>
