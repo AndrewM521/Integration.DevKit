@@ -3,45 +3,45 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.Core", "AndrewM5.DevKit.Core\AndrewM5.DevKit.Core.csproj", "{814C760B-813D-4C15-8885-C419A17B5B19}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.Core", "src\AndrewM5.DevKit.Core\AndrewM5.DevKit.Core.csproj", "{814C760B-813D-4C15-8885-C419A17B5B19}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.Logging", "AndrewM5.DevKit.Logging\AndrewM5.DevKit.Logging.csproj", "{F32EFB1C-CFCA-4ED7-B5B2-1BD8718BFAF3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.Logging", "src\AndrewM5.DevKit.Logging\AndrewM5.DevKit.Logging.csproj", "{F32EFB1C-CFCA-4ED7-B5B2-1BD8718BFAF3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ApiManagement", "AndrewM5.DevKit.ApiManagement\AndrewM5.DevKit.ApiManagement.csproj", "{87133A8B-AFAD-447A-806F-D8024BDF390D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ApiManagement", "src\AndrewM5.DevKit.ApiManagement\AndrewM5.DevKit.ApiManagement.csproj", "{87133A8B-AFAD-447A-806F-D8024BDF390D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.SqlManagement", "AndrewM5.DevKit.SqlManagement\AndrewM5.DevKit.SqlManagement.csproj", "{56FE305E-40D7-43BD-9937-146A5F524A9C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.SqlManagement", "src\AndrewM5.DevKit.SqlManagement\AndrewM5.DevKit.SqlManagement.csproj", "{56FE305E-40D7-43BD-9937-146A5F524A9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ProcessLauncher", "AndrewM5.DevKit.ProcessLauncher\AndrewM5.DevKit.ProcessLauncher.csproj", "{87E521E9-C31D-426E-88FD-167AB128E798}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ProcessLauncher", "src\AndrewM5.DevKit.ProcessLauncher\AndrewM5.DevKit.ProcessLauncher.csproj", "{87E521E9-C31D-426E-88FD-167AB128E798}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{AF696F54-F789-4F37-8672-2CBE6FB0E98C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "samples\TestApp\TestApp.csproj", "{AF696F54-F789-4F37-8672-2CBE6FB0E98C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ThreadLocks", "AndrewM5.DevKit.ThreadLocks\AndrewM5.DevKit.ThreadLocks.csproj", "{231CC5FE-BD5A-48C3-BAFF-EBEF2EAF47BF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ThreadLocks", "src\AndrewM5.DevKit.ThreadLocks\AndrewM5.DevKit.ThreadLocks.csproj", "{231CC5FE-BD5A-48C3-BAFF-EBEF2EAF47BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.TaskManagement", "AndrewM5.DevKit.TaskManagement\AndrewM5.DevKit.TaskManagement.csproj", "{1A88B2AD-B4EB-411A-A56C-FCB2F39FEDFF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.TaskManagement", "src\AndrewM5.DevKit.TaskManagement\AndrewM5.DevKit.TaskManagement.csproj", "{1A88B2AD-B4EB-411A-A56C-FCB2F39FEDFF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.Logging.Flusher", "AndrewM5.DevKit.Logging.Flusher\AndrewM5.DevKit.Logging.Flusher.csproj", "{8A4562E1-78E7-C177-99CF-D382E56DA76B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.Logging.Flusher", "src\AndrewM5.DevKit.Logging.Flusher\AndrewM5.DevKit.Logging.Flusher.csproj", "{8A4562E1-78E7-C177-99CF-D382E56DA76B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ThreadSafeItems", "AndrewM5.DevKit.ThreadSafeItems\AndrewM5.DevKit.ThreadSafeItems.csproj", "{4801EBCA-71A8-4315-B8E3-C70FDFB51BFF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ThreadSafeItems", "src\AndrewM5.DevKit.ThreadSafeItems\AndrewM5.DevKit.ThreadSafeItems.csproj", "{4801EBCA-71A8-4315-B8E3-C70FDFB51BFF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.CredentialManagement", "AndrewM5.DevKit.CredentialManagement\AndrewM5.DevKit.CredentialManagement.csproj", "{250707CF-9820-43BD-B0BB-76D34844116A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.CredentialManagement", "src\AndrewM5.DevKit.CredentialManagement\AndrewM5.DevKit.CredentialManagement.csproj", "{250707CF-9820-43BD-B0BB-76D34844116A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.OAuth", "AndrewM5.DevKit.OAuth\AndrewM5.DevKit.OAuth.csproj", "{9A7612E6-A654-457C-B871-C5DD84AE17FE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.OAuth", "src\AndrewM5.DevKit.OAuth\AndrewM5.DevKit.OAuth.csproj", "{9A7612E6-A654-457C-B871-C5DD84AE17FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ApiManagement.Contracts", "AndrewM5.DevKit.ApiManagement.Contracts\AndrewM5.DevKit.ApiManagement.Contracts.csproj", "{03708538-C935-D545-0CA8-F06AB1772AB4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ApiManagement.Contracts", "src\AndrewM5.DevKit.ApiManagement.Contracts\AndrewM5.DevKit.ApiManagement.Contracts.csproj", "{03708538-C935-D545-0CA8-F06AB1772AB4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.CredentialManagement.Contracts", "AndrewM5.DevKit.CredentialManagement.Contracts\AndrewM5.DevKit.CredentialManagement.Contracts.csproj", "{C90B7F4D-E900-11DE-0E79-5456DFC0FA1D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.CredentialManagement.Contracts", "src\AndrewM5.DevKit.CredentialManagement.Contracts\AndrewM5.DevKit.CredentialManagement.Contracts.csproj", "{C90B7F4D-E900-11DE-0E79-5456DFC0FA1D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.Logging.Contracts", "AndrewM5.DevKit.Logging.Contracts\AndrewM5.DevKit.Logging.Contracts.csproj", "{37DF5B7F-3851-729F-6ABD-647E26FBB1BC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.Logging.Contracts", "src\AndrewM5.DevKit.Logging.Contracts\AndrewM5.DevKit.Logging.Contracts.csproj", "{37DF5B7F-3851-729F-6ABD-647E26FBB1BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ProcessLauncher.Contracts", "AndrewM5.DevKit.ProcessLauncher.Contracts\AndrewM5.DevKit.ProcessLauncher.Contracts.csproj", "{551AF839-B035-4D84-806C-ACD3C2A03AB5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ProcessLauncher.Contracts", "src\AndrewM5.DevKit.ProcessLauncher.Contracts\AndrewM5.DevKit.ProcessLauncher.Contracts.csproj", "{551AF839-B035-4D84-806C-ACD3C2A03AB5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.SqlManagement.Contracts", "AndrewM5.DevKit.SqlManagement.Contracts\AndrewM5.DevKit.SqlManagement.Contracts.csproj", "{0DAB595E-A959-F18B-410C-19A3B9A2215D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.SqlManagement.Contracts", "src\AndrewM5.DevKit.SqlManagement.Contracts\AndrewM5.DevKit.SqlManagement.Contracts.csproj", "{0DAB595E-A959-F18B-410C-19A3B9A2215D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.TaskManagement.Contracts", "AndrewM5.DevKit.TaskManagement.Contracts\AndrewM5.DevKit.TaskManagement.Contracts.csproj", "{6D0B9FB7-17C9-0BA9-3F66-69EFFB30AE3B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.TaskManagement.Contracts", "src\AndrewM5.DevKit.TaskManagement.Contracts\AndrewM5.DevKit.TaskManagement.Contracts.csproj", "{6D0B9FB7-17C9-0BA9-3F66-69EFFB30AE3B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ThreadLocks.Contracts", "AndrewM5.DevKit.ThreadLocks.Contracts\AndrewM5.DevKit.ThreadLocks.Contracts.csproj", "{E746040F-4BEB-579C-D74E-2B3EFAA94BEF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ThreadLocks.Contracts", "src\AndrewM5.DevKit.ThreadLocks.Contracts\AndrewM5.DevKit.ThreadLocks.Contracts.csproj", "{E746040F-4BEB-579C-D74E-2B3EFAA94BEF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.OAuth.Contracts", "AndrewM5.Devkit.OAuth.Contracts\AndrewM5.DevKit.OAuth.Contracts.csproj", "{7DCC5F81-A65E-446F-CDDB-743F3267E5BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.OAuth.Contracts", "src\AndrewM5.Devkit.OAuth.Contracts\AndrewM5.DevKit.OAuth.Contracts.csproj", "{7DCC5F81-A65E-446F-CDDB-743F3267E5BE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
