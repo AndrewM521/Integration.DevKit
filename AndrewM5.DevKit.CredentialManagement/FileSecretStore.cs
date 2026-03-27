@@ -37,7 +37,7 @@ public class FileSecretStore : SecretStoreBase
 
             getDecryptedContent.Result[key] = value;
 
-            var getJson = JsonUtils.ParseObjectToJson(getDecryptedContent.Result);
+            var getJson = JsonUtils.SerializeObjectToJson(getDecryptedContent.Result);
             if (!getJson.MethodSuccess)
             {
                 throw getJson.Exception;
@@ -134,7 +134,7 @@ public class FileSecretStore : SecretStoreBase
 
             var tmpFilePath = filePath + ".tmp";
 
-            var getJson = JsonUtils.ParseObjectToJson(getDecryptedContent.Result);
+            var getJson = JsonUtils.SerializeObjectToJson(getDecryptedContent.Result);
             if (!getJson.MethodSuccess)
             {
                 throw getJson.Exception;
@@ -210,7 +210,14 @@ public class FileSecretStore : SecretStoreBase
 
             var json = Decrypt(getContent.Result);
 
-            return JsonUtils.ParseJsonToDictionary(json);
+            object? parsedObj = JsonUtils.ConvertJsonToObject(json);
+
+            if (parsedObj is not Dictionary<string, object> parsedDictionary)
+            {
+                throw new Exception("Parsed object is not a Dictionary<string, object>");
+            }
+
+            return result.SetMethodSuccess(parsedDictionary);
         }
         catch (Exception ex)
         {

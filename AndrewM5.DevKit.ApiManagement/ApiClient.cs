@@ -367,6 +367,9 @@ public class ApiClient : IApiClient
                 case RESTApiMediaTypes.Xml:
                     mediaTypeStr = "application/xml";
                     break;
+                case RESTApiMediaTypes.WWW_UrlEncoded:
+                    mediaTypeStr = "application/x-www-form-urlencoded";
+                    break;
                 default:
                     throw new Exception($"Invalid media type '{mediaType}'");
             }

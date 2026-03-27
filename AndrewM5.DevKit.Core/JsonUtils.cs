@@ -5,98 +5,186 @@ namespace AndrewM5.DevKit.Core;
 
 public static class JsonUtils
 {
-    public static OperationResult<List<Dictionary<string, object>>> ParseAndFilterJson(string rawJSON,
-        List<string>? FilterParentsListKey = null,
-        string? FilterListKey = null,
-        List<string>? FilterPropertyKeys = null)
+    public static NullableOperationResult<object?> ConvertJsonToObject(string json)
     {
-        var result = new OperationResult<List<Dictionary<string, object>>>();
-
-        if (string.IsNullOrWhiteSpace(rawJSON))
-        {
-            return result.SetMethodSuccess(new List<Dictionary<string, object>>());
-        }
+        var result = new NullableOperationResult<object>();
 
         try
         {
-            // 1. Parse ONLY the structure (low memory)
-            using (var doc = JsonDocument.Parse(rawJSON))
+            using (var doc = JsonDocument.Parse(json))
             {
-                // 2. Traverse the JsonElement tree
-                JsonElement targetElement = doc.RootElement;
+                object? obj = ConvertJsonElementToNativeObject(doc.RootElement);
 
-                // Navigate through Parents
-                if (FilterParentsListKey != null)
-                {
-                    foreach (var key in FilterParentsListKey)
-                    {
-                        if (targetElement.ValueKind == JsonValueKind.Object && targetElement.TryGetProperty(key, out var nextElement))
-                        {
-                            targetElement = nextElement;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                // Navigate to the specific List Key (e.g., "results")
-                if (!string.IsNullOrWhiteSpace(FilterListKey))
-                {
-                    if (targetElement.ValueKind == JsonValueKind.Object && targetElement.TryGetProperty(FilterListKey, out var listElement))
-                    {
-                        targetElement = listElement;
-                    }
-                }
-
-                // 3. ONLY NOW convert the specific objects we need
-                var resultList = new List<Dictionary<string, object>>();
-                if (targetElement.ValueKind == JsonValueKind.Array)
-                {
-                    foreach (var item in targetElement.EnumerateArray())
-                    {
-                        var dict = ConvertToFilteredDictionary(item, FilterPropertyKeys);
-                        if (dict != null)
-                        {
-                            resultList.Add(dict);
-                        }
-                    }
-                }
-                else if (targetElement.ValueKind == JsonValueKind.Object)
-                {
-                    var dict = ConvertToFilteredDictionary(targetElement, FilterPropertyKeys);
-                    if (dict != null)
-                    {
-                        resultList.Add(dict);
-                    }
-                }
-
-                return result.SetMethodSuccess(resultList);
+                return result.SetMethodSuccess(obj);
             }
+        }
+        catch (Exception ex) 
+        { 
+            return result.SetMethodFailure(ex);
+        }
+    }
+    public static OperationResult<string> SerializeObjectToJson(object obj)
+    {
+        var result = new OperationResult<string>();
+
+        try
+        {
+            string json = JsonSerializer.Serialize(obj, new JsonSerializerOptions { WriteIndented = true });
+
+            return result.SetMethodSuccess(json);
         }
         catch (Exception ex)
         {
             return result.SetMethodFailure(ex);
         }
     }
-
-    public static OperationResult<List<Dictionary<string, object>>> FilterNestedDictionaries(Dictionary<string, object> originalDictionary,
-        List<string>? FilterParentsListKey = null, string?
-        FilterListKey = null,
-        List<string>? FilterPropertyKeys = null)
+    public static OperationResult<T> ParseAndFilterJson<T>(string rawJson, List<string>? keys = null)
     {
-        var result = new OperationResult<List<Dictionary<string, object>>>();
+        var result = new OperationResult<T>();
 
-        var json = ParseObjectToJson(originalDictionary);
-        if (!json.MethodSuccess)
+        try
         {
-            return result.SetMethodFailure(json.Exception);
+            var parseResult = InternalParseAndFilterJson(rawJson, keys);
+            if (!parseResult.MethodSuccess)
+            {
+                throw parseResult.Exception;
+            }
+
+            if (parseResult.Result is not T typed)
+            {
+                throw new Exception($"Result is not of type {typeof(T).Name}");
+            }
+
+            return result.SetMethodSuccess(typed);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+    public static OperationResult<Dictionary<string, object>> FilterDictionary(Dictionary<string, object> originalDictionary, List<string>? keys = null)
+    {
+        var result = new OperationResult<Dictionary<string, object>>();
+
+        try
+        {
+            var getJson = SerializeObjectToJson(originalDictionary);
+            if (!getJson.MethodSuccess)
+            {
+                throw getJson.Exception;
+            }
+
+            var getFilteredDictionary = ParseAndFilterJson<Dictionary<string, object>>(getJson.Result, keys);
+            if (!getFilteredDictionary.MethodSuccess)
+            {
+                throw getFilteredDictionary.Exception;
+            }
+
+            return result.SetMethodSuccess(getFilteredDictionary.Result);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+    public static NullableOperationResult<Dictionary<string, object>> GetDictionary(Dictionary<string, object> dictionary, string keyPath)
+    {
+        return GetDictionaryValue(dictionary, keyPath, new Dictionary<string, object>());
+    }
+    public static NullableOperationResult<List<Dictionary<string, object>>> GetListDictionary(Dictionary<string, object> dictionary, string keyPath)
+    {
+        return GetDictionaryValue(dictionary, keyPath, new List<Dictionary<string, object>>());
+    }
+    public static NullableOperationResult<T> GetDictionaryValue<T>(Dictionary<string, object> dictionary, string keyPath, T defaultVal = default!)
+    {
+        var result = new NullableOperationResult<T>();
+
+        if (dictionary == null || string.IsNullOrWhiteSpace(keyPath))
+        {
+            return result.SetMethodSuccess(defaultVal)!;
         }
 
-        return ParseAndFilterJson(json.Result, FilterParentsListKey, FilterListKey, FilterPropertyKeys);
-    }
+        object? currentObj = dictionary;
 
+        var keys = keyPath.Split('.', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var key in keys)
+        {
+            if (currentObj is Dictionary<string, object> currentDict &&
+                currentDict.TryGetValue(key, out var next))
+            {
+                currentObj = next;
+            }
+            else
+            {
+                return result.SetMethodSuccess(defaultVal)!;
+            }
+        }
+
+        if (currentObj is T typed)
+        {
+            return result.SetMethodSuccess(typed)!;
+        }
+
+        try
+        {
+            if (currentObj == null)
+            {
+                return result.SetMethodSuccess(defaultVal)!;
+            }
+
+            var targetType = typeof(T);
+            var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+            if (underlyingType.IsGenericType && underlyingType.GetGenericTypeDefinition() == typeof(List<>))
+            {
+                var itemType = underlyingType.GetGenericArguments()[0];
+
+                if (currentObj is IEnumerable<object?> objList)
+                {
+                    var listType = typeof(List<>).MakeGenericType(itemType);
+                    var list = (System.Collections.IList)Activator.CreateInstance(listType)!;
+
+                    foreach (var item in objList)
+                    {
+                        if (item == null)
+                        {
+                            list.Add(null);
+                            continue;
+                        }
+
+                        if (itemType.IsInstanceOfType(item))
+                        {
+                            list.Add(item);
+                            continue;
+                        }
+
+                        try
+                        {
+                            var convertedItem = Convert.ChangeType(item, itemType);
+                            list.Add(convertedItem);
+                        }
+                        catch (Exception ex)
+                        {
+                            return result.SetMethodFailure(
+                                new Exception($"Failed to convert list item to {itemType.Name}", ex)
+                            )!;
+                        }
+                    }
+
+                    return result.SetMethodSuccess((T)list)!;
+                }
+            }
+
+            var converted = Convert.ChangeType(currentObj, underlyingType);
+
+            return result.SetMethodSuccess((T)converted!)!;
+        }
+        catch (Exception ex)
+        { 
+            return result.SetMethodFailure(ex)!;
+        }
+    }
     public static object? ConvertJsonElementToNativeObject(JsonElement element)
     {
         switch (element.ValueKind)
@@ -138,70 +226,73 @@ public static class JsonUtils
         }
     }
 
-    public static OperationResult<Dictionary<string, object>> ParseJsonToDictionary(string json)
+
+    private static NullableOperationResult<object?> InternalParseAndFilterJson(string rawJSON, List<string>? keys = null)
     {
-        var result = new OperationResult<Dictionary<string, object>>();
+        var result = new NullableOperationResult<object?>();
+
+        if (string.IsNullOrWhiteSpace(rawJSON))
+        {
+            return result.SetMethodSuccess(null);
+        }
 
         try
         {
-            using (var doc = JsonDocument.Parse(json))
+            using var doc = JsonDocument.Parse(rawJSON);
+            var root = doc.RootElement;
+
+            if (keys == null || keys.Count == 0)
             {
-                object? parsedElement = ConvertJsonElementToNativeObject(doc.RootElement);
+                var rootObject = ConvertJsonElementToNativeObject(root);
 
-                if (parsedElement == null)
-                {
-                    throw new Exception("Parsed element is null.");
-                }
-
-                return result.SetMethodSuccess((Dictionary<string, object>)parsedElement);
+                return result.SetMethodSuccess(rootObject);
             }
-        }
-        catch (Exception ex) 
-        { 
-            return result.SetMethodFailure(ex);
-        }
-    }
-    
-    public static OperationResult<string> ParseObjectToJson(object obj)
-    {
-        var result = new OperationResult<string>();
 
-        try
-        {
-            string json = JsonSerializer.Serialize(obj, new JsonSerializerOptions { WriteIndented = true });
-            
-            return result.SetMethodSuccess(json);
+            // Root must be an object to extract keys
+            if (root.ValueKind != JsonValueKind.Object)
+            {
+                var rootObject = ConvertJsonElementToNativeObject(root);
+
+                return result.SetMethodSuccess(rootObject);
+            }
+
+            var extracted = new Dictionary<string, object?>();
+
+            // Step 1: extract all requested keys
+            foreach (var key in keys)
+            {
+                var element = GetValueByPath(root, key);
+
+                if (element.HasValue)
+                {
+                    extracted[key] = ConvertJsonElementToNativeObject(element.Value);
+                }
+            }
+
+            return result.SetMethodSuccess(extracted);
         }
         catch (Exception ex)
         {
             return result.SetMethodFailure(ex);
         }
     }
-
-    private static Dictionary<string, object>? ConvertToFilteredDictionary(JsonElement element, List<string>? propertyKeys)
+    private static JsonElement? GetValueByPath(JsonElement element, string path)
     {
-        if (element.ValueKind != JsonValueKind.Object)
-        {
-            return null;
-        }
+        var keys = path.Split('.', StringSplitOptions.RemoveEmptyEntries);
 
-        var dict = new Dictionary<string, object>();
-        IEnumerable<string>? keys = null;
-
-        if (propertyKeys?.Any() == true)
+        foreach (var key in keys)
         {
-            keys = propertyKeys;
-        }
-
-        foreach (var prop in element.EnumerateObject())
-        {
-            // Only convert if the user asked for it, or if they didn't provide a filter
-            if (keys == null || keys.Contains(prop.Name))
+            if (element.ValueKind == JsonValueKind.Object &&
+                element.TryGetProperty(key, out var next))
             {
-                dict[prop.Name] = ConvertJsonElementToNativeObject(prop.Value)!;
+                element = next;
+            }
+            else
+            {
+                return null;
             }
         }
 
-        return dict;
+        return element;
     }
 }

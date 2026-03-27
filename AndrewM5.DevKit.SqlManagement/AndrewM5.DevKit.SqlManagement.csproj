@@ -11,9 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AndrewM5.DevKit.Core\AndrewM5.DevKit.Core.csproj" />
-    <ProjectReference Include="..\AndrewM5.DevKit.Logging.Abstractions\AndrewM5.DevKit.Logging.Abstractions.csproj" />
-    <ProjectReference Include="..\AndrewM5.DevKit.SqlManagement.Abstractions\AndrewM5.DevKit.SqlManagement.Abstractions.csproj" />
+    <ProjectReference Include="..\AndrewM5.DevKit.SqlManagement.Contracts\AndrewM5.DevKit.SqlManagement.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

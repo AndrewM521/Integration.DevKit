@@ -65,5 +65,6 @@ public enum RESTApiMediaTypes
 {
     Json,
     Xml,
-    PlainText
+    PlainText,
+    WWW_UrlEncoded
 }

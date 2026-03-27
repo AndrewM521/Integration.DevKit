@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AndrewM5.DevKit.ThreadLocks\AndrewM5.DevKit.ThreadLocks.csproj" />
+    <ProjectReference Include="..\AndrewM5.DevKit.Core\AndrewM5.DevKit.Core.csproj" />
   </ItemGroup>
 
 </Project>

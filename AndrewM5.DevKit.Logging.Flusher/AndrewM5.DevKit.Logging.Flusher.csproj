@@ -11,7 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AndrewM5.DevKit.Core\AndrewM5.DevKit.Core.csproj" />
     <ProjectReference Include="..\AndrewM5.DevKit.Logging\AndrewM5.DevKit.Logging.csproj" />
   </ItemGroup>
 
