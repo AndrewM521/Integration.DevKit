@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
-using AndrewM5.DevKit.SqlManagement.Abstractions.Settings;
+using AndrewM5.DevKit.SqlManagement.Abstractions.Options;
 using Microsoft.Data.SqlClient;
 using System.Data;
 

@@ -1,0 +1,1188 @@
+### YamlMime:XRefMap
+sorted: true
+references:
+- uid: AndrewM5.DevKit.Core
+  name: AndrewM5.DevKit.Core
+  href: api/core/AndrewM5.DevKit.Core.html
+  commentId: N:AndrewM5.DevKit.Core
+  fullName: AndrewM5.DevKit.Core
+  nameWithType: AndrewM5.DevKit.Core
+- uid: AndrewM5.DevKit.Core.Abstractions
+  name: AndrewM5.DevKit.Core.Abstractions
+  href: api/core/AndrewM5.DevKit.Core.Abstractions.html
+  commentId: N:AndrewM5.DevKit.Core.Abstractions
+  fullName: AndrewM5.DevKit.Core.Abstractions
+  nameWithType: AndrewM5.DevKit.Core.Abstractions
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1
+  name: IOperationResult<T>
+  href: api/core/AndrewM5.DevKit.Core.Abstractions.IOperationResult-1.html
+  commentId: T:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1
+  name.vb: IOperationResult(Of T)
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T)
+  nameWithType: IOperationResult<T>
+  nameWithType.vb: IOperationResult(Of T)
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Exception
+  name: Exception
+  href: api/core/AndrewM5.DevKit.Core.Abstractions.IOperationResult-1.html#AndrewM5_DevKit_Core_Abstractions_IOperationResult_1_Exception
+  commentId: P:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Exception
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>.Exception
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T).Exception
+  nameWithType: IOperationResult<T>.Exception
+  nameWithType.vb: IOperationResult(Of T).Exception
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Exception*
+  name: Exception
+  href: api/core/AndrewM5.DevKit.Core.Abstractions.IOperationResult-1.html#AndrewM5_DevKit_Core_Abstractions_IOperationResult_1_Exception_
+  commentId: Overload:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Exception
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>.Exception
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T).Exception
+  nameWithType: IOperationResult<T>.Exception
+  nameWithType.vb: IOperationResult(Of T).Exception
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.MethodSuccess
+  name: MethodSuccess
+  href: api/core/AndrewM5.DevKit.Core.Abstractions.IOperationResult-1.html#AndrewM5_DevKit_Core_Abstractions_IOperationResult_1_MethodSuccess
+  commentId: P:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.MethodSuccess
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>.MethodSuccess
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T).MethodSuccess
+  nameWithType: IOperationResult<T>.MethodSuccess
+  nameWithType.vb: IOperationResult(Of T).MethodSuccess
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.MethodSuccess*
+  name: MethodSuccess
+  href: api/core/AndrewM5.DevKit.Core.Abstractions.IOperationResult-1.html#AndrewM5_DevKit_Core_Abstractions_IOperationResult_1_MethodSuccess_
+  commentId: Overload:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.MethodSuccess
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>.MethodSuccess
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T).MethodSuccess
+  nameWithType: IOperationResult<T>.MethodSuccess
+  nameWithType.vb: IOperationResult(Of T).MethodSuccess
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Result
+  name: Result
+  href: api/core/AndrewM5.DevKit.Core.Abstractions.IOperationResult-1.html#AndrewM5_DevKit_Core_Abstractions_IOperationResult_1_Result
+  commentId: P:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Result
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>.Result
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T).Result
+  nameWithType: IOperationResult<T>.Result
+  nameWithType.vb: IOperationResult(Of T).Result
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Result*
+  name: Result
+  href: api/core/AndrewM5.DevKit.Core.Abstractions.IOperationResult-1.html#AndrewM5_DevKit_Core_Abstractions_IOperationResult_1_Result_
+  commentId: Overload:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Result
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>.Result
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T).Result
+  nameWithType: IOperationResult<T>.Result
+  nameWithType.vb: IOperationResult(Of T).Result
+- uid: AndrewM5.DevKit.Core.DictionaryUtils
+  name: DictionaryUtils
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html
+  commentId: T:AndrewM5.DevKit.Core.DictionaryUtils
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils
+  nameWithType: DictionaryUtils
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.ExtractSubsetByKeys(System.Collections.Generic.List{System.Collections.Generic.Dictionary{System.String,System.Object}},System.Collections.Generic.List{System.String})
+  name: ExtractSubsetByKeys(List<Dictionary<string, object>>, List<string>)
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_ExtractSubsetByKeys_System_Collections_Generic_List_System_Collections_Generic_Dictionary_System_String_System_Object___System_Collections_Generic_List_System_String__
+  commentId: M:AndrewM5.DevKit.Core.DictionaryUtils.ExtractSubsetByKeys(System.Collections.Generic.List{System.Collections.Generic.Dictionary{System.String,System.Object}},System.Collections.Generic.List{System.String})
+  name.vb: ExtractSubsetByKeys(List(Of Dictionary(Of String, Object)), List(Of String))
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.ExtractSubsetByKeys(System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>, System.Collections.Generic.List<string>)
+  fullName.vb: AndrewM5.DevKit.Core.DictionaryUtils.ExtractSubsetByKeys(System.Collections.Generic.List(Of System.Collections.Generic.Dictionary(Of String, Object)), System.Collections.Generic.List(Of String))
+  nameWithType: DictionaryUtils.ExtractSubsetByKeys(List<Dictionary<string, object>>, List<string>)
+  nameWithType.vb: DictionaryUtils.ExtractSubsetByKeys(List(Of Dictionary(Of String, Object)), List(Of String))
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.ExtractSubsetByKeys*
+  name: ExtractSubsetByKeys
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_ExtractSubsetByKeys_
+  commentId: Overload:AndrewM5.DevKit.Core.DictionaryUtils.ExtractSubsetByKeys
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.ExtractSubsetByKeys
+  nameWithType: DictionaryUtils.ExtractSubsetByKeys
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.FirstKeyValuePair(System.Collections.Generic.List{System.Collections.Generic.Dictionary{System.String,System.Object}})
+  name: FirstKeyValuePair(List<Dictionary<string, object>>)
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_FirstKeyValuePair_System_Collections_Generic_List_System_Collections_Generic_Dictionary_System_String_System_Object___
+  commentId: M:AndrewM5.DevKit.Core.DictionaryUtils.FirstKeyValuePair(System.Collections.Generic.List{System.Collections.Generic.Dictionary{System.String,System.Object}})
+  name.vb: FirstKeyValuePair(List(Of Dictionary(Of String, Object)))
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.FirstKeyValuePair(System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>)
+  fullName.vb: AndrewM5.DevKit.Core.DictionaryUtils.FirstKeyValuePair(System.Collections.Generic.List(Of System.Collections.Generic.Dictionary(Of String, Object)))
+  nameWithType: DictionaryUtils.FirstKeyValuePair(List<Dictionary<string, object>>)
+  nameWithType.vb: DictionaryUtils.FirstKeyValuePair(List(Of Dictionary(Of String, Object)))
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.FirstKeyValuePair*
+  name: FirstKeyValuePair
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_FirstKeyValuePair_
+  commentId: Overload:AndrewM5.DevKit.Core.DictionaryUtils.FirstKeyValuePair
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.FirstKeyValuePair
+  nameWithType: DictionaryUtils.FirstKeyValuePair
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.FlattenListByKey(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  name: FlattenListByKey(Dictionary<string, object>, string)
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_FlattenListByKey_System_Collections_Generic_Dictionary_System_String_System_Object__System_String_
+  commentId: M:AndrewM5.DevKit.Core.DictionaryUtils.FlattenListByKey(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  name.vb: FlattenListByKey(Dictionary(Of String, Object), String)
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.FlattenListByKey(System.Collections.Generic.Dictionary<string, object>, string)
+  fullName.vb: AndrewM5.DevKit.Core.DictionaryUtils.FlattenListByKey(System.Collections.Generic.Dictionary(Of String, Object), String)
+  nameWithType: DictionaryUtils.FlattenListByKey(Dictionary<string, object>, string)
+  nameWithType.vb: DictionaryUtils.FlattenListByKey(Dictionary(Of String, Object), String)
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.FlattenListByKey*
+  name: FlattenListByKey
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_FlattenListByKey_
+  commentId: Overload:AndrewM5.DevKit.Core.DictionaryUtils.FlattenListByKey
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.FlattenListByKey
+  nameWithType: DictionaryUtils.FlattenListByKey
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.GetDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  name: GetDictionary(Dictionary<string, object>, string)
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_GetDictionary_System_Collections_Generic_Dictionary_System_String_System_Object__System_String_
+  commentId: M:AndrewM5.DevKit.Core.DictionaryUtils.GetDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  name.vb: GetDictionary(Dictionary(Of String, Object), String)
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.GetDictionary(System.Collections.Generic.Dictionary<string, object>, string)
+  fullName.vb: AndrewM5.DevKit.Core.DictionaryUtils.GetDictionary(System.Collections.Generic.Dictionary(Of String, Object), String)
+  nameWithType: DictionaryUtils.GetDictionary(Dictionary<string, object>, string)
+  nameWithType.vb: DictionaryUtils.GetDictionary(Dictionary(Of String, Object), String)
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.GetDictionary*
+  name: GetDictionary
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_GetDictionary_
+  commentId: Overload:AndrewM5.DevKit.Core.DictionaryUtils.GetDictionary
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.GetDictionary
+  nameWithType: DictionaryUtils.GetDictionary
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.GetFirstDictionary(System.Collections.Generic.List{System.Collections.Generic.Dictionary{System.String,System.Object}})
+  name: GetFirstDictionary(List<Dictionary<string, object>>)
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_GetFirstDictionary_System_Collections_Generic_List_System_Collections_Generic_Dictionary_System_String_System_Object___
+  commentId: M:AndrewM5.DevKit.Core.DictionaryUtils.GetFirstDictionary(System.Collections.Generic.List{System.Collections.Generic.Dictionary{System.String,System.Object}})
+  name.vb: GetFirstDictionary(List(Of Dictionary(Of String, Object)))
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.GetFirstDictionary(System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>)
+  fullName.vb: AndrewM5.DevKit.Core.DictionaryUtils.GetFirstDictionary(System.Collections.Generic.List(Of System.Collections.Generic.Dictionary(Of String, Object)))
+  nameWithType: DictionaryUtils.GetFirstDictionary(List<Dictionary<string, object>>)
+  nameWithType.vb: DictionaryUtils.GetFirstDictionary(List(Of Dictionary(Of String, Object)))
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.GetFirstDictionary*
+  name: GetFirstDictionary
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_GetFirstDictionary_
+  commentId: Overload:AndrewM5.DevKit.Core.DictionaryUtils.GetFirstDictionary
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.GetFirstDictionary
+  nameWithType: DictionaryUtils.GetFirstDictionary
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.GetList(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  name: GetList(Dictionary<string, object>, string)
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_GetList_System_Collections_Generic_Dictionary_System_String_System_Object__System_String_
+  commentId: M:AndrewM5.DevKit.Core.DictionaryUtils.GetList(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  name.vb: GetList(Dictionary(Of String, Object), String)
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.GetList(System.Collections.Generic.Dictionary<string, object>, string)
+  fullName.vb: AndrewM5.DevKit.Core.DictionaryUtils.GetList(System.Collections.Generic.Dictionary(Of String, Object), String)
+  nameWithType: DictionaryUtils.GetList(Dictionary<string, object>, string)
+  nameWithType.vb: DictionaryUtils.GetList(Dictionary(Of String, Object), String)
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.GetList*
+  name: GetList
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_GetList_
+  commentId: Overload:AndrewM5.DevKit.Core.DictionaryUtils.GetList
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.GetList
+  nameWithType: DictionaryUtils.GetList
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.GetListDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  name: GetListDictionary(Dictionary<string, object>, string)
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_GetListDictionary_System_Collections_Generic_Dictionary_System_String_System_Object__System_String_
+  commentId: M:AndrewM5.DevKit.Core.DictionaryUtils.GetListDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  name.vb: GetListDictionary(Dictionary(Of String, Object), String)
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.GetListDictionary(System.Collections.Generic.Dictionary<string, object>, string)
+  fullName.vb: AndrewM5.DevKit.Core.DictionaryUtils.GetListDictionary(System.Collections.Generic.Dictionary(Of String, Object), String)
+  nameWithType: DictionaryUtils.GetListDictionary(Dictionary<string, object>, string)
+  nameWithType.vb: DictionaryUtils.GetListDictionary(Dictionary(Of String, Object), String)
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.GetListDictionary*
+  name: GetListDictionary
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_GetListDictionary_
+  commentId: Overload:AndrewM5.DevKit.Core.DictionaryUtils.GetListDictionary
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.GetListDictionary
+  nameWithType: DictionaryUtils.GetListDictionary
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.GetValueOrDefault*
+  name: GetValueOrDefault
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_GetValueOrDefault_
+  commentId: Overload:AndrewM5.DevKit.Core.DictionaryUtils.GetValueOrDefault
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.GetValueOrDefault
+  nameWithType: DictionaryUtils.GetValueOrDefault
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.GetValueOrDefault``1(System.Collections.Generic.Dictionary{System.String,System.Object},System.String,``0)
+  name: GetValueOrDefault<T>(Dictionary<string, object>, string, T)
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_GetValueOrDefault__1_System_Collections_Generic_Dictionary_System_String_System_Object__System_String___0_
+  commentId: M:AndrewM5.DevKit.Core.DictionaryUtils.GetValueOrDefault``1(System.Collections.Generic.Dictionary{System.String,System.Object},System.String,``0)
+  name.vb: GetValueOrDefault(Of T)(Dictionary(Of String, Object), String, T)
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.GetValueOrDefault<T>(System.Collections.Generic.Dictionary<string, object>, string, T)
+  fullName.vb: AndrewM5.DevKit.Core.DictionaryUtils.GetValueOrDefault(Of T)(System.Collections.Generic.Dictionary(Of String, Object), String, T)
+  nameWithType: DictionaryUtils.GetValueOrDefault<T>(Dictionary<string, object>, string, T)
+  nameWithType.vb: DictionaryUtils.GetValueOrDefault(Of T)(Dictionary(Of String, Object), String, T)
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.TraverseByPath(System.Object,System.String[])
+  name: TraverseByPath(object, string[])
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_TraverseByPath_System_Object_System_String___
+  commentId: M:AndrewM5.DevKit.Core.DictionaryUtils.TraverseByPath(System.Object,System.String[])
+  name.vb: TraverseByPath(Object, String())
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.TraverseByPath(object, string[])
+  fullName.vb: AndrewM5.DevKit.Core.DictionaryUtils.TraverseByPath(Object, String())
+  nameWithType: DictionaryUtils.TraverseByPath(object, string[])
+  nameWithType.vb: DictionaryUtils.TraverseByPath(Object, String())
+- uid: AndrewM5.DevKit.Core.DictionaryUtils.TraverseByPath*
+  name: TraverseByPath
+  href: api/core/AndrewM5.DevKit.Core.DictionaryUtils.html#AndrewM5_DevKit_Core_DictionaryUtils_TraverseByPath_
+  commentId: Overload:AndrewM5.DevKit.Core.DictionaryUtils.TraverseByPath
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DictionaryUtils.TraverseByPath
+  nameWithType: DictionaryUtils.TraverseByPath
+- uid: AndrewM5.DevKit.Core.DirectoryUtils
+  name: DirectoryUtils
+  href: api/core/AndrewM5.DevKit.Core.DirectoryUtils.html
+  commentId: T:AndrewM5.DevKit.Core.DirectoryUtils
+  fullName: AndrewM5.DevKit.Core.DirectoryUtils
+  nameWithType: DirectoryUtils
+- uid: AndrewM5.DevKit.Core.DirectoryUtils.CreateDirectory(System.String)
+  name: CreateDirectory(string)
+  href: api/core/AndrewM5.DevKit.Core.DirectoryUtils.html#AndrewM5_DevKit_Core_DirectoryUtils_CreateDirectory_System_String_
+  commentId: M:AndrewM5.DevKit.Core.DirectoryUtils.CreateDirectory(System.String)
+  name.vb: CreateDirectory(String)
+  fullName: AndrewM5.DevKit.Core.DirectoryUtils.CreateDirectory(string)
+  fullName.vb: AndrewM5.DevKit.Core.DirectoryUtils.CreateDirectory(String)
+  nameWithType: DirectoryUtils.CreateDirectory(string)
+  nameWithType.vb: DirectoryUtils.CreateDirectory(String)
+- uid: AndrewM5.DevKit.Core.DirectoryUtils.CreateDirectory*
+  name: CreateDirectory
+  href: api/core/AndrewM5.DevKit.Core.DirectoryUtils.html#AndrewM5_DevKit_Core_DirectoryUtils_CreateDirectory_
+  commentId: Overload:AndrewM5.DevKit.Core.DirectoryUtils.CreateDirectory
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DirectoryUtils.CreateDirectory
+  nameWithType: DirectoryUtils.CreateDirectory
+- uid: AndrewM5.DevKit.Core.DirectoryUtils.DeleteDirectory(System.String,System.Boolean)
+  name: DeleteDirectory(string, bool)
+  href: api/core/AndrewM5.DevKit.Core.DirectoryUtils.html#AndrewM5_DevKit_Core_DirectoryUtils_DeleteDirectory_System_String_System_Boolean_
+  commentId: M:AndrewM5.DevKit.Core.DirectoryUtils.DeleteDirectory(System.String,System.Boolean)
+  name.vb: DeleteDirectory(String, Boolean)
+  fullName: AndrewM5.DevKit.Core.DirectoryUtils.DeleteDirectory(string, bool)
+  fullName.vb: AndrewM5.DevKit.Core.DirectoryUtils.DeleteDirectory(String, Boolean)
+  nameWithType: DirectoryUtils.DeleteDirectory(string, bool)
+  nameWithType.vb: DirectoryUtils.DeleteDirectory(String, Boolean)
+- uid: AndrewM5.DevKit.Core.DirectoryUtils.DeleteDirectory*
+  name: DeleteDirectory
+  href: api/core/AndrewM5.DevKit.Core.DirectoryUtils.html#AndrewM5_DevKit_Core_DirectoryUtils_DeleteDirectory_
+  commentId: Overload:AndrewM5.DevKit.Core.DirectoryUtils.DeleteDirectory
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DirectoryUtils.DeleteDirectory
+  nameWithType: DirectoryUtils.DeleteDirectory
+- uid: AndrewM5.DevKit.Core.DirectoryUtils.DoesDirectoryExist(System.String)
+  name: DoesDirectoryExist(string)
+  href: api/core/AndrewM5.DevKit.Core.DirectoryUtils.html#AndrewM5_DevKit_Core_DirectoryUtils_DoesDirectoryExist_System_String_
+  commentId: M:AndrewM5.DevKit.Core.DirectoryUtils.DoesDirectoryExist(System.String)
+  name.vb: DoesDirectoryExist(String)
+  fullName: AndrewM5.DevKit.Core.DirectoryUtils.DoesDirectoryExist(string)
+  fullName.vb: AndrewM5.DevKit.Core.DirectoryUtils.DoesDirectoryExist(String)
+  nameWithType: DirectoryUtils.DoesDirectoryExist(string)
+  nameWithType.vb: DirectoryUtils.DoesDirectoryExist(String)
+- uid: AndrewM5.DevKit.Core.DirectoryUtils.DoesDirectoryExist*
+  name: DoesDirectoryExist
+  href: api/core/AndrewM5.DevKit.Core.DirectoryUtils.html#AndrewM5_DevKit_Core_DirectoryUtils_DoesDirectoryExist_
+  commentId: Overload:AndrewM5.DevKit.Core.DirectoryUtils.DoesDirectoryExist
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DirectoryUtils.DoesDirectoryExist
+  nameWithType: DirectoryUtils.DoesDirectoryExist
+- uid: AndrewM5.DevKit.Core.DirectoryUtils.GetFiles(System.String,System.String)
+  name: GetFiles(string, string)
+  href: api/core/AndrewM5.DevKit.Core.DirectoryUtils.html#AndrewM5_DevKit_Core_DirectoryUtils_GetFiles_System_String_System_String_
+  commentId: M:AndrewM5.DevKit.Core.DirectoryUtils.GetFiles(System.String,System.String)
+  name.vb: GetFiles(String, String)
+  fullName: AndrewM5.DevKit.Core.DirectoryUtils.GetFiles(string, string)
+  fullName.vb: AndrewM5.DevKit.Core.DirectoryUtils.GetFiles(String, String)
+  nameWithType: DirectoryUtils.GetFiles(string, string)
+  nameWithType.vb: DirectoryUtils.GetFiles(String, String)
+- uid: AndrewM5.DevKit.Core.DirectoryUtils.GetFiles*
+  name: GetFiles
+  href: api/core/AndrewM5.DevKit.Core.DirectoryUtils.html#AndrewM5_DevKit_Core_DirectoryUtils_GetFiles_
+  commentId: Overload:AndrewM5.DevKit.Core.DirectoryUtils.GetFiles
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DirectoryUtils.GetFiles
+  nameWithType: DirectoryUtils.GetFiles
+- uid: AndrewM5.DevKit.Core.DirectoryUtils.GetSafeDirectoryName(System.String,System.Char)
+  name: GetSafeDirectoryName(string, char)
+  href: api/core/AndrewM5.DevKit.Core.DirectoryUtils.html#AndrewM5_DevKit_Core_DirectoryUtils_GetSafeDirectoryName_System_String_System_Char_
+  commentId: M:AndrewM5.DevKit.Core.DirectoryUtils.GetSafeDirectoryName(System.String,System.Char)
+  name.vb: GetSafeDirectoryName(String, Char)
+  fullName: AndrewM5.DevKit.Core.DirectoryUtils.GetSafeDirectoryName(string, char)
+  fullName.vb: AndrewM5.DevKit.Core.DirectoryUtils.GetSafeDirectoryName(String, Char)
+  nameWithType: DirectoryUtils.GetSafeDirectoryName(string, char)
+  nameWithType.vb: DirectoryUtils.GetSafeDirectoryName(String, Char)
+- uid: AndrewM5.DevKit.Core.DirectoryUtils.GetSafeDirectoryName*
+  name: GetSafeDirectoryName
+  href: api/core/AndrewM5.DevKit.Core.DirectoryUtils.html#AndrewM5_DevKit_Core_DirectoryUtils_GetSafeDirectoryName_
+  commentId: Overload:AndrewM5.DevKit.Core.DirectoryUtils.GetSafeDirectoryName
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DirectoryUtils.GetSafeDirectoryName
+  nameWithType: DirectoryUtils.GetSafeDirectoryName
+- uid: AndrewM5.DevKit.Core.DirectoryUtils.IsStringValidDirectoryPath(System.String)
+  name: IsStringValidDirectoryPath(string)
+  href: api/core/AndrewM5.DevKit.Core.DirectoryUtils.html#AndrewM5_DevKit_Core_DirectoryUtils_IsStringValidDirectoryPath_System_String_
+  commentId: M:AndrewM5.DevKit.Core.DirectoryUtils.IsStringValidDirectoryPath(System.String)
+  name.vb: IsStringValidDirectoryPath(String)
+  fullName: AndrewM5.DevKit.Core.DirectoryUtils.IsStringValidDirectoryPath(string)
+  fullName.vb: AndrewM5.DevKit.Core.DirectoryUtils.IsStringValidDirectoryPath(String)
+  nameWithType: DirectoryUtils.IsStringValidDirectoryPath(string)
+  nameWithType.vb: DirectoryUtils.IsStringValidDirectoryPath(String)
+- uid: AndrewM5.DevKit.Core.DirectoryUtils.IsStringValidDirectoryPath*
+  name: IsStringValidDirectoryPath
+  href: api/core/AndrewM5.DevKit.Core.DirectoryUtils.html#AndrewM5_DevKit_Core_DirectoryUtils_IsStringValidDirectoryPath_
+  commentId: Overload:AndrewM5.DevKit.Core.DirectoryUtils.IsStringValidDirectoryPath
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.DirectoryUtils.IsStringValidDirectoryPath
+  nameWithType: DirectoryUtils.IsStringValidDirectoryPath
+- uid: AndrewM5.DevKit.Core.FileExtension
+  name: FileExtension
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html
+  commentId: T:AndrewM5.DevKit.Core.FileExtension
+  fullName: AndrewM5.DevKit.Core.FileExtension
+  nameWithType: FileExtension
+- uid: AndrewM5.DevKit.Core.FileExtension.CopyFile(System.String,System.String,System.Boolean)
+  name: CopyFile(string, string, bool)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_CopyFile_System_String_System_String_System_Boolean_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.CopyFile(System.String,System.String,System.Boolean)
+  name.vb: CopyFile(String, String, Boolean)
+  fullName: AndrewM5.DevKit.Core.FileExtension.CopyFile(string, string, bool)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.CopyFile(String, String, Boolean)
+  nameWithType: FileExtension.CopyFile(string, string, bool)
+  nameWithType.vb: FileExtension.CopyFile(String, String, Boolean)
+- uid: AndrewM5.DevKit.Core.FileExtension.CopyFile*
+  name: CopyFile
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_CopyFile_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.CopyFile
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.CopyFile
+  nameWithType: FileExtension.CopyFile
+- uid: AndrewM5.DevKit.Core.FileExtension.CreateFile(System.String)
+  name: CreateFile(string)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_CreateFile_System_String_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.CreateFile(System.String)
+  name.vb: CreateFile(String)
+  fullName: AndrewM5.DevKit.Core.FileExtension.CreateFile(string)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.CreateFile(String)
+  nameWithType: FileExtension.CreateFile(string)
+  nameWithType.vb: FileExtension.CreateFile(String)
+- uid: AndrewM5.DevKit.Core.FileExtension.CreateFile*
+  name: CreateFile
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_CreateFile_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.CreateFile
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.CreateFile
+  nameWithType: FileExtension.CreateFile
+- uid: AndrewM5.DevKit.Core.FileExtension.DeleteFile(System.String)
+  name: DeleteFile(string)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_DeleteFile_System_String_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.DeleteFile(System.String)
+  name.vb: DeleteFile(String)
+  fullName: AndrewM5.DevKit.Core.FileExtension.DeleteFile(string)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.DeleteFile(String)
+  nameWithType: FileExtension.DeleteFile(string)
+  nameWithType.vb: FileExtension.DeleteFile(String)
+- uid: AndrewM5.DevKit.Core.FileExtension.DeleteFile*
+  name: DeleteFile
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_DeleteFile_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.DeleteFile
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.DeleteFile
+  nameWithType: FileExtension.DeleteFile
+- uid: AndrewM5.DevKit.Core.FileExtension.DeleteFiles(System.String,System.String)
+  name: DeleteFiles(string, string)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_DeleteFiles_System_String_System_String_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.DeleteFiles(System.String,System.String)
+  name.vb: DeleteFiles(String, String)
+  fullName: AndrewM5.DevKit.Core.FileExtension.DeleteFiles(string, string)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.DeleteFiles(String, String)
+  nameWithType: FileExtension.DeleteFiles(string, string)
+  nameWithType.vb: FileExtension.DeleteFiles(String, String)
+- uid: AndrewM5.DevKit.Core.FileExtension.DeleteFiles*
+  name: DeleteFiles
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_DeleteFiles_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.DeleteFiles
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.DeleteFiles
+  nameWithType: FileExtension.DeleteFiles
+- uid: AndrewM5.DevKit.Core.FileExtension.DoesFileExist(System.String)
+  name: DoesFileExist(string)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_DoesFileExist_System_String_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.DoesFileExist(System.String)
+  name.vb: DoesFileExist(String)
+  fullName: AndrewM5.DevKit.Core.FileExtension.DoesFileExist(string)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.DoesFileExist(String)
+  nameWithType: FileExtension.DoesFileExist(string)
+  nameWithType.vb: FileExtension.DoesFileExist(String)
+- uid: AndrewM5.DevKit.Core.FileExtension.DoesFileExist*
+  name: DoesFileExist
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_DoesFileExist_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.DoesFileExist
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.DoesFileExist
+  nameWithType: FileExtension.DoesFileExist
+- uid: AndrewM5.DevKit.Core.FileExtension.GetExtension(System.String)
+  name: GetExtension(string)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_GetExtension_System_String_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.GetExtension(System.String)
+  name.vb: GetExtension(String)
+  fullName: AndrewM5.DevKit.Core.FileExtension.GetExtension(string)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.GetExtension(String)
+  nameWithType: FileExtension.GetExtension(string)
+  nameWithType.vb: FileExtension.GetExtension(String)
+- uid: AndrewM5.DevKit.Core.FileExtension.GetExtension*
+  name: GetExtension
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_GetExtension_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.GetExtension
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.GetExtension
+  nameWithType: FileExtension.GetExtension
+- uid: AndrewM5.DevKit.Core.FileExtension.IsPathValidExtension(System.String,System.String)
+  name: IsPathValidExtension(string, string)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_IsPathValidExtension_System_String_System_String_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.IsPathValidExtension(System.String,System.String)
+  name.vb: IsPathValidExtension(String, String)
+  fullName: AndrewM5.DevKit.Core.FileExtension.IsPathValidExtension(string, string)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.IsPathValidExtension(String, String)
+  nameWithType: FileExtension.IsPathValidExtension(string, string)
+  nameWithType.vb: FileExtension.IsPathValidExtension(String, String)
+- uid: AndrewM5.DevKit.Core.FileExtension.IsPathValidExtension*
+  name: IsPathValidExtension
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_IsPathValidExtension_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.IsPathValidExtension
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.IsPathValidExtension
+  nameWithType: FileExtension.IsPathValidExtension
+- uid: AndrewM5.DevKit.Core.FileExtension.IsStringValidFilePath(System.String)
+  name: IsStringValidFilePath(string)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_IsStringValidFilePath_System_String_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.IsStringValidFilePath(System.String)
+  name.vb: IsStringValidFilePath(String)
+  fullName: AndrewM5.DevKit.Core.FileExtension.IsStringValidFilePath(string)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.IsStringValidFilePath(String)
+  nameWithType: FileExtension.IsStringValidFilePath(string)
+  nameWithType.vb: FileExtension.IsStringValidFilePath(String)
+- uid: AndrewM5.DevKit.Core.FileExtension.IsStringValidFilePath*
+  name: IsStringValidFilePath
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_IsStringValidFilePath_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.IsStringValidFilePath
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.IsStringValidFilePath
+  nameWithType: FileExtension.IsStringValidFilePath
+- uid: AndrewM5.DevKit.Core.FileExtension.MoveFile(System.String,System.String,System.Boolean)
+  name: MoveFile(string, string, bool)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_MoveFile_System_String_System_String_System_Boolean_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.MoveFile(System.String,System.String,System.Boolean)
+  name.vb: MoveFile(String, String, Boolean)
+  fullName: AndrewM5.DevKit.Core.FileExtension.MoveFile(string, string, bool)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.MoveFile(String, String, Boolean)
+  nameWithType: FileExtension.MoveFile(string, string, bool)
+  nameWithType.vb: FileExtension.MoveFile(String, String, Boolean)
+- uid: AndrewM5.DevKit.Core.FileExtension.MoveFile*
+  name: MoveFile
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_MoveFile_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.MoveFile
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.MoveFile
+  nameWithType: FileExtension.MoveFile
+- uid: AndrewM5.DevKit.Core.FileExtension.ReadFileLines(System.String)
+  name: ReadFileLines(string)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_ReadFileLines_System_String_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.ReadFileLines(System.String)
+  name.vb: ReadFileLines(String)
+  fullName: AndrewM5.DevKit.Core.FileExtension.ReadFileLines(string)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.ReadFileLines(String)
+  nameWithType: FileExtension.ReadFileLines(string)
+  nameWithType.vb: FileExtension.ReadFileLines(String)
+- uid: AndrewM5.DevKit.Core.FileExtension.ReadFileLines*
+  name: ReadFileLines
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_ReadFileLines_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.ReadFileLines
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.ReadFileLines
+  nameWithType: FileExtension.ReadFileLines
+- uid: AndrewM5.DevKit.Core.FileExtension.ReadFileLinesAsync(System.String)
+  name: ReadFileLinesAsync(string)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_ReadFileLinesAsync_System_String_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.ReadFileLinesAsync(System.String)
+  name.vb: ReadFileLinesAsync(String)
+  fullName: AndrewM5.DevKit.Core.FileExtension.ReadFileLinesAsync(string)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.ReadFileLinesAsync(String)
+  nameWithType: FileExtension.ReadFileLinesAsync(string)
+  nameWithType.vb: FileExtension.ReadFileLinesAsync(String)
+- uid: AndrewM5.DevKit.Core.FileExtension.ReadFileLinesAsync*
+  name: ReadFileLinesAsync
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_ReadFileLinesAsync_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.ReadFileLinesAsync
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.ReadFileLinesAsync
+  nameWithType: FileExtension.ReadFileLinesAsync
+- uid: AndrewM5.DevKit.Core.FileExtension.ReadFileText(System.String)
+  name: ReadFileText(string)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_ReadFileText_System_String_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.ReadFileText(System.String)
+  name.vb: ReadFileText(String)
+  fullName: AndrewM5.DevKit.Core.FileExtension.ReadFileText(string)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.ReadFileText(String)
+  nameWithType: FileExtension.ReadFileText(string)
+  nameWithType.vb: FileExtension.ReadFileText(String)
+- uid: AndrewM5.DevKit.Core.FileExtension.ReadFileText*
+  name: ReadFileText
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_ReadFileText_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.ReadFileText
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.ReadFileText
+  nameWithType: FileExtension.ReadFileText
+- uid: AndrewM5.DevKit.Core.FileExtension.ReadFileTextAsync(System.String)
+  name: ReadFileTextAsync(string)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_ReadFileTextAsync_System_String_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.ReadFileTextAsync(System.String)
+  name.vb: ReadFileTextAsync(String)
+  fullName: AndrewM5.DevKit.Core.FileExtension.ReadFileTextAsync(string)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.ReadFileTextAsync(String)
+  nameWithType: FileExtension.ReadFileTextAsync(string)
+  nameWithType.vb: FileExtension.ReadFileTextAsync(String)
+- uid: AndrewM5.DevKit.Core.FileExtension.ReadFileTextAsync*
+  name: ReadFileTextAsync
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_ReadFileTextAsync_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.ReadFileTextAsync
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.ReadFileTextAsync
+  nameWithType: FileExtension.ReadFileTextAsync
+- uid: AndrewM5.DevKit.Core.FileExtension.WriteToFile(System.String,System.String,System.Boolean,System.Text.Encoding)
+  name: WriteToFile(string, string, bool, Encoding?)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_WriteToFile_System_String_System_String_System_Boolean_System_Text_Encoding_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.WriteToFile(System.String,System.String,System.Boolean,System.Text.Encoding)
+  name.vb: WriteToFile(String, String, Boolean, Encoding)
+  fullName: AndrewM5.DevKit.Core.FileExtension.WriteToFile(string, string, bool, System.Text.Encoding?)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.WriteToFile(String, String, Boolean, System.Text.Encoding)
+  nameWithType: FileExtension.WriteToFile(string, string, bool, Encoding?)
+  nameWithType.vb: FileExtension.WriteToFile(String, String, Boolean, Encoding)
+- uid: AndrewM5.DevKit.Core.FileExtension.WriteToFile(System.String,System.String[],System.Boolean,System.Text.Encoding)
+  name: WriteToFile(string, string[], bool, Encoding?)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_WriteToFile_System_String_System_String___System_Boolean_System_Text_Encoding_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.WriteToFile(System.String,System.String[],System.Boolean,System.Text.Encoding)
+  name.vb: WriteToFile(String, String(), Boolean, Encoding)
+  fullName: AndrewM5.DevKit.Core.FileExtension.WriteToFile(string, string[], bool, System.Text.Encoding?)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.WriteToFile(String, String(), Boolean, System.Text.Encoding)
+  nameWithType: FileExtension.WriteToFile(string, string[], bool, Encoding?)
+  nameWithType.vb: FileExtension.WriteToFile(String, String(), Boolean, Encoding)
+- uid: AndrewM5.DevKit.Core.FileExtension.WriteToFile*
+  name: WriteToFile
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_WriteToFile_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.WriteToFile
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.WriteToFile
+  nameWithType: FileExtension.WriteToFile
+- uid: AndrewM5.DevKit.Core.FileExtension.WriteToFileAsync(System.String,System.String,System.Boolean,System.Text.Encoding)
+  name: WriteToFileAsync(string, string, bool, Encoding?)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_WriteToFileAsync_System_String_System_String_System_Boolean_System_Text_Encoding_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.WriteToFileAsync(System.String,System.String,System.Boolean,System.Text.Encoding)
+  name.vb: WriteToFileAsync(String, String, Boolean, Encoding)
+  fullName: AndrewM5.DevKit.Core.FileExtension.WriteToFileAsync(string, string, bool, System.Text.Encoding?)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.WriteToFileAsync(String, String, Boolean, System.Text.Encoding)
+  nameWithType: FileExtension.WriteToFileAsync(string, string, bool, Encoding?)
+  nameWithType.vb: FileExtension.WriteToFileAsync(String, String, Boolean, Encoding)
+- uid: AndrewM5.DevKit.Core.FileExtension.WriteToFileAsync(System.String,System.String[],System.Boolean,System.Text.Encoding)
+  name: WriteToFileAsync(string, string[], bool, Encoding?)
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_WriteToFileAsync_System_String_System_String___System_Boolean_System_Text_Encoding_
+  commentId: M:AndrewM5.DevKit.Core.FileExtension.WriteToFileAsync(System.String,System.String[],System.Boolean,System.Text.Encoding)
+  name.vb: WriteToFileAsync(String, String(), Boolean, Encoding)
+  fullName: AndrewM5.DevKit.Core.FileExtension.WriteToFileAsync(string, string[], bool, System.Text.Encoding?)
+  fullName.vb: AndrewM5.DevKit.Core.FileExtension.WriteToFileAsync(String, String(), Boolean, System.Text.Encoding)
+  nameWithType: FileExtension.WriteToFileAsync(string, string[], bool, Encoding?)
+  nameWithType.vb: FileExtension.WriteToFileAsync(String, String(), Boolean, Encoding)
+- uid: AndrewM5.DevKit.Core.FileExtension.WriteToFileAsync*
+  name: WriteToFileAsync
+  href: api/core/AndrewM5.DevKit.Core.FileExtension.html#AndrewM5_DevKit_Core_FileExtension_WriteToFileAsync_
+  commentId: Overload:AndrewM5.DevKit.Core.FileExtension.WriteToFileAsync
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.FileExtension.WriteToFileAsync
+  nameWithType: FileExtension.WriteToFileAsync
+- uid: AndrewM5.DevKit.Core.GCManager
+  name: GCManager
+  href: api/core/AndrewM5.DevKit.Core.GCManager.html
+  commentId: T:AndrewM5.DevKit.Core.GCManager
+  fullName: AndrewM5.DevKit.Core.GCManager
+  nameWithType: GCManager
+- uid: AndrewM5.DevKit.Core.GCManager.CallGC_Collect(System.String)
+  name: CallGC_Collect(string?)
+  href: api/core/AndrewM5.DevKit.Core.GCManager.html#AndrewM5_DevKit_Core_GCManager_CallGC_Collect_System_String_
+  commentId: M:AndrewM5.DevKit.Core.GCManager.CallGC_Collect(System.String)
+  name.vb: CallGC_Collect(String)
+  fullName: AndrewM5.DevKit.Core.GCManager.CallGC_Collect(string?)
+  fullName.vb: AndrewM5.DevKit.Core.GCManager.CallGC_Collect(String)
+  nameWithType: GCManager.CallGC_Collect(string?)
+  nameWithType.vb: GCManager.CallGC_Collect(String)
+- uid: AndrewM5.DevKit.Core.GCManager.CallGC_Collect*
+  name: CallGC_Collect
+  href: api/core/AndrewM5.DevKit.Core.GCManager.html#AndrewM5_DevKit_Core_GCManager_CallGC_Collect_
+  commentId: Overload:AndrewM5.DevKit.Core.GCManager.CallGC_Collect
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.GCManager.CallGC_Collect
+  nameWithType: GCManager.CallGC_Collect
+- uid: AndrewM5.DevKit.Core.JsonUtils
+  name: JsonUtils
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html
+  commentId: T:AndrewM5.DevKit.Core.JsonUtils
+  fullName: AndrewM5.DevKit.Core.JsonUtils
+  nameWithType: JsonUtils
+- uid: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject(System.Text.Json.JsonElement)
+  name: ConvertJsonElementToNativeObject(JsonElement)
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_ConvertJsonElementToNativeObject_System_Text_Json_JsonElement_
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject(System.Text.Json.JsonElement)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject(System.Text.Json.JsonElement)
+  nameWithType: JsonUtils.ConvertJsonElementToNativeObject(JsonElement)
+- uid: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject*
+  name: ConvertJsonElementToNativeObject
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_ConvertJsonElementToNativeObject_
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject
+  nameWithType: JsonUtils.ConvertJsonElementToNativeObject
+- uid: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject(System.String)
+  name: ConvertJsonToObject(string)
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_ConvertJsonToObject_System_String_
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject(System.String)
+  name.vb: ConvertJsonToObject(String)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject(string)
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject(String)
+  nameWithType: JsonUtils.ConvertJsonToObject(string)
+  nameWithType.vb: JsonUtils.ConvertJsonToObject(String)
+- uid: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject*
+  name: ConvertJsonToObject
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_ConvertJsonToObject_
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject
+  nameWithType: JsonUtils.ConvertJsonToObject
+- uid: AndrewM5.DevKit.Core.JsonUtils.FilterDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.Collections.Generic.List{System.String})
+  name: FilterDictionary(Dictionary<string, object>, List<string>?)
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_FilterDictionary_System_Collections_Generic_Dictionary_System_String_System_Object__System_Collections_Generic_List_System_String__
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.FilterDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.Collections.Generic.List{System.String})
+  name.vb: FilterDictionary(Dictionary(Of String, Object), List(Of String))
+  fullName: AndrewM5.DevKit.Core.JsonUtils.FilterDictionary(System.Collections.Generic.Dictionary<string, object>, System.Collections.Generic.List<string>?)
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.FilterDictionary(System.Collections.Generic.Dictionary(Of String, Object), System.Collections.Generic.List(Of String))
+  nameWithType: JsonUtils.FilterDictionary(Dictionary<string, object>, List<string>?)
+  nameWithType.vb: JsonUtils.FilterDictionary(Dictionary(Of String, Object), List(Of String))
+- uid: AndrewM5.DevKit.Core.JsonUtils.FilterDictionary*
+  name: FilterDictionary
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_FilterDictionary_
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.FilterDictionary
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.JsonUtils.FilterDictionary
+  nameWithType: JsonUtils.FilterDictionary
+- uid: AndrewM5.DevKit.Core.JsonUtils.GetDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  name: GetDictionary(Dictionary<string, object>, string)
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_GetDictionary_System_Collections_Generic_Dictionary_System_String_System_Object__System_String_
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.GetDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  name.vb: GetDictionary(Dictionary(Of String, Object), String)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.GetDictionary(System.Collections.Generic.Dictionary<string, object>, string)
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.GetDictionary(System.Collections.Generic.Dictionary(Of String, Object), String)
+  nameWithType: JsonUtils.GetDictionary(Dictionary<string, object>, string)
+  nameWithType.vb: JsonUtils.GetDictionary(Dictionary(Of String, Object), String)
+- uid: AndrewM5.DevKit.Core.JsonUtils.GetDictionary*
+  name: GetDictionary
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_GetDictionary_
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.GetDictionary
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.JsonUtils.GetDictionary
+  nameWithType: JsonUtils.GetDictionary
+- uid: AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue*
+  name: GetDictionaryValue
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_GetDictionaryValue_
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue
+  nameWithType: JsonUtils.GetDictionaryValue
+- uid: AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue``1(System.Collections.Generic.Dictionary{System.String,System.Object},System.String,``0)
+  name: GetDictionaryValue<T>(Dictionary<string, object>, string, T)
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_GetDictionaryValue__1_System_Collections_Generic_Dictionary_System_String_System_Object__System_String___0_
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue``1(System.Collections.Generic.Dictionary{System.String,System.Object},System.String,``0)
+  name.vb: GetDictionaryValue(Of T)(Dictionary(Of String, Object), String, T)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue<T>(System.Collections.Generic.Dictionary<string, object>, string, T)
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue(Of T)(System.Collections.Generic.Dictionary(Of String, Object), String, T)
+  nameWithType: JsonUtils.GetDictionaryValue<T>(Dictionary<string, object>, string, T)
+  nameWithType.vb: JsonUtils.GetDictionaryValue(Of T)(Dictionary(Of String, Object), String, T)
+- uid: AndrewM5.DevKit.Core.JsonUtils.GetListDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  name: GetListDictionary(Dictionary<string, object>, string)
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_GetListDictionary_System_Collections_Generic_Dictionary_System_String_System_Object__System_String_
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.GetListDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  name.vb: GetListDictionary(Dictionary(Of String, Object), String)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.GetListDictionary(System.Collections.Generic.Dictionary<string, object>, string)
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.GetListDictionary(System.Collections.Generic.Dictionary(Of String, Object), String)
+  nameWithType: JsonUtils.GetListDictionary(Dictionary<string, object>, string)
+  nameWithType.vb: JsonUtils.GetListDictionary(Dictionary(Of String, Object), String)
+- uid: AndrewM5.DevKit.Core.JsonUtils.GetListDictionary*
+  name: GetListDictionary
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_GetListDictionary_
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.GetListDictionary
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.JsonUtils.GetListDictionary
+  nameWithType: JsonUtils.GetListDictionary
+- uid: AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson*
+  name: ParseAndFilterJson
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_ParseAndFilterJson_
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson
+  nameWithType: JsonUtils.ParseAndFilterJson
+- uid: AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson``1(System.String,System.Collections.Generic.List{System.String})
+  name: ParseAndFilterJson<T>(string, List<string>?)
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_ParseAndFilterJson__1_System_String_System_Collections_Generic_List_System_String__
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson``1(System.String,System.Collections.Generic.List{System.String})
+  name.vb: ParseAndFilterJson(Of T)(String, List(Of String))
+  fullName: AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson<T>(string, System.Collections.Generic.List<string>?)
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson(Of T)(String, System.Collections.Generic.List(Of String))
+  nameWithType: JsonUtils.ParseAndFilterJson<T>(string, List<string>?)
+  nameWithType.vb: JsonUtils.ParseAndFilterJson(Of T)(String, List(Of String))
+- uid: AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson(System.Object)
+  name: SerializeObjectToJson(object)
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_SerializeObjectToJson_System_Object_
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson(System.Object)
+  name.vb: SerializeObjectToJson(Object)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson(object)
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson(Object)
+  nameWithType: JsonUtils.SerializeObjectToJson(object)
+  nameWithType.vb: JsonUtils.SerializeObjectToJson(Object)
+- uid: AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson*
+  name: SerializeObjectToJson
+  href: api/core/AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_SerializeObjectToJson_
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson
+  nameWithType: JsonUtils.SerializeObjectToJson
+- uid: AndrewM5.DevKit.Core.MiscUtils
+  name: MiscUtils
+  href: api/core/AndrewM5.DevKit.Core.MiscUtils.html
+  commentId: T:AndrewM5.DevKit.Core.MiscUtils
+  fullName: AndrewM5.DevKit.Core.MiscUtils
+  nameWithType: MiscUtils
+- uid: AndrewM5.DevKit.Core.MiscUtils.ConvertUnixToCentralTime(System.Int64)
+  name: ConvertUnixToCentralTime(long)
+  href: api/core/AndrewM5.DevKit.Core.MiscUtils.html#AndrewM5_DevKit_Core_MiscUtils_ConvertUnixToCentralTime_System_Int64_
+  commentId: M:AndrewM5.DevKit.Core.MiscUtils.ConvertUnixToCentralTime(System.Int64)
+  name.vb: ConvertUnixToCentralTime(Long)
+  fullName: AndrewM5.DevKit.Core.MiscUtils.ConvertUnixToCentralTime(long)
+  fullName.vb: AndrewM5.DevKit.Core.MiscUtils.ConvertUnixToCentralTime(Long)
+  nameWithType: MiscUtils.ConvertUnixToCentralTime(long)
+  nameWithType.vb: MiscUtils.ConvertUnixToCentralTime(Long)
+- uid: AndrewM5.DevKit.Core.MiscUtils.ConvertUnixToCentralTime*
+  name: ConvertUnixToCentralTime
+  href: api/core/AndrewM5.DevKit.Core.MiscUtils.html#AndrewM5_DevKit_Core_MiscUtils_ConvertUnixToCentralTime_
+  commentId: Overload:AndrewM5.DevKit.Core.MiscUtils.ConvertUnixToCentralTime
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.MiscUtils.ConvertUnixToCentralTime
+  nameWithType: MiscUtils.ConvertUnixToCentralTime
+- uid: AndrewM5.DevKit.Core.Results
+  name: AndrewM5.DevKit.Core.Results
+  href: api/core/AndrewM5.DevKit.Core.Results.html
+  commentId: N:AndrewM5.DevKit.Core.Results
+  fullName: AndrewM5.DevKit.Core.Results
+  nameWithType: AndrewM5.DevKit.Core.Results
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1
+  name: ApiOperationResult<T>
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html
+  commentId: T:AndrewM5.DevKit.Core.Results.ApiOperationResult`1
+  name.vb: ApiOperationResult(Of T)
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T)
+  nameWithType: ApiOperationResult<T>
+  nameWithType.vb: ApiOperationResult(Of T)
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.DisplaySummary
+  name: DisplaySummary
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_DisplaySummary
+  commentId: P:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.DisplaySummary
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.DisplaySummary
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).DisplaySummary
+  nameWithType: ApiOperationResult<T>.DisplaySummary
+  nameWithType.vb: ApiOperationResult(Of T).DisplaySummary
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.DisplaySummary*
+  name: DisplaySummary
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_DisplaySummary_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.DisplaySummary
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.DisplaySummary
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).DisplaySummary
+  nameWithType: ApiOperationResult<T>.DisplaySummary
+  nameWithType.vb: ApiOperationResult(Of T).DisplaySummary
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.RequestUrl
+  name: RequestUrl
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_RequestUrl
+  commentId: P:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.RequestUrl
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.RequestUrl
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).RequestUrl
+  nameWithType: ApiOperationResult<T>.RequestUrl
+  nameWithType.vb: ApiOperationResult(Of T).RequestUrl
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.RequestUrl*
+  name: RequestUrl
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_RequestUrl_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.RequestUrl
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.RequestUrl
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).RequestUrl
+  nameWithType: ApiOperationResult<T>.RequestUrl
+  nameWithType.vb: ApiOperationResult(Of T).RequestUrl
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.ResponseBody
+  name: ResponseBody
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_ResponseBody
+  commentId: P:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.ResponseBody
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.ResponseBody
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).ResponseBody
+  nameWithType: ApiOperationResult<T>.ResponseBody
+  nameWithType.vb: ApiOperationResult(Of T).ResponseBody
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.ResponseBody*
+  name: ResponseBody
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_ResponseBody_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.ResponseBody
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.ResponseBody
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).ResponseBody
+  nameWithType: ApiOperationResult<T>.ResponseBody
+  nameWithType.vb: ApiOperationResult(Of T).ResponseBody
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.SetApiFailure(System.Net.HttpStatusCode,System.Exception,System.String,System.String)
+  name: SetApiFailure(HttpStatusCode, Exception, string?, string?)
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_SetApiFailure_System_Net_HttpStatusCode_System_Exception_System_String_System_String_
+  commentId: M:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.SetApiFailure(System.Net.HttpStatusCode,System.Exception,System.String,System.String)
+  name.vb: SetApiFailure(HttpStatusCode, Exception, String, String)
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.SetApiFailure(System.Net.HttpStatusCode, System.Exception, string?, string?)
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).SetApiFailure(System.Net.HttpStatusCode, System.Exception, String, String)
+  nameWithType: ApiOperationResult<T>.SetApiFailure(HttpStatusCode, Exception, string?, string?)
+  nameWithType.vb: ApiOperationResult(Of T).SetApiFailure(HttpStatusCode, Exception, String, String)
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.SetApiFailure*
+  name: SetApiFailure
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_SetApiFailure_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.SetApiFailure
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.SetApiFailure
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).SetApiFailure
+  nameWithType: ApiOperationResult<T>.SetApiFailure
+  nameWithType.vb: ApiOperationResult(Of T).SetApiFailure
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.SetApiSuccess(`0,System.Net.HttpStatusCode,System.String,System.String)
+  name: SetApiSuccess(T?, HttpStatusCode, string?, string?)
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_SetApiSuccess__0_System_Net_HttpStatusCode_System_String_System_String_
+  commentId: M:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.SetApiSuccess(`0,System.Net.HttpStatusCode,System.String,System.String)
+  name.vb: SetApiSuccess(T, HttpStatusCode, String, String)
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.SetApiSuccess(T?, System.Net.HttpStatusCode, string?, string?)
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).SetApiSuccess(T, System.Net.HttpStatusCode, String, String)
+  nameWithType: ApiOperationResult<T>.SetApiSuccess(T?, HttpStatusCode, string?, string?)
+  nameWithType.vb: ApiOperationResult(Of T).SetApiSuccess(T, HttpStatusCode, String, String)
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.SetApiSuccess*
+  name: SetApiSuccess
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_SetApiSuccess_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.SetApiSuccess
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.SetApiSuccess
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).SetApiSuccess
+  nameWithType: ApiOperationResult<T>.SetApiSuccess
+  nameWithType.vb: ApiOperationResult(Of T).SetApiSuccess
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.SetRequestUrl(System.String)
+  name: SetRequestUrl(string)
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_SetRequestUrl_System_String_
+  commentId: M:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.SetRequestUrl(System.String)
+  name.vb: SetRequestUrl(String)
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.SetRequestUrl(string)
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).SetRequestUrl(String)
+  nameWithType: ApiOperationResult<T>.SetRequestUrl(string)
+  nameWithType.vb: ApiOperationResult(Of T).SetRequestUrl(String)
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.SetRequestUrl*
+  name: SetRequestUrl
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_SetRequestUrl_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.SetRequestUrl
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.SetRequestUrl
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).SetRequestUrl
+  nameWithType: ApiOperationResult<T>.SetRequestUrl
+  nameWithType.vb: ApiOperationResult(Of T).SetRequestUrl
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.StatusCode
+  name: StatusCode
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_StatusCode
+  commentId: P:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.StatusCode
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.StatusCode
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).StatusCode
+  nameWithType: ApiOperationResult<T>.StatusCode
+  nameWithType.vb: ApiOperationResult(Of T).StatusCode
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.StatusCode*
+  name: StatusCode
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_StatusCode_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.StatusCode
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.StatusCode
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).StatusCode
+  nameWithType: ApiOperationResult<T>.StatusCode
+  nameWithType.vb: ApiOperationResult(Of T).StatusCode
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.ToString
+  name: ToString()
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_ToString
+  commentId: M:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.ToString
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.ToString()
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).ToString()
+  nameWithType: ApiOperationResult<T>.ToString()
+  nameWithType.vb: ApiOperationResult(Of T).ToString()
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1.ToString*
+  name: ToString
+  href: api/core/AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html#AndrewM5_DevKit_Core_Results_ApiOperationResult_1_ToString_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.ApiOperationResult`1.ToString
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>.ToString
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T).ToString
+  nameWithType: ApiOperationResult<T>.ToString
+  nameWithType.vb: ApiOperationResult(Of T).ToString
+- uid: AndrewM5.DevKit.Core.Results.NullOperationResult
+  name: NullOperationResult
+  href: api/core/AndrewM5.DevKit.Core.Results.NullOperationResult.html
+  commentId: T:AndrewM5.DevKit.Core.Results.NullOperationResult
+  fullName: AndrewM5.DevKit.Core.Results.NullOperationResult
+  nameWithType: NullOperationResult
+- uid: AndrewM5.DevKit.Core.Results.NullOperationResult.SetMethodFailure(System.Exception)
+  name: SetMethodFailure(Exception)
+  href: api/core/AndrewM5.DevKit.Core.Results.NullOperationResult.html#AndrewM5_DevKit_Core_Results_NullOperationResult_SetMethodFailure_System_Exception_
+  commentId: M:AndrewM5.DevKit.Core.Results.NullOperationResult.SetMethodFailure(System.Exception)
+  fullName: AndrewM5.DevKit.Core.Results.NullOperationResult.SetMethodFailure(System.Exception)
+  nameWithType: NullOperationResult.SetMethodFailure(Exception)
+- uid: AndrewM5.DevKit.Core.Results.NullOperationResult.SetMethodFailure*
+  name: SetMethodFailure
+  href: api/core/AndrewM5.DevKit.Core.Results.NullOperationResult.html#AndrewM5_DevKit_Core_Results_NullOperationResult_SetMethodFailure_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.NullOperationResult.SetMethodFailure
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.NullOperationResult.SetMethodFailure
+  nameWithType: NullOperationResult.SetMethodFailure
+- uid: AndrewM5.DevKit.Core.Results.NullOperationResult.SetMethodSuccess
+  name: SetMethodSuccess()
+  href: api/core/AndrewM5.DevKit.Core.Results.NullOperationResult.html#AndrewM5_DevKit_Core_Results_NullOperationResult_SetMethodSuccess
+  commentId: M:AndrewM5.DevKit.Core.Results.NullOperationResult.SetMethodSuccess
+  fullName: AndrewM5.DevKit.Core.Results.NullOperationResult.SetMethodSuccess()
+  nameWithType: NullOperationResult.SetMethodSuccess()
+- uid: AndrewM5.DevKit.Core.Results.NullOperationResult.SetMethodSuccess*
+  name: SetMethodSuccess
+  href: api/core/AndrewM5.DevKit.Core.Results.NullOperationResult.html#AndrewM5_DevKit_Core_Results_NullOperationResult_SetMethodSuccess_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.NullOperationResult.SetMethodSuccess
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.NullOperationResult.SetMethodSuccess
+  nameWithType: NullOperationResult.SetMethodSuccess
+- uid: AndrewM5.DevKit.Core.Results.NullOperationResult.ToString
+  name: ToString()
+  href: api/core/AndrewM5.DevKit.Core.Results.NullOperationResult.html#AndrewM5_DevKit_Core_Results_NullOperationResult_ToString
+  commentId: M:AndrewM5.DevKit.Core.Results.NullOperationResult.ToString
+  fullName: AndrewM5.DevKit.Core.Results.NullOperationResult.ToString()
+  nameWithType: NullOperationResult.ToString()
+- uid: AndrewM5.DevKit.Core.Results.NullOperationResult.ToString*
+  name: ToString
+  href: api/core/AndrewM5.DevKit.Core.Results.NullOperationResult.html#AndrewM5_DevKit_Core_Results_NullOperationResult_ToString_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.NullOperationResult.ToString
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.NullOperationResult.ToString
+  nameWithType: NullOperationResult.ToString
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+  name: NullableOperationResult<T>
+  href: api/core/AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  commentId: T:AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+  name.vb: NullableOperationResult(Of T)
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T)
+  nameWithType: NullableOperationResult<T>
+  nameWithType.vb: NullableOperationResult(Of T)
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1.Exception
+  name: Exception
+  href: api/core/AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html#AndrewM5_DevKit_Core_Results_NullableOperationResult_1_Exception
+  commentId: P:AndrewM5.DevKit.Core.Results.NullableOperationResult`1.Exception
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>.Exception
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T).Exception
+  nameWithType: NullableOperationResult<T>.Exception
+  nameWithType.vb: NullableOperationResult(Of T).Exception
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1.Exception*
+  name: Exception
+  href: api/core/AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html#AndrewM5_DevKit_Core_Results_NullableOperationResult_1_Exception_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.NullableOperationResult`1.Exception
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>.Exception
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T).Exception
+  nameWithType: NullableOperationResult<T>.Exception
+  nameWithType.vb: NullableOperationResult(Of T).Exception
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1.MethodSuccess
+  name: MethodSuccess
+  href: api/core/AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html#AndrewM5_DevKit_Core_Results_NullableOperationResult_1_MethodSuccess
+  commentId: P:AndrewM5.DevKit.Core.Results.NullableOperationResult`1.MethodSuccess
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>.MethodSuccess
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T).MethodSuccess
+  nameWithType: NullableOperationResult<T>.MethodSuccess
+  nameWithType.vb: NullableOperationResult(Of T).MethodSuccess
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1.MethodSuccess*
+  name: MethodSuccess
+  href: api/core/AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html#AndrewM5_DevKit_Core_Results_NullableOperationResult_1_MethodSuccess_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.NullableOperationResult`1.MethodSuccess
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>.MethodSuccess
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T).MethodSuccess
+  nameWithType: NullableOperationResult<T>.MethodSuccess
+  nameWithType.vb: NullableOperationResult(Of T).MethodSuccess
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1.Result
+  name: Result
+  href: api/core/AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html#AndrewM5_DevKit_Core_Results_NullableOperationResult_1_Result
+  commentId: P:AndrewM5.DevKit.Core.Results.NullableOperationResult`1.Result
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>.Result
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T).Result
+  nameWithType: NullableOperationResult<T>.Result
+  nameWithType.vb: NullableOperationResult(Of T).Result
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1.Result*
+  name: Result
+  href: api/core/AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html#AndrewM5_DevKit_Core_Results_NullableOperationResult_1_Result_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.NullableOperationResult`1.Result
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>.Result
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T).Result
+  nameWithType: NullableOperationResult<T>.Result
+  nameWithType.vb: NullableOperationResult(Of T).Result
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1.SetMethodFailure(System.Exception)
+  name: SetMethodFailure(Exception)
+  href: api/core/AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html#AndrewM5_DevKit_Core_Results_NullableOperationResult_1_SetMethodFailure_System_Exception_
+  commentId: M:AndrewM5.DevKit.Core.Results.NullableOperationResult`1.SetMethodFailure(System.Exception)
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>.SetMethodFailure(System.Exception)
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T).SetMethodFailure(System.Exception)
+  nameWithType: NullableOperationResult<T>.SetMethodFailure(Exception)
+  nameWithType.vb: NullableOperationResult(Of T).SetMethodFailure(Exception)
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1.SetMethodFailure*
+  name: SetMethodFailure
+  href: api/core/AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html#AndrewM5_DevKit_Core_Results_NullableOperationResult_1_SetMethodFailure_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.NullableOperationResult`1.SetMethodFailure
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>.SetMethodFailure
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T).SetMethodFailure
+  nameWithType: NullableOperationResult<T>.SetMethodFailure
+  nameWithType.vb: NullableOperationResult(Of T).SetMethodFailure
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1.SetMethodSuccess(`0)
+  name: SetMethodSuccess(T?)
+  href: api/core/AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html#AndrewM5_DevKit_Core_Results_NullableOperationResult_1_SetMethodSuccess__0_
+  commentId: M:AndrewM5.DevKit.Core.Results.NullableOperationResult`1.SetMethodSuccess(`0)
+  name.vb: SetMethodSuccess(T)
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>.SetMethodSuccess(T?)
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T).SetMethodSuccess(T)
+  nameWithType: NullableOperationResult<T>.SetMethodSuccess(T?)
+  nameWithType.vb: NullableOperationResult(Of T).SetMethodSuccess(T)
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1.SetMethodSuccess*
+  name: SetMethodSuccess
+  href: api/core/AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html#AndrewM5_DevKit_Core_Results_NullableOperationResult_1_SetMethodSuccess_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.NullableOperationResult`1.SetMethodSuccess
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>.SetMethodSuccess
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T).SetMethodSuccess
+  nameWithType: NullableOperationResult<T>.SetMethodSuccess
+  nameWithType.vb: NullableOperationResult(Of T).SetMethodSuccess
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1.ToString
+  name: ToString()
+  href: api/core/AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html#AndrewM5_DevKit_Core_Results_NullableOperationResult_1_ToString
+  commentId: M:AndrewM5.DevKit.Core.Results.NullableOperationResult`1.ToString
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>.ToString()
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T).ToString()
+  nameWithType: NullableOperationResult<T>.ToString()
+  nameWithType.vb: NullableOperationResult(Of T).ToString()
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1.ToString*
+  name: ToString
+  href: api/core/AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html#AndrewM5_DevKit_Core_Results_NullableOperationResult_1_ToString_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.NullableOperationResult`1.ToString
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>.ToString
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T).ToString
+  nameWithType: NullableOperationResult<T>.ToString
+  nameWithType.vb: NullableOperationResult(Of T).ToString
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+  name: OperationResult<T>
+  href: api/core/AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  commentId: T:AndrewM5.DevKit.Core.Results.OperationResult`1
+  name.vb: OperationResult(Of T)
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T)
+  nameWithType: OperationResult<T>
+  nameWithType.vb: OperationResult(Of T)
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1.Exception
+  name: Exception
+  href: api/core/AndrewM5.DevKit.Core.Results.OperationResult-1.html#AndrewM5_DevKit_Core_Results_OperationResult_1_Exception
+  commentId: P:AndrewM5.DevKit.Core.Results.OperationResult`1.Exception
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>.Exception
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T).Exception
+  nameWithType: OperationResult<T>.Exception
+  nameWithType.vb: OperationResult(Of T).Exception
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1.Exception*
+  name: Exception
+  href: api/core/AndrewM5.DevKit.Core.Results.OperationResult-1.html#AndrewM5_DevKit_Core_Results_OperationResult_1_Exception_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.OperationResult`1.Exception
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>.Exception
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T).Exception
+  nameWithType: OperationResult<T>.Exception
+  nameWithType.vb: OperationResult(Of T).Exception
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1.MethodSuccess
+  name: MethodSuccess
+  href: api/core/AndrewM5.DevKit.Core.Results.OperationResult-1.html#AndrewM5_DevKit_Core_Results_OperationResult_1_MethodSuccess
+  commentId: P:AndrewM5.DevKit.Core.Results.OperationResult`1.MethodSuccess
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>.MethodSuccess
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T).MethodSuccess
+  nameWithType: OperationResult<T>.MethodSuccess
+  nameWithType.vb: OperationResult(Of T).MethodSuccess
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1.MethodSuccess*
+  name: MethodSuccess
+  href: api/core/AndrewM5.DevKit.Core.Results.OperationResult-1.html#AndrewM5_DevKit_Core_Results_OperationResult_1_MethodSuccess_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.OperationResult`1.MethodSuccess
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>.MethodSuccess
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T).MethodSuccess
+  nameWithType: OperationResult<T>.MethodSuccess
+  nameWithType.vb: OperationResult(Of T).MethodSuccess
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1.Result
+  name: Result
+  href: api/core/AndrewM5.DevKit.Core.Results.OperationResult-1.html#AndrewM5_DevKit_Core_Results_OperationResult_1_Result
+  commentId: P:AndrewM5.DevKit.Core.Results.OperationResult`1.Result
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>.Result
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T).Result
+  nameWithType: OperationResult<T>.Result
+  nameWithType.vb: OperationResult(Of T).Result
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1.Result*
+  name: Result
+  href: api/core/AndrewM5.DevKit.Core.Results.OperationResult-1.html#AndrewM5_DevKit_Core_Results_OperationResult_1_Result_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.OperationResult`1.Result
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>.Result
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T).Result
+  nameWithType: OperationResult<T>.Result
+  nameWithType.vb: OperationResult(Of T).Result
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1.SetMethodFailure(System.Exception)
+  name: SetMethodFailure(Exception)
+  href: api/core/AndrewM5.DevKit.Core.Results.OperationResult-1.html#AndrewM5_DevKit_Core_Results_OperationResult_1_SetMethodFailure_System_Exception_
+  commentId: M:AndrewM5.DevKit.Core.Results.OperationResult`1.SetMethodFailure(System.Exception)
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>.SetMethodFailure(System.Exception)
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T).SetMethodFailure(System.Exception)
+  nameWithType: OperationResult<T>.SetMethodFailure(Exception)
+  nameWithType.vb: OperationResult(Of T).SetMethodFailure(Exception)
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1.SetMethodFailure*
+  name: SetMethodFailure
+  href: api/core/AndrewM5.DevKit.Core.Results.OperationResult-1.html#AndrewM5_DevKit_Core_Results_OperationResult_1_SetMethodFailure_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.OperationResult`1.SetMethodFailure
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>.SetMethodFailure
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T).SetMethodFailure
+  nameWithType: OperationResult<T>.SetMethodFailure
+  nameWithType.vb: OperationResult(Of T).SetMethodFailure
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1.SetMethodSuccess(`0)
+  name: SetMethodSuccess(T)
+  href: api/core/AndrewM5.DevKit.Core.Results.OperationResult-1.html#AndrewM5_DevKit_Core_Results_OperationResult_1_SetMethodSuccess__0_
+  commentId: M:AndrewM5.DevKit.Core.Results.OperationResult`1.SetMethodSuccess(`0)
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>.SetMethodSuccess(T)
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T).SetMethodSuccess(T)
+  nameWithType: OperationResult<T>.SetMethodSuccess(T)
+  nameWithType.vb: OperationResult(Of T).SetMethodSuccess(T)
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1.SetMethodSuccess*
+  name: SetMethodSuccess
+  href: api/core/AndrewM5.DevKit.Core.Results.OperationResult-1.html#AndrewM5_DevKit_Core_Results_OperationResult_1_SetMethodSuccess_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.OperationResult`1.SetMethodSuccess
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>.SetMethodSuccess
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T).SetMethodSuccess
+  nameWithType: OperationResult<T>.SetMethodSuccess
+  nameWithType.vb: OperationResult(Of T).SetMethodSuccess
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1.ToString
+  name: ToString()
+  href: api/core/AndrewM5.DevKit.Core.Results.OperationResult-1.html#AndrewM5_DevKit_Core_Results_OperationResult_1_ToString
+  commentId: M:AndrewM5.DevKit.Core.Results.OperationResult`1.ToString
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>.ToString()
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T).ToString()
+  nameWithType: OperationResult<T>.ToString()
+  nameWithType.vb: OperationResult(Of T).ToString()
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1.ToString*
+  name: ToString
+  href: api/core/AndrewM5.DevKit.Core.Results.OperationResult-1.html#AndrewM5_DevKit_Core_Results_OperationResult_1_ToString_
+  commentId: Overload:AndrewM5.DevKit.Core.Results.OperationResult`1.ToString
+  isSpec: "True"
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>.ToString
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T).ToString
+  nameWithType: OperationResult<T>.ToString
+  nameWithType.vb: OperationResult(Of T).ToString

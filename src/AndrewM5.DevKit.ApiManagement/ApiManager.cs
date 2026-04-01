@@ -1,4 +1,4 @@
-﻿using AndrewM5.DevKit.ApiManagement.Abstractions.Settings;
+﻿using AndrewM5.DevKit.ApiManagement.Abstractions.Options;
 using AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;

@@ -1,0 +1,48 @@
+### YamlMime:TableOfContent
+items:
+- uid: AndrewM5.DevKit.Core
+  name: AndrewM5.DevKit.Core
+  type: Namespace
+  items:
+  - uid: AndrewM5.DevKit.Core.DictionaryUtils
+    name: DictionaryUtils
+    type: Class
+  - uid: AndrewM5.DevKit.Core.DirectoryUtils
+    name: DirectoryUtils
+    type: Class
+  - uid: AndrewM5.DevKit.Core.FileExtension
+    name: FileExtension
+    type: Class
+  - uid: AndrewM5.DevKit.Core.GCManager
+    name: GCManager
+    type: Class
+  - uid: AndrewM5.DevKit.Core.JsonUtils
+    name: JsonUtils
+    type: Class
+  - uid: AndrewM5.DevKit.Core.MiscUtils
+    name: MiscUtils
+    type: Class
+- uid: AndrewM5.DevKit.Core.Abstractions
+  name: AndrewM5.DevKit.Core.Abstractions
+  type: Namespace
+  items:
+  - uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1
+    name: IOperationResult<T>
+    type: Interface
+- uid: AndrewM5.DevKit.Core.Results
+  name: AndrewM5.DevKit.Core.Results
+  type: Namespace
+  items:
+  - uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1
+    name: ApiOperationResult<T>
+    type: Class
+  - uid: AndrewM5.DevKit.Core.Results.NullOperationResult
+    name: NullOperationResult
+    type: Class
+  - uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+    name: NullableOperationResult<T>
+    type: Class
+  - uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+    name: OperationResult<T>
+    type: Class
+memberLayout: SamePage

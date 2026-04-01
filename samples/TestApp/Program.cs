@@ -2,7 +2,6 @@
 using AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.ApiManagement.Services;
 using AndrewM5.DevKit.Core;
-using AndrewM5.DevKit.CredentialManagement.Abstractions;
 using AndrewM5.DevKit.CredentialManagement.Services;
 using AndrewM5.DevKit.Logging;
 using AndrewM5.DevKit.Logging.Contracts.Interfaces;

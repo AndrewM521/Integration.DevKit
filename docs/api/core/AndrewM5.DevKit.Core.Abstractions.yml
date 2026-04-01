@@ -1,0 +1,42 @@
+### YamlMime:ManagedReference
+items:
+- uid: AndrewM5.DevKit.Core.Abstractions
+  commentId: N:AndrewM5.DevKit.Core.Abstractions
+  id: AndrewM5.DevKit.Core.Abstractions
+  children:
+  - AndrewM5.DevKit.Core.Abstractions.IOperationResult`1
+  langs:
+  - csharp
+  - vb
+  name: AndrewM5.DevKit.Core.Abstractions
+  nameWithType: AndrewM5.DevKit.Core.Abstractions
+  fullName: AndrewM5.DevKit.Core.Abstractions
+  type: Namespace
+  assemblies:
+  - AndrewM5.DevKit.Core
+references:
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1
+  commentId: T:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1
+  href: AndrewM5.DevKit.Core.Abstractions.IOperationResult-1.html
+  name: IOperationResult<T>
+  nameWithType: IOperationResult<T>
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>
+  nameWithType.vb: IOperationResult(Of T)
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T)
+  name.vb: IOperationResult(Of T)
+  spec.csharp:
+  - uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1
+    name: IOperationResult
+    href: AndrewM5.DevKit.Core.Abstractions.IOperationResult-1.html
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1
+    name: IOperationResult
+    href: AndrewM5.DevKit.Core.Abstractions.IOperationResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )

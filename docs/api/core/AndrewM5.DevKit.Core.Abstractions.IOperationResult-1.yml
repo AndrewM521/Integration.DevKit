@@ -1,0 +1,233 @@
+### YamlMime:ManagedReference
+items:
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1
+  commentId: T:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1
+  id: IOperationResult`1
+  parent: AndrewM5.DevKit.Core.Abstractions
+  children:
+  - AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Exception
+  - AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.MethodSuccess
+  - AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Result
+  langs:
+  - csharp
+  - vb
+  name: IOperationResult<T>
+  nameWithType: IOperationResult<T>
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>
+  type: Interface
+  source:
+    remote:
+      path: src/AndrewM5.DevKit.Core/Abstractions/IOperationResult.cs
+      branch: main
+      repo: https://github.com/AndrewM521/AndrewM5.DevKit.git
+    id: IOperationResult
+    path: ../src/AndrewM5.DevKit.Core/Abstractions/IOperationResult.cs
+    startLine: 2
+  assemblies:
+  - AndrewM5.DevKit.Core
+  namespace: AndrewM5.DevKit.Core.Abstractions
+  syntax:
+    content: public interface IOperationResult<T>
+    typeParameters:
+    - id: T
+    content.vb: Public Interface IOperationResult(Of T)
+  derivedClasses:
+  - AndrewM5.DevKit.Core.Results.ApiOperationResult`1
+  - AndrewM5.DevKit.Core.Results.NullOperationResult
+  - AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+  - AndrewM5.DevKit.Core.Results.OperationResult`1
+  nameWithType.vb: IOperationResult(Of T)
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T)
+  name.vb: IOperationResult(Of T)
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.MethodSuccess
+  commentId: P:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.MethodSuccess
+  id: MethodSuccess
+  parent: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1
+  langs:
+  - csharp
+  - vb
+  name: MethodSuccess
+  nameWithType: IOperationResult<T>.MethodSuccess
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>.MethodSuccess
+  type: Property
+  source:
+    remote:
+      path: src/AndrewM5.DevKit.Core/Abstractions/IOperationResult.cs
+      branch: main
+      repo: https://github.com/AndrewM521/AndrewM5.DevKit.git
+    id: MethodSuccess
+    path: ../src/AndrewM5.DevKit.Core/Abstractions/IOperationResult.cs
+    startLine: 4
+  assemblies:
+  - AndrewM5.DevKit.Core
+  namespace: AndrewM5.DevKit.Core.Abstractions
+  syntax:
+    content: bool MethodSuccess { get; }
+    parameters: []
+    return:
+      type: System.Boolean
+    content.vb: ReadOnly Property MethodSuccess As Boolean
+  overload: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.MethodSuccess*
+  nameWithType.vb: IOperationResult(Of T).MethodSuccess
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T).MethodSuccess
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Exception
+  commentId: P:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Exception
+  id: Exception
+  parent: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1
+  langs:
+  - csharp
+  - vb
+  name: Exception
+  nameWithType: IOperationResult<T>.Exception
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>.Exception
+  type: Property
+  source:
+    remote:
+      path: src/AndrewM5.DevKit.Core/Abstractions/IOperationResult.cs
+      branch: main
+      repo: https://github.com/AndrewM521/AndrewM5.DevKit.git
+    id: Exception
+    path: ../src/AndrewM5.DevKit.Core/Abstractions/IOperationResult.cs
+    startLine: 5
+  assemblies:
+  - AndrewM5.DevKit.Core
+  namespace: AndrewM5.DevKit.Core.Abstractions
+  syntax:
+    content: Exception Exception { get; }
+    parameters: []
+    return:
+      type: System.Exception
+    content.vb: ReadOnly Property Exception As Exception
+  overload: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Exception*
+  nameWithType.vb: IOperationResult(Of T).Exception
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T).Exception
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Result
+  commentId: P:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Result
+  id: Result
+  parent: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1
+  langs:
+  - csharp
+  - vb
+  name: Result
+  nameWithType: IOperationResult<T>.Result
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>.Result
+  type: Property
+  source:
+    remote:
+      path: src/AndrewM5.DevKit.Core/Abstractions/IOperationResult.cs
+      branch: main
+      repo: https://github.com/AndrewM521/AndrewM5.DevKit.git
+    id: Result
+    path: ../src/AndrewM5.DevKit.Core/Abstractions/IOperationResult.cs
+    startLine: 6
+  assemblies:
+  - AndrewM5.DevKit.Core
+  namespace: AndrewM5.DevKit.Core.Abstractions
+  syntax:
+    content: T Result { get; }
+    parameters: []
+    return:
+      type: '{T}'
+    content.vb: ReadOnly Property Result As T
+  overload: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Result*
+  nameWithType.vb: IOperationResult(Of T).Result
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T).Result
+references:
+- uid: AndrewM5.DevKit.Core.Abstractions
+  commentId: N:AndrewM5.DevKit.Core.Abstractions
+  href: AndrewM5.html
+  name: AndrewM5.DevKit.Core.Abstractions
+  nameWithType: AndrewM5.DevKit.Core.Abstractions
+  fullName: AndrewM5.DevKit.Core.Abstractions
+  spec.csharp:
+  - uid: AndrewM5
+    name: AndrewM5
+    href: AndrewM5.html
+  - name: .
+  - uid: AndrewM5.DevKit
+    name: DevKit
+    href: AndrewM5.DevKit.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core
+    name: Core
+    href: AndrewM5.DevKit.Core.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core.Abstractions
+    name: Abstractions
+    href: AndrewM5.DevKit.Core.Abstractions.html
+  spec.vb:
+  - uid: AndrewM5
+    name: AndrewM5
+    href: AndrewM5.html
+  - name: .
+  - uid: AndrewM5.DevKit
+    name: DevKit
+    href: AndrewM5.DevKit.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core
+    name: Core
+    href: AndrewM5.DevKit.Core.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core.Abstractions
+    name: Abstractions
+    href: AndrewM5.DevKit.Core.Abstractions.html
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.MethodSuccess*
+  commentId: Overload:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.MethodSuccess
+  href: AndrewM5.DevKit.Core.Abstractions.IOperationResult-1.html#AndrewM5_DevKit_Core_Abstractions_IOperationResult_1_MethodSuccess
+  name: MethodSuccess
+  nameWithType: IOperationResult<T>.MethodSuccess
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>.MethodSuccess
+  nameWithType.vb: IOperationResult(Of T).MethodSuccess
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T).MethodSuccess
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Exception*
+  commentId: Overload:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Exception
+  href: AndrewM5.DevKit.Core.Abstractions.IOperationResult-1.html#AndrewM5_DevKit_Core_Abstractions_IOperationResult_1_Exception
+  name: Exception
+  nameWithType: IOperationResult<T>.Exception
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>.Exception
+  nameWithType.vb: IOperationResult(Of T).Exception
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T).Exception
+- uid: System.Exception
+  commentId: T:System.Exception
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.exception
+  name: Exception
+  nameWithType: Exception
+  fullName: System.Exception
+- uid: AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Result*
+  commentId: Overload:AndrewM5.DevKit.Core.Abstractions.IOperationResult`1.Result
+  href: AndrewM5.DevKit.Core.Abstractions.IOperationResult-1.html#AndrewM5_DevKit_Core_Abstractions_IOperationResult_1_Result
+  name: Result
+  nameWithType: IOperationResult<T>.Result
+  fullName: AndrewM5.DevKit.Core.Abstractions.IOperationResult<T>.Result
+  nameWithType.vb: IOperationResult(Of T).Result
+  fullName.vb: AndrewM5.DevKit.Core.Abstractions.IOperationResult(Of T).Result
+- uid: '{T}'
+  commentId: '!:T'
+  definition: T
+  name: T
+  nameWithType: T
+  fullName: T
+- uid: T
+  name: T
+  nameWithType: T
+  fullName: T

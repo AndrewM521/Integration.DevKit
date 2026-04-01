@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Models;
-using AndrewM5.DevKit.TaskManagement.Abstractions.Settings;
+using AndrewM5.DevKit.TaskManagement.Abstractions.Options;
 
 namespace AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 

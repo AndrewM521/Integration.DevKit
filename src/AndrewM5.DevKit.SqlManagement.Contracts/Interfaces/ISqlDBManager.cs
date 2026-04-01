@@ -1,4 +1,4 @@
-﻿using AndrewM5.DevKit.SqlManagement.Abstractions.Settings;
+﻿using AndrewM5.DevKit.SqlManagement.Abstractions.Options;
 
 namespace AndrewM5.DevKit.SqlManagement.Contracts.Interfaces;
 

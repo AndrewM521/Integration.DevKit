@@ -1,0 +1,143 @@
+### YamlMime:ManagedReference
+items:
+- uid: AndrewM5.DevKit.Core.Results
+  commentId: N:AndrewM5.DevKit.Core.Results
+  id: AndrewM5.DevKit.Core.Results
+  children:
+  - AndrewM5.DevKit.Core.Results.ApiOperationResult`1
+  - AndrewM5.DevKit.Core.Results.NullOperationResult
+  - AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+  - AndrewM5.DevKit.Core.Results.OperationResult`1
+  langs:
+  - csharp
+  - vb
+  name: AndrewM5.DevKit.Core.Results
+  nameWithType: AndrewM5.DevKit.Core.Results
+  fullName: AndrewM5.DevKit.Core.Results
+  type: Namespace
+  assemblies:
+  - AndrewM5.DevKit.Core
+references:
+- uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1
+  commentId: T:AndrewM5.DevKit.Core.Results.ApiOperationResult`1
+  parent: AndrewM5.DevKit.Core.Results
+  href: AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html
+  name: ApiOperationResult<T>
+  nameWithType: ApiOperationResult<T>
+  fullName: AndrewM5.DevKit.Core.Results.ApiOperationResult<T>
+  nameWithType.vb: ApiOperationResult(Of T)
+  fullName.vb: AndrewM5.DevKit.Core.Results.ApiOperationResult(Of T)
+  name.vb: ApiOperationResult(Of T)
+  spec.csharp:
+  - uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1
+    name: ApiOperationResult
+    href: AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: AndrewM5.DevKit.Core.Results.ApiOperationResult`1
+    name: ApiOperationResult
+    href: AndrewM5.DevKit.Core.Results.ApiOperationResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+  commentId: T:AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+  parent: AndrewM5.DevKit.Core.Results
+  href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  name: NullableOperationResult<T>
+  nameWithType: NullableOperationResult<T>
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>
+  nameWithType.vb: NullableOperationResult(Of T)
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T)
+  name.vb: NullableOperationResult(Of T)
+  spec.csharp:
+  - uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+    name: NullableOperationResult
+    href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+    name: NullableOperationResult
+    href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: AndrewM5.DevKit.Core.Results.NullOperationResult
+  commentId: T:AndrewM5.DevKit.Core.Results.NullOperationResult
+  parent: AndrewM5.DevKit.Core.Results
+  href: AndrewM5.DevKit.Core.Results.NullOperationResult.html
+  name: NullOperationResult
+  nameWithType: NullOperationResult
+  fullName: AndrewM5.DevKit.Core.Results.NullOperationResult
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+  commentId: T:AndrewM5.DevKit.Core.Results.OperationResult`1
+  parent: AndrewM5.DevKit.Core.Results
+  href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  name: OperationResult<T>
+  nameWithType: OperationResult<T>
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>
+  nameWithType.vb: OperationResult(Of T)
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T)
+  name.vb: OperationResult(Of T)
+  spec.csharp:
+  - uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+    name: OperationResult
+    href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+    name: OperationResult
+    href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: AndrewM5.DevKit.Core.Results
+  commentId: N:AndrewM5.DevKit.Core.Results
+  href: AndrewM5.html
+  name: AndrewM5.DevKit.Core.Results
+  nameWithType: AndrewM5.DevKit.Core.Results
+  fullName: AndrewM5.DevKit.Core.Results
+  spec.csharp:
+  - uid: AndrewM5
+    name: AndrewM5
+    href: AndrewM5.html
+  - name: .
+  - uid: AndrewM5.DevKit
+    name: DevKit
+    href: AndrewM5.DevKit.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core
+    name: Core
+    href: AndrewM5.DevKit.Core.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core.Results
+    name: Results
+    href: AndrewM5.DevKit.Core.Results.html
+  spec.vb:
+  - uid: AndrewM5
+    name: AndrewM5
+    href: AndrewM5.html
+  - name: .
+  - uid: AndrewM5.DevKit
+    name: DevKit
+    href: AndrewM5.DevKit.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core
+    name: Core
+    href: AndrewM5.DevKit.Core.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core.Results
+    name: Results
+    href: AndrewM5.DevKit.Core.Results.html

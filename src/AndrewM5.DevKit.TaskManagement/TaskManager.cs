@@ -3,7 +3,7 @@ using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Models;
-using AndrewM5.DevKit.TaskManagement.Abstractions.Settings;
+using AndrewM5.DevKit.TaskManagement.Abstractions.Options;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

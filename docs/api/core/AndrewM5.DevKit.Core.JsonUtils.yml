@@ -1,0 +1,1295 @@
+### YamlMime:ManagedReference
+items:
+- uid: AndrewM5.DevKit.Core.JsonUtils
+  commentId: T:AndrewM5.DevKit.Core.JsonUtils
+  id: JsonUtils
+  parent: AndrewM5.DevKit.Core
+  children:
+  - AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject(System.Text.Json.JsonElement)
+  - AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject(System.String)
+  - AndrewM5.DevKit.Core.JsonUtils.FilterDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.Collections.Generic.List{System.String})
+  - AndrewM5.DevKit.Core.JsonUtils.GetDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  - AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue``1(System.Collections.Generic.Dictionary{System.String,System.Object},System.String,``0)
+  - AndrewM5.DevKit.Core.JsonUtils.GetListDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  - AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson``1(System.String,System.Collections.Generic.List{System.String})
+  - AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson(System.Object)
+  langs:
+  - csharp
+  - vb
+  name: JsonUtils
+  nameWithType: JsonUtils
+  fullName: AndrewM5.DevKit.Core.JsonUtils
+  type: Class
+  source:
+    remote:
+      path: src/AndrewM5.DevKit.Core/JsonUtils.cs
+      branch: main
+      repo: https://github.com/AndrewM521/AndrewM5.DevKit.git
+    id: JsonUtils
+    path: ../src/AndrewM5.DevKit.Core/JsonUtils.cs
+    startLine: 5
+  assemblies:
+  - AndrewM5.DevKit.Core
+  namespace: AndrewM5.DevKit.Core
+  syntax:
+    content: public static class JsonUtils
+    content.vb: Public Module JsonUtils
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject(System.String)
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject(System.String)
+  id: ConvertJsonToObject(System.String)
+  parent: AndrewM5.DevKit.Core.JsonUtils
+  langs:
+  - csharp
+  - vb
+  name: ConvertJsonToObject(string)
+  nameWithType: JsonUtils.ConvertJsonToObject(string)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject(string)
+  type: Method
+  source:
+    remote:
+      path: src/AndrewM5.DevKit.Core/JsonUtils.cs
+      branch: main
+      repo: https://github.com/AndrewM521/AndrewM5.DevKit.git
+    id: ConvertJsonToObject
+    path: ../src/AndrewM5.DevKit.Core/JsonUtils.cs
+    startLine: 7
+  assemblies:
+  - AndrewM5.DevKit.Core
+  namespace: AndrewM5.DevKit.Core
+  syntax:
+    content: public static NullableOperationResult<object?> ConvertJsonToObject(string json)
+    parameters:
+    - id: json
+      type: System.String
+    return:
+      type: AndrewM5.DevKit.Core.Results.NullableOperationResult{System.Object}
+    content.vb: Public Shared Function ConvertJsonToObject(json As String) As NullableOperationResult(Of Object)
+  overload: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject*
+  nameWithType.vb: JsonUtils.ConvertJsonToObject(String)
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject(String)
+  name.vb: ConvertJsonToObject(String)
+- uid: AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson(System.Object)
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson(System.Object)
+  id: SerializeObjectToJson(System.Object)
+  parent: AndrewM5.DevKit.Core.JsonUtils
+  langs:
+  - csharp
+  - vb
+  name: SerializeObjectToJson(object)
+  nameWithType: JsonUtils.SerializeObjectToJson(object)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson(object)
+  type: Method
+  source:
+    remote:
+      path: src/AndrewM5.DevKit.Core/JsonUtils.cs
+      branch: main
+      repo: https://github.com/AndrewM521/AndrewM5.DevKit.git
+    id: SerializeObjectToJson
+    path: ../src/AndrewM5.DevKit.Core/JsonUtils.cs
+    startLine: 25
+  assemblies:
+  - AndrewM5.DevKit.Core
+  namespace: AndrewM5.DevKit.Core
+  syntax:
+    content: public static OperationResult<string> SerializeObjectToJson(object obj)
+    parameters:
+    - id: obj
+      type: System.Object
+    return:
+      type: AndrewM5.DevKit.Core.Results.OperationResult{System.String}
+    content.vb: Public Shared Function SerializeObjectToJson(obj As Object) As OperationResult(Of String)
+  overload: AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson*
+  nameWithType.vb: JsonUtils.SerializeObjectToJson(Object)
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson(Object)
+  name.vb: SerializeObjectToJson(Object)
+- uid: AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson``1(System.String,System.Collections.Generic.List{System.String})
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson``1(System.String,System.Collections.Generic.List{System.String})
+  id: ParseAndFilterJson``1(System.String,System.Collections.Generic.List{System.String})
+  parent: AndrewM5.DevKit.Core.JsonUtils
+  langs:
+  - csharp
+  - vb
+  name: ParseAndFilterJson<T>(string, List<string>?)
+  nameWithType: JsonUtils.ParseAndFilterJson<T>(string, List<string>?)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson<T>(string, System.Collections.Generic.List<string>?)
+  type: Method
+  source:
+    remote:
+      path: src/AndrewM5.DevKit.Core/JsonUtils.cs
+      branch: main
+      repo: https://github.com/AndrewM521/AndrewM5.DevKit.git
+    id: ParseAndFilterJson
+    path: ../src/AndrewM5.DevKit.Core/JsonUtils.cs
+    startLine: 40
+  assemblies:
+  - AndrewM5.DevKit.Core
+  namespace: AndrewM5.DevKit.Core
+  syntax:
+    content: public static OperationResult<T> ParseAndFilterJson<T>(string rawJson, List<string>? keys = null)
+    parameters:
+    - id: rawJson
+      type: System.String
+    - id: keys
+      type: System.Collections.Generic.List{System.String}
+    typeParameters:
+    - id: T
+    return:
+      type: AndrewM5.DevKit.Core.Results.OperationResult{{T}}
+    content.vb: Public Shared Function ParseAndFilterJson(Of T)(rawJson As String, keys As List(Of String) = Nothing) As OperationResult(Of T)
+  overload: AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson*
+  nameWithType.vb: JsonUtils.ParseAndFilterJson(Of T)(String, List(Of String))
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson(Of T)(String, System.Collections.Generic.List(Of String))
+  name.vb: ParseAndFilterJson(Of T)(String, List(Of String))
+- uid: AndrewM5.DevKit.Core.JsonUtils.FilterDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.Collections.Generic.List{System.String})
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.FilterDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.Collections.Generic.List{System.String})
+  id: FilterDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.Collections.Generic.List{System.String})
+  parent: AndrewM5.DevKit.Core.JsonUtils
+  langs:
+  - csharp
+  - vb
+  name: FilterDictionary(Dictionary<string, object>, List<string>?)
+  nameWithType: JsonUtils.FilterDictionary(Dictionary<string, object>, List<string>?)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.FilterDictionary(System.Collections.Generic.Dictionary<string, object>, System.Collections.Generic.List<string>?)
+  type: Method
+  source:
+    remote:
+      path: src/AndrewM5.DevKit.Core/JsonUtils.cs
+      branch: main
+      repo: https://github.com/AndrewM521/AndrewM5.DevKit.git
+    id: FilterDictionary
+    path: ../src/AndrewM5.DevKit.Core/JsonUtils.cs
+    startLine: 64
+  assemblies:
+  - AndrewM5.DevKit.Core
+  namespace: AndrewM5.DevKit.Core
+  syntax:
+    content: public static OperationResult<Dictionary<string, object>> FilterDictionary(Dictionary<string, object> originalDictionary, List<string>? keys = null)
+    parameters:
+    - id: originalDictionary
+      type: System.Collections.Generic.Dictionary{System.String,System.Object}
+    - id: keys
+      type: System.Collections.Generic.List{System.String}
+    return:
+      type: AndrewM5.DevKit.Core.Results.OperationResult{System.Collections.Generic.Dictionary{System.String,System.Object}}
+    content.vb: Public Shared Function FilterDictionary(originalDictionary As Dictionary(Of String, Object), keys As List(Of String) = Nothing) As OperationResult(Of Dictionary(Of String, Object))
+  overload: AndrewM5.DevKit.Core.JsonUtils.FilterDictionary*
+  nameWithType.vb: JsonUtils.FilterDictionary(Dictionary(Of String, Object), List(Of String))
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.FilterDictionary(System.Collections.Generic.Dictionary(Of String, Object), System.Collections.Generic.List(Of String))
+  name.vb: FilterDictionary(Dictionary(Of String, Object), List(Of String))
+- uid: AndrewM5.DevKit.Core.JsonUtils.GetDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.GetDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  id: GetDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  parent: AndrewM5.DevKit.Core.JsonUtils
+  langs:
+  - csharp
+  - vb
+  name: GetDictionary(Dictionary<string, object>, string)
+  nameWithType: JsonUtils.GetDictionary(Dictionary<string, object>, string)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.GetDictionary(System.Collections.Generic.Dictionary<string, object>, string)
+  type: Method
+  source:
+    remote:
+      path: src/AndrewM5.DevKit.Core/JsonUtils.cs
+      branch: main
+      repo: https://github.com/AndrewM521/AndrewM5.DevKit.git
+    id: GetDictionary
+    path: ../src/AndrewM5.DevKit.Core/JsonUtils.cs
+    startLine: 89
+  assemblies:
+  - AndrewM5.DevKit.Core
+  namespace: AndrewM5.DevKit.Core
+  syntax:
+    content: public static NullableOperationResult<Dictionary<string, object>> GetDictionary(Dictionary<string, object> dictionary, string keyPath)
+    parameters:
+    - id: dictionary
+      type: System.Collections.Generic.Dictionary{System.String,System.Object}
+    - id: keyPath
+      type: System.String
+    return:
+      type: AndrewM5.DevKit.Core.Results.NullableOperationResult{System.Collections.Generic.Dictionary{System.String,System.Object}}
+    content.vb: Public Shared Function GetDictionary(dictionary As Dictionary(Of String, Object), keyPath As String) As NullableOperationResult(Of Dictionary(Of String, Object))
+  overload: AndrewM5.DevKit.Core.JsonUtils.GetDictionary*
+  nameWithType.vb: JsonUtils.GetDictionary(Dictionary(Of String, Object), String)
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.GetDictionary(System.Collections.Generic.Dictionary(Of String, Object), String)
+  name.vb: GetDictionary(Dictionary(Of String, Object), String)
+- uid: AndrewM5.DevKit.Core.JsonUtils.GetListDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.GetListDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  id: GetListDictionary(System.Collections.Generic.Dictionary{System.String,System.Object},System.String)
+  parent: AndrewM5.DevKit.Core.JsonUtils
+  langs:
+  - csharp
+  - vb
+  name: GetListDictionary(Dictionary<string, object>, string)
+  nameWithType: JsonUtils.GetListDictionary(Dictionary<string, object>, string)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.GetListDictionary(System.Collections.Generic.Dictionary<string, object>, string)
+  type: Method
+  source:
+    remote:
+      path: src/AndrewM5.DevKit.Core/JsonUtils.cs
+      branch: main
+      repo: https://github.com/AndrewM521/AndrewM5.DevKit.git
+    id: GetListDictionary
+    path: ../src/AndrewM5.DevKit.Core/JsonUtils.cs
+    startLine: 93
+  assemblies:
+  - AndrewM5.DevKit.Core
+  namespace: AndrewM5.DevKit.Core
+  syntax:
+    content: public static NullableOperationResult<List<Dictionary<string, object>>> GetListDictionary(Dictionary<string, object> dictionary, string keyPath)
+    parameters:
+    - id: dictionary
+      type: System.Collections.Generic.Dictionary{System.String,System.Object}
+    - id: keyPath
+      type: System.String
+    return:
+      type: AndrewM5.DevKit.Core.Results.NullableOperationResult{System.Collections.Generic.List{System.Collections.Generic.Dictionary{System.String,System.Object}}}
+    content.vb: Public Shared Function GetListDictionary(dictionary As Dictionary(Of String, Object), keyPath As String) As NullableOperationResult(Of List(Of Dictionary(Of String, Object)))
+  overload: AndrewM5.DevKit.Core.JsonUtils.GetListDictionary*
+  nameWithType.vb: JsonUtils.GetListDictionary(Dictionary(Of String, Object), String)
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.GetListDictionary(System.Collections.Generic.Dictionary(Of String, Object), String)
+  name.vb: GetListDictionary(Dictionary(Of String, Object), String)
+- uid: AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue``1(System.Collections.Generic.Dictionary{System.String,System.Object},System.String,``0)
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue``1(System.Collections.Generic.Dictionary{System.String,System.Object},System.String,``0)
+  id: GetDictionaryValue``1(System.Collections.Generic.Dictionary{System.String,System.Object},System.String,``0)
+  parent: AndrewM5.DevKit.Core.JsonUtils
+  langs:
+  - csharp
+  - vb
+  name: GetDictionaryValue<T>(Dictionary<string, object>, string, T)
+  nameWithType: JsonUtils.GetDictionaryValue<T>(Dictionary<string, object>, string, T)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue<T>(System.Collections.Generic.Dictionary<string, object>, string, T)
+  type: Method
+  source:
+    remote:
+      path: src/AndrewM5.DevKit.Core/JsonUtils.cs
+      branch: main
+      repo: https://github.com/AndrewM521/AndrewM5.DevKit.git
+    id: GetDictionaryValue
+    path: ../src/AndrewM5.DevKit.Core/JsonUtils.cs
+    startLine: 97
+  assemblies:
+  - AndrewM5.DevKit.Core
+  namespace: AndrewM5.DevKit.Core
+  syntax:
+    content: public static NullableOperationResult<T> GetDictionaryValue<T>(Dictionary<string, object> dictionary, string keyPath, T defaultVal = default)
+    parameters:
+    - id: dictionary
+      type: System.Collections.Generic.Dictionary{System.String,System.Object}
+    - id: keyPath
+      type: System.String
+    - id: defaultVal
+      type: '{T}'
+    typeParameters:
+    - id: T
+    return:
+      type: AndrewM5.DevKit.Core.Results.NullableOperationResult{{T}}
+    content.vb: Public Shared Function GetDictionaryValue(Of T)(dictionary As Dictionary(Of String, Object), keyPath As String, defaultVal As T = Nothing) As NullableOperationResult(Of T)
+  overload: AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue*
+  nameWithType.vb: JsonUtils.GetDictionaryValue(Of T)(Dictionary(Of String, Object), String, T)
+  fullName.vb: AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue(Of T)(System.Collections.Generic.Dictionary(Of String, Object), String, T)
+  name.vb: GetDictionaryValue(Of T)(Dictionary(Of String, Object), String, T)
+- uid: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject(System.Text.Json.JsonElement)
+  commentId: M:AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject(System.Text.Json.JsonElement)
+  id: ConvertJsonElementToNativeObject(System.Text.Json.JsonElement)
+  parent: AndrewM5.DevKit.Core.JsonUtils
+  langs:
+  - csharp
+  - vb
+  name: ConvertJsonElementToNativeObject(JsonElement)
+  nameWithType: JsonUtils.ConvertJsonElementToNativeObject(JsonElement)
+  fullName: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject(System.Text.Json.JsonElement)
+  type: Method
+  source:
+    remote:
+      path: src/AndrewM5.DevKit.Core/JsonUtils.cs
+      branch: main
+      repo: https://github.com/AndrewM521/AndrewM5.DevKit.git
+    id: ConvertJsonElementToNativeObject
+    path: ../src/AndrewM5.DevKit.Core/JsonUtils.cs
+    startLine: 187
+  assemblies:
+  - AndrewM5.DevKit.Core
+  namespace: AndrewM5.DevKit.Core
+  syntax:
+    content: public static object? ConvertJsonElementToNativeObject(JsonElement element)
+    parameters:
+    - id: element
+      type: System.Text.Json.JsonElement
+    return:
+      type: System.Object
+    content.vb: Public Shared Function ConvertJsonElementToNativeObject(element As JsonElement) As Object
+  overload: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject*
+references:
+- uid: AndrewM5.DevKit.Core
+  commentId: N:AndrewM5.DevKit.Core
+  href: AndrewM5.html
+  name: AndrewM5.DevKit.Core
+  nameWithType: AndrewM5.DevKit.Core
+  fullName: AndrewM5.DevKit.Core
+  spec.csharp:
+  - uid: AndrewM5
+    name: AndrewM5
+    href: AndrewM5.html
+  - name: .
+  - uid: AndrewM5.DevKit
+    name: DevKit
+    href: AndrewM5.DevKit.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core
+    name: Core
+    href: AndrewM5.DevKit.Core.html
+  spec.vb:
+  - uid: AndrewM5
+    name: AndrewM5
+    href: AndrewM5.html
+  - name: .
+  - uid: AndrewM5.DevKit
+    name: DevKit
+    href: AndrewM5.DevKit.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core
+    name: Core
+    href: AndrewM5.DevKit.Core.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject*
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject
+  href: AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_ConvertJsonToObject_System_String_
+  name: ConvertJsonToObject
+  nameWithType: JsonUtils.ConvertJsonToObject
+  fullName: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonToObject
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult{System.Object}
+  commentId: T:AndrewM5.DevKit.Core.Results.NullableOperationResult{System.Object}
+  parent: AndrewM5.DevKit.Core.Results
+  definition: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+  href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  name: NullableOperationResult<object>
+  nameWithType: NullableOperationResult<object>
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<object>
+  nameWithType.vb: NullableOperationResult(Of Object)
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of Object)
+  name.vb: NullableOperationResult(Of Object)
+  spec.csharp:
+  - uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+    name: NullableOperationResult
+    href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  - name: <
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '>'
+  spec.vb:
+  - uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+    name: NullableOperationResult
+    href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+  commentId: T:AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+  parent: AndrewM5.DevKit.Core.Results
+  href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  name: NullableOperationResult<T>
+  nameWithType: NullableOperationResult<T>
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>
+  nameWithType.vb: NullableOperationResult(Of T)
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T)
+  name.vb: NullableOperationResult(Of T)
+  spec.csharp:
+  - uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+    name: NullableOperationResult
+    href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+    name: NullableOperationResult
+    href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: AndrewM5.DevKit.Core.Results
+  commentId: N:AndrewM5.DevKit.Core.Results
+  href: AndrewM5.html
+  name: AndrewM5.DevKit.Core.Results
+  nameWithType: AndrewM5.DevKit.Core.Results
+  fullName: AndrewM5.DevKit.Core.Results
+  spec.csharp:
+  - uid: AndrewM5
+    name: AndrewM5
+    href: AndrewM5.html
+  - name: .
+  - uid: AndrewM5.DevKit
+    name: DevKit
+    href: AndrewM5.DevKit.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core
+    name: Core
+    href: AndrewM5.DevKit.Core.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core.Results
+    name: Results
+    href: AndrewM5.DevKit.Core.Results.html
+  spec.vb:
+  - uid: AndrewM5
+    name: AndrewM5
+    href: AndrewM5.html
+  - name: .
+  - uid: AndrewM5.DevKit
+    name: DevKit
+    href: AndrewM5.DevKit.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core
+    name: Core
+    href: AndrewM5.DevKit.Core.html
+  - name: .
+  - uid: AndrewM5.DevKit.Core.Results
+    name: Results
+    href: AndrewM5.DevKit.Core.Results.html
+- uid: AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson*
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson
+  href: AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_SerializeObjectToJson_System_Object_
+  name: SerializeObjectToJson
+  nameWithType: JsonUtils.SerializeObjectToJson
+  fullName: AndrewM5.DevKit.Core.JsonUtils.SerializeObjectToJson
+- uid: AndrewM5.DevKit.Core.Results.OperationResult{System.String}
+  commentId: T:AndrewM5.DevKit.Core.Results.OperationResult{System.String}
+  parent: AndrewM5.DevKit.Core.Results
+  definition: AndrewM5.DevKit.Core.Results.OperationResult`1
+  href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  name: OperationResult<string>
+  nameWithType: OperationResult<string>
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<string>
+  nameWithType.vb: OperationResult(Of String)
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of String)
+  name.vb: OperationResult(Of String)
+  spec.csharp:
+  - uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+    name: OperationResult
+    href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '>'
+  spec.vb:
+  - uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+    name: OperationResult
+    href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+  commentId: T:AndrewM5.DevKit.Core.Results.OperationResult`1
+  parent: AndrewM5.DevKit.Core.Results
+  href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  name: OperationResult<T>
+  nameWithType: OperationResult<T>
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>
+  nameWithType.vb: OperationResult(Of T)
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T)
+  name.vb: OperationResult(Of T)
+  spec.csharp:
+  - uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+    name: OperationResult
+    href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+    name: OperationResult
+    href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson*
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson
+  href: AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_ParseAndFilterJson__1_System_String_System_Collections_Generic_List_System_String__
+  name: ParseAndFilterJson
+  nameWithType: JsonUtils.ParseAndFilterJson
+  fullName: AndrewM5.DevKit.Core.JsonUtils.ParseAndFilterJson
+- uid: System.Collections.Generic.List{System.String}
+  commentId: T:System.Collections.Generic.List{System.String}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.List`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  name: List<string>
+  nameWithType: List<string>
+  fullName: System.Collections.Generic.List<string>
+  nameWithType.vb: List(Of String)
+  fullName.vb: System.Collections.Generic.List(Of String)
+  name.vb: List(Of String)
+  spec.csharp:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: AndrewM5.DevKit.Core.Results.OperationResult{{T}}
+  commentId: T:AndrewM5.DevKit.Core.Results.OperationResult{``0}
+  parent: AndrewM5.DevKit.Core.Results
+  definition: AndrewM5.DevKit.Core.Results.OperationResult`1
+  href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  name: OperationResult<T>
+  nameWithType: OperationResult<T>
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<T>
+  nameWithType.vb: OperationResult(Of T)
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of T)
+  name.vb: OperationResult(Of T)
+  spec.csharp:
+  - uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+    name: OperationResult
+    href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+    name: OperationResult
+    href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic.List`1
+  commentId: T:System.Collections.Generic.List`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  name: List<T>
+  nameWithType: List<T>
+  fullName: System.Collections.Generic.List<T>
+  nameWithType.vb: List(Of T)
+  fullName.vb: System.Collections.Generic.List(Of T)
+  name.vb: List(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: AndrewM5.DevKit.Core.JsonUtils.FilterDictionary*
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.FilterDictionary
+  href: AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_FilterDictionary_System_Collections_Generic_Dictionary_System_String_System_Object__System_Collections_Generic_List_System_String__
+  name: FilterDictionary
+  nameWithType: JsonUtils.FilterDictionary
+  fullName: AndrewM5.DevKit.Core.JsonUtils.FilterDictionary
+- uid: System.Collections.Generic.Dictionary{System.String,System.Object}
+  commentId: T:System.Collections.Generic.Dictionary{System.String,System.Object}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.Dictionary`2
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  name: Dictionary<string, object>
+  nameWithType: Dictionary<string, object>
+  fullName: System.Collections.Generic.Dictionary<string, object>
+  nameWithType.vb: Dictionary(Of String, Object)
+  fullName.vb: System.Collections.Generic.Dictionary(Of String, Object)
+  name.vb: Dictionary(Of String, Object)
+  spec.csharp:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: AndrewM5.DevKit.Core.Results.OperationResult{System.Collections.Generic.Dictionary{System.String,System.Object}}
+  commentId: T:AndrewM5.DevKit.Core.Results.OperationResult{System.Collections.Generic.Dictionary{System.String,System.Object}}
+  parent: AndrewM5.DevKit.Core.Results
+  definition: AndrewM5.DevKit.Core.Results.OperationResult`1
+  href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  name: OperationResult<Dictionary<string, object>>
+  nameWithType: OperationResult<Dictionary<string, object>>
+  fullName: AndrewM5.DevKit.Core.Results.OperationResult<System.Collections.Generic.Dictionary<string, object>>
+  nameWithType.vb: OperationResult(Of Dictionary(Of String, Object))
+  fullName.vb: AndrewM5.DevKit.Core.Results.OperationResult(Of System.Collections.Generic.Dictionary(Of String, Object))
+  name.vb: OperationResult(Of Dictionary(Of String, Object))
+  spec.csharp:
+  - uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+    name: OperationResult
+    href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  - name: <
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: AndrewM5.DevKit.Core.Results.OperationResult`1
+    name: OperationResult
+    href: AndrewM5.DevKit.Core.Results.OperationResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  - name: )
+- uid: System.Collections.Generic.Dictionary`2
+  commentId: T:System.Collections.Generic.Dictionary`2
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  name: Dictionary<TKey, TValue>
+  nameWithType: Dictionary<TKey, TValue>
+  fullName: System.Collections.Generic.Dictionary<TKey, TValue>
+  nameWithType.vb: Dictionary(Of TKey, TValue)
+  fullName.vb: System.Collections.Generic.Dictionary(Of TKey, TValue)
+  name.vb: Dictionary(Of TKey, TValue)
+  spec.csharp:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TValue
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TValue
+  - name: )
+- uid: AndrewM5.DevKit.Core.JsonUtils.GetDictionary*
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.GetDictionary
+  href: AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_GetDictionary_System_Collections_Generic_Dictionary_System_String_System_Object__System_String_
+  name: GetDictionary
+  nameWithType: JsonUtils.GetDictionary
+  fullName: AndrewM5.DevKit.Core.JsonUtils.GetDictionary
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult{System.Collections.Generic.Dictionary{System.String,System.Object}}
+  commentId: T:AndrewM5.DevKit.Core.Results.NullableOperationResult{System.Collections.Generic.Dictionary{System.String,System.Object}}
+  parent: AndrewM5.DevKit.Core.Results
+  definition: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+  href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  name: NullableOperationResult<Dictionary<string, object>>
+  nameWithType: NullableOperationResult<Dictionary<string, object>>
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<System.Collections.Generic.Dictionary<string, object>>
+  nameWithType.vb: NullableOperationResult(Of Dictionary(Of String, Object))
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of System.Collections.Generic.Dictionary(Of String, Object))
+  name.vb: NullableOperationResult(Of Dictionary(Of String, Object))
+  spec.csharp:
+  - uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+    name: NullableOperationResult
+    href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  - name: <
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+    name: NullableOperationResult
+    href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  - name: )
+- uid: AndrewM5.DevKit.Core.JsonUtils.GetListDictionary*
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.GetListDictionary
+  href: AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_GetListDictionary_System_Collections_Generic_Dictionary_System_String_System_Object__System_String_
+  name: GetListDictionary
+  nameWithType: JsonUtils.GetListDictionary
+  fullName: AndrewM5.DevKit.Core.JsonUtils.GetListDictionary
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult{System.Collections.Generic.List{System.Collections.Generic.Dictionary{System.String,System.Object}}}
+  commentId: T:AndrewM5.DevKit.Core.Results.NullableOperationResult{System.Collections.Generic.List{System.Collections.Generic.Dictionary{System.String,System.Object}}}
+  parent: AndrewM5.DevKit.Core.Results
+  definition: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+  href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  name: NullableOperationResult<List<Dictionary<string, object>>>
+  nameWithType: NullableOperationResult<List<Dictionary<string, object>>>
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>>
+  nameWithType.vb: NullableOperationResult(Of List(Of Dictionary(Of String, Object)))
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of System.Collections.Generic.List(Of System.Collections.Generic.Dictionary(Of String, Object)))
+  name.vb: NullableOperationResult(Of List(Of Dictionary(Of String, Object)))
+  spec.csharp:
+  - uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+    name: NullableOperationResult
+    href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  - name: <
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '>'
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+    name: NullableOperationResult
+    href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  - name: )
+  - name: )
+- uid: AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue*
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue
+  href: AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_GetDictionaryValue__1_System_Collections_Generic_Dictionary_System_String_System_Object__System_String___0_
+  name: GetDictionaryValue
+  nameWithType: JsonUtils.GetDictionaryValue
+  fullName: AndrewM5.DevKit.Core.JsonUtils.GetDictionaryValue
+- uid: '{T}'
+  commentId: '!:T'
+  definition: T
+  name: T
+  nameWithType: T
+  fullName: T
+- uid: AndrewM5.DevKit.Core.Results.NullableOperationResult{{T}}
+  commentId: T:AndrewM5.DevKit.Core.Results.NullableOperationResult{``0}
+  parent: AndrewM5.DevKit.Core.Results
+  definition: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+  href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  name: NullableOperationResult<T>
+  nameWithType: NullableOperationResult<T>
+  fullName: AndrewM5.DevKit.Core.Results.NullableOperationResult<T>
+  nameWithType.vb: NullableOperationResult(Of T)
+  fullName.vb: AndrewM5.DevKit.Core.Results.NullableOperationResult(Of T)
+  name.vb: NullableOperationResult(Of T)
+  spec.csharp:
+  - uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+    name: NullableOperationResult
+    href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: AndrewM5.DevKit.Core.Results.NullableOperationResult`1
+    name: NullableOperationResult
+    href: AndrewM5.DevKit.Core.Results.NullableOperationResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: T
+  name: T
+  nameWithType: T
+  fullName: T
+- uid: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject*
+  commentId: Overload:AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject
+  href: AndrewM5.DevKit.Core.JsonUtils.html#AndrewM5_DevKit_Core_JsonUtils_ConvertJsonElementToNativeObject_System_Text_Json_JsonElement_
+  name: ConvertJsonElementToNativeObject
+  nameWithType: JsonUtils.ConvertJsonElementToNativeObject
+  fullName: AndrewM5.DevKit.Core.JsonUtils.ConvertJsonElementToNativeObject
+- uid: System.Text.Json.JsonElement
+  commentId: T:System.Text.Json.JsonElement
+  parent: System.Text.Json
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.text.json.jsonelement
+  name: JsonElement
+  nameWithType: JsonElement
+  fullName: System.Text.Json.JsonElement
+- uid: System.Text.Json
+  commentId: N:System.Text.Json
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Text.Json
+  nameWithType: System.Text.Json
+  fullName: System.Text.Json
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Text
+    name: Text
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.text
+  - name: .
+  - uid: System.Text.Json
+    name: Json
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.text.json
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Text
+    name: Text
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.text
+  - name: .
+  - uid: System.Text.Json
+    name: Json
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.text.json

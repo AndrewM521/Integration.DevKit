@@ -2,8 +2,19 @@
 
 namespace AndrewM5.DevKit.Core;
 
+/// <summary>
+/// Provides utility methods for navigating, filtering, and transforming complex 
+/// Dictionary and List structures, specifically targeting <see cref="Dictionary{TKey, TValue}"/> 
+/// where the value is an <see cref="object"/>.
+/// </summary>
 public static class DictionaryUtils
 {
+    /// <summary>
+    /// Recursively traverses an object structure (dictionaries and lists) following a specified path of keys.
+    /// </summary>
+    /// <param name="curObject">The root object to begin traversal.</param>
+    /// <param name="path">An array of strings representing the keys to follow.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing a list of objects that match the full path.</returns>
     public static OperationResult<List<object>> TraverseByPath(object curObject, string[] path)
     {
         var result = new OperationResult<List<object>>();
@@ -21,6 +32,12 @@ public static class DictionaryUtils
         }
     }
 
+    /// <summary>
+    /// Filters a list of dictionaries, returning a new list containing only the specified keys.
+    /// </summary>
+    /// <param name="source">The source list of dictionaries.</param>
+    /// <param name="keys">The list of keys to keep in the subset.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the filtered list of dictionaries.</returns>
     public static OperationResult<List<Dictionary<string, object>>> ExtractSubsetByKeys(List<Dictionary<string, object>> source, List<string> keys)
     {
         var result = new OperationResult<List<Dictionary<string, object>>>();
@@ -66,7 +83,15 @@ public static class DictionaryUtils
             return result.SetMethodFailure(ex);
         }
     }
-    
+
+    /// <summary>
+    /// Retrieves the first dictionary from a list of dictionaries.
+    /// </summary>
+    /// <param name="dictionaries">The list of dictionaries.</param>
+    /// <returns>
+    /// An <see cref="OperationResult{T}"/> containing the first dictionary if found; 
+    /// otherwise, an empty dictionary.
+    /// </returns>
     public static OperationResult<Dictionary<string, object>> GetFirstDictionary(List<Dictionary<string, object>> dictionaries)
     {
         var result = new OperationResult<Dictionary<string, object>>();
@@ -78,24 +103,15 @@ public static class DictionaryUtils
 
         return result.SetMethodSuccess(new Dictionary<string, object>());
     }
-    
-    public static OperationResult<KeyValuePair<string, object>> FirstKeyValuePair(List<Dictionary<string, object>> dictionaries)
-    {
-        var result = new OperationResult<KeyValuePair<string, object>>();
 
-        if (dictionaries != null && dictionaries.Count > 0 && dictionaries[0] != null)
-        {
-            var firstDict = dictionaries[0];
-
-            if (firstDict.Count > 0)
-            {
-                return result.SetMethodSuccess(firstDict.First());
-            }
-        }
-
-        return result.SetMethodSuccess(default);
-    }
-
+    /// <summary>
+    /// Extracts data from a dictionary identified by a key and flattens it into a single dictionary.
+    /// </summary>
+    /// <param name="source">The source dictionary containing the nested data.</param>
+    /// <param name="searchKey">The key used to locate the nested dictionary or list.</param>
+    /// <returns>
+    /// An <see cref="OperationResult{T}"/> containing a flattened dictionary of all found key-value pairs.
+    /// </returns>
     public static OperationResult<Dictionary<string, object>> FlattenListByKey(Dictionary<string, object> source, string searchKey)
     {
         var result = new OperationResult<Dictionary<string, object>>();
@@ -135,6 +151,17 @@ public static class DictionaryUtils
         return result.SetMethodSuccess(resultDict);
     }
 
+    /// <summary>
+    /// Retrieves a value from the dictionary and attempts to cast or convert it to the specified type.
+    /// </summary>
+    /// <typeparam name="T">The desired type of the return value.</typeparam>
+    /// <param name="dict">The dictionary to search.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="defaultValue">The value to return if the key is not found or conversion fails.</param>
+    /// <returns>The value converted to <typeparamref name="T"/>, or <paramref name="defaultValue"/>.</returns>
+    /// <remarks>
+    /// This method first attempts a direct cast. If that fails, it uses <see cref="Convert.ChangeType(object, Type)"/>.
+    /// </remarks>
     public static T GetValueOrDefault<T>(Dictionary<string, object> dict, string key, T defaultValue)
     {
         if (dict.TryGetValue(key, out var value) && value != null)
@@ -158,9 +185,15 @@ public static class DictionaryUtils
         return defaultValue;
     }
 
-    public static Dictionary<string, object>? GetDictionary(Dictionary<string, object> dict, string key)
+    /// <summary>
+    /// Retrieves a nested dictionary from the source dictionary.
+    /// </summary>
+    /// <param name="source">The source dictionary.</param>
+    /// <param name="key">The key for the nested dictionary.</param>
+    /// <returns>The nested dictionary if found and of the correct type; otherwise, null.</returns>
+    public static Dictionary<string, object>? GetDictionary(Dictionary<string, object> source, string key)
     {
-        if (!dict.TryGetValue(key, out var value))
+        if (!source.TryGetValue(key, out var value))
         {
             return null;
         }
@@ -173,9 +206,18 @@ public static class DictionaryUtils
         return nested;
     }
 
-    public static List<Dictionary<string, object>>? GetListDictionary(Dictionary<string, object> dict, string key)
+    /// <summary>
+    /// Retrieves a list of dictionaries associated with the specified key.
+    /// </summary>
+    /// <param name="source">The source dictionary.</param>
+    /// <param name="key">The key for the nested list.</param>
+    /// <returns>
+    /// A list of dictionaries if found; returns null if the key is missing, 
+    /// the value is not a list, or the list contains no valid dictionaries.
+    /// </returns>
+    public static List<Dictionary<string, object>>? GetListDictionary(Dictionary<string, object> source, string key)
     {
-        if (!dict.TryGetValue(key, out var value))
+        if (!source.TryGetValue(key, out var value))
         {
             return null;
         }
@@ -203,9 +245,15 @@ public static class DictionaryUtils
         return result;
     }
 
-    public static List<object>? GetList(Dictionary<string, object> dict, string key)
+    /// <summary>
+    /// Retrieves a generic list of objects associated with the specified key.
+    /// </summary>
+    /// <param name="source">The source dictionary.</param>
+    /// <param name="key">The key for the nested list.</param>
+    /// <returns>The list of objects if found and of the correct type; otherwise, null.</returns>
+    public static List<object>? GetList(Dictionary<string, object> source, string key)
     {
-        if (!dict.TryGetValue(key, out var value))
+        if (!source.TryGetValue(key, out var value))
         {
             return null;
         }
@@ -218,6 +266,13 @@ public static class DictionaryUtils
         return list;
     }
 
+    /// <summary>
+    /// Internal recursive method to navigate through dictionaries and lists.
+    /// </summary>
+    /// <param name="current">The current object in the recursion.</param>
+    /// <param name="path">The full path of keys being searched.</param>
+    /// <param name="depth">The current index within the path array.</param>
+    /// <param name="matches">A reference to the list where matching objects are collected.</param>
     private static void TraverseInternal(object current, string[] path, int depth, ref List<object> matches)
     {
         if (depth == path.Length)

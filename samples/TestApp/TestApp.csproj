@@ -13,14 +13,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AndrewM5.DevKit.ApiManagement\AndrewM5.DevKit.ApiManagement.csproj" />
-    <ProjectReference Include="..\AndrewM5.DevKit.Core\AndrewM5.DevKit.Core.csproj" />
-    <ProjectReference Include="..\AndrewM5.DevKit.CredentialManagement\AndrewM5.DevKit.CredentialManagement.csproj" />
-    <ProjectReference Include="..\AndrewM5.DevKit.Logging.Flusher\AndrewM5.DevKit.Logging.Flusher.csproj" />
-    <ProjectReference Include="..\AndrewM5.DevKit.Logging\AndrewM5.DevKit.Logging.csproj" />
-    <ProjectReference Include="..\AndrewM5.DevKit.ProcessLauncher\AndrewM5.DevKit.ProcessLauncher.csproj" />
-    <ProjectReference Include="..\AndrewM5.DevKit.TaskManagement\AndrewM5.DevKit.TaskManagement.csproj" />
-    <ProjectReference Include="..\AndrewM5.DevKit.ThreadSafeItems\AndrewM5.DevKit.ThreadSafeItems.csproj" />
+    <ProjectReference Include="..\..\src\AndrewM5.DevKit.ApiManagement\AndrewM5.DevKit.ApiManagement.csproj" />
+    <ProjectReference Include="..\..\src\AndrewM5.DevKit.CredentialManagement\AndrewM5.DevKit.CredentialManagement.csproj" />
+    <ProjectReference Include="..\..\src\AndrewM5.DevKit.Logging.Flusher\AndrewM5.DevKit.Logging.Flusher.csproj" />
+    <ProjectReference Include="..\..\src\AndrewM5.DevKit.ProcessLauncher\AndrewM5.DevKit.ProcessLauncher.csproj" />
+    <ProjectReference Include="..\..\src\AndrewM5.DevKit.TaskManagement\AndrewM5.DevKit.TaskManagement.csproj" />
+    <ProjectReference Include="..\..\src\AndrewM5.DevKit.ThreadSafeItems\AndrewM5.DevKit.ThreadSafeItems.csproj" />
   </ItemGroup>
 
   <ItemGroup>
