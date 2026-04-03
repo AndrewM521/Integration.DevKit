@@ -10,8 +10,13 @@ using System.Text;
 
 namespace AndrewM5.DevKit.Logging.Flusher;
 
+/// <summary>
+/// A hosted background service that periodically flushes buffered log messages from 
+/// <see cref="ILogRegistry"/> to a persistent file destination.
+/// </summary>
 public class LogFlusher : BackgroundService, ILogFlusher
 {
+    /// <inheritdoc />
     public LogFlushServiceSettings RuntimeSettings { get; init; }
 
     private readonly ILogRegistry _logRegistry;
@@ -19,6 +24,13 @@ public class LogFlusher : BackgroundService, ILogFlusher
 
     private readonly bool _runningInContainer;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogFlusher"/> class.
+    /// </summary>
+    /// <param name="settings">The configuration settings for flushing behavior.</param>
+    /// <param name="loggerManager">The manager used to create an internal logger for this service.</param>
+    /// <param name="logRegistry">The registry containing the message buffer to be flushed.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="settings"/> is null.</exception>
     public LogFlusher(IOptions<LogFlushServiceSettings> settings, ICustomLoggerManager loggerManager, ILogRegistry logRegistry)
     {
         if (settings == null)
@@ -33,6 +45,12 @@ public class LogFlusher : BackgroundService, ILogFlusher
         _runningInContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
     }
 
+    /// <summary>
+    /// The main execution loop of the background service. 
+    /// Monitors buffer size and elapsed time to trigger log flushes.
+    /// </summary>
+    /// <param name="cancellationToken">Triggered when the application host is shutting down.</param>
+    /// <returns>A <see cref="Task"/> representing the background operation.</returns>
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         DateTime lastFlushTime = DateTime.UtcNow;
@@ -53,6 +71,13 @@ public class LogFlusher : BackgroundService, ILogFlusher
         FlushBuffer(); //Final flush when task is canceled.
     }
 
+    /// <summary>
+    /// Dequeues messages from the registry and writes them to the configured log file.
+    /// </summary>
+    /// <remarks>
+    /// Respects the <see cref="LogFlushServiceSettings.CreateLogFile"/> and 
+    /// <see cref="LogFlushServiceSettings.AllowCreateFileInContainer"/> configurations.
+    /// </remarks>
     private void FlushBuffer()
     {
         try
@@ -93,6 +118,7 @@ public class LogFlusher : BackgroundService, ILogFlusher
         }
     }
 
+    /// <inheritdoc />
     public void OutputRuntimeSettings()
     {
         _logger?.LogDebug($"--- Log Flush Service Settings ---");

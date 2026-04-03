@@ -3,12 +3,25 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AndrewM5.DevKit.Logging.Flusher.Services;
 
+/// <summary>
+/// Provides a static entry point for interacting with the <see cref="ILogFlusher"/> service.
+/// This host must be initialized during application startup after the DI container is built.
+/// </summary>
 public static class LogFlusherHost
 {
     private static ILogFlusher? _logFlushService;
 
     private const string NoInit = "LogFlusherHost has not been initialized.";
 
+    /// <summary>
+    /// Initializes the static flusher host and validates that all required logging dependencies are registered.
+    /// </summary>
+    /// <param name="sp">The <see cref="IServiceProvider"/> used to resolve logging and flushing services.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if the core Logging module is missing (requires <see cref="ICustomLoggerManager"/> and <see cref="ILogRegistry"/>) 
+    /// or if the Flusher service itself has not been registered.
+    /// </exception>
     public static void Initalize(IServiceProvider sp)
     {
         if (sp == null)
@@ -33,6 +46,11 @@ public static class LogFlusherHost
         }
     }
 
+    /// <summary>
+    /// Gets the global instance of the <see cref="ILogFlusher"/> service.
+    /// </summary>
+    /// <value>The current log flusher instance.</value>
+    /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initalize"/> is called.</exception>
     public static ILogFlusher LogFlushService
     {
         get

@@ -6,8 +6,28 @@ using Microsoft.Extensions.Options;
 
 namespace AndrewM5.DevKit.Logging.Flusher.Services;
 
+/// <summary>
+/// Provides extension methods for <see cref="IServiceCollection"/> to register and 
+/// configure the background log flushing service.
+/// </summary>
 public static class LogFlusherServiceCollection
 {
+    /// <summary>
+    /// Registers the <see cref="LogFlusher"/> as a singleton and a hosted background service.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+    /// <param name="config">The <see cref="IConfiguration"/> instance used to bind flusher settings.</param>
+    /// <returns>The same <see cref="IServiceCollection"/> instance for chaining calls.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> or <paramref name="config"/> is null.</exception>
+    /// <remarks>
+    /// This method performs the following actions:
+    /// <list type="bullet">
+    /// <item>Binds the <c>"AndrewM5.DevKit:LogFlushService"</c> configuration section.</item>
+    /// <item>Registers <see cref="LogFlusher"/> as a singleton implementation.</item>
+    /// <item>Maps <see cref="ILogFlusher"/> to the same <see cref="LogFlusher"/> singleton.</item>
+    /// <item>Registers <see cref="LogFlusher"/> as an <see cref="IHostedService"/> to enable background execution.</item>
+    /// </list>
+    /// </remarks>
     public static IServiceCollection AddCustomLogFlusher(this IServiceCollection services, IConfiguration config)
     {
         if (services == null)

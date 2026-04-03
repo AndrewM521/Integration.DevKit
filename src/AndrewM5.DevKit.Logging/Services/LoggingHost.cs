@@ -2,13 +2,25 @@
 using Microsoft.Extensions.DependencyInjection;
 namespace AndrewM5.DevKit.Logging.Services;
 
+/// <summary>
+/// Provides a static entry point to access logging services across the application. 
+/// This class must be initialized during application startup to function.
+/// </summary>
 public static class LoggingHost
 {
     private const string NoInit = "LoggingHost has not been initialized.";
 
     private static ILogRegistry? _logRegistry;
     private static ICustomLoggerManager? _loggerManager;
-    
+
+    /// <summary>
+    /// Initializes the static logging host with the required services from the service provider.
+    /// </summary>
+    /// <param name="sp">The <see cref="IServiceProvider"/> containing the registered logging services.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if <see cref="ILogRegistry"/> or <see cref="ICustomLoggerManager"/> are not registered in the DI container.
+    /// </exception>
     public static void Initialize(IServiceProvider sp)
     {
         if (sp == null)
@@ -29,6 +41,11 @@ public static class LoggingHost
         }
     }
 
+    /// <summary>
+    /// Gets the global instance of the <see cref="ICustomLoggerManager"/>.
+    /// </summary>
+    /// <value>The current logger manager instance.</value>
+    /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
     public static ICustomLoggerManager LoggerManager
     {
         get
@@ -42,6 +59,11 @@ public static class LoggingHost
         }
     }
 
+    /// <summary>
+    /// Gets the global instance of the <see cref="ILogRegistry"/>.
+    /// </summary>
+    /// <value>The current log registry instance.</value>
+    /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
     public static ILogRegistry LogRegistry
     {
         get

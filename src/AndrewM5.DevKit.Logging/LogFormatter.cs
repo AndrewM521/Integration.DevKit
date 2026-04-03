@@ -2,8 +2,23 @@
 
 namespace AndrewM5.DevKit.Logging;
 
+/// <summary>
+/// Provides static utility methods for normalizing and formatting log messages into a standardized string representation.
+/// </summary>
 public static class LogFormatter
 {
+    /// <summary>
+    /// Formats log data into a structured string, optionally including system metadata like process ID and timestamps.
+    /// </summary>
+    /// <param name="includePrefix">If set to <see langword="true"/>, prepends process ID, log level, and Unix timestamp to the message.</param>
+    /// <param name="category">The source or category of the log (usually the class name).</param>
+    /// <param name="message">The primary log message text.</param>
+    /// <param name="logLevel">The severity level of the log. Defaults to <see cref="LogLevel.Information"/>.</param>
+    /// <param name="ex">An optional <see cref="Exception"/> to append to the end of the formatted string.</param>
+    /// <returns>
+    /// A formatted string. If <paramref name="includePrefix"/> is true, the format is: 
+    /// <c>[PID:LEVEL]&lt;UNIX_MS&gt; Category - Message</c>.
+    /// </returns>
     public static string Format(bool includePrefix, string category, string message, LogLevel logLevel = LogLevel.Information, Exception? ex = null)
     {
         string logLevelStr = "NONE";
