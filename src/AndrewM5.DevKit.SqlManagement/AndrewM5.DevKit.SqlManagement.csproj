@@ -14,8 +14,4 @@
     <ProjectReference Include="..\AndrewM5.DevKit.SqlManagement.Contracts\AndrewM5.DevKit.SqlManagement.Contracts.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services\" />
-  </ItemGroup>
-
 </Project>

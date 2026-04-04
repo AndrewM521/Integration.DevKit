@@ -11,10 +11,13 @@ using System.Reflection;
 
 namespace AndrewM5.DevKit.SqlManagement;
 
+/// <inheritdoc/>
 public class SqlDBClient : ISqlDBClient
 {
+    /// <inheritdoc/>
     public SqlDBClientSettings RuntimeSettings { get; set; }
 
+    /// <inheritdoc/>
     public string ClientName { get; set; }
 
     private readonly ICustomLogger? _logger;
@@ -25,6 +28,13 @@ public class SqlDBClient : ISqlDBClient
 
     private SqlConnection? _mainSqlConnection;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SqlDBClient"/> class.
+    /// </summary>
+    /// <param name="sqlDBManager">The parent manager used to inherit default settings if necessary.</param>
+    /// <param name="clientName">The name identifying this specific client.</param>
+    /// <param name="settings">The configuration settings for this client.</param>
+    /// <param name="logger">An optional logger instance for debugging and error tracking.</param>
     public SqlDBClient(ISqlDBManager sqlDBManager, string clientName, SqlDBClientSettings settings, ICustomLogger? logger = null)
     {
         ClientName = clientName;
@@ -47,12 +57,14 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
+    /// <inheritdoc/>
     public void SetSecretStore(ISecretStore secretStore)
     {
         _secretStore = secretStore;
     }
 
     #region Asyncronous Methods
+    /// <inheritdoc/>
     public async Task<OperationResult<bool>> TestSqlConnectionAsync(CancellationToken cancellationToken = default)
     {
         var result = new OperationResult<bool>();
@@ -84,6 +96,7 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
+    /// <inheritdoc/>
     public async Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, 
         Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default)
     {
@@ -126,6 +139,7 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
+    /// <inheritdoc/>
     public async Task<NullOperationResult> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, 
             Func<SqlCommand, Task> processCommand, CancellationToken cancellationToken = default)
     {
@@ -166,6 +180,7 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
+    /// <inheritdoc/>
     public async Task<NullOperationResult> RunDataReaderAsync(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader,
         Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default)
     {
@@ -216,22 +231,26 @@ public class SqlDBClient : ISqlDBClient
     #endregion
 
     #region Syncronous Methods
+    /// <inheritdoc/>
     public OperationResult<bool> TestSqlConnection()
     {
         return TestSqlConnectionAsync().GetAwaiter().GetResult();
     }
 
+    /// <inheritdoc/>
     public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, Action<SqlParameterCollection>? configureParameters = null)
     {
         return RunNonQueryCommandAsync(sqlStatement, commandType, configureParameters).GetAwaiter().GetResult();
     }
 
+    /// <inheritdoc/>
     public NullOperationResult RunNonQueryCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand)
     {
         return RunNonQueryCommandAsync(sqlStatement, commandType, 
             command => processCommand(command)).GetAwaiter().GetResult();
     }
 
+    /// <inheritdoc/>
     public NullOperationResult RunDataReader(string sql, CommandType commandType,
         Func<SqlDataReader, Task> processReader, Action<SqlParameterCollection>? configureParameters = null)
     {
@@ -241,6 +260,7 @@ public class SqlDBClient : ISqlDBClient
     #endregion
 
     #region Credentials
+    /// <inheritdoc/>
     public NullOperationResult SetCredentials(string server, string database, string username, string password)
     {
         var result = new NullOperationResult();
@@ -284,6 +304,7 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
+    /// <inheritdoc/>
     public NullOperationResult DeleteCredential(string key)
     {
         var result = new NullOperationResult();
@@ -303,6 +324,7 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
+    /// <inheritdoc/>
     public NullOperationResult DeleteAllCredentials()
     {
         var result = new NullOperationResult();
@@ -322,6 +344,9 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
+    /// <summary>
+    /// Internal helper to resolve a specific credential key from the secret store.
+    /// </summary>
     private OperationResult<string> GetCredentials(string key, string defaultStr)
     {
         var result = new OperationResult<string>();
@@ -350,6 +375,9 @@ public class SqlDBClient : ISqlDBClient
     }
     #endregion
 
+    /// <summary>
+    /// Retrieves a SQL connection, either creating a new one or returning the persistent instance.
+    /// </summary>
     private OperationResult<SqlConnection> GetConnection()
     {
         var result = new OperationResult<SqlConnection>();
@@ -388,6 +416,9 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
+    /// <summary>
+    /// Generates the connection string by resolving values from settings and the secret store.
+    /// </summary>
     private OperationResult<string> GetConnectionString()
     {
         var result = new OperationResult<string>();
@@ -436,6 +467,7 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
+    /// <inheritdoc/>
     public void OutputRuntimeSettings(bool calledFromManager = false)
     {
         string indent;
@@ -464,6 +496,9 @@ public class SqlDBClient : ISqlDBClient
         }
     }
 
+    /// <summary>
+    /// Disposes of any persistent database connections.
+    /// </summary>
     public void Dispose()
     {
         _mainSqlConnection?.Dispose();
