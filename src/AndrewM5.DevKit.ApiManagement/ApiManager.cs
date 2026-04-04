@@ -8,8 +8,12 @@ using System.Reflection;
 
 namespace AndrewM5.DevKit.ApiManagement;
 
+/// <summary>
+/// The central manager responsible for creating, configuring, and caching <see cref="IApiClient"/> instances.
+/// </summary>
 public class ApiManager : IApiManager
 {
+    /// <inheritdoc/>
     public ApiManagerSettings RuntimeSettings { get; set; }
 
     private readonly ConcurrentDictionary<string, IApiClient> _clients = new ConcurrentDictionary<string, IApiClient>(StringComparer.OrdinalIgnoreCase);
@@ -17,6 +21,13 @@ public class ApiManager : IApiManager
     private readonly IHttpClientFactory _httpFactory;
     private readonly ICustomLogger? _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ApiManager"/> class.
+    /// </summary>
+    /// <param name="settings">The initial configuration settings injected via the Options pattern.</param>
+    /// <param name="httpFactory">The factory used to create underlying <see cref="HttpClient"/> instances.</param>
+    /// <param name="loggerManager">Optional manager to resolve the "ApiManager" logger.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="settings"/> is null.</exception>
     public ApiManager(IOptions<ApiManagerSettings> settings, IHttpClientFactory httpFactory, ICustomLoggerManager? loggerManager = null)
     {
         if (settings == null)
@@ -36,6 +47,11 @@ public class ApiManager : IApiManager
         _logger = loggerManager?.GetLogger("ApiManager");
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// If the requested <paramref name="clientName"/> is not found in the <see cref="RuntimeSettings"/>, 
+    /// the manager provides a fallback <see cref="ApiClient"/> using default settings.
+    /// </remarks>
     public IApiClient GetClient(string clientName)
     {
         if (!RuntimeSettings.Clients.TryGetValue(clientName, out var clientSettings))
@@ -47,21 +63,19 @@ public class ApiManager : IApiManager
 
         return _clients.GetOrAdd(clientName, _ =>
         {
-            /* 
-            We do not name the HttpClient object the same as client name because internally HttpClient has 2 layers of configurations
-                Layer 1: BaseURL, Timeouts, Tokens, Headers, etc.
-                Layer 2: DNS Refresh, SSL options, Proxy Settings, Certificate Settings, etc.
-            We can change Layer 1 with the given settings but we should not change Layer 2, as Microsoft warns that multiple instances 
-            of Layer 2 will cause performance hits. By using "ApiClient", we are telling .NET to use the same layer 2 config settings 
-            for each instances of HttpClient 
+            /* CRITICAL ARCHITECTURAL NOTE:
+               We request a client named "ApiClient" from the factory rather than using the specific 'clientName'.
+               This allows .NET to manage the underlying Primary Handler (Layer 2 - DNS, SSL, Connection Pooling) 
+               as a single pool, while we manually configure the 'Outer' HttpClient (Layer 1 - BaseUrl, Headers) 
+               inside the ApiClient constructor. 
             */
-
             var httpClientObj = _httpFactory.CreateClient("ApiClient");
 
             return new ApiClient(this, clientName, clientSettings, httpClientObj, _logger);
         });
     }
 
+    /// <inheritdoc/>
     public void OutputRuntimeSettings()
     {
         _logger?.LogDebug($"--- Api Manager Settings ---");
@@ -91,6 +105,10 @@ public class ApiManager : IApiManager
         }
     }
 
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting 
+    /// unmanaged resources asynchronously by disposing all cached clients.
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
         foreach (var client in _clients.Values)

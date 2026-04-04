@@ -12,11 +12,19 @@ using System.Text;
 
 namespace AndrewM5.DevKit.ApiManagement;
 
+/// <summary>
+/// Implementation of <see cref="IApiClient"/> providing thread-safe HTTP operations, 
+/// integrated rate limiting, and secure credential management.
+/// </summary>
 public class ApiClient : IApiClient
 {
+    /// <inheritdoc/>
     public string ClientName { get; set; }
 
+    /// <inheritdoc/>
     public ApiClientSettings RuntimeSettings { get; private set; }
+
+    /// <inheritdoc/>
     public IApiClientMetrics ClientMetrics => _metrics;
 
     private readonly HttpClient _httpClient;
@@ -28,6 +36,14 @@ public class ApiClient : IApiClient
     private readonly string _secretStoreFileName;
     private ISecretStore? _secretStore;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ApiClient"/> class.
+    /// </summary>
+    /// <param name="apiManager">The parent manager used to resolve default settings.</param>
+    /// <param name="clientName">The unique name for this client instance.</param>
+    /// <param name="clientSettings">The specific configuration for this client.</param>
+    /// <param name="httpClient">The underlying <see cref="HttpClient"/> instance to use for requests.</param>
+    /// <param name="logger">Optional logger for debugging and runtime info.</param>
     public ApiClient(IApiManager apiManager, string clientName, ApiClientSettings clientSettings, HttpClient httpClient, ICustomLogger? logger = null)
     {
         ClientName = clientName;
@@ -76,6 +92,7 @@ public class ApiClient : IApiClient
     }
 
     #region Asyncronous Methods
+    /// <inheritdoc/>
     public async Task<ApiOperationResult<string>> GetAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
     {
         var result = new ApiOperationResult<string>();
@@ -103,6 +120,7 @@ public class ApiClient : IApiClient
         }
     }
 
+    /// <inheritdoc/>
     public async Task<ApiOperationResult<string>> PutAsync(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
     {
         var result = new ApiOperationResult<string>();
@@ -132,6 +150,7 @@ public class ApiClient : IApiClient
         }
     }
 
+    /// <inheritdoc/>
     public async Task<ApiOperationResult<string>> PostAsync(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
     {
         var result = new ApiOperationResult<string>();
@@ -161,6 +180,7 @@ public class ApiClient : IApiClient
         }
     }
 
+    /// <inheritdoc/>
     public async Task<ApiOperationResult<string>> PostAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
     {
         var result = new ApiOperationResult<string>();
@@ -188,6 +208,7 @@ public class ApiClient : IApiClient
         }
     }
 
+    /// <inheritdoc/>
     public async Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
     {
         var result = new ApiOperationResult<string>();
@@ -215,6 +236,11 @@ public class ApiClient : IApiClient
         }
     }
 
+    /// <summary>
+    /// Core method for executing an <see cref="HttpRequestMessage"/> with rate limiting and metric tracking.
+    /// </summary>
+    /// <param name="request">The prepared HTTP request to send.</param>
+    /// <returns>An <see cref="ApiOperationResult{T}"/> containing the string response or failure details.</returns>
     private async Task<ApiOperationResult<string>> SendRequestAsync(HttpRequestMessage request)
     {
         var result = new ApiOperationResult<string>();
@@ -272,26 +298,31 @@ public class ApiClient : IApiClient
 
     #region Syncronous Methods
 
+    /// <inheritdoc/>
     public ApiOperationResult<string> Get(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
     {
         return GetAsync(endpointUrl, requestHeaders).GetAwaiter().GetResult();
     }
 
+    /// <inheritdoc/>
     public ApiOperationResult<string> Put(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
     {
         return PutAsync(endpointUrl, httpContent, requestHeaders).GetAwaiter().GetResult();
     }
 
+    /// <inheritdoc/>
     public ApiOperationResult<string> Post(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
     {
         return PostAsync(endpointUrl, httpContent, requestHeaders).GetAwaiter().GetResult();
     }
 
+    /// <inheritdoc/>
     public ApiOperationResult<string> Post(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
     {
         return PostAsync(endpointUrl, requestHeaders).GetAwaiter().GetResult();
     }
 
+    /// <inheritdoc/>
     public ApiOperationResult<string> Delete(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
     {
         return DeleteAsync(endpointUrl, requestHeaders).GetAwaiter().GetResult();
@@ -299,6 +330,7 @@ public class ApiClient : IApiClient
     #endregion
 
     #region Helper Methods
+    /// <inheritdoc/>
     public OperationResult<HttpContent> CreateHttpContent(RESTApiMediaTypes mediaType, string data, Encoding? encoding = null)
     {
         var result = new OperationResult<HttpContent>();
@@ -326,6 +358,7 @@ public class ApiClient : IApiClient
         }
     }
 
+    /// <inheritdoc/>
     public NullOperationResult AddDefaultHeader(string key, string value)
     {
         var result = new NullOperationResult();
@@ -347,6 +380,9 @@ public class ApiClient : IApiClient
         }
     }
 
+    /// <summary>
+    /// Maps the <see cref="RESTApiMediaTypes"/> enum to its corresponding MIME type string.
+    /// </summary>
     private OperationResult<string> GetMediaTypeString(RESTApiMediaTypes mediaType)
     {
         var result = new OperationResult<string>();
@@ -381,6 +417,10 @@ public class ApiClient : IApiClient
         }
     }
 
+    /// <summary>
+    /// Applies specific request headers to the <see cref="HttpRequestMessage"/>, 
+    /// handling special cases like Authorization and Content-Type.
+    /// </summary>
     private OperationResult<bool> AddRequestHeaders(HttpRequestMessage request, Dictionary<string, string>? requestHeaders = null)
     {
         var result = new OperationResult<bool>();
@@ -466,6 +506,10 @@ public class ApiClient : IApiClient
             return result.SetMethodFailure(ex);
         }
     }
+
+    /// <summary>
+    /// Maps standard <see cref="HttpMethod"/> types to our custom <see cref="HttpMetricNames"/> enum.
+    /// </summary>
     private HttpMetricNames GetMetricName(HttpMethod method)
     {
         if (method == HttpMethod.Get)
@@ -502,10 +546,13 @@ public class ApiClient : IApiClient
     #endregion
 
     #region Credentials
+    /// <inheritdoc/>
     public void SetSecretStore(ISecretStore secretStore)
     {
         _secretStore = secretStore;
     }
+
+    /// <inheritdoc/>
     public NullOperationResult SetCredentials(string username, string password)
     {
         var result = new NullOperationResult();
@@ -537,16 +584,19 @@ public class ApiClient : IApiClient
         }
     }
 
+    /// <inheritdoc/>
     public OperationResult<string> GetUsername()
     {
         return GetCredentials("username", RuntimeSettings.Username);
     }
 
+    /// <inheritdoc/>
     public OperationResult<string> GetPassword()
     {
         return GetCredentials("password", RuntimeSettings.Password);
     }
 
+    /// <inheritdoc/>
     public NullOperationResult DeleteCredential(string key)
     {
         var result = new NullOperationResult();
@@ -566,6 +616,7 @@ public class ApiClient : IApiClient
         }
     }
 
+    /// <inheritdoc/>
     public NullOperationResult DeleteAllCredentials()
     {
         var result = new NullOperationResult();
@@ -585,6 +636,9 @@ public class ApiClient : IApiClient
         }
     }
 
+    /// <summary>
+    /// Internal helper to retrieve a credential from the secret store, falling back to runtime settings if the store is not set.
+    /// </summary>
     private OperationResult<string> GetCredentials(string key, string defaultStr)
     {
         var result = new OperationResult<string>();
@@ -613,6 +667,7 @@ public class ApiClient : IApiClient
     }
     #endregion
 
+    /// <inheritdoc/>
     public void OutputRuntimeSettings(bool calledFromManager = false)
     {
         string indent;
@@ -654,6 +709,7 @@ public class ApiClient : IApiClient
         }
     }
 
+    /// <inheritdoc/>
     public ValueTask DisposeAsync()
     {
         _rateLimiter?.Dispose();

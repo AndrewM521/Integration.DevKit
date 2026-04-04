@@ -2,11 +2,31 @@
 
 namespace AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
 
+/// <summary>
+/// Defines a contract for a manager responsible for orchestrating multiple <see cref="IApiClient"/> instances 
+/// and maintaining global API management configurations.
+/// </summary>
 public interface IApiManager : IAsyncDisposable
 {
+    /// <summary>
+    /// Gets or sets the global configuration settings for the API manager.
+    /// </summary>
+    /// <value>
+    /// An instance of <see cref="ApiManagerSettings"/> containing the current runtime configuration.
+    /// </value>
     public ApiManagerSettings RuntimeSettings { get; set; }
 
+    /// <summary>
+    /// Retrieves a specific API client by its registered name.
+    /// </summary>
+    /// <param name="clientName">The unique name identifying the desired <see cref="IApiClient"/>.</param>
+    /// <returns>
+    /// An instance of <see cref="IApiClient"/> associated with the provided <paramref name="clientName"/>.
+    /// </returns>
     public IApiClient GetClient(string clientName);
 
+    /// <summary>
+    /// Debugging or logging method to output the current <see cref="ApiManagerSettings"/> state to the configured output stream.
+    /// </summary>
     public void OutputRuntimeSettings();
 }
