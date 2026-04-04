@@ -7,6 +7,10 @@ using System.Text;
 
 namespace AndrewM5.DevKit.ProcessLauncher;
 
+/// <summary>
+/// A concrete implementation of <see cref="IManagedProcess"/> that wraps a <see cref="System.Diagnostics.Process"/>.
+/// Handles stream redirection, asynchronous monitoring, and lifecycle management.
+/// </summary>
 public class ManagedProcess : IManagedProcess
 {
     private readonly ICustomLogger? _logger;
@@ -16,14 +20,23 @@ public class ManagedProcess : IManagedProcess
     private readonly StringBuilder _stderr = new StringBuilder();
     private readonly TimeSpan? _timeout;
 
+    /// <inheritdoc />
     public string ProcessKey { get; }
 
+    /// <inheritdoc />
     public Process? Process { get; private set; }
 
+    /// <inheritdoc />
     public Task? MonitorTask { get; private set; }
 
+    /// <inheritdoc />
     public DateTime StartTime { get; private set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ManagedProcess"/> class.
+    /// </summary>
+    /// <param name="config">The configuration defining how the process should be launched.</param>
+    /// <param name="logger">An optional logger for internal event tracking.</param>
     public ManagedProcess(IManagedProcessConfig config, ICustomLogger? logger = null)
     {
         ProcessKey = config.ProcessKey;
@@ -51,6 +64,11 @@ public class ManagedProcess : IManagedProcess
         }
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// This method initializes the internal <see cref="Process"/> object, attaches 
+    /// output data handlers if redirected, and kicks off the <see cref="MonitorTask"/>.
+    /// </remarks>
     public NullOperationResult Start()
     {
         var result = new NullOperationResult();
@@ -127,6 +145,11 @@ public class ManagedProcess : IManagedProcess
         }
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// If <paramref name="forceKill"/> is false, the implementation attempts a graceful 
+    /// <see cref="Process.CloseMainWindow"/> with a 3-second timeout before falling back to a hard kill.
+    /// </remarks>
     public NullOperationResult Cancel(bool forceKill)
     {
         var result = new NullOperationResult();
@@ -167,6 +190,7 @@ public class ManagedProcess : IManagedProcess
         }
     }
 
+    /// <inheritdoc />
     public OperationResult<string> GetOutput()
     {
         var result = new OperationResult<string>();
@@ -181,6 +205,7 @@ public class ManagedProcess : IManagedProcess
         }
     }
 
+    /// <inheritdoc />
     public OperationResult<string> GetError() 
     {
         var result = new OperationResult<string>();
@@ -195,6 +220,9 @@ public class ManagedProcess : IManagedProcess
         }
     }
 
+    /// <summary>
+    /// Periodically polls the process status until it exits or the cancellation token is triggered.
+    /// </summary>
     private static async Task WaitForExitAsync(Process process, CancellationToken token)
     {
         while (!process.HasExited)
@@ -203,6 +231,10 @@ public class ManagedProcess : IManagedProcess
         }
     }
 
+    /// <summary>
+    /// Triggers cancellation, waits for the monitor task to conclude, and releases all process and logging resources.
+    /// </summary>
+    /// <returns>A <see cref="ValueTask"/> representing the asynchronous disposal operation.</returns>
     public async ValueTask DisposeAsync()
     {
         try
