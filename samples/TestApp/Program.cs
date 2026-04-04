@@ -55,7 +55,7 @@ public class Program
         TaskManagementHost.InitializeTaskManagement(host.Services);
         ThreadSafeItemsHost.Initialize(host.Services);
         ApiManagementHost.Initialize(host.Services);
-        CredentialManagementHost.InitalizeFileSecretStore(host.Services);
+        CredentialManagementHost.InitializeFileSecretStore(host.Services);
 
         // Start hosted services (LogFlushService will start running in the background)
         await host.StartAsync();
