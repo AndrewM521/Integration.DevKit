@@ -13,17 +13,29 @@ using System.Threading;
 
 namespace AndrewM5.DevKit.TaskManagement;
 
+/// <summary>
+/// The central coordinator for the task management system. 
+/// Handles task initiation, concurrency limiting, lifecycle monitoring, and host shutdown integration.
+/// </summary>
 public class TaskManager : ITaskManager
 {
+    /// <inheritdoc/>
     public TaskManagerSettings RuntimeSettings { get; init; }
 
     private readonly ConcurrentDictionary<string, ManagedTaskRuntime> _tasks = new ConcurrentDictionary<string, ManagedTaskRuntime>();
     private readonly IHostApplicationLifetime _appLifetime;
     private readonly ICustomLogger _logger;
 
+    /// <summary>
+    /// Limits the number of concurrent tasks allowed to run based on <see cref="TaskManagerSettings.MaxConcurrentTasks"/>.
+    /// </summary>
     private readonly SemaphoreSlim _taskLimiter;
     private readonly TaskRegistryRuntime _taskRegistryRuntime;
-    
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TaskManager"/>.
+    /// Hooks into <see cref="IHostApplicationLifetime"/> to ensure all tasks are signaled for cancellation during shutdown.
+    /// </summary>
     public TaskManager(
         IHostApplicationLifetime appLifetime,
         ICustomLoggerManager loggerManager,
@@ -72,7 +84,8 @@ public class TaskManager : ITaskManager
         _taskLimiter = new SemaphoreSlim(RuntimeSettings.MaxConcurrentTasks);   
     }
 
-
+    /// <inheritdoc/>
+    /// <exception cref="InvalidOperationException">Thrown if a task with the same key is already active.</exception>
     public async Task<OperationResult<ITaskHandle>> StartTask(IManagedTask managedTask, TaskExecutionMode executionMode, ManagedTaskSettings? settings = null, CancellationToken cancellationToken = default)
     {
         var result = new OperationResult<ITaskHandle>();
@@ -135,6 +148,7 @@ public class TaskManager : ITaskManager
         }
     }
 
+    /// <inheritdoc/>
     public NullOperationResult CancelTask(string taskKey, bool forceCancel = false)
     {
         var result = new NullOperationResult();
@@ -167,6 +181,7 @@ public class TaskManager : ITaskManager
         }
     }
 
+    /// <inheritdoc/>
     public NullOperationResult CancelAllTasks(bool forceCancel = false)
     {
         var result = new NullOperationResult();
@@ -189,6 +204,7 @@ public class TaskManager : ITaskManager
         return result.SetMethodSuccess();
     }
 
+    /// <inheritdoc/>
     public OperationResult<bool> IsTaskRunning(string taskKey)
     {
         var result = new OperationResult<bool>();
@@ -214,6 +230,7 @@ public class TaskManager : ITaskManager
         }
     }
 
+    /// <inheritdoc/>
     public OperationResult<TimeSpan> GetTaskRuntime(string taskKey)
     {
         var result = new OperationResult<TimeSpan>();
@@ -257,16 +274,19 @@ public class TaskManager : ITaskManager
         }
     }
 
+    /// <inheritdoc/>
     public IEnumerable<string> GetAllRunningTaskKeys()
     {
         return _tasks.Keys;
     }
 
+    /// <inheritdoc/>
     public async Task AwaitAllTasksToFinish(List<Task> tasksList)
     {
         await Task.WhenAll(tasksList).ConfigureAwait(false);
     }
 
+    /// <inheritdoc/>
     public void OutputRuntimeSettings()
     {
         _logger?.LogDebug($"--- Task Manager Settings ---");
@@ -283,6 +303,11 @@ public class TaskManager : ITaskManager
 
 
     #region Helpers
+    /// <summary>
+    /// The core execution engine for a managed task. 
+    /// Manages scheduling (via NextRunStrategy), iteration loops, linked cancellation tokens, 
+    /// timeouts (watchdogs), and retry logic.
+    /// </summary>
     private async Task RunManagedTaskAsync(ManagedTaskRuntime managedTaskRuntime)
     {
         var exceptions = new List<Exception>();
@@ -518,6 +543,10 @@ public class TaskManager : ITaskManager
         }
     }
 
+    /// <summary>
+    /// Performs an adaptive delay that sleeps in increments to allow for responsive cancellation 
+    /// even during long wait periods.
+    /// </summary>
     private async Task DelayUntilNextRun(DateTime target, CancellationToken token)
     {
         var utcTarget = target.ToUniversalTime();
@@ -563,6 +592,9 @@ public class TaskManager : ITaskManager
         }
     }
 
+    /// <summary>
+    /// Evaluates if a task should proceed to its next scheduled iteration.
+    /// </summary>
     private bool ShouldRunAgain(ManagedTaskRuntime managedTaskRuntime)
     {
         var runtimeSettings = managedTaskRuntime.RuntimeSettings;
