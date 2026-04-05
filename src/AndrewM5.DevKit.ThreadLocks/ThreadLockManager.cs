@@ -4,14 +4,22 @@ using System.Collections.Concurrent;
 
 namespace AndrewM5.DevKit.ThreadLocks;
 
+/// <summary>
+/// Provides a centralized manager for named synchronization locks, supporting both synchronous 
+/// and asynchronous operations with automatic memory cleanup.
+/// </summary>
 public class ThreadLockManager : IThreadLockManager
 {
     private readonly ConcurrentDictionary<string, ThreadLockInfo_Sync> _syncLocks = new ConcurrentDictionary<string, ThreadLockInfo_Sync>();
     private readonly ConcurrentDictionary<string, ThreadLockInfo_Async> _asyncLocks = new ConcurrentDictionary<string, ThreadLockInfo_Async>();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ThreadLockManager"/> class.
+    /// </summary>
     public ThreadLockManager() {}
 
     #region Syncronous Methods
+    /// <inheritdoc />
     public NullOperationResult TryEnterSyncLock(string key, int timeoutMilliseconds = -1)
     {
         var result = new NullOperationResult();
@@ -45,6 +53,7 @@ public class ThreadLockManager : IThreadLockManager
         }
     }
 
+    /// <inheritdoc />
     public NullOperationResult TryExitSyncLock(string key)
     {
         var result = new NullOperationResult();
@@ -80,6 +89,7 @@ public class ThreadLockManager : IThreadLockManager
     #endregion
 
     #region Asyncronous Methods
+    /// <inheritdoc />
     public async Task<NullOperationResult> TryEnterAsyncLock(string key, int timeoutMilliseconds = -1)
     {
         var result = new NullOperationResult();
@@ -117,6 +127,7 @@ public class ThreadLockManager : IThreadLockManager
         }
     }
 
+    /// <inheritdoc />
     public NullOperationResult TryExitAsyncLock(string key)
     {
         var result = new NullOperationResult();
@@ -156,6 +167,11 @@ public class ThreadLockManager : IThreadLockManager
     }
     #endregion
 
+    /// <summary>
+    /// Validates and normalizes the lock key.
+    /// </summary>
+    /// <param name="key">The key string to validate and transform.</param>
+    /// <exception cref="ArgumentException">Thrown if the key is null or empty.</exception>
     private static void ValidateAndNormalizeKey(ref string key)
     {
         if (string.IsNullOrWhiteSpace(key))

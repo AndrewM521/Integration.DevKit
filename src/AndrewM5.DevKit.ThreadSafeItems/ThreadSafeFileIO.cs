@@ -7,11 +7,21 @@ using System.Text;
 
 namespace AndrewM5.DevKit.ThreadSafeItems;
 
+/// <summary>
+/// Provides thread-safe file I/O operations by utilizing <see cref="IThreadLockManager"/> 
+/// to synchronize access based on file paths.
+/// </summary>
 public class ThreadSafeFileIO
 {
     private IThreadLockManager _threadLockManager;
     private ICustomLogger _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ThreadSafeFileIO"/> class.
+    /// </summary>
+    /// <param name="threadLockManager">The manager used to handle synchronization locks.</param>
+    /// <param name="loggerManager">The manager used to resolve the internal logger.</param>
+    /// <exception cref="ArgumentNullException">Thrown if any required dependency is null.</exception>
     public ThreadSafeFileIO(IThreadLockManager threadLockManager, ICustomLoggerManager loggerManager)
     {
         if (threadLockManager == null)
@@ -29,6 +39,15 @@ public class ThreadSafeFileIO
     }
 
     #region Async Methods
+    /// <summary>
+    /// Asynchronously writes a string to a file with thread-safe locking.
+    /// </summary>
+    /// <param name="path">The full path to the file.</param>
+    /// <param name="content">The string content to write.</param>
+    /// <param name="append"><see langword="true"/> to append data; <see langword="false"/> to overwrite.</param>
+    /// <param name="encoding">The character encoding to use. Defaults to UTF-8 if null.</param>
+    /// <param name="lockTimeoutMs">Maximum time in milliseconds to wait for the file lock.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating the outcome of the operation.</returns>
     public async Task<NullOperationResult> WriteToFileAsync(string path, string content, bool append = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
     {
         var result = new NullOperationResult();
@@ -59,6 +78,15 @@ public class ThreadSafeFileIO
         }
     }
 
+    /// <summary>
+    /// Asynchronously writes an array of strings (lines) to a file with thread-safe locking.
+    /// </summary>
+    /// <param name="path">The full path to the file.</param>
+    /// <param name="content">The string content to write.</param>
+    /// <param name="append"><see langword="true"/> to append data; <see langword="false"/> to overwrite.</param>
+    /// <param name="encoding">The character encoding to use. Defaults to UTF-8 if null.</param>
+    /// <param name="lockTimeoutMs">Maximum time in milliseconds to wait for the file lock.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating the outcome of the operation.</returns>
     public async Task<NullOperationResult> WriteToFileAsync(string path, string[] content, bool append = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
     {
         var result = new NullOperationResult();
@@ -89,6 +117,12 @@ public class ThreadSafeFileIO
         }
     }
 
+    /// <summary>
+    /// Asynchronously reads all lines from a file with thread-safe locking.
+    /// </summary>
+    /// <param name="path">The full path to the file.</param>
+    /// <param name="lockTimeoutMs">Maximum time in milliseconds to wait for the file lock.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the array of lines read from the file.</returns>
     public async Task<OperationResult<string[]>> ReadFileLinesAsync(string path, int lockTimeoutMs = 5000)
     {
         var result = new OperationResult<string[]>();
@@ -125,6 +159,12 @@ public class ThreadSafeFileIO
         }
     }
 
+    /// <summary>
+    /// Asynchronously reads the entire content of a file as a string with thread-safe locking.
+    /// </summary>
+    /// <param name="path">The full path to the file.</param>
+    /// <param name="lockTimeoutMs">Maximum time in milliseconds to wait for the file lock.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the array of lines read from the file.</returns>
     public async Task<OperationResult<string>> ReadFileTextAsync(string path, int lockTimeoutMs = 5000)
     {
         var result = new OperationResult<string>();
@@ -163,6 +203,15 @@ public class ThreadSafeFileIO
     #endregion
 
     #region Sync Methods
+    /// <summary>
+    /// Synchronously writes a string to a file with thread-safe locking.
+    /// </summary>
+    /// <param name="path">The full path to the file.</param>
+    /// <param name="content">The string content to write.</param>
+    /// <param name="append"><see langword="true"/> to append data; <see langword="false"/> to overwrite.</param>
+    /// <param name="encoding">The character encoding to use. Defaults to UTF-8 if null.</param>
+    /// <param name="lockTimeoutMs">Maximum time in milliseconds to wait for the file lock.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating the outcome of the operation.</returns>
     public NullOperationResult WriteToFile(string path, string content, bool append = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
     {
         var result = new NullOperationResult();
@@ -193,6 +242,15 @@ public class ThreadSafeFileIO
         }
     }
 
+    /// <summary>
+    /// Synchronously writes an array of strings (lines) to a file with thread-safe locking.
+    /// </summary>
+    /// <param name="path">The full path to the file.</param>
+    /// <param name="content">The string content to write.</param>
+    /// <param name="append"><see langword="true"/> to append data; <see langword="false"/> to overwrite.</param>
+    /// <param name="encoding">The character encoding to use. Defaults to UTF-8 if null.</param>
+    /// <param name="lockTimeoutMs">Maximum time in milliseconds to wait for the file lock.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating the outcome of the operation.</returns>
     public NullOperationResult WriteToFile(string path, string[] content, bool append = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
     {
         var result = new NullOperationResult();
@@ -223,6 +281,12 @@ public class ThreadSafeFileIO
         }
     }
 
+    /// <summary>
+    /// Synchronously reads all lines from a file with thread-safe locking.
+    /// </summary>
+    /// <param name="path">The full path to the file.</param>
+    /// <param name="lockTimeoutMs">Maximum time in milliseconds to wait for the file lock.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the array of lines read from the file.</returns>
     public OperationResult<string[]> ReadFileLines(string path, int lockTimeoutMs = 5000)
     {
         var result = new OperationResult<string[]>();
@@ -259,6 +323,12 @@ public class ThreadSafeFileIO
         }
     }
 
+    /// <summary>
+    /// Synchronously reads the entire content of a file as a string with thread-safe locking.
+    /// </summary>
+    /// <param name="path">The full path to the file.</param>
+    /// <param name="lockTimeoutMs">Maximum time in milliseconds to wait for the file lock.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the array of lines read from the file.</returns>
     public OperationResult<string> ReadFileText(string path, int lockTimeoutMs = 5000)
     {
         var result = new OperationResult<string>();
