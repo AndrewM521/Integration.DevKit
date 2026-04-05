@@ -2,9 +2,9 @@
 
 namespace TestApp;
 
-internal class SimpleTestTask : ManagedTask
+internal class SimpleLongTask : ManagedTask
 {
-    public SimpleTestTask() : base("SimpleTestTask", Guid.NewGuid()) {}
+    public SimpleLongTask() : base("SimpleLongTask", Guid.NewGuid()) {}
 
     public override async Task DoTaskWork(CancellationToken cancellationToken)
     {
@@ -17,7 +17,5 @@ internal class SimpleTestTask : ManagedTask
 
             await Task.Delay(500, cancellationToken);
         }
-
-        throw new NotImplementedException();
     }
 }

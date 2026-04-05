@@ -36,13 +36,12 @@ public class Program
             {
                 services.AddCustomLogging(config);
                 services.AddCustomLogFlusher(config);
-                services.AddProcessLauncher(config);
+                services.AddProcessLauncher();
                 services.AddTaskManagement(config);
                 services.AddThreadSafeItems();
                 services.AddApiManagement(config);
                 services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
 
-                services.AddSingleton<ICustomLoggerManager, CustomLoggerManager>();
 
                 // Register your app entry
                 services.AddSingleton<AppEntry>();
@@ -74,14 +73,18 @@ public class AppEntry
     public async Task RunAsync(string[] args)
     {
         Console.WriteLine("TODO");
+        Console.WriteLine("  Redo Logger to include log methods, log registry max count, and per logger file output");
         Console.WriteLine("  Test SQLManagement");
         Console.WriteLine("  Look into OAuth");
+
+
+        
 
         //await TestLogger();
         //await TestLogFlusher();
         //await TestProcessLauncher();
 
-        await TaskCoreClasses(); 
+        //await TaskCoreClasses(); 
         //await TestTaskManagement();
         //await TestTaskScheduling();
         //await TestTaskConcurrency(5000);
@@ -516,7 +519,7 @@ public class AppEntry
         //settings.NextRunStrategy = new NextRunStrategy_Daily();
         //settings.NextRunStrategy = new NextRunStrategy_Weekday();
 
-        var createTask0 = await _taskManager.StartTask(new SimpleTestTask(), TaskExecutionMode.Asyncronous, settings);
+        var createTask0 = await _taskManager.StartTask(new SimpleShortTask(), TaskExecutionMode.Asyncronous, settings);
         if (!createTask0.MethodSuccess)
         {
             Console.WriteLine("Error: " + createTask0.Exception.Message);

@@ -23,6 +23,8 @@ public class SqlDBClient : ISqlDBClient
     private readonly ICustomLogger? _logger;
 
     private const string NoSecretStore = "SecretStore has not been set. Call SetSecretStore()";
+    private const string ConnectionStringKey = "ConnectionString";
+
     private readonly string _secretStoreFileName;
     private ISecretStore? _secretStore;
 
@@ -43,18 +45,6 @@ public class SqlDBClient : ISqlDBClient
         _logger = logger;
 
         RuntimeSettings = settings;
-
-        if (RuntimeSettings.CommandTimeout_Seconds != null)
-        {
-            if (RuntimeSettings.CommandTimeout_Seconds < 0)
-            {
-                RuntimeSettings.CommandTimeout_Seconds = 0;
-            }
-        }
-        else
-        {
-            RuntimeSettings.CommandTimeout_Seconds = sqlDBManager.RuntimeSettings.Default_CommandTimeout_Seconds;
-        }
     }
 
     /// <inheritdoc/>
@@ -112,8 +102,7 @@ public class SqlDBClient : ISqlDBClient
         {
             await using var cmd = new SqlCommand(sqlStatement, conn)
             {
-                CommandType = commandType,
-                CommandTimeout = (int)RuntimeSettings.CommandTimeout_Seconds!
+                CommandType = commandType
             };
 
             try
@@ -155,8 +144,7 @@ public class SqlDBClient : ISqlDBClient
         {
             await using var cmd = new SqlCommand(sqlStatement, conn)
             {
-                CommandType = commandType,
-                CommandTimeout = (int)RuntimeSettings.CommandTimeout_Seconds!
+                CommandType = commandType
             };
 
             try
@@ -196,8 +184,7 @@ public class SqlDBClient : ISqlDBClient
         {
             await using var cmd = new SqlCommand(sqlStatement, conn)
             {
-                CommandType = commandType,
-                CommandTimeout = (int)RuntimeSettings.CommandTimeout_Seconds!
+                CommandType = commandType
             };
 
             try
@@ -261,7 +248,7 @@ public class SqlDBClient : ISqlDBClient
 
     #region Credentials
     /// <inheritdoc/>
-    public NullOperationResult SetCredentials(string server, string database, string username, string password)
+    public NullOperationResult SetSecretStoreCredentials(string connectionString)
     {
         var result = new NullOperationResult();
 
@@ -272,28 +259,10 @@ public class SqlDBClient : ISqlDBClient
                 throw new ArgumentNullException(NoSecretStore);
             }
 
-            var setServerKey = _secretStore.SetKey(_secretStoreFileName, "server", username);
+            var setServerKey = _secretStore.SetKey(_secretStoreFileName, ConnectionStringKey, connectionString);
             if (!setServerKey.MethodSuccess)
             {
                 throw setServerKey.Exception;
-            }
-
-            var setDatabaseKey = _secretStore.SetKey(_secretStoreFileName, "database", username);
-            if (!setDatabaseKey.MethodSuccess)
-            {
-                throw setDatabaseKey.Exception;
-            }
-
-            var setUsernameKey = _secretStore.SetKey(_secretStoreFileName, "username", username);
-            if (!setUsernameKey.MethodSuccess)
-            {
-                throw setUsernameKey.Exception;
-            }
-
-            var setPasswordKey = _secretStore.SetKey(_secretStoreFileName, "password", password);
-            if (!setPasswordKey.MethodSuccess)
-            {
-                throw setPasswordKey.Exception;
             }
 
             return result.SetMethodSuccess();
@@ -417,7 +386,7 @@ public class SqlDBClient : ISqlDBClient
     }
 
     /// <summary>
-    /// Generates the connection string by resolving values from settings and the secret store.
+    /// Generates the connection string by resolving the connection string from settings or secret store.
     /// </summary>
     private OperationResult<string> GetConnectionString()
     {
@@ -425,41 +394,13 @@ public class SqlDBClient : ISqlDBClient
 
         try
         {
-            var getServer = GetCredentials("server", RuntimeSettings.Server);
-            if (!getServer.MethodSuccess)
+            var getConnectionString = GetCredentials("ConnectionString", RuntimeSettings.ConnectionString);
+            if (!getConnectionString.MethodSuccess)
             {
-                throw getServer.Exception;
+                throw getConnectionString.Exception;
             }
 
-            var getDatabase = GetCredentials("database", RuntimeSettings.Database);
-            if (!getDatabase.MethodSuccess)
-            {
-                throw getDatabase.Exception;
-            }
-
-            var getUsername = GetCredentials("username", RuntimeSettings.Username);
-            if (!getUsername.MethodSuccess)
-            {
-                throw getUsername.Exception;
-            }
-
-            var getPassword = GetCredentials("password", RuntimeSettings.Password);
-            if (!getPassword.MethodSuccess)
-            {
-                throw getPassword.Exception;
-            }
-
-            string connectionStr = @$"
-                Server={getServer.Result};
-                Database={getDatabase.Result};
-                User Id={getUsername.Result};
-                Password={getPassword.Result};
-                MultipleActiveResultSets={RuntimeSettings.MultipleActiveResultSets};
-                TrustServerCertificate={RuntimeSettings.TrustServerCertificate};
-                Connect Timeout={RuntimeSettings.ConnectionTimeout_Seconds};
-            ";
-
-            return result.SetMethodSuccess(connectionStr);
+            return result.SetMethodSuccess(getConnectionString.Result);
         }
         catch (Exception ex)
         {
