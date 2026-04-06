@@ -26,10 +26,4 @@ public interface ILogRegistry
     /// and commit entries to persistent storage.
     /// </remarks>
     public string[] DequeueFromLogFileBuffer();
-
-    /// <summary>
-    /// Gets the current number of items waiting in the log file buffer.
-    /// </summary>
-    /// <returns>The count of pending log entries.</returns>
-    public int GetLogFileQueueCount();
 }

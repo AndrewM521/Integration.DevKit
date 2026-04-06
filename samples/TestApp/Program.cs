@@ -72,14 +72,6 @@ public class AppEntry
 {
     public async Task RunAsync(string[] args)
     {
-        Console.WriteLine("TODO");
-        Console.WriteLine("  Redo Logger to include log methods, log registry max count, and per logger file output");
-        Console.WriteLine("  Test SQLManagement");
-        Console.WriteLine("  Look into OAuth");
-
-
-        
-
         //await TestLogger();
         //await TestLogFlusher();
         //await TestProcessLauncher();

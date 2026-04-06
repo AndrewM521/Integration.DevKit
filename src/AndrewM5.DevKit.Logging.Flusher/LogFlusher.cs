@@ -59,7 +59,7 @@ public class LogFlusher : BackgroundService, ILogFlusher
         {
             TimeSpan elapsedTime = DateTime.UtcNow - lastFlushTime;
 
-            if (_logRegistry.GetLogFileQueueCount() >= RuntimeSettings.MaxBufferCount || elapsedTime.TotalSeconds >= RuntimeSettings.FlushIntervalSeconds)
+            if (_logRegistry.Count >= RuntimeSettings.MaxBufferCount || elapsedTime.TotalSeconds >= RuntimeSettings.FlushIntervalSeconds)
             {
                 FlushBuffer();
                 lastFlushTime = DateTime.UtcNow;

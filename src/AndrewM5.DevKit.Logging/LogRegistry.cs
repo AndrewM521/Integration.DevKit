@@ -13,22 +13,11 @@ internal class LogRegistry : ILogRegistry
     public int Count => _logFileQueue.Count;
 
     private ConcurrentQueue<string> _logFileQueue = new ConcurrentQueue<string>();
-    private readonly int _maxEntries;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LogRegistry"/> class with a specified capacity.
     /// </summary>
-    /// <param name="maxEntries">The maximum number of entries the registry is intended to hold. Defaults to 2000.</param>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="maxEntries"/> is 0 or less.</exception>
-    public LogRegistry(int maxEntries = 2000)
-    {
-        if (maxEntries <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(maxEntries));
-        }
-
-        _maxEntries = maxEntries;
-    }
+    public LogRegistry() {}
 
     /// <inheritdoc />
     /// <remarks>
@@ -57,11 +46,5 @@ internal class LogRegistry : ILogRegistry
         }
 
         return list.ToArray();
-    }
-
-    /// <inheritdoc />
-    public int GetLogFileQueueCount()
-    {
-        return _logFileQueue.Count;
     }
 }
