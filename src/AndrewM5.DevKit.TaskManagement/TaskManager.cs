@@ -4,6 +4,7 @@ using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Models;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Options;
+using AndrewM5.DevKit.TaskManagement.Contracts.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -86,7 +87,7 @@ public class TaskManager : ITaskManager
 
     /// <inheritdoc/>
     /// <exception cref="InvalidOperationException">Thrown if a task with the same key is already active.</exception>
-    public async Task<OperationResult<ITaskHandle>> StartTask(IManagedTask managedTask, TaskExecutionMode executionMode, ManagedTaskSettings? settings = null, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<ITaskHandle>> StartTask(ManagedTask managedTask, TaskExecutionMode executionMode, ManagedTaskSettings? settings = null, CancellationToken cancellationToken = default)
     {
         var result = new OperationResult<ITaskHandle>();
 
@@ -127,7 +128,9 @@ public class TaskManager : ITaskManager
                 await managedTaskRuntime.TaskToRun.ConfigureAwait(false);
             }
 
-            return result.SetMethodSuccess(new ManagedTaskHandle(managedTaskRuntime));
+            managedTaskRuntime.UserTask.SetHandle(new ManagedTaskHandle(managedTaskRuntime));
+
+            return result.SetMethodSuccess(managedTaskRuntime.UserTask.Handle!);
         }
         catch (Exception ex)
         {

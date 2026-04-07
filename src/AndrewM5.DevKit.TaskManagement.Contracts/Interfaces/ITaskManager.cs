@@ -1,6 +1,7 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Models;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Options;
+using AndrewM5.DevKit.TaskManagement.Contracts.Models;
 
 namespace AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 
@@ -23,7 +24,7 @@ public interface ITaskManager
     /// <param name="settings">Execution-specific settings for this task instance.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>An <see cref="OperationResult{ITaskHandle}"/> containing the handle to the started task if successful.</returns>
-    public Task<OperationResult<ITaskHandle>> StartTask(IManagedTask managedTask, TaskExecutionMode executionMode, ManagedTaskSettings settings, CancellationToken cancellationToken = default);
+    public Task<OperationResult<ITaskHandle>> StartTask(ManagedTask managedTask, TaskExecutionMode executionMode, ManagedTaskSettings settings, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Requests the cancellation of a specific task.

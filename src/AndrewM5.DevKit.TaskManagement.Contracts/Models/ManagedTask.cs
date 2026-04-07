@@ -1,24 +1,40 @@
 ﻿using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 
-namespace AndrewM5.DevKit.TaskManagement;
+namespace AndrewM5.DevKit.TaskManagement.Contracts.Models;
 
 /// <summary>
 /// Provides a base implementation for a task that can be managed by the task management system.
 /// Implements basic identification and validation logic.
 /// </summary>
-public abstract class ManagedTask : IManagedTask
+public abstract class ManagedTask : IDisposable
 {
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the friendly display name of the task.
+    /// </summary>
     public string TaskName { get; }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the unique global identifier for this specific task instance.
+    /// </summary>
     public Guid TaskId { get; }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets a unique string key used for lookups within the task registry. 
+    /// This is often a combination of the Name and ID.
+    /// </summary>
     public string TaskKey { get; }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the maximum amount of time the task is allowed to run before being automatically canceled.
+    /// If null, the task will run indefinitely until completion or manual cancellation.
+    /// </summary>
     public TimeSpan? Timeout { get; protected set; }
+
+    /// <summary>
+    /// Gets the monitoring handle associated with this task once it has been queued or started.
+    /// This may be null if the task has not yet been registered with the task manager.
+    /// </summary>
+    public ITaskHandle? Handle { get; protected set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ManagedTask"/> class.
@@ -43,7 +59,11 @@ public abstract class ManagedTask : IManagedTask
         TaskKey = $"{taskName}_{id}";
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Contains the core logic to be executed by the task manager.
+    /// </summary>
+    /// <param name="cancellationToken">A token that will be signaled if the task needs to stop (e.g., due to timeout or manual cancellation).</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public abstract Task DoTaskWork(CancellationToken cancellationToken);
 
     /// <summary>
@@ -53,4 +73,9 @@ public abstract class ManagedTask : IManagedTask
     /// Overriding this method is optional for derived tasks that do not hold onto disposable resources.
     /// </remarks>
     public virtual void Dispose() {}
+
+    public void SetHandle(ITaskHandle handle)
+    {
+        Handle = handle;
+    }
 }

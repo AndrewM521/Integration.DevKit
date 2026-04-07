@@ -106,14 +106,11 @@ public interface ISqlDBClient : IDisposable
     public void SetSecretStore(ISecretStore secretStore);
 
     /// <summary>
-    /// Manually sets the connection credentials for the client.
+    /// Manually sets the connection string for the client.
     /// </summary>
-    /// <param name="server">The SQL Server address.</param>
-    /// <param name="database">The target database name.</param>
-    /// <param name="username">The login username.</param>
-    /// <param name="password">The login password.</param>
-    /// <returns>A <see cref="NullOperationResult"/> indicating if the credentials were successfully applied.</returns>
-    public NullOperationResult SetCredentials(string server, string database, string username, string password);
+    /// <param name="connectionString">The SQL COnnection string</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating if the connection string were successfully applied.</returns>
+    public NullOperationResult SetSecretStoreCredentials(string connectionString);
 
     /// <summary>
     /// Deletes a specific credential from the store based on the provided key.

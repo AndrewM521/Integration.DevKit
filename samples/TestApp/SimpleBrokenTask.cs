@@ -1,4 +1,5 @@
 ﻿using AndrewM5.DevKit.TaskManagement;
+using AndrewM5.DevKit.TaskManagement.Contracts.Models;
 
 namespace TestApp;
 

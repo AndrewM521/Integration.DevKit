@@ -1,5 +1,6 @@
 ﻿using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Abstractions.Models;
+using AndrewM5.DevKit.TaskManagement.Contracts.Models;
 using System.Threading;
 
 namespace AndrewM5.DevKit.TaskManagement;
@@ -17,7 +18,7 @@ internal sealed class ManagedTaskRuntime : IDisposable
     /// <summary>
     /// Gets the underlying user-defined task implementation.
     /// </summary>
-    public IManagedTask UserTask { get; }
+    public ManagedTask UserTask { get; }
 
     /// <summary>
     /// Gets or sets the current execution state of the task. 
@@ -81,7 +82,7 @@ internal sealed class ManagedTaskRuntime : IDisposable
     /// <param name="task">The task implementation to run.</param>
     /// <param name="settings">Configuration for execution behavior.</param>
     /// <param name="cancellationToken">An optional external token to observe for cancellation.</param>
-    public ManagedTaskRuntime(IManagedTask task, ManagedTaskSettings settings, CancellationToken cancellationToken = default)
+    public ManagedTaskRuntime(ManagedTask task, ManagedTaskSettings settings, CancellationToken cancellationToken = default)
     {
         UserTask = task;
         RuntimeSettings = settings;
