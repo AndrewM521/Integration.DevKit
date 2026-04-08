@@ -1,6 +1,6 @@
-﻿using AndrewM5.DevKit.ApiManagement.Abstractions.Options;
+﻿using AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
 
-namespace AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
+namespace AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
 
 /// <summary>
 /// Defines a contract for a manager responsible for orchestrating multiple <see cref="IApiClient"/> instances 

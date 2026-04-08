@@ -1,9 +1,9 @@
-﻿using AndrewM5.DevKit.ApiManagement.Abstractions.Options;
+﻿using AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
 using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
 using System.Text;
 
-namespace AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
+namespace AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
 
 /// <summary>
 /// Defines a contract for a specialized HTTP client capable of performing RESTful operations,

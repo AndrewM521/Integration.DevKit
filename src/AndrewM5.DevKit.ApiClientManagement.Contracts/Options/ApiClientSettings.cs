@@ -1,4 +1,4 @@
-﻿namespace AndrewM5.DevKit.ApiManagement.Abstractions.Options;
+﻿namespace AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
 
 /// <summary>
 /// Represents the configuration schema and runtime settings for an <see cref="IApiClient"/>.

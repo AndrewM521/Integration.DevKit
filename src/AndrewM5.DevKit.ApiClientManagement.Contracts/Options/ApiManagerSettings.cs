@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace AndrewM5.DevKit.ApiManagement.Abstractions.Options;
+namespace AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
 
 /// <summary>
 /// Represents the global configuration and registry for the <see cref="AndrewM5.DevKit.ApiManagement.Contracts.Interfaces.IApiManager"/>.

@@ -1,7 +1,7 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 using System.Net;
 
-namespace AndrewM5.DevKit.ApiManagement;
+namespace AndrewM5.DevKit.ApiClientManagement;
 
 /// <summary>
 /// A utility class for constructing formatted endpoint URLs using various routing styles 

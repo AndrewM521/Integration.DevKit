@@ -1,9 +1,9 @@
-﻿using AndrewM5.DevKit.ApiManagement.Abstractions.Options;
-using AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
+using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AndrewM5.DevKit.ApiManagement.Services;
+namespace AndrewM5.DevKit.ApiClientManagement.Services;
 
 /// <summary>
 /// Extension methods for setting up API management services in an <see cref="IServiceCollection"/>.

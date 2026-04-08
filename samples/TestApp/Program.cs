@@ -1,6 +1,6 @@
-﻿using AndrewM5.DevKit.ApiManagement;
-using AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
-using AndrewM5.DevKit.ApiManagement.Services;
+﻿using AndrewM5.DevKit.ApiClientManagement;
+using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.ApiClientManagement.Services;
 using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.CredentialManagement.Services;
 using AndrewM5.DevKit.Logging;

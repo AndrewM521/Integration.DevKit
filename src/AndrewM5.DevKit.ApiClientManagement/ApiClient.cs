@@ -1,5 +1,5 @@
-﻿using AndrewM5.DevKit.ApiManagement.Abstractions.Options;
-using AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
+using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
@@ -10,7 +10,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 
-namespace AndrewM5.DevKit.ApiManagement;
+namespace AndrewM5.DevKit.ApiClientManagement;
 
 /// <summary>
 /// Implementation of <see cref="IApiClient"/> providing thread-safe HTTP operations, 

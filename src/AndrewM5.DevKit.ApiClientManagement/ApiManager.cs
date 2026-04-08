@@ -1,12 +1,12 @@
-﻿using AndrewM5.DevKit.ApiManagement.Abstractions.Options;
-using AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
+using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace AndrewM5.DevKit.ApiManagement;
+namespace AndrewM5.DevKit.ApiClientManagement;
 
 /// <summary>
 /// The central manager responsible for creating, configuring, and caching <see cref="IApiClient"/> instances.

@@ -1,6 +1,6 @@
-﻿using AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
 
-namespace AndrewM5.DevKit.ApiManagement;
+namespace AndrewM5.DevKit.ApiClientManagement;
 
 /// <summary>
 /// Implementation of <see cref="IApiClientMetrics"/> that tracks HTTP request statistics 

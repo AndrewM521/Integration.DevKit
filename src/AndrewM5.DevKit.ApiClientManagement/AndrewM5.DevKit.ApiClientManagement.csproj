@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AndrewM5.DevKit.ApiManagement.Contracts\AndrewM5.DevKit.ApiClientManagement.Contracts.csproj" />
+    <ProjectReference Include="..\AndrewM5.DevKit.ApiClientManagement.Contracts\AndrewM5.DevKit.ApiClientManagement.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

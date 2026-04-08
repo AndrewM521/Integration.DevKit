@@ -1,4 +1,4 @@
-﻿namespace AndrewM5.DevKit.ApiManagement.Contracts.Interfaces;
+﻿namespace AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
 
 /// <summary>
 /// Provides a read-only snapshot of HTTP request metrics and execution statistics 
