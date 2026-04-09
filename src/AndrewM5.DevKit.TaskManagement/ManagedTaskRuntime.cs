@@ -59,6 +59,16 @@ internal sealed class ManagedTaskRuntime : IDisposable
     public DateTime EndTime { get; internal set; }
 
     /// <summary>
+    /// Gets or sets the UTC timestamp of when the current task iteration execution started.
+    /// </summary>
+    public DateTime IterationStartTime { get; internal set; }
+
+    /// <summary>
+    /// Gets or sets the UTC timestamp of when the current task iteration execution reached a terminal state.
+    /// </summary>
+    public DateTime IterationEndTime { get; internal set; }
+
+    /// <summary>
     /// Managed token source for the entire lifespan of the task runtime.
     /// </summary>
     internal CancellationTokenSource _lifecycleCTS;

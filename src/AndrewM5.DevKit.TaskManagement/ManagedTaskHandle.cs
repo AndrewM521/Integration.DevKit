@@ -19,6 +19,17 @@ internal sealed class ManagedTaskHandle : ITaskHandle
     /// <inheritdoc />
     public Task? RunningTask => _managedTaskRuntime.TaskToRun;
 
+    /// <inheritdoc />
+    public DateTime StartTime => _managedTaskRuntime.StartTime;
+
+    /// <inheritdoc />
+    public DateTime EndTime => _managedTaskRuntime.EndTime;
+
+    /// <inheritdoc />
+    public DateTime IterationStartTime => _managedTaskRuntime.IterationStartTime;
+
+    /// <inheritdoc />
+    public DateTime IterationEndTime => _managedTaskRuntime.IterationEndTime;
 
     private readonly ManagedTaskRuntime _managedTaskRuntime;
 
@@ -32,7 +43,7 @@ internal sealed class ManagedTaskHandle : ITaskHandle
     }
 
     /// <summary>
-    /// Retrieves the current runtime duration of the task by querying the global <see cref="TaskManagementHost.TaskManager"/>.
+    /// Retrieves the current runtime duration of the task.
     /// </summary>
     /// <returns>
     /// An <see cref="OperationResult{TimeSpan}"/> containing the elapsed time since the task started, 
@@ -46,6 +57,34 @@ internal sealed class ManagedTaskHandle : ITaskHandle
         try
         {
             var getRunTime = TaskManagementHost.TaskManager!.GetTaskRuntime(TaskKey);
+            if (!getRunTime.MethodSuccess)
+            {
+                throw getRunTime.Exception;
+            }
+
+            return result.SetMethodSuccess(getRunTime.Result);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+
+    /// <summary>
+    /// Retrieves the current runtime duration of the task iteration.
+    /// </summary>
+    /// <returns>
+    /// An <see cref="OperationResult{TimeSpan}"/> containing the elapsed time since the task started, 
+    /// or failure details if the manager cannot be reached or the task is not found.
+    /// </returns>
+    /// <exception cref="Exception">Re-throws the exception encapsulated in the TaskManager's result if the method fails.</exception>
+    public OperationResult<TimeSpan> GetTaskIterationRuntime()
+    {
+        var result = new OperationResult<TimeSpan>();
+
+        try
+        {
+            var getRunTime = TaskManagementHost.TaskManager!.GetTaskIterationRuntime(TaskKey);
             if (!getRunTime.MethodSuccess)
             {
                 throw getRunTime.Exception;

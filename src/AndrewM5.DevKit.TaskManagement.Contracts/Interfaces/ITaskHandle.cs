@@ -19,6 +19,26 @@ public interface ITaskHandle
     public ManagedTaskState State { get; }
 
     /// <summary>
+    /// Gets or sets the UTC timestamp of when the task execution started.
+    /// </summary>
+    public DateTime StartTime { get; }
+
+    /// <summary>
+    /// Gets or sets the UTC timestamp of when the task execution reached a terminal state.
+    /// </summary>
+    public DateTime EndTime { get; }
+
+    /// <summary>
+    /// Gets or sets the UTC timestamp of when the task iteration execution started.
+    /// </summary>
+    public DateTime IterationStartTime { get; }
+
+    /// <summary>
+    /// Gets or sets the UTC timestamp of when the task iteration execution reached a terminal state.
+    /// </summary>
+    public DateTime IterationEndTime { get; }
+
+    /// <summary>
     /// Gets the underlying <see cref="Task"/> representing the actual execution of the workload.
     /// This may be null if the task has not yet been dispatched or fails to start.
     /// </summary>
@@ -29,4 +49,10 @@ public interface ITaskHandle
     /// </summary>
     /// <returns>An <see cref="OperationResult{TimeSpan}"/> containing the elapsed runtime.</returns>
     public OperationResult<TimeSpan> GetTaskRuntime();
+
+    /// <summary>
+    /// Calculates the current duration the task iteration has been active.
+    /// </summary>
+    /// <returns>An <see cref="OperationResult{TimeSpan}"/> containing the elapsed runtime.</returns>
+    public OperationResult<TimeSpan> GetTaskIterationRuntime();
 }

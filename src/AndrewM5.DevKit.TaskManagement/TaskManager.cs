@@ -108,6 +108,8 @@ public class TaskManager : ITaskManager
 
             managedTaskRuntime = new ManagedTaskRuntime(managedTask, runtimeSettings, cancellationToken);
 
+            managedTaskRuntime.UserTask.SetHandle(new ManagedTaskHandle(managedTaskRuntime));
+
             if (!_tasks.TryAdd(managedTask.TaskKey, managedTaskRuntime))
             {
                 throw new InvalidOperationException($"A managed task with key '{managedTask.TaskKey}' is already running.");
@@ -127,8 +129,6 @@ public class TaskManager : ITaskManager
             {
                 await managedTaskRuntime.TaskToRun.ConfigureAwait(false);
             }
-
-            managedTaskRuntime.UserTask.SetHandle(new ManagedTaskHandle(managedTaskRuntime));
 
             return result.SetMethodSuccess(managedTaskRuntime.UserTask.Handle!);
         }
@@ -278,6 +278,50 @@ public class TaskManager : ITaskManager
     }
 
     /// <inheritdoc/>
+    public OperationResult<TimeSpan> GetTaskIterationRuntime(string taskKey)
+    {
+        var result = new OperationResult<TimeSpan>();
+
+        try
+        {
+            if (_tasks.TryGetValue(taskKey, out var liveTask))
+            {
+                if (liveTask.StartTime == DateTime.MinValue)
+                {
+                    return result.SetMethodSuccess(TimeSpan.Zero);
+                }
+
+                DateTime end = liveTask.IterationEndTime;
+
+                if (liveTask.EndTime == DateTime.MinValue)
+                {
+                    end = DateTime.UtcNow;
+                }
+
+                return result.SetMethodSuccess(end - liveTask.IterationStartTime);
+            }
+
+            var tryGet = _taskRegistryRuntime._taskRegistry.TryGet(taskKey);
+            if (!tryGet.MethodSuccess)
+            {
+                throw tryGet.Exception;
+            }
+
+            var snapshot = tryGet.Result;
+            if (snapshot == null)
+            {
+                throw new ArgumentException("Could not find task.");
+            }
+
+            return result.SetMethodSuccess(snapshot.Runtime);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+
+    /// <inheritdoc/>
     public IEnumerable<string> GetAllRunningTaskKeys()
     {
         return _tasks.Keys;
@@ -369,6 +413,7 @@ public class TaskManager : ITaskManager
                 }
 
                 managedTaskRuntime.IncrementIteration();
+                managedTaskRuntime.IterationStartTime = DateTime.UtcNow;
 
                 while (!token.IsCancellationRequested && (firstRun || needRetry))
                 {
@@ -405,6 +450,8 @@ public class TaskManager : ITaskManager
 
                     // Wait for the first to complete
                     Task completedTask = await Task.WhenAny(tasksToWatch);
+
+                    managedTaskRuntime.IterationEndTime = DateTime.UtcNow;
 
                     if (completedTask == cancelWatcher)
                     {

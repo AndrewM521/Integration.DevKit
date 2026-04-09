@@ -72,12 +72,14 @@ public class AppEntry
 {
     public async Task RunAsync(string[] args)
     {
+        //await TaskCoreClasses(); 
+
         //await TestLogger();
         //await TestLogFlusher();
         //await TestProcessLauncher();
 
-        //await TaskCoreClasses(); 
-        //await TestTaskManagement();
+
+        await TestTaskManagement();
         //await TestTaskScheduling();
         //await TestTaskConcurrency(5000);
         //await TestThreadSafeItems();
@@ -152,7 +154,6 @@ public class AppEntry
         dictionary = JsonUtils.GetDictionary(getDict.Result, "data.tags").Result;
         listDictionary = JsonUtils.GetListDictionary(getDict.Result, "data.tags").Result;
     }
-
     private async Task TestFileSecretStore()
     {
         var store = CredentialManagementHost.FileSecretStore;
@@ -503,8 +504,8 @@ public class AppEntry
         Console.WriteLine("Synchronous Test");
         var settings = new ManagedTaskSettings();
         settings.MaxIterations = 3;
-        settings.RetryOnException = true;
-        settings.MaxRetryCount = 3;
+        //settings.RetryOnException = true;
+        //settings.MaxRetryCount = 3;
         //settings.StopIterationAfterMaxRetries = false;
         //settings.StopIteratingOnException = true;
         //settings.NextRunStrategy = new NextRunStrategy_Interval(TimeSpan.FromMinutes(30));
@@ -516,8 +517,6 @@ public class AppEntry
         {
             Console.WriteLine("Error: " + createTask0.Exception.Message);
         }
-
-        Console.WriteLine("Before external awaiting RunningTask");
 
         await createTask0.Result.RunningTask!;
 

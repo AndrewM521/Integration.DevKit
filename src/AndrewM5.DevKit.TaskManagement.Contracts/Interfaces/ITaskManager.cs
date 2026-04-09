@@ -56,6 +56,13 @@ public interface ITaskManager
     public OperationResult<TimeSpan> GetTaskRuntime(string taskKey);
 
     /// <summary>
+    /// Retrieves the total duration the current task iteration has been active.
+    /// </summary>
+    /// <param name="taskKey">The unique identifier of the task.</param>
+    /// <returns>An <see cref="OperationResult{TimeSpan}"/> containing the elapsed time.</returns>
+    public OperationResult<TimeSpan> GetTaskIterationRuntime(string taskKey);
+
+    /// <summary>
     /// Retrieves a collection of keys for all tasks currently managed and running.
     /// </summary>
     /// <returns>An enumerable of task key strings.</returns>
