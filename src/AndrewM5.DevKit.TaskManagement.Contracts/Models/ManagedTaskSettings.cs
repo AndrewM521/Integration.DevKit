@@ -48,6 +48,16 @@ public class ManagedTaskSettings
     }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the entire iteration loop should stop if there is an exception.
+    /// Default is <c>true</c>.
+    /// </summary>
+    /// <remarks>
+    /// If <see cref="RetryOnException"/> is true, this flag will be skipped. If you want the same results with 
+    /// retries, use <see cref="StopIterationAfterMaxRetries"/> instead
+    /// </remarks>
+    public bool StopIteratingOnException { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets a value indicating whether the task should be retried if an exception is thrown during execution.
     /// Default is <c>false</c>.
     /// </summary>

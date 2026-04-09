@@ -375,6 +375,8 @@ public class TaskManager : ITaskManager
                 throw upsert.Exception;
             }
 
+            bool forceStopIterating = false;
+
             while (!managedTaskRuntime._lifecycleCTS.Token.IsCancellationRequested &&
                 !managedTaskRuntime._externalCT.IsCancellationRequested)
             {
@@ -482,6 +484,11 @@ public class TaskManager : ITaskManager
 
                         if (!runtimeSettings.RetryOnException)
                         {
+                            if (runtimeSettings.StopIteratingOnException)
+                            {
+                                forceStopIterating = true;
+                            }
+
                             break;
                         }
 
@@ -512,6 +519,12 @@ public class TaskManager : ITaskManager
                 if (maxRetriesHit && runtimeSettings.StopIterationAfterMaxRetries)
                 {
                     _logger?.LogWarning($"Stopping further iterations for '{managedTaskRuntime.UserTask.TaskKey}' due to retry limit and {nameof(managedTaskRuntime.RuntimeSettings.StopIterationAfterMaxRetries)}.");
+                    break; // exits outer loop
+                }
+
+                if (forceStopIterating)
+                {
+                    _logger?.LogWarning($"Stopping further iterations for '{managedTaskRuntime.UserTask.TaskKey}' due to {nameof(managedTaskRuntime.RuntimeSettings.StopIteratingOnException)}.");
                     break; // exits outer loop
                 }
 

@@ -64,6 +64,11 @@ public abstract class ManagedTask : IDisposable
     /// </summary>
     /// <param name="cancellationToken">A token that will be signaled if the task needs to stop (e.g., due to timeout or manual cancellation).</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <remarks>
+    /// Both <see cref="ITaskHandle.IterationEndTime"/> and <see cref="ITaskHandle.EndTime"/> are set after this method completes. 
+    /// Calling <see cref="ITaskHandle.GetTaskIterationRuntime"/> or <see cref="ITaskHandle.GetTaskRuntime"/> inside this method
+    /// will return the runtime between the Start Time and the Current Time
+    /// </remarks>
     public abstract Task DoTaskWork(CancellationToken cancellationToken);
 
     /// <summary>

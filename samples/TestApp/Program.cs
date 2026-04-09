@@ -20,6 +20,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Reflection.Metadata;
 
 namespace TestApp;
 
@@ -503,22 +504,25 @@ public class AppEntry
 
         Console.WriteLine("Synchronous Test");
         var settings = new ManagedTaskSettings();
-        settings.MaxIterations = 3;
+        //settings.MaxIterations = 3;
         //settings.RetryOnException = true;
-        //settings.MaxRetryCount = 3;
-        //settings.StopIterationAfterMaxRetries = false;
-        //settings.StopIteratingOnException = true;
+        //settings.MaxRetryCount = 2;
+        //settings.StopIterationAfterMaxRetries = true;
+        //settings.StopIteratingOnException = false;
         //settings.NextRunStrategy = new NextRunStrategy_Interval(TimeSpan.FromMinutes(30));
         //settings.NextRunStrategy = new NextRunStrategy_Daily();
         //settings.NextRunStrategy = new NextRunStrategy_Weekday();
 
-        var createTask0 = await _taskManager.StartTask(new SimpleShortTask(), TaskExecutionMode.Asyncronous, settings);
+        var createTask0 = await _taskManager.StartTask(new SimpleBrokenTask(), TaskExecutionMode.Asyncronous, settings);
         if (!createTask0.MethodSuccess)
         {
             Console.WriteLine("Error: " + createTask0.Exception.Message);
         }
 
         await createTask0.Result.RunningTask!;
+
+        Console.WriteLine($"End Time: {createTask0.Result?.IterationEndTime}. Elapsed Iteration Time: {createTask0.Result?.GetTaskIterationRuntime().Result}");
+        Console.WriteLine($"End Time: {createTask0.Result?.IterationEndTime}. Elapsed Time: {createTask0.Result?.GetTaskRuntime().Result}");
 
         //while (true)
         //{
@@ -532,7 +536,7 @@ public class AppEntry
 
         //    await Task.Delay(1000);
         //}
-        
+
 
         //Console.WriteLine("Restart Test");
         //var restartTask = await _taskManager.RestartTask(createTask0.Result.TaskKey!);

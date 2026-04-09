@@ -9,8 +9,8 @@ internal class SimpleBrokenTask : ManagedTask
 
     public override async Task DoTaskWork(CancellationToken cancellationToken)
     {
-        Console.WriteLine($"Start Local Time: {DateTime.Now}");
-        Console.WriteLine($"Start Utc Time: {DateTime.UtcNow}");
+        Console.WriteLine($"Start Time: {Handle?.StartTime}");
+        Console.WriteLine($"Start Iteration Time: {Handle?.IterationStartTime}");
 
         for (int i = 0; i < 5; i++)
         {
@@ -18,6 +18,9 @@ internal class SimpleBrokenTask : ManagedTask
 
             await Task.Delay(500, cancellationToken);
         }
+
+        Console.WriteLine($"End Time: {DateTime.Now}. Elapsed Iteration Time: {Handle?.GetTaskIterationRuntime().Result}");
+        Console.WriteLine($"End Time: {DateTime.Now}. Elapsed Time: {Handle?.GetTaskRuntime().Result}");
 
         throw new NotImplementedException();
     }

@@ -18,7 +18,7 @@ internal class SimpleShortTask : ManagedTask
             await Task.Delay(1000, cancellationToken);
         }
 
-        Console.WriteLine($"End Time: {DateTime.Now}. Elapsed Iteration Time: {Handle?.GetTaskIterationRuntime()}");
-        Console.WriteLine($"End Time: {DateTime.Now}. Elapsed Time: {Handle?.GetTaskRuntime()}");
+        Console.WriteLine($"End Time: {DateTime.Now}. Elapsed Iteration Time: {Handle?.GetTaskIterationRuntime().Result}");
+        Console.WriteLine($"End Time: {DateTime.Now}. Elapsed Time: {Handle?.GetTaskRuntime().Result}");
     }
 }
