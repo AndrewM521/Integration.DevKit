@@ -1,7 +1,7 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 using System.Collections.Concurrent;
 
-namespace AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
+namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 
 /// <summary>
 /// Defines a thread-safe registry for storing and retrieving metadata snapshots 

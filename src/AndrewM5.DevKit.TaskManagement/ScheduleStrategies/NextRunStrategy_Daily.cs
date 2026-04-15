@@ -1,11 +1,9 @@
-﻿using AndrewM5.DevKit.TaskManagement.Abstractions;
-
-namespace AndrewM5.DevKit.TaskManagement.ScheduleStrategies;
+﻿namespace AndrewM5.DevKit.TaskManagement.ScheduleStrategies;
 
 /// <summary>
 /// Represents a scheduling strategy that calculates the next execution time on a daily basis.
 /// </summary>
-public class NextRunStrategy_Daily : NextRunStrategy
+public sealed class NextRunStrategy_Daily : TimeBasedContinueIteration
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="NextRunStrategy_Daily"/> class.
@@ -15,7 +13,7 @@ public class NextRunStrategy_Daily : NextRunStrategy
     public NextRunStrategy_Daily(DateOnly? startDate = null, TimeSpan? startTime = null) : base(startDate, startTime) { }
 
     /// <summary>
-    /// Calculates the next execution time by adding exactly one day to the <see cref="NextRunStrategy.LastTargetDTM"/>.
+    /// Calculates the next execution time by adding exactly one day to the <see cref="TimeBasedContinueIteration.LastTargetDTM"/>.
     /// </summary>
     /// <param name="currentIteration">The current iteration count of the task.</param>
     /// <returns>A <see cref="DateTime"/> representing the same time on the following day.</returns>

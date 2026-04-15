@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 
-namespace AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
+namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 
 /// <summary>
 /// Provides a handle for monitoring and interacting with a task 
@@ -19,24 +19,29 @@ public interface ITaskHandle
     public ManagedTaskState State { get; }
 
     /// <summary>
-    /// Gets or sets the UTC timestamp of when the task execution started.
+    /// Gets the UTC timestamp of when the task execution started.
     /// </summary>
     public DateTime StartTime { get; }
 
     /// <summary>
-    /// Gets or sets the UTC timestamp of when the task execution reached a terminal state.
+    /// Gets the UTC timestamp of when the task execution reached a terminal state.
     /// </summary>
     public DateTime EndTime { get; }
 
     /// <summary>
-    /// Gets or sets the UTC timestamp of when the task iteration execution started.
+    /// Gets the UTC timestamp of when the task iteration execution started.
     /// </summary>
     public DateTime IterationStartTime { get; }
 
     /// <summary>
-    /// Gets or sets the UTC timestamp of when the task iteration execution reached a terminal state.
+    /// Gets the UTC timestamp of when the task iteration execution ended.
     /// </summary>
     public DateTime IterationEndTime { get; }
+
+    /// <summary>
+    /// Gets the current iteration execution count
+    /// </summary>
+    public int CurrentIterationCount { get; }
 
     /// <summary>
     /// Gets the underlying <see cref="Task"/> representing the actual execution of the workload.

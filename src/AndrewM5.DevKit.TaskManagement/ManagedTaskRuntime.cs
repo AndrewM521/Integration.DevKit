@@ -1,7 +1,5 @@
-﻿using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
-using AndrewM5.DevKit.TaskManagement.Abstractions.Models;
+﻿using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Contracts.Models;
-using System.Threading;
 
 namespace AndrewM5.DevKit.TaskManagement;
 

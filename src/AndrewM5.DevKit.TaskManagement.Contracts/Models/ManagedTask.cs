@@ -1,4 +1,5 @@
-﻿using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
+﻿
+using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 
 namespace AndrewM5.DevKit.TaskManagement.Contracts.Models;
 

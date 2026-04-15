@@ -1,9 +1,8 @@
 ﻿using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.TaskManagement.Abstractions.Models;
-using AndrewM5.DevKit.TaskManagement.Abstractions.Options;
 using AndrewM5.DevKit.TaskManagement.Contracts.Models;
+using AndrewM5.DevKit.TaskManagement.Contracts.Options;
 
-namespace AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
+namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 
 /// <summary>
 /// Defines the core contract for a manager responsible for the lifecycle, 
@@ -22,7 +21,7 @@ public interface ITaskManager
     /// <param name="managedTask">The task implementation to be executed.</param>
     /// <param name="executionMode">Specifies whether the task should run synchronously or asynchronously.</param>
     /// <param name="settings">Execution-specific settings for this task instance.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <param name="cancellationToken">An external token to monitor for cancellation requests.</param>
     /// <returns>An <see cref="OperationResult{ITaskHandle}"/> containing the handle to the started task if successful.</returns>
     public Task<OperationResult<ITaskHandle>> StartTask(ManagedTask managedTask, TaskExecutionMode executionMode, ManagedTaskSettings settings, CancellationToken cancellationToken = default);
 

@@ -1,5 +1,5 @@
 ﻿using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
+using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Services;
 
 namespace AndrewM5.DevKit.TaskManagement;
@@ -30,6 +30,9 @@ internal sealed class ManagedTaskHandle : ITaskHandle
 
     /// <inheritdoc />
     public DateTime IterationEndTime => _managedTaskRuntime.IterationEndTime;
+
+    /// <inheritdoc />
+    public int CurrentIterationCount => _managedTaskRuntime.IterationCount;
 
     private readonly ManagedTaskRuntime _managedTaskRuntime;
 

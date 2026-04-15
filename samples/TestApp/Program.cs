@@ -10,9 +10,8 @@ using AndrewM5.DevKit.Logging.Services;
 using AndrewM5.DevKit.ProcessLauncher;
 using AndrewM5.DevKit.ProcessLauncher.Services;
 using AndrewM5.DevKit.TaskManagement;
-using AndrewM5.DevKit.TaskManagement.Abstractions;
-using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
-using AndrewM5.DevKit.TaskManagement.Abstractions.Models;
+using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.TaskManagement.Contracts.Models;
 using AndrewM5.DevKit.TaskManagement.ScheduleStrategies;
 using AndrewM5.DevKit.TaskManagement.Services;
 using AndrewM5.DevKit.ThreadSafeItems.Services;
@@ -504,16 +503,16 @@ public class AppEntry
 
         Console.WriteLine("Synchronous Test");
         var settings = new ManagedTaskSettings();
-        //settings.MaxIterations = 3;
+        settings.MaxIterations = 3;
         //settings.RetryOnException = true;
         //settings.MaxRetryCount = 2;
         //settings.StopIterationAfterMaxRetries = true;
         //settings.StopIteratingOnException = false;
-        //settings.NextRunStrategy = new NextRunStrategy_Interval(TimeSpan.FromMinutes(30));
-        //settings.NextRunStrategy = new NextRunStrategy_Daily();
-        //settings.NextRunStrategy = new NextRunStrategy_Weekday();
+        settings.ContinueIterationStrategy = new NextRunStrategy_Interval(TimeSpan.FromSeconds(3));
+        //settings.ContinueIteration = new NextRunStrategy_Daily();
+        //settings.ContinueIteration = new NextRunStrategy_Weekday();
 
-        var createTask0 = await _taskManager.StartTask(new SimpleBrokenTask(), TaskExecutionMode.Asyncronous, settings);
+        var createTask0 = await _taskManager.StartTask(new SimpleShortTask(), TaskExecutionMode.Asyncronous, settings);
         if (!createTask0.MethodSuccess)
         {
             Console.WriteLine("Error: " + createTask0.Exception.Message);

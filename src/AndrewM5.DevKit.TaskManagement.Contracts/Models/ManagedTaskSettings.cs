@@ -1,6 +1,4 @@
-﻿using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
-
-namespace AndrewM5.DevKit.TaskManagement.Abstractions.Models;
+﻿namespace AndrewM5.DevKit.TaskManagement.Contracts.Models;
 
 /// <summary>
 /// Defines the execution behavior, retry policies, and iteration limits for an individual managed task.
@@ -70,9 +68,19 @@ public class ManagedTaskSettings
     public bool StopIterationAfterMaxRetries { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets the strategy used to determine the timing of the next execution run (e.g., delay intervals).
+    /// Gets or sets a value indicating whether the entire iteration loop should stop if the <see cref="MaxRetryCount"/> is reached.
+    /// Defaults to new instance of <see cref="ContinueIterationBase"/>
     /// </summary>
-    public NextRunStrategy? NextRunStrategy { get; set; }
+    public ContinueIterationBase ContinueIterationStrategy { get; set; } = new ContinueIterationBase();
+
+    /// <summary>
+    /// If true, a new iteration can start even if the previous one is still running.
+    /// </summary>
+    /// <remarks>
+    /// WARNING: Enabling this can lead to race conditions if your task logic 
+    /// accesses shared resources. Ensure your task code is thread-safe.
+    /// </remarks>
+    public bool AllowParallelExecution { get; set; } = false;
 
     /// <summary>
     /// Creates a deep copy clone of the current settings.
@@ -83,10 +91,12 @@ public class ManagedTaskSettings
         return new ManagedTaskSettings
         {
             MaxIterations = _maxIterations,
-            NextRunStrategy = NextRunStrategy,
+            ContinueIterationStrategy = ContinueIterationStrategy,
             MaxRetryCount = _maxRetryCount,
             RetryOnException = RetryOnException,
-            StopIterationAfterMaxRetries = StopIterationAfterMaxRetries
+            StopIterationAfterMaxRetries = StopIterationAfterMaxRetries,
+            StopIteratingOnException = StopIteratingOnException,
+            AllowParallelExecution = AllowParallelExecution,
         };
     }
 }

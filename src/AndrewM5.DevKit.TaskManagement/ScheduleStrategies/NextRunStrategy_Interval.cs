@@ -1,11 +1,9 @@
-﻿using AndrewM5.DevKit.TaskManagement.Abstractions;
-
-namespace AndrewM5.DevKit.TaskManagement.ScheduleStrategies;
+﻿namespace AndrewM5.DevKit.TaskManagement.ScheduleStrategies;
 
 /// <summary>
 /// Represents a flexible scheduling strategy that calculates the next execution time based on a fixed <see cref="TimeSpan"/> interval.
 /// </summary>
-public sealed class NextRunStrategy_Interval : NextRunStrategy
+public sealed class NextRunStrategy_Interval : TimeBasedContinueIteration
 {
     private readonly TimeSpan _interval;
 
@@ -21,7 +19,7 @@ public sealed class NextRunStrategy_Interval : NextRunStrategy
     }
 
     /// <summary>
-    /// Calculates the next execution time by adding the defined interval to the <see cref="NextRunStrategy.LastTargetDTM"/>.
+    /// Calculates the next execution time by adding the defined interval to the <see cref="TimeBasedContinueIteration.LastTargetDTM"/>.
     /// </summary>
     /// <param name="iteration">The current iteration count of the task.</param>
     /// <returns>A <see cref="DateTime"/> representing the last target time plus the specified interval.</returns>

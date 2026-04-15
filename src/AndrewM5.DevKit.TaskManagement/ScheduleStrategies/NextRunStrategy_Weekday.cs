@@ -1,11 +1,9 @@
-﻿using AndrewM5.DevKit.TaskManagement.Abstractions;
-
-namespace AndrewM5.DevKit.TaskManagement.ScheduleStrategies;
+﻿namespace AndrewM5.DevKit.TaskManagement.ScheduleStrategies;
 
 /// <summary>
 /// Represents a scheduling strategy that calculates the next execution time on the following business day (Monday through Friday).
 /// </summary>
-public class NextRunStrategy_Weekday : NextRunStrategy
+public sealed class NextRunStrategy_Weekday : TimeBasedContinueIteration
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="NextRunStrategy_Weekday"/> class.

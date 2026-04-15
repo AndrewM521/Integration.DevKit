@@ -1,4 +1,4 @@
-﻿using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
+﻿using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.ThreadLocks.Contracts.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 

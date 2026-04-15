@@ -1,4 +1,4 @@
-﻿namespace AndrewM5.DevKit.TaskManagement.Abstractions.Options;
+﻿namespace AndrewM5.DevKit.TaskManagement.Contracts.Options;
 
 /// <summary>
 /// Provides global configuration settings for the Task Manager, 

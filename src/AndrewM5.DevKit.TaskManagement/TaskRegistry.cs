@@ -1,5 +1,5 @@
 ﻿using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
+using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 using System.Collections.Concurrent;
 
 namespace AndrewM5.DevKit.TaskManagement;

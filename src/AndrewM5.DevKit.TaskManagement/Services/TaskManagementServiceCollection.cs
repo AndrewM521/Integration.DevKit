@@ -1,5 +1,5 @@
-﻿using AndrewM5.DevKit.TaskManagement.Abstractions.Interfaces;
-using AndrewM5.DevKit.TaskManagement.Abstractions.Options;
+﻿using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.TaskManagement.Contracts.Options;
 using AndrewM5.DevKit.ThreadLocks;
 using AndrewM5.DevKit.ThreadLocks.Contracts.Interfaces;
 using Microsoft.Extensions.Configuration;
