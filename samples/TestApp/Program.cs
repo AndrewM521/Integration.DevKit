@@ -78,11 +78,11 @@ public class AppEntry
         //await TestProcessLauncher();
 
 
-        await TestTaskManagement();
+        //await TestTaskManagement();
         //await TestTaskScheduling();
         //await TestTaskConcurrency(5000);
         //await TestThreadSafeItems();
-        //await TestApiManagement();
+        await TestApiManagement();
         //await TestApiManagementCredentials(true, false);
         //await TestFileSecretStore();
 

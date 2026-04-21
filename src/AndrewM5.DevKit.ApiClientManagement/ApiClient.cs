@@ -6,6 +6,7 @@ using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
@@ -95,202 +96,62 @@ public class ApiClient : IApiClient
     /// <inheritdoc/>
     public async Task<ApiOperationResult<string>> GetAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
     {
-        var result = new ApiOperationResult<string>();
-
-        try
-        {
-            string finalUrl = RuntimeSettings.BaseUrl.TrimEnd('/') + "/" + endpointUrl;
-
-            result.SetRequestUrl(finalUrl);
-
-            using (var request = new HttpRequestMessage(HttpMethod.Get, finalUrl))
-            {
-                var addRequestHeaders = AddRequestHeaders(request, requestHeaders);
-                if (!addRequestHeaders.MethodSuccess)
-                {
-                    throw addRequestHeaders.Exception;
-                }
-
-                return await SendRequestAsync(request);
-            }
-        }
-        catch (Exception ex)
-        {
-            return result.SetApiFailure(HttpStatusCode.InternalServerError, ex);
-        }
+        return await SendRequestOrchestratorAsync(HttpMethod.Get, () =>
+            ApiRequest.GetAsync(_httpClient, endpointUrl, requestHeaders));
     }
 
     /// <inheritdoc/>
     public async Task<ApiOperationResult<string>> PutAsync(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
     {
-        var result = new ApiOperationResult<string>();
-
-        try
-        {
-            string finalUrl = RuntimeSettings.BaseUrl.TrimEnd('/') + "/" + endpointUrl;
-
-            result.SetRequestUrl(finalUrl);
-
-            using (var request = new HttpRequestMessage(HttpMethod.Put, finalUrl))
-            {
-                var addRequestHeaders = AddRequestHeaders(request, requestHeaders);
-                if (!addRequestHeaders.MethodSuccess)
-                {
-                    throw addRequestHeaders.Exception;
-                }
-
-                request.Content = httpContent;
-
-                return await SendRequestAsync(request);
-            }
-        }
-        catch (Exception ex)
-        {
-            return result.SetApiFailure(HttpStatusCode.InternalServerError, ex);
-        }
+        return await SendRequestOrchestratorAsync(HttpMethod.Put, () =>
+            ApiRequest.PutAsync(_httpClient, endpointUrl, httpContent, requestHeaders));
     }
 
     /// <inheritdoc/>
     public async Task<ApiOperationResult<string>> PostAsync(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
     {
-        var result = new ApiOperationResult<string>();
-
-        try
-        {
-            string finalUrl = RuntimeSettings.BaseUrl.TrimEnd('/') + "/" + endpointUrl;
-
-            result.SetRequestUrl(finalUrl);
-
-            using (var request = new HttpRequestMessage(HttpMethod.Post, finalUrl))
-            {
-                var addRequestHeaders = AddRequestHeaders(request, requestHeaders);
-                if (!addRequestHeaders.MethodSuccess)
-                {
-                    throw addRequestHeaders.Exception;
-                }
-
-                request.Content = httpContent;
-
-                return await SendRequestAsync(request);
-            }
-        }
-        catch (Exception ex)
-        {
-            return result.SetApiFailure(HttpStatusCode.InternalServerError, ex);
-        }
+        return await SendRequestOrchestratorAsync(HttpMethod.Post, () =>
+            ApiRequest.PostAsync(_httpClient, endpointUrl, httpContent, requestHeaders));
     }
 
     /// <inheritdoc/>
     public async Task<ApiOperationResult<string>> PostAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
     {
-        var result = new ApiOperationResult<string>();
-
-        try
-        {
-            string finalUrl = RuntimeSettings.BaseUrl.TrimEnd('/') + "/" + endpointUrl;
-
-            result.SetRequestUrl(finalUrl);
-
-            using (var request = new HttpRequestMessage(HttpMethod.Post, finalUrl))
-            {
-                var addRequestHeaders = AddRequestHeaders(request, requestHeaders);
-                if (!addRequestHeaders.MethodSuccess)
-                {
-                    throw addRequestHeaders.Exception;
-                }
-
-                return await SendRequestAsync(request);
-            }
-        }
-        catch (Exception ex)
-        {
-            return result.SetApiFailure(HttpStatusCode.InternalServerError, ex);
-        }
+        return await SendRequestOrchestratorAsync(HttpMethod.Post, () =>
+            ApiRequest.PostAsync(_httpClient, endpointUrl, null, requestHeaders));
     }
 
     /// <inheritdoc/>
     public async Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
     {
-        var result = new ApiOperationResult<string>();
-
-        try
-        {
-            string finalUrl = RuntimeSettings.BaseUrl.TrimEnd('/') + "/" + endpointUrl;
-
-            result.SetRequestUrl(finalUrl);
-
-            using (var request = new HttpRequestMessage(HttpMethod.Delete, finalUrl))
-            {
-                var addRequestHeaders = AddRequestHeaders(request, requestHeaders);
-                if (!addRequestHeaders.MethodSuccess)
-                {
-                    throw addRequestHeaders.Exception;
-                }
-
-                return await SendRequestAsync(request);
-            }
-        }
-        catch (Exception ex)
-        {
-            return result.SetApiFailure(HttpStatusCode.InternalServerError, ex);
-        }
+        return await SendRequestOrchestratorAsync(HttpMethod.Delete, () =>
+            ApiRequest.DeleteAsync(_httpClient, endpointUrl, requestHeaders));
     }
 
-    /// <summary>
-    /// Core method for executing an <see cref="HttpRequestMessage"/> with rate limiting and metric tracking.
-    /// </summary>
-    /// <param name="request">The prepared HTTP request to send.</param>
-    /// <returns>An <see cref="ApiOperationResult{T}"/> containing the string response or failure details.</returns>
-    private async Task<ApiOperationResult<string>> SendRequestAsync(HttpRequestMessage request)
+    // A generic wrapper to handle the "Orchestration" (Metrics + Rate Limiting)
+    private async Task<ApiOperationResult<string>> SendRequestOrchestratorAsync(HttpMethod method, Func<Task<ApiOperationResult<string>>> action)
     {
-        var result = new ApiOperationResult<string>();
-
-        HttpMetricNames metricName = GetMetricName(request.Method);
+        HttpMetricNames metricName = GetMetricName(method);
+        
+        await _rateLimiter.WaitAsync();
 
         try
         {
-            result.SetRequestUrl(request.RequestUri!.ToString());
+            var result = await action();
 
-            await _rateLimiter.WaitAsync();
-            try
-            {
-                using (HttpResponseMessage response = await _httpClient.SendAsync(request))
-                {
-                    string responseBody = await response.Content.ReadAsStringAsync();
-                    HttpStatusCode statusEnum = response.StatusCode;
-                    int statusCode = (int)statusEnum;
-
-                    try
-                    {
-                        response.EnsureSuccessStatusCode();
-
-                        _metrics.IncrementMetric(metricName);
-
-                        return result.SetApiSuccess(responseBody, statusEnum, $"HTTP {statusCode} {statusEnum}");
-                    }
-                    catch (HttpRequestException ex)
-                    {
-                        _metrics.IncrementMetric(metricName);
-                        _metrics.IncrementFailure();
-
-                        return result.SetApiFailure(statusEnum, ex, responseBody, $"Request failed with HTTP {statusCode} {statusEnum}");
-                    }
-                }
-            }
-            finally
-            {
-                _rateLimiter.Release();
-            }
-        }
-        catch (Exception ex)
-        {
             _metrics.IncrementMetric(metricName);
-            _metrics.IncrementFailure();
 
-            return result.SetApiFailure(HttpStatusCode.ServiceUnavailable, ex, "Unexpected request error (no HTTP response recieved)");
+            if (!result.MethodSuccess)
+            {
+                _metrics.IncrementFailure();
+            }
+
+            return result;
         }
         finally
         {
+            _rateLimiter.Release();
+
             await GCManager.CallGC_Collect("API Request");
         }
     }
