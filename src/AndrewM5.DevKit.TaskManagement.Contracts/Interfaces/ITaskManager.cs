@@ -23,7 +23,7 @@ public interface ITaskManager
     /// <param name="settings">Execution-specific settings for this task instance.</param>
     /// <param name="cancellationToken">An external token to monitor for cancellation requests.</param>
     /// <returns>An <see cref="OperationResult{ITaskHandle}"/> containing the handle to the started task if successful.</returns>
-    public Task<OperationResult<ITaskHandle>> StartTask(ManagedTask managedTask, TaskExecutionMode executionMode, ManagedTaskSettings settings, CancellationToken cancellationToken = default);
+    public Task<OperationResult<IManagedTaskHandle>> StartTask(ManagedTask managedTask, TaskExecutionMode executionMode, ManagedTaskSettings settings, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Requests the cancellation of a specific task.
@@ -46,20 +46,6 @@ public interface ITaskManager
     /// <param name="taskKey">The unique identifier of the task.</param>
     /// <returns>An <see cref="OperationResult{Boolean}"/> where the value is true if the task is active.</returns>
     public OperationResult<bool> IsTaskRunning(string taskKey);
-
-    /// <summary>
-    /// Retrieves the total duration the specified task has been active.
-    /// </summary>
-    /// <param name="taskKey">The unique identifier of the task.</param>
-    /// <returns>An <see cref="OperationResult{TimeSpan}"/> containing the elapsed time.</returns>
-    public OperationResult<TimeSpan> GetTaskRuntime(string taskKey);
-
-    /// <summary>
-    /// Retrieves the total duration the current task iteration has been active.
-    /// </summary>
-    /// <param name="taskKey">The unique identifier of the task.</param>
-    /// <returns>An <see cref="OperationResult{TimeSpan}"/> containing the elapsed time.</returns>
-    public OperationResult<TimeSpan> GetTaskIterationRuntime(string taskKey);
 
     /// <summary>
     /// Retrieves a collection of keys for all tasks currently managed and running.

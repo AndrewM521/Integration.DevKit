@@ -32,12 +32,6 @@ public abstract class ManagedTask : IDisposable
     public TimeSpan? Timeout { get; protected set; }
 
     /// <summary>
-    /// Gets the monitoring handle associated with this task once it has been queued or started.
-    /// This may be null if the task has not yet been registered with the task manager.
-    /// </summary>
-    public ITaskHandle? Handle { get; protected set; }
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="ManagedTask"/> class.
     /// </summary>
     /// <param name="taskName">The friendly display name of the task.</param>
@@ -66,11 +60,11 @@ public abstract class ManagedTask : IDisposable
     /// <param name="cancellationToken">A token that will be signaled if the task needs to stop (e.g., due to timeout or manual cancellation).</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     /// <remarks>
-    /// Both <see cref="ITaskHandle.IterationEndTime"/> and <see cref="ITaskHandle.EndTime"/> are set after this method completes. 
-    /// Calling <see cref="ITaskHandle.GetTaskIterationRuntime"/> or <see cref="ITaskHandle.GetTaskRuntime"/> inside this method
+    /// Both <see cref="IManagedTaskHandle.IterationEndTime"/> and <see cref="IManagedTaskHandle.EndDTM"/> are set after this method completes. 
+    /// Calling <see cref="IManagedTaskHandle.GetTaskIterationRuntime"/> or <see cref="IManagedTaskHandle.GetTaskRuntime"/> inside this method
     /// will return the runtime between the Start Time and the Current Time
-    /// </remarks>
-    public abstract Task DoTaskWork(CancellationToken cancellationToken);
+    /// </remarks> 
+    public abstract Task DoTaskWork(IManagedTaskIterationHandle iterationHandle);
 
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -79,9 +73,4 @@ public abstract class ManagedTask : IDisposable
     /// Overriding this method is optional for derived tasks that do not hold onto disposable resources.
     /// </remarks>
     public virtual void Dispose() {}
-
-    public void SetHandle(ITaskHandle handle)
-    {
-        Handle = handle;
-    }
 }

@@ -1,26 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 
 namespace AndrewM5.DevKit.TaskManagement;
 
-public sealed class ManagedTaskIterationHandle
+public sealed class ManagedTaskIterationHandle : IManagedTaskIterationHandle
 {
-    public int IterationNumber { get; }
-    public DateTime StartTime { get; }
+    /// <inheritdoc/>
+    public int IterationNumber => _taskIterationRuntime.IterationNumber;
 
-    private readonly CancellationTokenSource _cts;
+    /// <inheritdoc />
+    public ManagedTaskState State => _taskIterationRuntime.State;
 
-    internal ManagedTaskIterationHandle(int iterationNumber, CancellationToken externalToken)
+    /// <inheritdoc/>
+    public DateTime StartDTM => _taskIterationRuntime.StartDTM;
+
+    /// <inheritdoc/>
+    public DateTime EndDTM => _taskIterationRuntime.EndDTM;
+
+    /// <inheritdoc/>
+    public CancellationToken Token => _taskIterationRuntime.Token;
+
+    /// <inheritdoc/>
+    public TimeSpan Runtime => _taskIterationRuntime.Runtime;
+
+    /// <inheritdoc/>
+    public bool IsRunning => _taskIterationRuntime.IsRunning;
+
+    /// <inheritdoc/>
+    public IManagedTaskHandle TaskHandle => _taskIterationRuntime.TaskHandle;
+
+    private readonly ManagedTaskIterationRuntime _taskIterationRuntime;
+
+    internal ManagedTaskIterationHandle(ManagedTaskIterationRuntime runtime)
     {
-        IterationNumber = iterationNumber;
-        _cts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
-
-        StartTime = DateTime.UtcNow;
+        _taskIterationRuntime = runtime;
     }
 
-    public void Cancel() => _cts.Cancel();
-    public void Dispose() => _cts.Dispose();
+    /// <inheritdoc/>
+    public void Cancel() => _taskIterationRuntime.Cancel();
 }

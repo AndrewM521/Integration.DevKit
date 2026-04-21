@@ -1,25 +1,19 @@
 ﻿using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
-using AndrewM5.DevKit.TaskManagement.Contracts.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 
-namespace AndrewM5.DevKit.TaskManagement;
+namespace AndrewM5.DevKit.TaskManagement.Contracts.Models;
 
 /// <summary>
 /// Provides a base implementation for defining when a task should next execute.
 /// Handles initial start times and tracking of the last execution target.
 /// </summary>
-public abstract class TimeBasedContinueIteration : ContinueIterationBase
+public abstract class Time_IterationStrategy : BaseIterationStrategy
 {
-    /// <summary>
-    /// Gets the specific date the strategy should begin from. If null, defaults to the current date.
-    /// </summary>
-    public DateOnly? CustomStartDate { get; }
-
-    /// <summary>
-    /// Gets the specific time of day the strategy should begin from. If null, defaults to the current time.
-    /// </summary>
-    public TimeSpan? CustomStartTime { get; }
+    private const string outputDTMFormat = "yyyy-MM-dd hh:mm:ss tt";
+    
+    internal TimeStrategySettings RuntimeSettings { get; }
 
     /// <summary>
     /// Gets or sets the timestamp of the last calculated execution target.
@@ -30,38 +24,69 @@ public abstract class TimeBasedContinueIteration : ContinueIterationBase
     /// <summary>
     /// Initializes a new instance of the <see cref="NextRunStrategy"/> class.
     /// </summary>
-    /// <param name="startDate">An optional starting date.</param>
-    /// <param name="startTime">An optional starting time of day.</param>
-    protected TimeBasedContinueIteration(DateOnly? startDate = null, TimeSpan? startTime = null)
+    protected Time_IterationStrategy(TimeStrategySettings settings)
     {
-        CustomStartDate = startDate;
-        CustomStartTime = startTime;
+        RuntimeSettings = settings;      
     }
 
     /// <inheritdoc/>
-    public override async Task WaitForReadyAsync(ITaskHandle handle, CancellationToken cancellationToken, ICustomLogger? logger = null)
+    public override async Task WaitForReadyAsync(IManagedTaskHandle handle, CancellationToken cancellationToken, ICustomLogger? logger = null)
     {
+        // Initial State Resolution
         var target = GetNextTargetDTM(handle.CurrentIterationCount);
         var utcTarget = new DateTimeOffset(target.ToUniversalTime());
-        var localTarget = utcTarget.ToLocalTime();
+        var remaining = utcTarget - DateTimeOffset.UtcNow;
 
-        string format = "yyyy-MM-dd hh:mm:ss tt";
-        string msg = $"Task '{handle.TaskKey}' next runtime <UTC: {utcTarget.ToString(format)} | Local: {localTarget.ToString(format)}";
-        logger?.LogDebug(msg);
-
-        while (!cancellationToken.IsCancellationRequested)
+        // The Catch-up Phase
+        // If flag is true, we "burn" through past dates without returning to the Task Manager.
+        if (RuntimeSettings.FastForwardToPresent && remaining <= TimeSpan.Zero)
         {
-            var utcNow = DateTimeOffset.UtcNow;
-            var remaining = utcTarget - utcNow;
+            logger?.LogInformation($"Task '{handle.TaskKey}' is behind schedule. Catching up to current time (Skipping missed iterations)...");
 
-            // Target reached, record the target and let the next iteration start.
-            if (remaining <= TimeSpan.Zero)
+            // Keep advancing until 'target' is in the future
+            while (remaining <= TimeSpan.Zero && !cancellationToken.IsCancellationRequested)
             {
                 LastTargetDTM = target;
-                break;
+
+                // Advance target based on the strategy's math
+                target = ComputeNextTargetDTM(handle.CurrentIterationCount);
+                utcTarget = new DateTimeOffset(target.ToUniversalTime());
+                remaining = utcTarget - DateTimeOffset.UtcNow;
             }
 
-            // Determine our sleep time
+            logger?.LogInformation($"Task '{handle.TaskKey}' catch-up complete");
+        }
+
+        var localTarget = utcTarget.ToLocalTime();
+        string runtimeStr = GetTargetRuntimeStr(localTarget, utcTarget);
+
+        logger?.LogInformation($"Task '{handle.TaskKey}' next runtime <{runtimeStr}>");
+
+        // The Execution/Wait Phase(External Relay)
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            // Re-sync local variables with the current state of 'target'
+            remaining = utcTarget - DateTimeOffset.UtcNow;
+
+            // Process Missed (Catchup was false, or we just hit a slot)
+            if (remaining <= TimeSpan.Zero)
+            {
+                logger?.LogDebug($"Task '{handle.TaskKey}' target reached <{runtimeStr}>");
+                LastTargetDTM = target;
+
+                return; // Exit to let the Task Manager execute the logic
+            }
+
+            // Fresh Start / Skip Wait Policy
+            if (handle.CurrentIterationCount == 0 && RuntimeSettings.SkipFirstIterationWait)
+            {
+                logger?.LogDebug($"Task '{handle.TaskKey}' skipping first runtime wait for <{runtimeStr}> due to strategy policy. ({nameof(RuntimeSettings.SkipFirstIterationWait)})");
+                LastTargetDTM = target;
+
+                return;
+            }
+
+            // Real-time Polling/Waiting
             TimeSpan wait = CalculateSmartWait(remaining);
 
             // If our desired sleep (e.g., 5 mins) is longer than 
@@ -74,11 +99,24 @@ public abstract class TimeBasedContinueIteration : ContinueIterationBase
             // Ensure we don't pass a negative or zero to Task.Delay if time ticked forward during calculation.
             if (wait <= TimeSpan.Zero)
             {
-                break;
+                LastTargetDTM = target;
+
+                break; // Target reached exactly during calculation
+            }
+
+            // Log the next check for long-running waits
+            if (wait > TimeSpan.FromMinutes(1))
+            {
+                logger?.LogDebug($"Task '{handle.TaskKey}' sleeping for {wait.TotalMinutes:F1} minutes until next check.");
             }
 
             await Task.Delay(wait, cancellationToken);
         }
+    }
+
+    private string GetTargetRuntimeStr(DateTimeOffset localTarget, DateTimeOffset utcTarget)
+    {
+        return $"Local: {localTarget.ToString(outputDTMFormat)} | UTC: {utcTarget.ToString(outputDTMFormat)}";
     }
 
     /// <summary>
@@ -114,14 +152,14 @@ public abstract class TimeBasedContinueIteration : ContinueIterationBase
         var startDate = DateOnly.FromDateTime(now);
         var startTime = now.TimeOfDay;
 
-        if (CustomStartDate.HasValue)
+        if (RuntimeSettings.CustomStartDate.HasValue)
         {
-            startDate = (DateOnly)CustomStartDate;
+            startDate = (DateOnly)RuntimeSettings.CustomStartDate;
         }
 
-        if (CustomStartTime.HasValue)
+        if (RuntimeSettings.CustomStartTime.HasValue)
         {
-            startTime = (TimeSpan)CustomStartTime;
+            startTime = (TimeSpan)RuntimeSettings.CustomStartTime;
         }
 
         var localDTM = startDate.ToDateTime(TimeOnly.FromTimeSpan(startTime));

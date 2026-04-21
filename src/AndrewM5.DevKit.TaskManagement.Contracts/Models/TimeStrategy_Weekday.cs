@@ -1,16 +1,11 @@
-﻿namespace AndrewM5.DevKit.TaskManagement.ScheduleStrategies;
+﻿namespace AndrewM5.DevKit.TaskManagement.Contracts.Models;
 
 /// <summary>
 /// Represents a scheduling strategy that calculates the next execution time on the following business day (Monday through Friday).
 /// </summary>
-public sealed class NextRunStrategy_Weekday : TimeBasedContinueIteration
+public sealed class TimeStrategy_Weekday : Time_IterationStrategy
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="NextRunStrategy_Weekday"/> class.
-    /// </summary>
-    /// <param name="startDate">The specific date to start the schedule. If null, defaults to the current date.</param>
-    /// <param name="startTime">The specific time of day the task should run. If null, defaults to the current time.</param>
-    public NextRunStrategy_Weekday(DateOnly? startDate = null, TimeSpan? startTime = null) : base(startDate, startTime) { }
+    public TimeStrategy_Weekday(TimeStrategySettings settings) : base(settings) { }
 
     /// <summary>
     /// Calculates the next execution time by incrementing the day until a weekday (Monday-Friday) is found.

@@ -3,135 +3,99 @@ using AndrewM5.DevKit.TaskManagement.Contracts.Models;
 
 namespace AndrewM5.DevKit.TaskManagement;
 
-/// <summary>
-/// Handles the execution lifecycle, state management, and cancellation logic for an <see cref="IManagedTask"/>.
-/// </summary>
 internal sealed class ManagedTaskRuntime : IDisposable
 {
-    /// <summary>
-    /// Gets the execution strategy (e.g., FireAndForget, LongRunning) for the task.
-    /// </summary>
-    public TaskExecutionMode ExecutionMode { get; }
+    public ManagedTaskHandle Handle { get; private set; }
 
-    /// <summary>
-    /// Gets the underlying user-defined task implementation.
-    /// </summary>
+    public ManagedTaskSettings RuntimeSettings { get; }
+
+    public Task? LifecycleTask { get; internal set; }
+
     public ManagedTask UserTask { get; }
 
-    /// <summary>
-    /// Gets or sets the current execution state of the task. 
-    /// Managed via thread-safe volatile operations.
-    /// </summary>
+    private int _state = (int)ManagedTaskState.Idle;
     public ManagedTaskState State
     {
         get => (ManagedTaskState)Volatile.Read(ref _state);
         internal set => Volatile.Write(ref _state, (int)value);
     }
 
-    /// <summary>
-    /// Gets the total number of iterations completed by the task.
-    /// </summary>
+    private int _iterationCount;
     public int IterationCount
     {
         get => Volatile.Read(ref _iterationCount);
     }
 
-    /// <summary>
-    /// Gets the configuration settings used to initialize this runtime.
-    /// </summary>
-    public ManagedTaskSettings RuntimeSettings { get; }
+    public DateTime StartDTM { get; internal set; } = DateTime.MinValue;
 
-    /// <summary>
-    /// Gets or sets the actual asynchronous <see cref="Task"/> being executed.
-    /// </summary>
-    public Task? TaskToRun { get; internal set; }
+    public DateTime EndDTM { get; internal set; } = DateTime.MinValue;
 
-    /// <summary>
-    /// Gets or sets the UTC timestamp of when the task execution started.
-    /// </summary>
-    public DateTime StartTime { get; internal set; }
+    public TimeSpan Runtime
+    {
+        get
+        {
+            if (StartDTM == DateTime.MinValue)
+            {
+                return TimeSpan.Zero;
+            }
 
-    /// <summary>
-    /// Gets or sets the UTC timestamp of when the task execution reached a terminal state.
-    /// </summary>
-    public DateTime EndTime { get; internal set; }
+            return (EndDTM == DateTime.MinValue ? DateTime.UtcNow : EndDTM) - StartDTM;
+        }
+    }
 
-    /// <summary>
-    /// Gets or sets the UTC timestamp of when the current task iteration execution started.
-    /// </summary>
-    public DateTime IterationStartTime { get; internal set; }
-
-    /// <summary>
-    /// Gets or sets the UTC timestamp of when the current task iteration execution reached a terminal state.
-    /// </summary>
-    public DateTime IterationEndTime { get; internal set; }
-
-    /// <summary>
-    /// Managed token source for the entire lifespan of the task runtime.
-    /// </summary>
+    internal SemaphoreSlim _concurrencyLock;
     internal CancellationTokenSource _lifecycleCTS;
 
-    /// <summary>
-    /// Managed token source specifically for the current execution iteration.
-    /// </summary>
-    internal CancellationTokenSource _iterationCTS;
-
-    /// <summary>
-    /// The cancellation token passed from the external caller or host.
-    /// </summary>
-    internal readonly CancellationToken _externalCT;
-
-    private int _state = (int)ManagedTaskState.Idle;
-    private int _iterationCount;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ManagedTaskRuntime"/> class.
-    /// </summary>
-    /// <param name="task">The task implementation to run.</param>
-    /// <param name="settings">Configuration for execution behavior.</param>
-    /// <param name="cancellationToken">An optional external token to observe for cancellation.</param>
-    public ManagedTaskRuntime(ManagedTask task, ManagedTaskSettings settings, CancellationToken cancellationToken = default)
+    internal ManagedTaskRuntime(ManagedTask task, ManagedTaskSettings settings, CancellationToken externalCancelationToken = default)
     {
         UserTask = task;
         RuntimeSettings = settings;
 
-        _externalCT = cancellationToken;
+        _lifecycleCTS = CancellationTokenSource.CreateLinkedTokenSource(externalCancelationToken);
+        _concurrencyLock = new SemaphoreSlim(settings.MaxConcurrentParallelTasks);
 
-        _lifecycleCTS = new CancellationTokenSource();
-        _iterationCTS = new CancellationTokenSource();
+        Handle = new ManagedTaskHandle(this);
     }
 
-    /// <summary>
-    /// Atomically increments the iteration counter.
-    /// </summary>
-    internal void IncrementIteration()
+    internal ManagedTaskIterationRuntime CreateIterationRuntime()
     {
-        Interlocked.Increment(ref _iterationCount);
+        // Increment global counter
+        int nextId = Interlocked.Increment(ref _iterationCount);
+
+        // Create a new runtime for this next iteration
+        return new ManagedTaskIterationRuntime(Handle, _lifecycleCTS.Token, nextId);
     }
 
-    /// <summary>
-    /// Disposes of the current iteration token and initializes a new one for the next run.
-    /// </summary>
-    internal void ResetIterationToken()
+    public void Cancel()
     {
-        _iterationCTS?.Dispose();
-        _iterationCTS = new CancellationTokenSource();
+        State = ManagedTaskState.CancelRequested;
+
+        if (_lifecycleCTS != null && !_lifecycleCTS.IsCancellationRequested)
+        {
+            _lifecycleCTS.Cancel();
+        }
     }
 
-    /// <summary>
-    /// Cancels the lifecycle token and releases resources used by the runtime.
-    /// </summary>
     public void Dispose()
     {
+        // Signal cancellation to the lifecycle
+        // This will automatically trigger cancellation for ALL active IterationHandles
+        // because their tokens are linked to this one.
         try
         {
             _lifecycleCTS?.Cancel();
+
+            // 2. Dispose the Token Sources
+            _lifecycleCTS?.Dispose();
         }
-        catch { }
+        catch (ObjectDisposedException) { /* Already gone */ }
 
-        _lifecycleCTS?.Dispose();
-        _iterationCTS?.Dispose();
-
-        TaskToRun = null;
+        try
+        {
+            // 3. Dispose the Concurrency Lock
+            // This is important! Semaphores use wait handles that should be released.
+            _concurrencyLock?.Dispose();
+        }
+        catch (ObjectDisposedException) { /* Already gone */ }
     }
 }

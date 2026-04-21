@@ -1,14 +1,8 @@
-﻿using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
-using AndrewM5.DevKit.TaskManagement.Services;
+﻿using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 
 namespace AndrewM5.DevKit.TaskManagement;
 
-/// <summary>
-/// An internal implementation of <see cref="ITaskHandle"/> that provides a live view 
-/// into the state and execution of a managed task.
-/// </summary>
-internal sealed class ManagedTaskHandle : ITaskHandle
+public sealed class ManagedTaskHandle : IManagedTaskHandle
 {
     /// <inheritdoc />
     public string TaskKey => _managedTaskRuntime.UserTask.TaskKey;
@@ -17,87 +11,27 @@ internal sealed class ManagedTaskHandle : ITaskHandle
     public ManagedTaskState State => _managedTaskRuntime.State;
 
     /// <inheritdoc />
-    public Task? RunningTask => _managedTaskRuntime.TaskToRun;
-
-    /// <inheritdoc />
-    public DateTime StartTime => _managedTaskRuntime.StartTime;
-
-    /// <inheritdoc />
-    public DateTime EndTime => _managedTaskRuntime.EndTime;
-
-    /// <inheritdoc />
-    public DateTime IterationStartTime => _managedTaskRuntime.IterationStartTime;
-
-    /// <inheritdoc />
-    public DateTime IterationEndTime => _managedTaskRuntime.IterationEndTime;
+    public Task? RunningTask => _managedTaskRuntime.LifecycleTask;
 
     /// <inheritdoc />
     public int CurrentIterationCount => _managedTaskRuntime.IterationCount;
 
+    /// <inheritdoc />
+    public DateTime StartDTM => _managedTaskRuntime.StartDTM;
+
+    /// <inheritdoc />
+    public DateTime EndDTM => _managedTaskRuntime.EndDTM;
+
+    /// <inheritdoc/>
+    public TimeSpan Runtime => _managedTaskRuntime.Runtime;
+
     private readonly ManagedTaskRuntime _managedTaskRuntime;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ManagedTaskHandle"/> class.
-    /// </summary>
-    /// <param name="managedTaskRuntime">The underlying runtime object containing the task's live data.</param>
-    public ManagedTaskHandle(ManagedTaskRuntime managedTaskRuntime)
+    internal ManagedTaskHandle(ManagedTaskRuntime managedTaskRuntime)
     {
         _managedTaskRuntime = managedTaskRuntime;
     }
 
-    /// <summary>
-    /// Retrieves the current runtime duration of the task.
-    /// </summary>
-    /// <returns>
-    /// An <see cref="OperationResult{TimeSpan}"/> containing the elapsed time since the task started, 
-    /// or failure details if the manager cannot be reached or the task is not found.
-    /// </returns>
-    /// <exception cref="Exception">Re-throws the exception encapsulated in the TaskManager's result if the method fails.</exception>
-    public OperationResult<TimeSpan> GetTaskRuntime()
-    {
-        var result = new OperationResult<TimeSpan>();
-
-        try
-        {
-            var getRunTime = TaskManagementHost.TaskManager!.GetTaskRuntime(TaskKey);
-            if (!getRunTime.MethodSuccess)
-            {
-                throw getRunTime.Exception;
-            }
-
-            return result.SetMethodSuccess(getRunTime.Result);
-        }
-        catch (Exception ex)
-        {
-            return result.SetMethodFailure(ex);
-        }
-    }
-
-    /// <summary>
-    /// Retrieves the current runtime duration of the task iteration.
-    /// </summary>
-    /// <returns>
-    /// An <see cref="OperationResult{TimeSpan}"/> containing the elapsed time since the task started, 
-    /// or failure details if the manager cannot be reached or the task is not found.
-    /// </returns>
-    /// <exception cref="Exception">Re-throws the exception encapsulated in the TaskManager's result if the method fails.</exception>
-    public OperationResult<TimeSpan> GetTaskIterationRuntime()
-    {
-        var result = new OperationResult<TimeSpan>();
-
-        try
-        {
-            var getRunTime = TaskManagementHost.TaskManager!.GetTaskIterationRuntime(TaskKey);
-            if (!getRunTime.MethodSuccess)
-            {
-                throw getRunTime.Exception;
-            }
-
-            return result.SetMethodSuccess(getRunTime.Result);
-        }
-        catch (Exception ex)
-        {
-            return result.SetMethodFailure(ex);
-        }
-    }
+    /// <inheritdoc/>
+    public void Cancel() => _managedTaskRuntime.Cancel();
 }

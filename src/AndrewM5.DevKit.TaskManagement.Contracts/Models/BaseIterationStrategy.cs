@@ -11,13 +11,13 @@ namespace AndrewM5.DevKit.TaskManagement.Contracts.Models;
 /// introduce any delay, allowing the task execution engine to proceed to the next 
 /// iteration immediately.
 /// </remarks>
-public class ContinueIterationBase : IContinueIteration
+public class BaseIterationStrategy : IIterationStrategy
 {
     /// <inheritdoc/>
     /// <remarks>
     /// Default implementation: Returns immediately to start the next iteration without delay.
     /// </remarks>
-    public virtual Task WaitForReadyAsync(ITaskHandle handle, CancellationToken cancellationToken, ICustomLogger? logger = null)
+    public virtual Task WaitForReadyAsync(IManagedTaskHandle handle, CancellationToken cancellationToken, ICustomLogger? logger = null)
     {
         return Task.CompletedTask;
     }

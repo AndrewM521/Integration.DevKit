@@ -11,7 +11,7 @@ namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 /// The execution engine will await <see cref="WaitForReadyAsync"/> before each 
 /// iteration begins
 /// </remarks>
-public interface IContinueIteration
+public interface IIterationStrategy
 {
     /// <summary>
     /// Asynchronously waits until the task is ready to proceed to its next iteration.
@@ -25,5 +25,5 @@ public interface IContinueIteration
     /// <exception cref="OperationCanceledException">
     /// Thrown if the <paramref name="cancellationToken"/> is signaled during the wait.
     /// </exception>
-    public Task WaitForReadyAsync(ITaskHandle handle, CancellationToken cancellationToken, ICustomLogger? logger = null);
+    public Task WaitForReadyAsync(IManagedTaskHandle handle, CancellationToken cancellationToken, ICustomLogger? logger = null);
 }

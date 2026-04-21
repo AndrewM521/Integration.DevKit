@@ -37,39 +37,40 @@ internal class TaskRegistryRuntime
     /// <param name="managedTaskRuntime">The active runtime to capture data from.</param>
     /// <param name="snapshotEx">An optional exception to associate with the snapshot (e.g., if the task just faulted).</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the success of the update and subsequent trim check.</returns>
-    public NullOperationResult Upsert(ManagedTaskRuntime managedTaskRuntime, Exception? snapshotEx = null)
+    public NullOperationResult Upsert(ManagedTaskRuntime managedTaskRuntime, ManagedTaskIterationRuntime? iterationRuntime = null, Exception? snapshotEx = null)
     {
         var result = new NullOperationResult();
 
         try
         {
-            ManagedTaskSnapshot snapshot;
-            string taskKey = managedTaskRuntime.UserTask.TaskKey;
-            if (_taskRegistry.Snapshots.TryGetValue(taskKey, out IManagedTaskSnapshot? existingSnapshot))
-            {
-                if (existingSnapshot != null)
-                {
-                    snapshot = (ManagedTaskSnapshot)existingSnapshot;
-                }
-                else
-                {
-                    snapshot = new ManagedTaskSnapshot(managedTaskRuntime.UserTask.TaskKey, managedTaskRuntime.RuntimeSettings.Clone());
-                }
-            }
-            else
-            {
-                snapshot = new ManagedTaskSnapshot(managedTaskRuntime.UserTask.TaskKey, managedTaskRuntime.RuntimeSettings.Clone());
-            }
+            Console.WriteLine("TODO Upsert");
+            //ManagedTaskSnapshot snapshot;
+            //string taskKey = managedTaskRuntime.UserTask.TaskKey;
+            //if (_taskRegistry.Snapshots.TryGetValue(taskKey, out IManagedTaskSnapshot? existingSnapshot))
+            //{
+            //    if (existingSnapshot != null)
+            //    {
+            //        snapshot = (ManagedTaskSnapshot)existingSnapshot;
+            //    }
+            //    else
+            //    {
+            //        snapshot = new ManagedTaskSnapshot(managedTaskRuntime.UserTask.TaskKey, managedTaskRuntime.RuntimeSettings.Clone());
+            //    }
+            //}
+            //else
+            //{
+            //    snapshot = new ManagedTaskSnapshot(managedTaskRuntime.UserTask.TaskKey, managedTaskRuntime.RuntimeSettings.Clone());
+            //}
 
-            snapshot.State = managedTaskRuntime.State;
-            snapshot.IterationCount = managedTaskRuntime.IterationCount;
-            snapshot.StartTime = managedTaskRuntime.StartTime;
-            snapshot.EndTime = managedTaskRuntime.EndTime;
-            snapshot.Exception = snapshotEx;
+            //snapshot.State = managedTaskRuntime.State;
+            //snapshot.IterationCount = managedTaskRuntime.IterationCount;
+            //snapshot.StartTime = managedTaskRuntime.StartTime;
+            //snapshot.EndTime = managedTaskRuntime.EndTime;
+            //snapshot.Exception = snapshotEx;
 
-            _taskRegistry.Upsert(snapshot);
+            //_taskRegistry.Upsert(snapshot);
 
-            TrimIfNeeded();
+            //TrimIfNeeded();
 
             return result.SetMethodSuccess();
         }

@@ -12,7 +12,6 @@ using AndrewM5.DevKit.ProcessLauncher.Services;
 using AndrewM5.DevKit.TaskManagement;
 using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Contracts.Models;
-using AndrewM5.DevKit.TaskManagement.ScheduleStrategies;
 using AndrewM5.DevKit.TaskManagement.Services;
 using AndrewM5.DevKit.ThreadSafeItems.Services;
 using Microsoft.Extensions.Configuration;
@@ -503,14 +502,23 @@ public class AppEntry
 
         Console.WriteLine("Synchronous Test");
         var settings = new ManagedTaskSettings();
+        var strategySettings = new TimeStrategySettings();
         settings.MaxIterations = 3;
         //settings.RetryOnException = true;
         //settings.MaxRetryCount = 2;
-        //settings.StopIterationAfterMaxRetries = true;
-        //settings.StopIteratingOnException = false;
-        settings.ContinueIterationStrategy = new NextRunStrategy_Interval(TimeSpan.FromSeconds(3));
-        //settings.ContinueIteration = new NextRunStrategy_Daily();
-        //settings.ContinueIteration = new NextRunStrategy_Weekday();
+        //settings.StopIterationAfterMaxRetries = false;
+        settings.StopIteratingOnException = true;
+
+        //strategySettings.CustomStartDate = DateOnly.FromDateTime(DateTime.Now);
+        //strategySettings.CustomStartTime = new TimeSpan(0,5,0,0);
+        //strategySettings.FastForwardToPresent = true;
+        //strategySettings.SkipFirstIterationWait = true;
+
+        settings.IterationStrategy = new TimeStrategy_Interval(TimeSpan.FromMinutes(1), strategySettings);
+        //settings.ContinueIteration = new TimeStrategy_Daily();
+        //settings.ContinueIteration = new TimeStrategy_Weekday();
+        //settings.AllowParallelIterationExecution = true;
+        settings.MaxConcurrentParallelTasks = 2;
 
         var createTask0 = await _taskManager.StartTask(new SimpleShortTask(), TaskExecutionMode.Asyncronous, settings);
         if (!createTask0.MethodSuccess)
@@ -520,8 +528,7 @@ public class AppEntry
 
         await createTask0.Result.RunningTask!;
 
-        Console.WriteLine($"End Time: {createTask0.Result?.IterationEndTime}. Elapsed Iteration Time: {createTask0.Result?.GetTaskIterationRuntime().Result}");
-        Console.WriteLine($"End Time: {createTask0.Result?.IterationEndTime}. Elapsed Time: {createTask0.Result?.GetTaskRuntime().Result}");
+        Console.WriteLine($"End Time: {createTask0.Result?.EndDTM}. Elapsed Time: {createTask0.Result?.Runtime}");
 
         //while (true)
         //{
