@@ -5,8 +5,6 @@ using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
-using System.Net;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
@@ -14,8 +12,7 @@ using System.Text;
 namespace AndrewM5.DevKit.ApiClientManagement;
 
 /// <summary>
-/// Implementation of <see cref="IApiClient"/> providing thread-safe HTTP operations, 
-/// integrated rate limiting, and secure credential management.
+/// Concrete Implementation of <see cref="IApiClient"/>
 /// </summary>
 public class ApiClient : IApiClient
 {
@@ -45,7 +42,7 @@ public class ApiClient : IApiClient
     /// <param name="clientSettings">The specific configuration for this client.</param>
     /// <param name="httpClient">The underlying <see cref="HttpClient"/> instance to use for requests.</param>
     /// <param name="logger">Optional logger for debugging and runtime info.</param>
-    public ApiClient(IApiManager apiManager, string clientName, ApiClientSettings clientSettings, HttpClient httpClient, ICustomLogger? logger = null)
+    internal ApiClient(IApiManager apiManager, string clientName, ApiClientSettings clientSettings, HttpClient httpClient, ICustomLogger? logger = null)
     {
         ClientName = clientName;
 
@@ -108,17 +105,10 @@ public class ApiClient : IApiClient
     }
 
     /// <inheritdoc/>
-    public async Task<ApiOperationResult<string>> PostAsync(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
+    public async Task<ApiOperationResult<string>> PostAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Post, () =>
             ApiRequest.PostAsync(_httpClient, endpointUrl, httpContent, requestHeaders));
-    }
-
-    /// <inheritdoc/>
-    public async Task<ApiOperationResult<string>> PostAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
-    {
-        return await SendRequestOrchestratorAsync(HttpMethod.Post, () =>
-            ApiRequest.PostAsync(_httpClient, endpointUrl, null, requestHeaders));
     }
 
     /// <inheritdoc/>
@@ -172,15 +162,9 @@ public class ApiClient : IApiClient
     }
 
     /// <inheritdoc/>
-    public ApiOperationResult<string> Post(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
+    public ApiOperationResult<string> Post(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return PostAsync(endpointUrl, httpContent, requestHeaders).GetAwaiter().GetResult();
-    }
-
-    /// <inheritdoc/>
-    public ApiOperationResult<string> Post(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
-    {
-        return PostAsync(endpointUrl, requestHeaders).GetAwaiter().GetResult();
     }
 
     /// <inheritdoc/>
@@ -271,96 +255,6 @@ public class ApiClient : IApiClient
             }
 
             return result.SetMethodSuccess(mediaTypeStr);
-        }
-        catch (Exception ex)
-        {
-            return result.SetMethodFailure(ex);
-        }
-    }
-
-    /// <summary>
-    /// Applies specific request headers to the <see cref="HttpRequestMessage"/>, 
-    /// handling special cases like Authorization and Content-Type.
-    /// </summary>
-    private OperationResult<bool> AddRequestHeaders(HttpRequestMessage request, Dictionary<string, string>? requestHeaders = null)
-    {
-        var result = new OperationResult<bool>();
-
-        try
-        {
-            if (requestHeaders != null && requestHeaders.Count > 0)
-            {
-                List<Exception> errors = new List<Exception>();
-
-                foreach (var header in requestHeaders)
-                {
-                    try
-                    {
-                        var key = header.Key.Trim().ToLowerInvariant() ?? string.Empty;
-                        var value = header.Value?.Trim() ?? string.Empty;
-
-                        switch (key)
-                        {
-                            case "content-type":
-                                if (request.Content == null)
-                                {
-                                    throw new InvalidOperationException("Cannot set Content-Type when HttpContent is null.");
-                                }
-
-                                request.Content.Headers.ContentType = new MediaTypeHeaderValue(value);
-                                break;
-                            case "authorization":
-                                // Check for common schemes: Basic, Bearer, Digest, or custom
-                                switch (value)
-                                {
-                                    case "basic":
-                                        request.Headers.Authorization = new AuthenticationHeaderValue("Basic", value.Substring(6));
-                                        break;
-                                    case "bearer":
-                                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", value.Substring(7));
-                                        break;
-                                    default:
-                                        var split = value.IndexOf(' ');
-                                        if (split > 0)
-                                        {
-                                            var scheme = value.Substring(0, split);
-                                            var parameter = value.Substring(split + 1);
-                                            request.Headers.Authorization = new AuthenticationHeaderValue(scheme, parameter);
-                                        }
-                                        else
-                                        {
-                                            // If only a token without scheme, treat as Bearer
-                                            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", value);
-                                        }
-                                        break;
-                                }
-                                break;
-                            case "user-agent":
-                                request.Headers.UserAgent.ParseAdd(header.Value);
-                                break;
-                            default:
-                                if (request.Headers.Contains(header.Key))
-                                {
-                                    request.Headers.Remove(header.Key); // overwrite existing header
-                                }
-
-                                request.Headers.Add(header.Key, header.Value);
-                                break;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        errors.Add(ex);
-                    }
-                }
-
-                if (errors.Count > 0)
-                {
-                    throw new AggregateException(errors);
-                }
-            }
-
-            return result.SetMethodSuccess(true);
         }
         catch (Exception ex)
         {
@@ -529,7 +423,7 @@ public class ApiClient : IApiClient
     #endregion
 
     /// <inheritdoc/>
-    public void OutputRuntimeSettings(bool calledFromManager = false)
+    public void LogRuntimeSettings(bool calledFromManager = false)
     {
         string indent;
 
@@ -570,7 +464,9 @@ public class ApiClient : IApiClient
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Disposes the client and rate limiter
+    /// </summary>
     public ValueTask DisposeAsync()
     {
         _rateLimiter?.Dispose();

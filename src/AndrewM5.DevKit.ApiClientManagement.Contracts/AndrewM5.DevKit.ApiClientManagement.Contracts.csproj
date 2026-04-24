@@ -10,8 +10,4 @@
     <ProjectReference Include="..\AndrewM5.DevKit.CredentialManagement.Contracts\AndrewM5.DevKit.CredentialManagement.Contracts.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
-
 </Project>

@@ -1,11 +1,11 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 using System.Net;
 
-namespace AndrewM5.DevKit.ApiClientManagement;
+namespace AndrewM5.DevKit.ApiClientManagement.Contracts.Models;
 
 /// <summary>
 /// A utility class for constructing formatted endpoint URLs using various routing styles 
-/// (Query String, Keyed Slashes, or Positional Slashes).
+/// (Query String, Keyed Slashes, or Positional Slashes) based on a persistent base route.
 /// </summary>
 public class ApiEndpoint
 {
@@ -22,18 +22,16 @@ public class ApiEndpoint
 
     #region Asyncronous Methods
     /// <summary>
-    /// Asyncronously constructs a URL with a standard query string appended (e.g., "route?key=value").
+    /// Asynchronously constructs a URL with a standard query string appended (e.g., "route?key=value").
     /// </summary>
     /// <param name="queryParams">A dictionary of key-value pairs to include in the query string.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the formatted URL string.</returns>
-    /// <remark>
-    /// --Example--
-    /// <br/>Route: users/search
-    /// <br/>Query Params: { name = "John Doe", age = 30 }
-    /// <br/>Resulting URL:
-    /// <br/>users/search?name=John+Doe&amp;age=30
-    /// </remark>
-    public async Task<OperationResult<string>> BuildQueryUrlAsync(Dictionary<string, object?>? queryParams = null)
+    /// <example>
+    /// Base Route: "users/search"
+    /// Params: { name = "John Doe", age = 30 }
+    /// Result: "users/search?name=John+Doe&amp;age=30"
+    /// </example>
+    public async Task<OperationResult<string>> BuildQueryUrlAsync(Dictionary<string, object> queryParams)
     {
         var result = new OperationResult<string>();
 
@@ -72,11 +70,6 @@ public class ApiEndpoint
     /// Returns the base route string provided during initialization.
     /// </summary>
     /// <returns>The unformatted base route.</returns>
-    /// <remark>
-    /// --Example--
-    /// <br/>Route: users/search
-    /// <br/>Resulting URL: users/search
-    /// </remark>
     public string BuildUrl()
     {
         return _route;
@@ -87,29 +80,27 @@ public class ApiEndpoint
     /// </summary>
     /// <param name="queryParams">A dictionary of key-value pairs to include in the query string.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the formatted URL string.</returns>
-    /// <remark>
-    /// --Example--
-    /// <br/>Route: users/search
-    /// <br/>Query Params: { name = "John Doe", age = 30 }
-    /// <br/>Resulting URL: users/search?name=John+Doe&amp;age=30
-    /// </remark>
-    public OperationResult<string> BuildQueryUrl(Dictionary<string, object?>? queryParams = null)
+    /// <example>
+    /// Base Route: "users/search"
+    /// Params: { name = "John Doe", age = 30 }
+    /// Result: "users/search?name=John+Doe&amp;age=30"
+    /// </example>
+    public OperationResult<string> BuildQueryUrl(Dictionary<string, object> queryParams)
     {
         return BuildQueryUrlAsync(queryParams).GetAwaiter().GetResult();
     }
 
     /// <summary>
-    /// Synchronously constructs a "Slash" style URL where keys and values are paired as path segments 
+    /// Synchronously constructs a "Slash" style URL where keys and values are paired as path segments.
     /// </summary>
     /// <param name="queryParams">The dictionary of parameters to append as path segments.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the formatted URL string.</returns>
-    /// <remark>
-    /// --Example--
-    /// <br/>Route: products/filter
-    /// <br/>Query Params: { category = "Laptops", brand = "Lenovo" }
-    /// <br/>Resulting URL: products/filter/category/Laptops/brand/Lenovo
-    /// </remark>
-    public OperationResult<string> BuildSlashUrl(Dictionary<string, object?> queryParams)
+    /// <example>
+    /// Base Route: "products/filter"
+    /// Params: { category = "Laptops" }
+    /// Result: "products/filter/category/Laptops"
+    /// </example>
+    public OperationResult<string> BuildSlashUrl(Dictionary<string, object> queryParams)
     {
         var result = new OperationResult<string>();
 
@@ -134,18 +125,15 @@ public class ApiEndpoint
     }
 
     /// <summary>
-    /// Synchronously constructs a "Positional" style URL where only values are appended as path segments 
-    /// (e.g., "route/value1/value2").
+    /// Synchronously constructs a "Positional" style URL where only values are appended as path segments.
     /// </summary>
     /// <param name="queryParams">The ordered list of values to append to the path.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the formatted URL string.</returns>
-    /// <remark>
-    /// --Example--
-    /// <br/>Route: orders/details
-    /// <br/>Positional Params: [ 12345, "full", "2024-01-01" ]
-    /// <br/>Resulting URL:
-    /// <br/>orders/details/12345/full/2024-01-01
-    /// </remark>
+    /// <example>
+    /// Base Route: "orders/details"
+    /// Params: [ 12345, "full" ]
+    /// Result: "orders/details/12345/full"
+    /// </example>
     public OperationResult<string> BuildPositionalUrl(List<object> queryParams)
     {
         var result = new OperationResult<string>();

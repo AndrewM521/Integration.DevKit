@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace AndrewM5.DevKit.ApiClientManagement.Services;
 
 /// <summary>
-/// Provides a static entry point to access the <see cref="IApiManager"/> 
+/// Provides a static entry point to access the APIManagement classes 
 /// This host must be initialized during application startup after the DI container is built.
 /// </summary>
 public static class ApiManagementHost

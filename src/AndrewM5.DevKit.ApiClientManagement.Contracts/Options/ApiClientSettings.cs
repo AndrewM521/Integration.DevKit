@@ -1,7 +1,9 @@
-﻿namespace AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
+﻿using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+
+namespace AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
 
 /// <summary>
-/// Represents the configuration schema and runtime settings for an <see cref="IApiClient"/>.
+/// Represents the configuration for an <see cref="IApiClient"/>.
 /// </summary>
 public class ApiClientSettings
 {
@@ -25,8 +27,7 @@ public class ApiClientSettings
     public string BaseUrl { get; set; } = "https://example.com";
 
     /// <summary>
-    /// Gets or sets the threshold for the number of requests allowed before client-side 
-    /// rate limiting logic is engaged. 
+    /// Gets or sets the threshold for the number of requests allowed before rate limiting is engaged. 
     /// Default is <see cref="int.MaxValue"/>.
     /// </summary>
     public int RequestCountBeforeRateLimiting { get; set; } = int.MaxValue;

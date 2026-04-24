@@ -6,13 +6,12 @@ using Microsoft.Extensions.DependencyInjection;
 namespace AndrewM5.DevKit.ApiClientManagement.Services;
 
 /// <summary>
-/// Extension methods for setting up API management services in an <see cref="IServiceCollection"/>.
+/// Extension methods for setting up the APIManagement module in an <see cref="IServiceCollection"/>.
 /// </summary>
 public static class ApiManagementServiceCollection
 {
     /// <summary>
-    /// Adds the API management infrastructure to the service collection, including configuration 
-    /// binding and the <see cref="IApiManager"/> singleton.
+    /// Adds the API management infrastructure to the service collection
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
     /// <param name="configuration">The application configuration used to bind <see cref="ApiManagerSettings"/>.</param>

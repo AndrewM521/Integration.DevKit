@@ -1,4 +1,4 @@
-﻿using AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
+﻿using AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
 
 namespace AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
 
@@ -26,7 +26,7 @@ public interface IApiManager : IAsyncDisposable
     public IApiClient GetClient(string clientName);
 
     /// <summary>
-    /// Debugging or logging method to output the current <see cref="ApiManagerSettings"/> state to the configured output stream.
+    /// Logging method to output current <see cref="ApiManagerSettings"/> to the logs.
     /// </summary>
-    public void OutputRuntimeSettings();
+    public void LogRuntimeSettings();
 }

@@ -1,4 +1,4 @@
-﻿using AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
+﻿using AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
 using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
 using System.Text;
@@ -36,21 +36,13 @@ public interface IApiClient : IAsyncDisposable
     public Task<ApiOperationResult<string>> GetAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null);
 
     /// <summary>
-    /// Sends an asynchronous POST request with no body to the specified endpoint.
+    /// Sends an asynchronous POST request with an optional specified body to the specified endpoint.
     /// </summary>
     /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">Optional <see cref="HttpContent"/> request content sent to the server.</param>
     /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
     /// <returns>A task representing the result as an <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
-    public Task<ApiOperationResult<string>> PostAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null);
-
-    /// <summary>
-    /// Sends an asynchronous POST request with a specified body to the specified endpoint.
-    /// </summary>
-    /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
-    /// <param name="httpContent">The <see cref="HttpContent"/> request content sent to the server.</param>
-    /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
-    /// <returns>A task representing the result as an <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
-    public Task<ApiOperationResult<string>> PostAsync(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null);
+    public Task<ApiOperationResult<string>> PostAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null);
 
     /// <summary>
     /// Sends an asynchronous PUT request to the specified endpoint.
@@ -72,7 +64,7 @@ public interface IApiClient : IAsyncDisposable
 
     #region Synchronous HTTP Methods
     /// <summary>
-    /// Sends a synchronous GET request.
+    /// Sends a synchronous GET request to the specified endpoint.
     /// </summary>
     /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
     /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
@@ -80,24 +72,16 @@ public interface IApiClient : IAsyncDisposable
     public ApiOperationResult<string> Get(string endpointUrl, Dictionary<string, string>? requestHeaders = null);
 
     /// <summary>
-    /// Sends a synchronous POST request with no body.
+    /// Sends a synchronous POST request with an optional specified body to the specified endpoint.
     /// </summary>
     /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">Optional <see cref="HttpContent"/> request content sent to the server.</param>
     /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
     /// <returns>An <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
-    public ApiOperationResult<string> Post(string endpointUrl, Dictionary<string, string>? requestHeaders = null);
+    public ApiOperationResult<string> Post(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null);
 
     /// <summary>
-    /// Sends a synchronous POST request with content.
-    /// </summary>
-    /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
-    /// <param name="httpContent">The <see cref="HttpContent"/> request content sent to the server.</param>
-    /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
-    /// <returns>An <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
-    public ApiOperationResult<string> Post(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null);
-
-    /// <summary>
-    /// Sends a synchronous PUT request.
+    /// Sends a synchronous PUT request to the specified endpoint.
     /// </summary>
     /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
     /// <param name="httpContent">The <see cref="HttpContent"/> request content sent to the server.</param>
@@ -106,7 +90,7 @@ public interface IApiClient : IAsyncDisposable
     public ApiOperationResult<string> Put(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null);
 
     /// <summary>
-    /// Sends a synchronous DELETE request.
+    /// Sends a synchronous DELETE request to the specified endpoint.
     /// </summary>
     /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
     /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
@@ -166,7 +150,7 @@ public interface IApiClient : IAsyncDisposable
     public OperationResult<HttpContent> CreateHttpContent(RESTApiMediaTypes mediaType, string data, Encoding? encoding = null);
 
     /// <summary>
-    /// Adds a default header that will be applied to all subsequent requests made by this client instance.
+    /// Adds a default header to the client that will be applied to all subsequent requests.
     /// </summary>
     /// <param name="key">The header name.</param>
     /// <param name="value">The header value.</param>
@@ -175,16 +159,35 @@ public interface IApiClient : IAsyncDisposable
     #endregion
 
     /// <summary>
-    /// Debugging or logging method to output current <see cref="ApiClientSettings"/> to the console or logs.
+    /// Logging method to output current <see cref="ApiClientSettings"/> to the logs.
     /// </summary>
     /// <param name="calledFromManager">Indicates if the call originated from a management orchestrator.</param>
-    public void OutputRuntimeSettings(bool calledFromManager = false);
+    public void LogRuntimeSettings(bool calledFromManager = false);
 }
 
+/// <summary>
+/// Specifies the media types (MIME types) used for REST API requests and responses.
+/// </summary>
 public enum RESTApiMediaTypes
 {
+    /// <summary>
+    /// Represents "application/json". The standard format for modern RESTful APIs.
+    /// </summary>
     Json,
+
+    /// <summary>
+    /// Represents "application/xml". Used for legacy systems or SOAP-based services.
+    /// </summary>
     Xml,
+
+    /// <summary>
+    /// Represents "text/plain". Used for simple, unformatted text data.
+    /// </summary>
     PlainText,
+
+    /// <summary>
+    /// Represents "application/x-www-form-urlencoded". 
+    /// Commonly used for simple form submissions and OAuth2 token requests.
+    /// </summary>
     WWW_UrlEncoded
 }

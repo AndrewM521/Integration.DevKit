@@ -1,21 +1,22 @@
-﻿using System.Collections.Concurrent;
+﻿using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+using System.Collections.Concurrent;
 
-namespace AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
+namespace AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
 
 /// <summary>
-/// Represents the global configuration and registry for the <see cref="AndrewM5.DevKit.ApiManagement.Contracts.Interfaces.IApiManager"/>.
+/// Represents the configuration for the <see cref="IApiManager"/>.
 /// </summary>
 public class ApiManagerSettings
 {
     /// <summary>
     /// Gets or sets the global default timeout in seconds for HTTP requests.
-    /// This value is typically used when a specific <see cref="ApiClientSettings.HttpTimeout_Seconds"/> is not provided.
+    /// This value is used when a specific <see cref="ApiClientSettings.HttpTimeout_Seconds"/> is not provided.
     /// Default is 30 seconds.
     /// </summary>
     public int Default_HttpTimeout_Seconds { get; set; } = 30;
 
     /// <summary>
-    /// Gets or sets the thread-safe registry of named <see cref="ApiClientSettings"/>.
+    /// Gets or sets the registry of named <see cref="ApiClientSettings"/>.
     /// </summary>
     /// <value>
     /// A <see cref="ConcurrentDictionary{TKey, TValue}"/> where the key is the client name 

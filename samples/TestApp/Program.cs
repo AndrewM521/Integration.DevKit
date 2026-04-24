@@ -206,7 +206,7 @@ public class AppEntry
         var _apiManager = ApiManagementHost.ApiManager;
         var _client = _apiManager.GetClient("TestClient");
 
-        _apiManager.OutputRuntimeSettings();
+        _apiManager.LogRuntimeSettings();
 
         Console.WriteLine("----------------------------------------------------");
         Console.WriteLine("Credential Test:");
@@ -278,7 +278,7 @@ public class AppEntry
         var _apiManager = ApiManagementHost.ApiManager;
         var _client = _apiManager.GetClient("TestClient");
 
-        _apiManager.OutputRuntimeSettings();
+        _apiManager.LogRuntimeSettings();
 
         Console.WriteLine("GET Posts: ");
         var getAll = await _client.GetAsync(Posts.BuildUrl());

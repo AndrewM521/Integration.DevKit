@@ -8,9 +8,7 @@ namespace AndrewM5.DevKit.ApiClientManagement;
 /// </summary>
 public class ApiClientMetrics : IApiClientMetrics
 {
-    /// <summary>
-    /// Gets the total number of requests by summing all individual HTTP method counters.
-    /// </summary>
+    /// <inheritdoc/>
     public int TotalRequests
     {
         get
@@ -19,10 +17,7 @@ public class ApiClientMetrics : IApiClientMetrics
         }
     }
 
-    /// <summary>
-    /// Gets the number of successful requests by subtracting <see cref="FailureCount"/> 
-    /// from <see cref="TotalRequests"/>.
-    /// </summary>
+    /// <inheritdoc/>
     public int SuccessCount
     {
         get

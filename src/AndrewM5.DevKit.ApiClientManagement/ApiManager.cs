@@ -9,7 +9,7 @@ using System.Reflection;
 namespace AndrewM5.DevKit.ApiClientManagement;
 
 /// <summary>
-/// The central manager responsible for creating, configuring, and caching <see cref="IApiClient"/> instances.
+/// Concrete Implementation of <see cref="IApiManager"/>
 /// </summary>
 public class ApiManager : IApiManager
 {
@@ -28,7 +28,7 @@ public class ApiManager : IApiManager
     /// <param name="httpFactory">The factory used to create underlying <see cref="HttpClient"/> instances.</param>
     /// <param name="loggerManager">Optional manager to resolve the "ApiManager" logger.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="settings"/> is null.</exception>
-    public ApiManager(IOptions<ApiManagerSettings> settings, IHttpClientFactory httpFactory, ICustomLoggerManager? loggerManager = null)
+    internal ApiManager(IOptions<ApiManagerSettings> settings, IHttpClientFactory httpFactory, ICustomLoggerManager? loggerManager = null)
     {
         if (settings == null)
         {
@@ -49,8 +49,8 @@ public class ApiManager : IApiManager
 
     /// <inheritdoc/>
     /// <remarks>
-    /// If the requested <paramref name="clientName"/> is not found in the <see cref="RuntimeSettings"/>, 
-    /// the manager provides a fallback <see cref="ApiClient"/> using default settings.
+    /// If the requested <paramref name="clientName"/> is not found in the <see cref="ApiManagerSettings.Clients"/>, 
+    /// the manager provides a new <see cref="ApiClient"/> using default settings.
     /// </remarks>
     public IApiClient GetClient(string clientName)
     {
@@ -76,7 +76,7 @@ public class ApiManager : IApiManager
     }
 
     /// <inheritdoc/>
-    public void OutputRuntimeSettings()
+    public void LogRuntimeSettings()
     {
         _logger?.LogDebug($"--- Api Manager Settings ---");
 
@@ -95,7 +95,7 @@ public class ApiManager : IApiManager
                 {
                     var client = GetClient(kvp.Key);
 
-                    client.OutputRuntimeSettings(true);
+                    client.LogRuntimeSettings(true);
                 }
             }
             else
@@ -106,8 +106,7 @@ public class ApiManager : IApiManager
     }
 
     /// <summary>
-    /// Performs application-defined tasks associated with freeing, releasing, or resetting 
-    /// unmanaged resources asynchronously by disposing all cached clients.
+    /// Disposes all cached clients 
     /// </summary>
     public async ValueTask DisposeAsync()
     {
