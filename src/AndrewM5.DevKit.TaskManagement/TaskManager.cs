@@ -82,6 +82,16 @@ public class TaskManager : ITaskManager
             RuntimeSettings.MaxConcurrentTasks = int.MaxValue;
         }
 
+        if (RuntimeSettings.MaxTaskRegistryCount < 0)
+        {
+            RuntimeSettings.MaxTaskRegistryCount = int.MaxValue;
+        }
+
+        if (RuntimeSettings.MaxTaskIterationRegistryCount < 0)
+        {
+            RuntimeSettings.MaxTaskIterationRegistryCount = int.MaxValue;
+        }
+
         _taskLimiter = new SemaphoreSlim(RuntimeSettings.MaxConcurrentTasks);   
     }
 
@@ -276,7 +286,9 @@ public class TaskManager : ITaskManager
         {
             await _taskLimiter.WaitAsync();
 
+
             managedTaskRuntime.StartDTM = DateTime.UtcNow;
+            managedTaskRuntime.State = ManagedTaskState.Running;
 
             var upsert = _taskRegistryRuntime.Upsert(managedTaskRuntime);
             if (!upsert.MethodSuccess)
@@ -352,7 +364,7 @@ public class TaskManager : ITaskManager
 
             if (!parallelIterations.IsEmpty)
             {
-                _logger?.LogDebug($"Task '{taskKey}' waiting for {parallelIterations.Count} parallel iterations to finish...");
+                _logger?.LogDebug($"Task '{taskKey}' waiting for {parallelIterations.Count} iterations to finish...");
 
                 // We do an WhenAll here to wait for all parallelTasks to finish. This negates the need to check if any tasks are still running
                 await Task.WhenAll(parallelIterations);
@@ -392,6 +404,8 @@ public class TaskManager : ITaskManager
             Exception? finalEx = null;
             if (exceptions.Count > 0)
             {
+                managedTaskRuntime.State = ManagedTaskState.Faulted;
+
                 finalEx = new AggregateException(exceptions);
             }
 
@@ -424,6 +438,12 @@ public class TaskManager : ITaskManager
 
         iterationRuntime.StartDTM = DateTime.UtcNow;
         iterationRuntime.State = ManagedTaskState.Running;
+
+        var upsert = _taskRegistryRuntime.Upsert(managedTaskRuntime, iterationRuntime);
+        if (!upsert.MethodSuccess)
+        {
+            throw upsert.Exception;
+        }
 
         while (!linkedToken.IsCancellationRequested && (firstRun || needRetry))
         {
@@ -555,7 +575,7 @@ public class TaskManager : ITaskManager
                 }
             }
 
-            var upsert1 = _taskRegistryRuntime.Upsert(managedTaskRuntime, iterationRuntime, iterationException);
+            var upsert1 = _taskRegistryRuntime.Upsert(managedTaskRuntime, iterationRuntime, null, iterationException);
             if (!upsert1.MethodSuccess)
             {
                 throw upsert1.Exception;

@@ -16,7 +16,9 @@ public class TaskManagerSettings
     /// Gets or sets the maximum number of task records allowed in the <see cref="ITaskRegistry"/>.
     /// The default value is 2000.
     /// </summary>
-    public int MaxRegistryCount { get; set; } = 2000;
+    public int MaxTaskRegistryCount { get; set; } = 2000;
+
+    public int MaxTaskIterationRegistryCount { get; set; } = 100;
 
     /// <summary>
     /// Creates a member-wise deep copy of the current <see cref="TaskManagerSettings"/> instance.
@@ -27,7 +29,8 @@ public class TaskManagerSettings
         return new TaskManagerSettings 
         { 
             MaxConcurrentTasks = this.MaxConcurrentTasks,
-            MaxRegistryCount = this.MaxRegistryCount
+            MaxTaskRegistryCount = this.MaxTaskRegistryCount,
+            MaxTaskIterationRegistryCount = this.MaxTaskIterationRegistryCount
         };
     }
 }

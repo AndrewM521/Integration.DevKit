@@ -27,13 +27,13 @@ public interface IManagedTaskSnapshot
     /// <summary>
     /// Gets the date and time when the task execution began.
     /// </summary>
-    public DateTime StartTime { get; }
+    public DateTime StartDTM { get; }
 
     /// <summary>
     /// Gets the date and time when the task execution concluded. 
     /// If the task is still running, this may represent <see cref="DateTime.MinValue"/> or a default value.
     /// </summary>
-    public DateTime EndTime { get; }
+    public DateTime EndDTM { get; }
 
     /// <summary>
     /// Gets the total duration the task has been (or was) active.
@@ -45,9 +45,7 @@ public interface IManagedTaskSnapshot
     /// </summary>
     public Exception Exception { get; }
 
-    /// <summary>
-    /// Outputs the snapshot details to the provided logger or the standard system output.
-    /// </summary>
-    /// <param name="logger">An optional <see cref="ICustomLogger"/> instance to handle the output.</param>
-    public void DisplaySnapshot(ICustomLogger? logger = null);
+    public SortedDictionary<int, IManagedTaskIterationSnapshot> IterationHistory { get; }
+
+    public string GetSnapshotInfo(bool showIterations = false);
 }

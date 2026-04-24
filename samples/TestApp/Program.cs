@@ -3,8 +3,6 @@ using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.ApiClientManagement.Services;
 using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.CredentialManagement.Services;
-using AndrewM5.DevKit.Logging;
-using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using AndrewM5.DevKit.Logging.Flusher.Services;
 using AndrewM5.DevKit.Logging.Services;
 using AndrewM5.DevKit.ProcessLauncher;
@@ -18,7 +16,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Reflection.Metadata;
 
 namespace TestApp;
 
@@ -78,11 +75,11 @@ public class AppEntry
         //await TestProcessLauncher();
 
 
-        //await TestTaskManagement();
+        await TestTaskManagement();
         //await TestTaskScheduling();
         //await TestTaskConcurrency(5000);
         //await TestThreadSafeItems();
-        await TestApiManagement();
+        //await TestApiManagement();
         //await TestApiManagementCredentials(true, false);
         //await TestFileSecretStore();
 
@@ -507,41 +504,44 @@ public class AppEntry
         //settings.RetryOnException = true;
         //settings.MaxRetryCount = 2;
         //settings.StopIterationAfterMaxRetries = false;
-        settings.StopIteratingOnException = true;
+        settings.StopIteratingOnException = false;
 
-        //strategySettings.CustomStartDate = DateOnly.FromDateTime(DateTime.Now);
+        strategySettings.CustomStartDate = DateOnly.FromDateTime(DateTime.Now);
         //strategySettings.CustomStartTime = new TimeSpan(0,5,0,0);
-        //strategySettings.FastForwardToPresent = true;
-        //strategySettings.SkipFirstIterationWait = true;
-
-        settings.IterationStrategy = new TimeStrategy_Interval(TimeSpan.FromMinutes(1), strategySettings);
+        strategySettings.FastForwardToPresent = true;
+        strategySettings.SkipFirstIterationWait = true;
+        //settings.IterationStrategy = new TimeStrategy_Interval(TimeSpan.FromMinutes(1), strategySettings);
         //settings.ContinueIteration = new TimeStrategy_Daily();
-        //settings.ContinueIteration = new TimeStrategy_Weekday();
         //settings.AllowParallelIterationExecution = true;
-        settings.MaxConcurrentParallelTasks = 2;
+        //settings.MaxConcurrentParallelTasks = 2;
 
-        var createTask0 = await _taskManager.StartTask(new SimpleShortTask(), TaskExecutionMode.Asyncronous, settings);
+        var createTask0 = await _taskManager.StartTask(new SimpleBrokenTask(), TaskExecutionMode.Asyncronous, settings);
         if (!createTask0.MethodSuccess)
         {
             Console.WriteLine("Error: " + createTask0.Exception.Message);
         }
 
-        await createTask0.Result.RunningTask!;
-
         Console.WriteLine($"End Time: {createTask0.Result?.EndDTM}. Elapsed Time: {createTask0.Result?.Runtime}");
 
-        //while (true)
-        //{
-        //    var tryGet = _taskRegistry.TryGet(createTask0.Result.TaskKey);
-        //    if (!tryGet.MethodSuccess)
-        //    {
-        //        throw tryGet.Exception;
-        //    }
+        while (!createTask0.Result.RunningTask.IsCompleted)
+        {
+            var tryGet1 = _taskRegistry.TryGet(createTask0.Result.TaskKey);
+            if (!tryGet1.MethodSuccess)
+            {
+                throw tryGet1.Exception;
+            }
 
-        //    tryGet.Result?.DisplaySnapshot(logger);
+            logger?.LogInformation(tryGet1.Result?.GetSnapshotInfo(true));
 
-        //    await Task.Delay(1000);
-        //}
+            await Task.Delay(1000);
+        }
+        var tryGet = _taskRegistry.TryGet(createTask0.Result.TaskKey);
+        if (!tryGet.MethodSuccess)
+        {
+            throw tryGet.Exception;
+        }
+
+        logger?.LogInformation(tryGet.Result?.GetSnapshotInfo(true));
 
 
         //Console.WriteLine("Restart Test");
@@ -578,52 +578,4 @@ public class AppEntry
 
         //Console.WriteLine("All tasks completed.");
     }
-    private async Task TestTaskConcurrency(int taskAmount)
-    {
-        //var _taskManager = TaskManagementHost.TaskManager;
-
-        //List<Task> tasks = new List<Task>();
-
-        //for (int i = 0; i < taskAmount; i++)
-        //{
-        //    var task1 = new SimpleTestTask();
-
-        //    var createTask = await _taskManager.StartTask(new SimpleTestTask(), TaskExecutionMode.Asyncronous);
-
-        //    tasks.Add(createTask.Result.RunningTask!);
-        //}
-
-        //await _taskManager.AwaitAllTasksToFinish(tasks);
-    }
-
-    private void DisplayTaskScheduleSnapshot(string taskKey, ICustomLogger? logger = null)
-    {
-        //var _registry = TaskManagementHost.TaskScheduleRegistry;
-
-        //var tryGet = _registry.TryGet(taskKey, out var snapshot);
-        //if (!tryGet.MethodSuccess)
-        //{
-        //    throw tryGet.Exception;
-        //}
-
-        //if (tryGet.Result)
-        //{
-        //    snapshot.DisplaySnapshot(logger);
-        //}
-    }
-    //private void DisplayTaskSnapshot(string taskKey, ICustomLogger? logger = null)
-    //{
-    //    var _registry = TaskManagementHost.TaskRegistry;
-
-    //    var tryGet = _registry.TryGet(taskKey, out var snapshot);
-    //    if (!tryGet.MethodSuccess)
-    //    {
-    //        throw tryGet.Exception;
-    //    }
-
-    //    if (tryGet.Result)
-    //    {
-    //        snapshot.DisplaySnapshot(logger);
-    //    }
-    //}
 }

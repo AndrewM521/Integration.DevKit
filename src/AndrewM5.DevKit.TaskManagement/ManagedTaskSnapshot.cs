@@ -26,28 +26,19 @@ public sealed class ManagedTaskSnapshot : IManagedTaskSnapshot
     public int IterationCount { get; internal set; }
 
     /// <inheritdoc/>
-    public DateTime StartTime { get; internal set; }
+    public DateTime StartDTM { get; internal set; }
 
     /// <inheritdoc/>
-    public DateTime EndTime { get; internal set; }
+    public DateTime EndDTM { get; internal set; }
 
-    /// <summary>
-    /// Gets the calculated duration of the task. 
-    /// If the task is still active, it returns the duration from <see cref="StartTime"/> to current UTC time.
-    /// </summary>
-    public TimeSpan Runtime {
-        get {
-            if (StartTime == DateTime.MinValue)
-            {
-                return TimeSpan.Zero;
-            }
-
-            return (EndTime == DateTime.MinValue ? DateTime.UtcNow : EndTime) - StartTime;
-        }
-    }
+    /// <inheritdoc/>
+    public TimeSpan Runtime { get; internal set; }
 
     /// <inheritdoc/>
     public Exception? Exception { get; internal set; }
+
+    /// <inheritdoc/>
+    public SortedDictionary<int, IManagedTaskIterationSnapshot> IterationHistory { get; } = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ManagedTaskSnapshot"/> class.
@@ -60,23 +51,28 @@ public sealed class ManagedTaskSnapshot : IManagedTaskSnapshot
         Settings = settings;
     }
 
-    /// <summary>
-    /// Formats and logs the current snapshot data to the provided <see cref="ICustomLogger"/>.
-    /// </summary>
-    /// <param name="logger">The logger instance to receive the debug output. If null, no action is taken.</param>
-    public void DisplaySnapshot(ICustomLogger? logger = null)
+    public string GetSnapshotInfo(bool showIterations = false)
     {
         string msg = @$"
-            TaskKey: {TaskKey}
-            State: {State}
-            IterationCount: {IterationCount}
-            StartUtc: {StartTime}
-            EndUtc: {EndTime}
-            Runtime: {Runtime}
-            ExceptionType: {Exception?.GetType()}
-            ExceptionMessage: {Exception?.Message}
+        --- Task Snapshot ---
+        TaskKey: {TaskKey}
+        State: {State}
+        IterationCount: {IterationCount}
+        StartUtc: {StartDTM}
+        EndUtc: {EndDTM}
+        Runtime: {Runtime}
+        ExceptionType: {Exception?.GetType().Name ?? "None"}
+        ExceptionMessage: {Exception?.Message ?? "None"}
         ";
 
-        logger?.LogDebug(msg);
+        if (showIterations)
+        {
+            foreach (var iteration in IterationHistory.Values)
+            {
+                msg += iteration.GetIterationInfo(true);
+            }
+        }
+
+        return msg;
     }
 }
