@@ -4,9 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 namespace AndrewM5.DevKit.ThreadLocks.Services;
 
 /// <summary>
-/// Provides static access to the <see cref="IThreadLockManager"/> instance within the application.
-/// This class must be initialized during application startup to resolve the required services.
+/// Provides a static entry point for accessing the <see cref="IThreadLockManager"/> instance.
 /// </summary>
+/// <remarks>
+/// This host acts as a static wrapper for services resolved from the Dependency Injection container. 
+/// It must be initialized during application startup (e.g., in Program.cs or Startup.cs) 
+/// after the service provider has been built.
+/// </remarks>
 public static class ThreadLocksHost
 {
     private const string NoInit = "ThreadLocksHost has not been initialized.";
@@ -39,9 +43,11 @@ public static class ThreadLocksHost
     /// Gets the globally accessible instance of the <see cref="IThreadLockManager"/>.
     /// </summary>
     /// <value>
-    /// The initialized <see cref="IThreadLockManager"/> instance.
+    /// The current <see cref="IThreadLockManager"/> resolved during initialization.
     /// </value>
-    /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if the property is accessed before <see cref="Initialize(IServiceProvider)"/> has been called.
+    /// </exception>
     public static IThreadLockManager ThreadLockManager
     {
         get

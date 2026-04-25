@@ -5,21 +5,19 @@ using System.Collections.Concurrent;
 namespace AndrewM5.DevKit.ThreadLocks;
 
 /// <summary>
-/// Provides a centralized manager for named synchronization locks, supporting both synchronous 
-/// and asynchronous operations with automatic memory cleanup.
+/// Concrete Implementation of <see cref="IThreadLockManager"/>
 /// </summary>
 public class ThreadLockManager : IThreadLockManager
 {
     private readonly ConcurrentDictionary<string, ThreadLockInfo_Sync> _syncLocks = new ConcurrentDictionary<string, ThreadLockInfo_Sync>();
     private readonly ConcurrentDictionary<string, ThreadLockInfo_Async> _asyncLocks = new ConcurrentDictionary<string, ThreadLockInfo_Async>();
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ThreadLockManager"/> class.
-    /// </summary>
-    public ThreadLockManager() {}
-
     #region Syncronous Methods
     /// <inheritdoc />
+    /// <remarks>
+    /// Uses <see cref="Monitor"/> for the locking mechanism. Increments the reference count 
+    /// before attempting to enter to prevent premature cleanup.
+    /// </remarks>
     public NullOperationResult TryEnterSyncLock(string key, int timeoutMilliseconds = -1)
     {
         var result = new NullOperationResult();
@@ -54,6 +52,10 @@ public class ThreadLockManager : IThreadLockManager
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Decrements the reference count. If the count reaches zero, the key is removed 
+    /// from the internal dictionary to free memory.
+    /// </remarks>
     public NullOperationResult TryExitSyncLock(string key)
     {
         var result = new NullOperationResult();
@@ -90,6 +92,10 @@ public class ThreadLockManager : IThreadLockManager
 
     #region Asyncronous Methods
     /// <inheritdoc />
+    /// <remarks>
+    /// Uses <see cref="SemaphoreSlim"/> to provide non-blocking waits. Increments the reference 
+    /// count before the awaitable operation.
+    /// </remarks>
     public async Task<NullOperationResult> TryEnterAsyncLock(string key, int timeoutMilliseconds = -1)
     {
         var result = new NullOperationResult();
@@ -128,6 +134,10 @@ public class ThreadLockManager : IThreadLockManager
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Releases the semaphore and decrements the reference count. If the count reaches zero, 
+    /// the semaphore is disposed and removed from the dictionary.
+    /// </remarks>
     public NullOperationResult TryExitAsyncLock(string key)
     {
         var result = new NullOperationResult();
@@ -168,10 +178,11 @@ public class ThreadLockManager : IThreadLockManager
     #endregion
 
     /// <summary>
-    /// Validates and normalizes the lock key.
+    /// Validates that the key is not null or whitespace and normalizes it to a 
+    /// trimmed, lowercase invariant format for consistent dictionary lookups.
     /// </summary>
-    /// <param name="key">The key string to validate and transform.</param>
-    /// <exception cref="ArgumentException">Thrown if the key is null or empty.</exception>
+    /// <param name="key">The key string to validate and transform by reference.</param>
+    /// <exception cref="ArgumentException">Thrown if the key is null or white space.</exception>
     private static void ValidateAndNormalizeKey(ref string key)
     {
         if (string.IsNullOrWhiteSpace(key))

@@ -1,25 +1,30 @@
 ﻿namespace AndrewM5.DevKit.ThreadLocks;
 
 /// <summary>
-/// Represents internal state and synchronization primitives for a synchronous named lock.
+/// Represents the internal state and synchronization primitives for a synchronous named lock.
 /// </summary>
+/// <remarks>
+/// This class is used by the <see cref="ThreadLockManager"/> to track the lifecycle 
+/// and usage of a specific synchronous lock key.
+/// </remarks>
 internal sealed class ThreadLockInfo_Sync
 {
     /// <summary>
-    /// Gets the object used for <see langword="lock"/> statements to provide exclusive access.
+    /// Gets the object used for <see langword="lock"/> statements or <see cref="Monitor"/> 
+    /// calls to provide exclusive access.
     /// </summary>
+    /// <value>
+    /// A unique, read-only <see cref="object"/> instance.
+    /// </value>
     public object LockObject { get; } = new object();
 
     /// <summary>
     /// Tracks the number of active references or threads waiting for this specific lock.
     /// </summary>
-    /// <remarks>
-    /// Used by the manager to determine when this lock metadata can be safely evicted from memory.
-    /// </remarks>
     public int RefCount = 0;
 
     /// <summary>
-    /// The timestamp of the last time this lock was accessed or updated.
+    /// Gets the timestamp of the last time this lock was successfully acquired or released.
     /// </summary>
     public DateTime LastAccessTime = DateTime.MinValue;
 

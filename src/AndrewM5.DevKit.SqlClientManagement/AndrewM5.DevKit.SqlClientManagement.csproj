@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AndrewM5.DevKit.SqlManagement.Contracts\AndrewM5.DevKit.SqlClientManagement.Contracts.csproj" />
+    <ProjectReference Include="..\AndrewM5.DevKit.SqlClientManagement.Contracts\AndrewM5.DevKit.SqlClientManagement.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

@@ -11,8 +11,10 @@ public static class ThreadSafeItemsServiceCollection
     /// Adds the <see cref="ThreadSafeFileIO"/> service to the service collection as a singleton.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add the service to.</param>
-    /// <returns>The same <see cref="IServiceCollection"/> instance for method chaining.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> is null.</exception>
+    /// <returns>
+    /// The same <see cref="IServiceCollection"/> instance to support a fluent configuration syntax.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> is <see langword="null"/>.</exception>
     public static IServiceCollection AddThreadSafeItems(this IServiceCollection services)
     {
         if (services == null)

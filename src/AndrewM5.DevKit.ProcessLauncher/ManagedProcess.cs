@@ -8,9 +8,9 @@ using System.Text;
 namespace AndrewM5.DevKit.ProcessLauncher;
 
 /// <summary>
-/// A concrete implementation of <see cref="IManagedProcess"/> that wraps a <see cref="System.Diagnostics.Process"/>.
-/// Handles stream redirection, asynchronous monitoring, and lifecycle management.
+/// Concrete Implementation of <see cref="IManagedProcess"/>
 /// </summary>
+
 public class ManagedProcess : IManagedProcess
 {
     private readonly ICustomLogger? _logger;
@@ -24,9 +24,14 @@ public class ManagedProcess : IManagedProcess
     public string ProcessKey { get; }
 
     /// <inheritdoc />
+    /// <value>The underlying <see cref="Process"/>; remains available until the instance is disposed.</value>
     public Process? Process { get; private set; }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// This task runs for the duration of the process lifetime. It completes when the process 
+    /// exits naturally, times out, or is explicitly cancelled.
+    /// </remarks>
     public Task? MonitorTask { get; private set; }
 
     /// <inheritdoc />
@@ -37,7 +42,7 @@ public class ManagedProcess : IManagedProcess
     /// </summary>
     /// <param name="config">The configuration defining how the process should be launched.</param>
     /// <param name="logger">An optional logger for internal event tracking.</param>
-    public ManagedProcess(IManagedProcessConfig config, ICustomLogger? logger = null)
+    internal ManagedProcess(IManagedProcessConfig config, ICustomLogger? logger = null)
     {
         ProcessKey = config.ProcessKey;
         _logger = logger;
@@ -66,8 +71,8 @@ public class ManagedProcess : IManagedProcess
 
     /// <inheritdoc />
     /// <remarks>
-    /// This method initializes the internal <see cref="Process"/> object, attaches 
-    /// output data handlers if redirected, and kicks off the <see cref="MonitorTask"/>.
+    /// Configures event handlers for asynchronous stream reading and begins process execution. 
+    /// Once started, a background monitoring loop is initiated.
     /// </remarks>
     public NullOperationResult Start()
     {
@@ -147,8 +152,9 @@ public class ManagedProcess : IManagedProcess
 
     /// <inheritdoc />
     /// <remarks>
-    /// If <paramref name="forceKill"/> is false, the implementation attempts a graceful 
-    /// <see cref="Process.CloseMainWindow"/> with a 3-second timeout before falling back to a hard kill.
+    /// When <paramref name="forceKill"/> is <see langword="false"/>, the method attempts 
+    /// <see cref="Process.CloseMainWindow"/> and waits up to 3 seconds. If the process does 
+    /// not exit within that window, a recursive <see cref="Process.Kill(bool)"/> is performed.
     /// </remarks>
     public NullOperationResult Cancel(bool forceKill)
     {
@@ -191,6 +197,7 @@ public class ManagedProcess : IManagedProcess
     }
 
     /// <inheritdoc />
+    /// <returns>An <see cref="OperationResult{String}"/> containing the full contents of the STDOUT buffer.</returns>
     public OperationResult<string> GetOutput()
     {
         var result = new OperationResult<string>();
@@ -206,6 +213,7 @@ public class ManagedProcess : IManagedProcess
     }
 
     /// <inheritdoc />
+    /// <returns>An <see cref="OperationResult{String}"/> containing the full contents of the STDERR buffer.</returns>
     public OperationResult<string> GetError() 
     {
         var result = new OperationResult<string>();
@@ -223,6 +231,8 @@ public class ManagedProcess : IManagedProcess
     /// <summary>
     /// Periodically polls the process status until it exits or the cancellation token is triggered.
     /// </summary>
+    /// <param name="process">The process to monitor.</param>
+    /// <param name="token">A token to signal abandonment of the wait operation.</param>
     private static async Task WaitForExitAsync(Process process, CancellationToken token)
     {
         while (!process.HasExited)
@@ -232,9 +242,9 @@ public class ManagedProcess : IManagedProcess
     }
 
     /// <summary>
-    /// Triggers cancellation, waits for the monitor task to conclude, and releases all process and logging resources.
+    /// Triggers cancellation, awaits the monitor task, and disposes of process handles and stream buffers.
     /// </summary>
-    /// <returns>A <see cref="ValueTask"/> representing the asynchronous disposal operation.</returns>
+    /// <returns>A <see cref="ValueTask"/> representing the asynchronous disposal.</returns>
     public async ValueTask DisposeAsync()
     {
         try

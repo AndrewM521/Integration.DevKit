@@ -9,15 +9,13 @@ namespace AndrewM5.DevKit.ThreadLocks.Services;
 public static class ThreadLocksServiceCollection
 {
     /// <summary>
-    /// Adds the <see cref="IThreadLockManager"/> to the service collection as a singleton.
+    /// Registers the <see cref="IThreadLockManager"/> and its implementation as a singleton service.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
-    /// <returns>The same <see cref="IServiceCollection"/> instance for method chaining.</returns>
-    /// <remarks>
-    /// The manager is registered as a singleton to ensure that lock dictionaries and reference 
-    /// counts are shared across the entire application lifetime.
-    /// </remarks>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> is null.</exception>
+    /// <returns>
+    /// The same <see cref="IServiceCollection"/> instance so that multiple calls can be chained.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> is <see langword="null"/>.</exception>
     public static IServiceCollection AddThreadLocks(this IServiceCollection services)
     {
         if (services == null)

@@ -6,27 +6,21 @@ using System.Collections.Concurrent;
 
 namespace AndrewM5.DevKit.ProcessLauncher;
 
+
 /// <summary>
-/// Provides a concrete implementation of <see cref="IProcessManager"/> using a thread-safe 
-/// dictionary to track active processes.
+/// Concrete Implementation of <see cref="IProcessManager"/>
 /// </summary>
 public class ProcessManager : IProcessManager
 {
-    /// <summary>
-    /// Internal storage for active managed processes, keyed by their unique identifier.
-    /// </summary>
     private readonly ConcurrentDictionary<string, ManagedProcess> _processes = new ConcurrentDictionary<string, ManagedProcess>();
 
-    /// <summary>
-    /// The logger instance used for recording process lifecycle events and errors.
-    /// </summary>
     private readonly ICustomLogger? _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ProcessManager"/> class.
     /// </summary>
     /// <param name="loggerManager">An optional logger manager to provide contextual logging for the launcher.</param>
-    public ProcessManager (ICustomLoggerManager? loggerManager = null)
+    internal ProcessManager (ICustomLoggerManager? loggerManager = null)
     {
         _logger = loggerManager?.GetLogger("ProcessLauncherManager");
     }
@@ -34,7 +28,8 @@ public class ProcessManager : IProcessManager
     /// <inheritdoc/>
     /// <remarks>
     /// This method validates the command path and ensures the <paramref name="config.ProcessKey"/> 
-    /// is not already in use before instantiating a <see cref="ManagedProcess"/>.
+    /// is not already in use before instantiating a <see cref="ManagedProcess"/>. 
+    /// If the startup fails, the exception is caught and returned within the <see cref="OperationResult{T}"/>.
     /// </remarks>
     public OperationResult<IManagedProcess> StartProcess(IManagedProcessConfig config)
     {
@@ -74,8 +69,10 @@ public class ProcessManager : IProcessManager
 
     /// <inheritdoc/>
     /// <remarks>
-    /// Removes the process from the internal tracking dictionary upon successful cancellation.
+    /// Attempts to remove the process from the internal tracking dictionary. If found, 
+    /// the process's own Cancel method is invoked. 
     /// </remarks>
+    /// <exception cref="KeyNotFoundException">Returned inside the result if the key does not exist.</exception>
     public NullOperationResult CancelProcess(string processKey, bool forceKill = false)
     {
         var result = new NullOperationResult();
@@ -108,7 +105,7 @@ public class ProcessManager : IProcessManager
     /// <inheritdoc/>
     /// <remarks>
     /// Iterates through all active keys and attempts to cancel each. 
-    /// If one or more cancellations fail, the errors are returned as an <see cref="AggregateException"/>.
+    /// Any caught errors are aggregated into a single <see cref="AggregateException"/>.
     /// </remarks>
     public NullOperationResult CancelAllProcesses(bool forceKill = false)
     {
@@ -136,7 +133,7 @@ public class ProcessManager : IProcessManager
 
     /// <inheritdoc/>
     /// <remarks>
-    /// Checks the internal dictionary for the existence of the <paramref name="processKey"/>.
+    /// Performs a high-performance lookup in the internal <see cref="ConcurrentDictionary{TKey, TValue}"/>.
     /// </remarks>
     public OperationResult<bool> IsRunning(string processKey)
     {

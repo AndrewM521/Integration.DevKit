@@ -11,7 +11,9 @@ using System.Reflection;
 
 namespace AndrewM5.DevKit.SqlManagement;
 
-/// <inheritdoc/>
+/// <summary>
+/// Concrete Implementation of <see cref="ISqlDBClient"/>
+/// </summary>
 public class SqlDBClient : ISqlDBClient
 {
     /// <inheritdoc/>
@@ -33,11 +35,11 @@ public class SqlDBClient : ISqlDBClient
     /// <summary>
     /// Initializes a new instance of the <see cref="SqlDBClient"/> class.
     /// </summary>
-    /// <param name="sqlDBManager">The parent manager used to inherit default settings if necessary.</param>
-    /// <param name="clientName">The name identifying this specific client.</param>
-    /// <param name="settings">The configuration settings for this client.</param>
-    /// <param name="logger">An optional logger instance for debugging and error tracking.</param>
-    public SqlDBClient(ISqlDBManager sqlDBManager, string clientName, SqlDBClientSettings settings, ICustomLogger? logger = null)
+    /// <param name="sqlDBManager">The parent manager responsible for this client.</param>
+    /// <param name="clientName">The unique name identifying this specific client instance.</param>
+    /// <param name="settings">The configuration and connectivity settings.</param>
+    /// <param name="logger">An optional logger instance for diagnostic reporting.</param>
+    internal SqlDBClient(ISqlDBManager sqlDBManager, string clientName, SqlDBClientSettings settings, ICustomLogger? logger = null)
     {
         ClientName = clientName;
 
@@ -316,6 +318,9 @@ public class SqlDBClient : ISqlDBClient
     /// <summary>
     /// Internal helper to resolve a specific credential key from the secret store.
     /// </summary>
+    /// <param name="key">The specific key to retrieve.</param>
+    /// <param name="defaultStr">The fallback value if the secret store is not available.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the resolved string.</returns>
     private OperationResult<string> GetCredentials(string key, string defaultStr)
     {
         var result = new OperationResult<string>();
@@ -345,8 +350,11 @@ public class SqlDBClient : ISqlDBClient
     #endregion
 
     /// <summary>
-    /// Retrieves a SQL connection, either creating a new one or returning the persistent instance.
+    /// Retrieves a SQL connection instance. 
+    /// Depending on <see cref="SqlDBClientSettings.UseSingleConnection"/>, this either returns a 
+    /// cached instance or a new connection object.
     /// </summary>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the <see cref="SqlConnection"/>.</returns>
     private OperationResult<SqlConnection> GetConnection()
     {
         var result = new OperationResult<SqlConnection>();
@@ -386,8 +394,10 @@ public class SqlDBClient : ISqlDBClient
     }
 
     /// <summary>
-    /// Generates the connection string by resolving the connection string from settings or secret store.
+    /// Generates the final connection string by prioritizing the <see cref="_secretStore"/> 
+    /// over the hardcoded <see cref="RuntimeSettings"/>.
     /// </summary>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the resolved connection string.</returns>
     private OperationResult<string> GetConnectionString()
     {
         var result = new OperationResult<string>();
@@ -409,7 +419,7 @@ public class SqlDBClient : ISqlDBClient
     }
 
     /// <inheritdoc/>
-    public void OutputRuntimeSettings(bool calledFromManager = false)
+    public void LogRuntimeSettings(bool calledFromManager = false)
     {
         string indent;
 
@@ -438,7 +448,7 @@ public class SqlDBClient : ISqlDBClient
     }
 
     /// <summary>
-    /// Disposes of any persistent database connections.
+    /// Disposes of any persistent database connections managed by this client.
     /// </summary>
     public void Dispose()
     {

@@ -12,6 +12,10 @@ public class SqlDBManagerSettings
     /// Gets or sets the thread-safe dictionary of client configurations, 
     /// keyed by their unique client name.
     /// </summary>
+    /// <value>
+    /// A <see cref="ConcurrentDictionary{TKey, TValue}"/> where the key is the client's unique name 
+    /// and the value is its corresponding <see cref="SqlDBClientSettings"/>.
+    /// </value>
     public ConcurrentDictionary<string, SqlDBClientSettings> Clients { get; set; } = new ConcurrentDictionary<string, SqlDBClientSettings>();
 
     /// <summary>

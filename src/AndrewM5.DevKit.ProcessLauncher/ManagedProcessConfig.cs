@@ -2,41 +2,59 @@
 
 namespace AndrewM5.DevKit.ProcessLauncher;
 
+
 /// <summary>
-/// A concrete implementation of <see cref="IManagedProcessConfig"/> used to define 
-/// the startup parameters and behavior for a managed process.
+/// Concrete Implementation of <see cref="IManagedProcessConfig"/>
 /// </summary>
 public class ManagedProcessConfig : IManagedProcessConfig
 {
     /// <inheritdoc />
-    /// <value>Defaults to a new <see cref="Guid"/> string if not specified.</value>
+    /// <value>
+    /// A unique string identifier. If not explicitly provided, a new <see cref="Guid"/> 
+    /// is generated automatically.
+    /// </value>
     public string ProcessKey { get; init; } = Guid.NewGuid().ToString();
 
     /// <inheritdoc />
-    /// <value>Defaults to <see cref="string.Empty"/> if not specified.</value>
+    /// <value>
+    /// The executable name or full path. Defaults to <see cref="string.Empty"/>.
+    /// </value>
     public string Command { get; init; } = string.Empty;
 
     /// <inheritdoc />
-    /// <value>Defaults to <see cref="string.Empty"/> if not specified.</value>
+    /// <value>
+    /// The string of arguments passed to the executable. Defaults to <see cref="string.Empty"/>.
+    /// </value>
     public string Arguments { get; init; } = string.Empty;
 
     /// <inheritdoc />
-    /// <value>Defaults to <see langword="false"/> (background/hidden process).</value>
+    /// <value>
+    /// <see langword="true"/> to display a window; otherwise <see langword="false"/>. 
+    /// Defaults to <see langword="false"/> (background execution).
+    /// </value>
     public bool ShowWindow { get; init; } = false;
 
     /// <inheritdoc />
-    /// <value>Defaults to the current application's working directory (<see cref="Environment.CurrentDirectory"/>).</value>
+    /// <value>
+    /// The execution directory. Defaults to <see cref="Environment.CurrentDirectory"/>.
+    /// </value>
     public string? WorkingDirectory { get; init; } = Environment.CurrentDirectory;
 
     /// <inheritdoc />
-    /// <value>Defaults to -1 (infinite/no timeout).</value>
+    /// <value>
+    /// Total seconds allowed for execution. Defaults to -1 (no timeout).
+    /// </value>
     public int TimeoutSeconds { get; set; } = -1;
 
     /// <inheritdoc />
-    /// <value>Defaults to <see langword="true"/>.</value>
+    /// <value>
+    /// Enables standard stream capture. Defaults to <see langword="true"/>.
+    /// </value>
     public bool EnableProcessLogging { get; set; } = true;
 
     /// <inheritdoc />
-    /// <value>Defaults to <see langword="false"/>.</value>
+    /// <value>
+    /// Enables automatic restart logic. Defaults to <see langword="false"/>.
+    /// </value>
     public bool AutoRestartOnFailure { get; set; } = false;
 }

@@ -4,12 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 namespace AndrewM5.DevKit.ThreadSafeItems.Services;
 
 /// <summary>
-/// Provides static access to the thread safe instances within the application.
-/// This class must be initialized during application startup to resolve the required services.
+/// Provides static access to thread-safe service instances within the application.
 /// </summary>
 /// <remarks>
-/// This host ensures that all necessary dependencies, specifically the <see cref="IThreadLockManager"/>,
-/// are registered and initialized before providing access to thread-safe I/O operations.
+/// This host acts as a static wrapper for services resolved from the Dependency Injection container. 
+/// It must be initialized during application startup (e.g., in Program.cs or Startup.cs) 
+/// after the service provider has been built.
 /// </remarks>
 public static class ThreadSafeItemsHost
 {
@@ -18,12 +18,14 @@ public static class ThreadSafeItemsHost
     private static ThreadSafeFileIO? _threadSafeFileIO;
 
     /// <summary>
-    /// Initializes the static host by resolving <see cref="ThreadSafeFileIO"/> from the service provider.
+    /// Initializes the static host by resolving <see cref="ThreadSafeFileIO"/> and validating 
+    /// its dependencies from the service provider.
     /// </summary>
     /// <param name="sp">The <see cref="IServiceProvider"/> used to resolve dependencies.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is <see langword="null"/>.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if the <see cref="IThreadLockManager"/> or <see cref="ThreadSafeFileIO"/> are not registered in the service collection.
+    /// Thrown if <see cref="IThreadLockManager"/> or <see cref="ThreadSafeFileIO"/> are not 
+    /// correctly registered in the service collection.
     /// </exception>
     public static void Initialize(IServiceProvider sp)
     {
@@ -52,9 +54,11 @@ public static class ThreadSafeItemsHost
     /// Gets the globally accessible instance of the <see cref="ThreadSafeFileIO"/> class.
     /// </summary>
     /// <value>
-    /// The initialized <see cref="ThreadSafeFileIO"/> instance.
+    /// The initialized <see cref="ThreadSafeFileIO"/> instance used for thread-safe file operations.
     /// </value>
-    /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if the property is accessed before <see cref="Initialize(IServiceProvider)"/> has been called.
+    /// </exception>
     public static ThreadSafeFileIO ThreadSafeFileIOClass { 
         get
         {
