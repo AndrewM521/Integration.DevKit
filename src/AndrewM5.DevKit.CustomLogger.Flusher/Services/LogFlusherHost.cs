@@ -1,7 +1,7 @@
-﻿using AndrewM5.DevKit.Logging.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AndrewM5.DevKit.Logging.Flusher.Services;
+namespace AndrewM5.DevKit.CustomLogger.Flusher.Services;
 
 /// <summary>
 /// Provides a static entry point to access the Logger Flusher module 

@@ -1,5 +1,5 @@
 ﻿
-using AndrewM5.DevKit.Logging.Contracts.Interfaces;
+using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 
 namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 

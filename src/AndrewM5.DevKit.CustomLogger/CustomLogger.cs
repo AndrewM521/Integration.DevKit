@@ -1,8 +1,8 @@
-﻿using AndrewM5.DevKit.Logging.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
-namespace AndrewM5.DevKit.Logging;
+namespace AndrewM5.DevKit.CustomLogger;
 
 /// <summary>
 /// A custom implementation of <see cref="ILogger"/> and <see cref="ICustomLogger"/> that 
@@ -70,7 +70,7 @@ public class CustomLogger : ICustomLogger
     /// <returns><see langword="true"/> if the logger is enabled for the specified level; otherwise, <see langword="false"/>.</returns>
     public bool IsEnabled(LogLevel logLevel)
     {
-        if (_isLoggerEnabled && logLevel >= _loggerManager.RuntimeSettings.DebugLogLevel)
+        if (_isLoggerEnabled && logLevel >= _loggerManager.RuntimeSettings.OutputLogLevel)
         {
             return true;
         }

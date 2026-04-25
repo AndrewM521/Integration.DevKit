@@ -15,7 +15,7 @@ public class TaskManagerSettings
     public int MaxConcurrentTasks { get; set; } = int.MaxValue;
 
     /// <summary>
-    /// Gets or sets the maximum number of task records allowed in the <see cref="ITaskRegistry"/>.
+    /// Gets or sets the maximum number of task records allowed in the <see cref="Interfaces.ITaskRegistry"/>.
     /// The default value is 2000.
     /// </summary>
     /// 

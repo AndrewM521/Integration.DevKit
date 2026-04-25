@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace AndrewM5.DevKit.Logging.Abstractions.Options;
+namespace AndrewM5.DevKit.CustomLogger.Contracts.Options;
 
 /// <summary>
 /// Provides configuration settings for managing logging behavior, 
@@ -20,14 +20,17 @@ public class LoggerManagerSettings
     /// <remarks>
     /// Messages below this level will be ignored.
     /// </remarks>
-    public LogLevel DebugLogLevel { get; set; } = LogLevel.Debug;
+    public LogLevel OutputLogLevel { get; set; } = LogLevel.Debug;
 
     /// <summary>
     /// Gets or sets the minimum <see cref="LogLevel"/> required for log entries 
     /// to be written to the file output
     /// </summary>
     /// <value>The default is <see cref="LogLevel.Information"/>.</value>
-    public LogLevel OutputLogLevel { get; set; } = LogLevel.Information;
+    /// <remarks>
+    /// Messages below this level will be ignored.
+    /// </remarks>
+    public LogLevel FileOutputLogLevel { get; set; } = LogLevel.Information;
     
     /// <summary>
     /// Creates a deep copy of the current <see cref="LoggerManagerSettings"/> instance.
@@ -37,8 +40,8 @@ public class LoggerManagerSettings
     {
         return new LoggerManagerSettings
         {
-            DebugLogLevel = DebugLogLevel,
-            OutputLogLevel = OutputLogLevel
+            OutputLogLevel = OutputLogLevel,
+            FileOutputLogLevel = FileOutputLogLevel
         };
     }
 }

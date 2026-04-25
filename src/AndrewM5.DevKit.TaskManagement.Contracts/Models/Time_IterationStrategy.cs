@@ -1,4 +1,4 @@
-﻿using AndrewM5.DevKit.Logging.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;

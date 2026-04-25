@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace AndrewM5.DevKit.Logging;
+namespace AndrewM5.DevKit.CustomLogger;
 
 /// <summary>
 /// Utility method for normalizing and formatting log messages into a standardized string representation.

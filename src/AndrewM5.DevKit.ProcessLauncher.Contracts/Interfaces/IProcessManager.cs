@@ -57,15 +57,6 @@ public interface IProcessManager
     /// </summary>
     /// <param name="processKey">The unique identifier of the process to check.</param>
     /// <returns>
-    /// An <see cref="OperationResult{Boolean}"/> where the value is <see langword="true"/> if the process is running; 
-    /// otherwise, <see langword="false"/>.
-    /// </returns>
-    /// 
-    /// <summary>
-    /// Checks the current status of a managed process to determine if it is still executing.
-    /// </summary>
-    /// <param name="processKey">The unique identifier of the process to check.</param>
-    /// <returns>
     /// An <see cref="OperationResult{Boolean}"/> where the value is <see langword="true"/> if the process is 
     /// found and currently running; otherwise, <see langword="false"/>.
     /// </returns>

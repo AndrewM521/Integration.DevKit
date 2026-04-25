@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 
-namespace AndrewM5.DevKit.Logging.Contracts.Interfaces;
+namespace AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 
 /// <summary>
 /// Defines a custom logging interface that extends the standard <see cref="ILogger"/> 

@@ -1,9 +1,10 @@
 ﻿using AndrewM5.DevKit.ApiClientManagement;
 using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.ApiClientManagement.Contracts.Models;
 using AndrewM5.DevKit.ApiClientManagement.Services;
 using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.CredentialManagement.Services;
-using AndrewM5.DevKit.Logging.Flusher.Services;
+using AndrewM5.DevKit.CustomLogger.Flusher.Services;
 using AndrewM5.DevKit.Logging.Services;
 using AndrewM5.DevKit.ProcessLauncher;
 using AndrewM5.DevKit.ProcessLauncher.Services;
@@ -32,12 +33,11 @@ public class Program
             {
                 services.AddCustomLogging(config);
                 services.AddCustomLogFlusher(config);
-                services.AddProcessLauncher();
-                services.AddTaskManagement(config);
-                services.AddThreadSafeItems();
-                services.AddApiManagement(config);
-                services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
-
+                //services.AddProcessLauncher();
+                //services.AddTaskManagement(config);
+                //services.AddThreadSafeItems();
+                //services.AddApiManagement(config);
+                //services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
 
                 // Register your app entry
                 services.AddSingleton<AppEntry>();
@@ -46,11 +46,11 @@ public class Program
 
         LoggingHost.Initialize(host.Services);
         LogFlusherHost.Initalize(host.Services);
-        ProcessLauncherHost.Initialize(host.Services);
-        TaskManagementHost.InitializeTaskManagement(host.Services);
-        ThreadSafeItemsHost.Initialize(host.Services);
-        ApiManagementHost.Initialize(host.Services);
-        CredentialManagementHost.InitializeFileSecretStore(host.Services);
+        //ProcessLauncherHost.Initialize(host.Services);
+        //TaskManagementHost.InitializeTaskManagement(host.Services);
+        //ThreadSafeItemsHost.Initialize(host.Services);
+        //ApiManagementHost.Initialize(host.Services);
+        //CredentialManagementHost.InitializeFileSecretStore(host.Services);
 
         // Start hosted services (LogFlushService will start running in the background)
         await host.StartAsync();
@@ -66,16 +66,17 @@ public class Program
 
 public class AppEntry
 {
+
     public async Task RunAsync(string[] args)
     {
         //await TaskCoreClasses(); 
 
         //await TestLogger();
-        //await TestLogFlusher();
+        await TestCustomLoggerFlusher();
         //await TestProcessLauncher();
 
 
-        await TestTaskManagement();
+        //await TestTaskManagement();
         //await TestTaskScheduling();
         //await TestTaskConcurrency(5000);
         //await TestThreadSafeItems();
@@ -85,6 +86,65 @@ public class AppEntry
 
         Console.WriteLine("Press enter to exit");
         Console.ReadLine();
+    }
+
+    private void TestCustomLogger()
+    {
+        var _loggerManager = LoggingHost.LoggerManager;
+
+        _loggerManager.LogRuntimeSettings();
+
+        var logger = _loggerManager.GetLogger("TestLogger");
+
+        logger.LogTrace("This is a trace");
+        logger.LogDebug("This is debug");
+        logger.LogInformation("This is information!");
+        logger.LogWarning("This is a warning!");
+        logger.LogError("This is an error!");
+        logger.LogCritical("This is critical");
+
+        logger.EnableConsoleOutput();
+
+        logger.LogInformation("This should show in the console.");
+
+        logger.DisableConsoleOutput();
+
+        logger.LogInformation("This should not show in the console.");
+
+        logger.LogInformation("This logger is enabled");
+
+        logger.DisableLogger();
+
+        logger.LogInformation("This logger is disabled");
+    }
+    private async Task TestCustomLoggerFlusher()
+    {
+        var _loggerManager = LoggingHost.LoggerManager;
+        var _logFlushService = LogFlusherHost.LogFlushService;
+
+        _loggerManager.LogRuntimeSettings();
+        _logFlushService.LogRuntimeSettings();
+
+        var logger = _loggerManager.GetLogger("TestLogFlusher");
+
+        if (!_logFlushService.RuntimeSettings.CreateLogFile)
+        {
+            Console.WriteLine($"{nameof(_logFlushService.RuntimeSettings.CreateLogFile)} set to false, returning...");
+
+            return;
+        }
+
+        for (int i = 0; i < 100; i++)
+        {
+            logger.LogInformation($"Log message {i}");
+
+            await Task.Delay(100);
+        }
+
+        if (_logFlushService.RuntimeSettings.CreateLogFile)
+        {
+            Console.WriteLine($"A log file should have now been created at {_logFlushService.RuntimeSettings.LogFilePath}");
+        }
     }
 
     private async Task TaskCoreClasses()
@@ -98,7 +158,7 @@ public class AppEntry
             {
                 ["type"] = "type1",
                 ["count"] = 1,
-                ["tags"] = new List<string> {
+                ["tags"] = new List<string?> {
                     "tag1",
                     "tag2",
                     null
@@ -292,7 +352,7 @@ public class AppEntry
         Console.WriteLine("----------------------------------------------------");
         Console.WriteLine("GET Post: ");
 
-        var buildUrlGET = Posts.BuildPositionalUrl(new List<object?> { 1 });
+        var buildUrlGET = Posts.BuildPositionalUrl(new List<object> { 1 });
         if (!buildUrlGET.MethodSuccess)
         {
             Console.WriteLine(buildUrlGET.Exception.Message);
@@ -310,7 +370,7 @@ public class AppEntry
         Console.WriteLine("----------------------------------------------------");
         Console.WriteLine("POST Post: ");
 
-        var getJsonPOST = JsonUtils.SerializeObjectToJson(new Dictionary<string, object?> { 
+        var getJsonPOST = JsonUtils.SerializeObjectToJson(new Dictionary<string, object> { 
             ["title"] = "foo", 
             ["body"] = "bar", 
             ["userId"] = 1
@@ -339,7 +399,7 @@ public class AppEntry
         Console.WriteLine("----------------------------------------------------");
         Console.WriteLine("PUT Post: ");
 
-        var getJsonPut = JsonUtils.SerializeObjectToJson(new Dictionary<string, object?>
+        var getJsonPut = JsonUtils.SerializeObjectToJson(new Dictionary<string, object>
         {
             ["id"] = 1,
             ["title"] = "updated title",
@@ -359,7 +419,7 @@ public class AppEntry
             return;
         }
 
-        var buildUrlPUT = Posts.BuildPositionalUrl(new List<object?> { 1 });
+        var buildUrlPUT = Posts.BuildPositionalUrl(new List<object> { 1 });
         if (!buildUrlPUT.MethodSuccess)
         {
             Console.WriteLine(buildUrlPUT.Exception.Message);
@@ -428,42 +488,7 @@ public class AppEntry
 
         Console.WriteLine(readFile.Result);
     }
-    private async Task TestLogger()
-    {
-        var _loggerManager = LoggingHost.LoggerManager;
-
-        _loggerManager.OutputRuntimeSettings();
-        
-        var logger = _loggerManager.GetLogger("TestLogger");
-
-        logger.LogInformation("This should not show in the console.");
-
-        logger.EnableConsoleOutput();
-
-        logger.LogInformation("This should show in the console.");
-
-        logger.DisableConsoleOutput();
-
-        logger.LogWarning("This is a warning!");
-        logger.LogError("This is an error!");
-    }
-    private async Task TestLogFlusher()
-    {
-        var _loggerManager = LoggingHost.LoggerManager;
-        var _logFlushService = LogFlusherHost.LogFlushService;
-
-        _loggerManager.OutputRuntimeSettings();
-        _logFlushService.OutputRuntimeSettings();
-
-        var logger = _loggerManager.GetLogger("TestLogFlusher");
-
-        for (int i = 0; i < 100; i++)
-        {
-            logger.LogInformation($"Log message {i}");
-
-            await Task.Delay(100);
-        }
-    }
+    
     private async Task TestProcessLauncher()
     {
         var _processManager = ProcessLauncherHost.ProcessManager;
@@ -495,7 +520,7 @@ public class AppEntry
         var _taskManager = TaskManagementHost.TaskManager;
         var _taskRegistry = TaskManagementHost.TaskRegistry;
 
-        _taskManager.OutputRuntimeSettings();
+        _taskManager.LogRuntimeSettings();
 
         Console.WriteLine("Synchronous Test");
         var settings = new ManagedTaskSettings();

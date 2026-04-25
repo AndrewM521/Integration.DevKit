@@ -15,7 +15,7 @@ public static class ProcessLauncherServiceCollection
     /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
     /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if either <paramref name="services"/> or <paramref name="config"/> is null.
+    /// Thrown if either <paramref name="services"/> is null.
     /// </exception>
     /// <remarks>
     /// This method registers <see cref="IProcessManager"/> as a singleton, ensuring a 

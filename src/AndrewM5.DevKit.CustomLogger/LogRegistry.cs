@@ -1,7 +1,7 @@
-﻿using AndrewM5.DevKit.Logging.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 using System.Collections.Concurrent;
 
-namespace AndrewM5.DevKit.Logging;
+namespace AndrewM5.DevKit.CustomLogger;
 
 
 /// <summary>

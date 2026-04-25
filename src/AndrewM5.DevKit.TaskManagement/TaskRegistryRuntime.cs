@@ -1,5 +1,5 @@
 ﻿using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.Logging.Contracts.Interfaces;
+using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Contracts.Options;
 using Microsoft.Extensions.Logging;

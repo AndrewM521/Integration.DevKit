@@ -1,10 +1,10 @@
-﻿using AndrewM5.DevKit.Logging.Abstractions.Options;
-using AndrewM5.DevKit.Logging.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
+using AndrewM5.DevKit.CustomLogger.Contracts.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace AndrewM5.DevKit.Logging.Flusher.Services;
+namespace AndrewM5.DevKit.CustomLogger.Flusher.Services;
 
 /// <summary>
 /// Provides extension methods for <see cref="IServiceCollection"/> to register and 
@@ -32,7 +32,7 @@ public static class LogFlusherServiceCollection
         }
 
         // Bind LogFlushServiceSettings
-        services.Configure<LogFlushServiceSettings>(config.GetSection("AndrewM5.DevKit:LogFlushService"));
+        services.Configure<LogFlushServiceSettings>(config.GetSection("AndrewM5.DevKit:CustomLoggerFlusher"));
 
         // Register the concrete class and inject ICustomLoggerManager
         services.AddSingleton(sp =>

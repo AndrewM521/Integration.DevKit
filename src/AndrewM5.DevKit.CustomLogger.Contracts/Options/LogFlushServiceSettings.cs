@@ -1,4 +1,4 @@
-﻿namespace AndrewM5.DevKit.Logging.Abstractions.Options;
+﻿namespace AndrewM5.DevKit.CustomLogger.Contracts.Options;
 
 /// <summary>
 /// Defines the configuration settings for the log flushing service, 
@@ -13,12 +13,14 @@ public class LogFlushServiceSettings
     public bool CreateLogFile { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets the full directory path or filename where logs will be stored.
+    /// Gets or sets a value indicating whether the service is permitted 
+    /// to create files when running inside a containerized environment (e.g., Docker).
     /// </summary>
     /// <remarks>
-    /// If <see cref="CreateLogFile"/> is <see langword="false"/>, this setting is ignored.
+    /// Writing to a container's ephemeral storage is generally discouraged in favor 
+    /// of volumes or external log collectors.
     /// </remarks>
-    public string LogFilePath { get; set; } = string.Empty;
+    public bool AllowCreateFileInContainer { get; set; } = false;
 
     /// <summary>
     /// Gets or sets the maximum number of log entries to hold in memory 
@@ -34,14 +36,12 @@ public class LogFlushServiceSettings
     public int FlushIntervalSeconds { get; set; } = 30;
 
     /// <summary>
-    /// Gets or sets a value indicating whether the service is permitted 
-    /// to create files when running inside a containerized environment (e.g., Docker).
+    /// Gets or sets the full directory path or filename where logs will be stored.
     /// </summary>
     /// <remarks>
-    /// Writing to a container's ephemeral storage is generally discouraged in favor 
-    /// of volumes or external log collectors.
+    /// If <see cref="CreateLogFile"/> is <see langword="false"/>, this setting is ignored.
     /// </remarks>
-    public bool AllowCreateFileInContainer { get; set; } = false;
+    public string LogFilePath { get; set; } = string.Empty;
 
     /// <summary>
     /// Creates a deep copy of the current <see cref="LogFlushServiceSettings"/> instance.

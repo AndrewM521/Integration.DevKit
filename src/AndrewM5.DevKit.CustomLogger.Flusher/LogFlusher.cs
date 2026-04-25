@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.Core;
-using AndrewM5.DevKit.Logging.Abstractions.Options;
-using AndrewM5.DevKit.Logging.Contracts.Interfaces;
+using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
+using AndrewM5.DevKit.CustomLogger.Contracts.Options;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 
-namespace AndrewM5.DevKit.Logging.Flusher;
+namespace AndrewM5.DevKit.CustomLogger.Flusher;
 
 /// <summary>
 /// Concrete Implementation of <see cref="ILogFlusher"/> that periodically flushes buffered log messages from 
@@ -31,7 +31,7 @@ public class LogFlusher : BackgroundService, ILogFlusher
     /// <param name="loggerManager">The manager used to create an internal logger for this service.</param>
     /// <param name="logRegistry">The registry containing the message buffer to be flushed.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="settings"/> is null.</exception>
-    internal LogFlusher(IOptions<LogFlushServiceSettings> settings, ICustomLoggerManager loggerManager, ILogRegistry logRegistry)
+    public LogFlusher(IOptions<LogFlushServiceSettings> settings, ICustomLoggerManager loggerManager, ILogRegistry logRegistry)
     {
         if (settings == null)
         {

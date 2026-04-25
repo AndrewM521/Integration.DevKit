@@ -15,7 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\AndrewM5.DevKit.ApiClientManagement\AndrewM5.DevKit.ApiClientManagement.csproj" />
     <ProjectReference Include="..\..\src\AndrewM5.DevKit.CredentialManagement\AndrewM5.DevKit.CredentialManagement.csproj" />
-    <ProjectReference Include="..\..\src\AndrewM5.DevKit.Logging.Flusher\AndrewM5.DevKit.Logging.Flusher.csproj" />
+    <ProjectReference Include="..\..\src\AndrewM5.DevKit.CustomLogger.Flusher\AndrewM5.DevKit.CustomLogger.Flusher.csproj" />
     <ProjectReference Include="..\..\src\AndrewM5.DevKit.ProcessLauncher\AndrewM5.DevKit.ProcessLauncher.csproj" />
     <ProjectReference Include="..\..\src\AndrewM5.DevKit.TaskManagement\AndrewM5.DevKit.TaskManagement.csproj" />
     <ProjectReference Include="..\..\src\AndrewM5.DevKit.ThreadSafeItems\AndrewM5.DevKit.ThreadSafeItems.csproj" />

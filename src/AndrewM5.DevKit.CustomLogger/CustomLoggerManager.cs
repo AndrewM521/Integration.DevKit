@@ -1,11 +1,11 @@
-﻿using AndrewM5.DevKit.Logging.Abstractions.Options;
-using AndrewM5.DevKit.Logging.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
+using AndrewM5.DevKit.CustomLogger.Contracts.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace AndrewM5.DevKit.Logging;
+namespace AndrewM5.DevKit.CustomLogger;
 
 /// <summary>
 /// Concrete Implementation of <see cref="ICustomLoggerManager"/>
@@ -25,7 +25,7 @@ public class CustomLoggerManager : ICustomLoggerManager
     /// <param name="settings">The configuration settings wrapped in <see cref="IOptions{T}"/>.</param>
     /// <param name="logRegistry">The central registry where log messages will be buffered.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="settings"/> or <paramref name="logRegistry"/> is null.</exception>
-    internal CustomLoggerManager(IOptions<LoggerManagerSettings> settings, ILogRegistry logRegistry) 
+    public CustomLoggerManager(IOptions<LoggerManagerSettings> settings, ILogRegistry logRegistry) 
     {
         if (settings == null)
         {
@@ -49,7 +49,7 @@ public class CustomLoggerManager : ICustomLoggerManager
     /// <inheritdoc/>
     public void LogRuntimeSettings()
     {
-        _logger?.LogDebug($"--- Logger Manager Settings ---");
+        _logger?.LogDebug($"--- Custom Logger Manager Settings ---");
 
         Type type = RuntimeSettings.GetType();
         PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);

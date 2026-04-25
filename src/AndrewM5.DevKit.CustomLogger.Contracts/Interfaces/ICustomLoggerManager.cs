@@ -1,6 +1,6 @@
-﻿using AndrewM5.DevKit.Logging.Abstractions.Options;
+﻿using AndrewM5.DevKit.CustomLogger.Contracts.Options;
 
-namespace AndrewM5.DevKit.Logging.Contracts.Interfaces;
+namespace AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 
 /// <summary>
 /// Provides centralized management for creating and configuring custom logger instances 

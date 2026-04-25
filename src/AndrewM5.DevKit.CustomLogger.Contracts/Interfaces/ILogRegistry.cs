@@ -1,4 +1,4 @@
-﻿namespace AndrewM5.DevKit.Logging.Contracts.Interfaces;
+﻿namespace AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 
 /// <summary>
 /// Defines a central registry that acts as a buffer for log messages, 

@@ -1,6 +1,6 @@
 ﻿using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
-using AndrewM5.DevKit.Logging.Contracts.Interfaces;
+using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;

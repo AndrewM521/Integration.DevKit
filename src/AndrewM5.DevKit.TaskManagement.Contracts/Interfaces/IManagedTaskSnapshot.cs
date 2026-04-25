@@ -1,6 +1,4 @@
-﻿using AndrewM5.DevKit.Logging.Contracts.Interfaces;
-
-namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
+﻿namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 
 /// <summary>
 /// Defines a read-only snapshot of a managed task's state and execution metrics 

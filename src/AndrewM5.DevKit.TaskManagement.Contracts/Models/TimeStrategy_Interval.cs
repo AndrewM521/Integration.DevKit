@@ -21,12 +21,6 @@ public sealed class TimeStrategy_Interval : Time_IterationStrategy
     /// Calculates the next execution time by adding the defined interval to the <see cref="Time_IterationStrategy.LastTargetDTM"/>.
     /// </summary>
     /// <param name="iteration">The current iteration count of the task.</param>
-    /// <returns>A <see cref="DateTime"/> representing the last target time plus the specified interval.</returns>
-    /// 
-    /// <summary>
-    /// Calculates the next execution time by adding the defined interval to the <see cref="Time_IterationStrategy.LastTargetDTM"/>.
-    /// </summary>
-    /// <param name="iteration">The current iteration count of the task.</param>
     /// <returns>
     /// A <see cref="DateTime"/> representing the previous target time incremented by the configured <see cref="TimeSpan"/>.
     /// </returns>

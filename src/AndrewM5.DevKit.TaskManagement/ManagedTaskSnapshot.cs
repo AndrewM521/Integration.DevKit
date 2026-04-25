@@ -1,7 +1,5 @@
-﻿using AndrewM5.DevKit.Logging.Contracts.Interfaces;
-using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Contracts.Models;
-using Microsoft.Extensions.Logging;
 
 namespace AndrewM5.DevKit.TaskManagement;
 
