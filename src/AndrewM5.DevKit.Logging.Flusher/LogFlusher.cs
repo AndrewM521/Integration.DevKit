@@ -11,7 +11,7 @@ using System.Text;
 namespace AndrewM5.DevKit.Logging.Flusher;
 
 /// <summary>
-/// A hosted background service that periodically flushes buffered log messages from 
+/// Concrete Implementation of <see cref="ILogFlusher"/> that periodically flushes buffered log messages from 
 /// <see cref="ILogRegistry"/> to a persistent file destination.
 /// </summary>
 public class LogFlusher : BackgroundService, ILogFlusher
@@ -31,7 +31,7 @@ public class LogFlusher : BackgroundService, ILogFlusher
     /// <param name="loggerManager">The manager used to create an internal logger for this service.</param>
     /// <param name="logRegistry">The registry containing the message buffer to be flushed.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="settings"/> is null.</exception>
-    public LogFlusher(IOptions<LogFlushServiceSettings> settings, ICustomLoggerManager loggerManager, ILogRegistry logRegistry)
+    internal LogFlusher(IOptions<LogFlushServiceSettings> settings, ICustomLoggerManager loggerManager, ILogRegistry logRegistry)
     {
         if (settings == null)
         {
@@ -51,6 +51,11 @@ public class LogFlusher : BackgroundService, ILogFlusher
     /// </summary>
     /// <param name="cancellationToken">Triggered when the application host is shutting down.</param>
     /// <returns>A <see cref="Task"/> representing the background operation.</returns>
+    /// <remarks>
+    /// The loop checks the buffer state every 500ms. A flush is triggered if 
+    /// <see cref="LogFlushServiceSettings.MaxBufferCount"/> is reached or 
+    /// <see cref="LogFlushServiceSettings.FlushIntervalSeconds"/> has elapsed.
+    /// </remarks>
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         DateTime lastFlushTime = DateTime.UtcNow;
@@ -65,7 +70,7 @@ public class LogFlusher : BackgroundService, ILogFlusher
                 lastFlushTime = DateTime.UtcNow;
             }
 
-            await Task.Delay(100, cancellationToken); // Short delay to avoid busy while loop
+            await Task.Delay(500, cancellationToken); // Short delay to avoid busy while loop
         }
 
         FlushBuffer(); //Final flush when task is canceled.
@@ -76,7 +81,8 @@ public class LogFlusher : BackgroundService, ILogFlusher
     /// </summary>
     /// <remarks>
     /// Respects the <see cref="LogFlushServiceSettings.CreateLogFile"/> and 
-    /// <see cref="LogFlushServiceSettings.AllowCreateFileInContainer"/> configurations.
+    /// <see cref="LogFlushServiceSettings.AllowCreateFileInContainer"/> configurations. 
+    /// If an error occurs during the write process, it is captured and sent to <see cref="Debug"/>.
     /// </remarks>
     private void FlushBuffer()
     {
@@ -119,7 +125,7 @@ public class LogFlusher : BackgroundService, ILogFlusher
     }
 
     /// <inheritdoc />
-    public void OutputRuntimeSettings()
+    public void LogRuntimeSettings()
     {
         _logger?.LogDebug($"--- Log Flush Service Settings ---");
 

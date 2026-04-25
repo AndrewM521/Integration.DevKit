@@ -19,15 +19,6 @@ public static class LogFlusherServiceCollection
     /// <param name="config">The <see cref="IConfiguration"/> instance used to bind flusher settings.</param>
     /// <returns>The same <see cref="IServiceCollection"/> instance for chaining calls.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> or <paramref name="config"/> is null.</exception>
-    /// <remarks>
-    /// This method performs the following actions:
-    /// <list type="bullet">
-    /// <item>Binds the <c>"AndrewM5.DevKit:LogFlushService"</c> configuration section.</item>
-    /// <item>Registers <see cref="LogFlusher"/> as a singleton implementation.</item>
-    /// <item>Maps <see cref="ILogFlusher"/> to the same <see cref="LogFlusher"/> singleton.</item>
-    /// <item>Registers <see cref="LogFlusher"/> as an <see cref="IHostedService"/> to enable background execution.</item>
-    /// </list>
-    /// </remarks>
     public static IServiceCollection AddCustomLogFlusher(this IServiceCollection services, IConfiguration config)
     {
         if (services == null)

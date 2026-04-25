@@ -23,6 +23,14 @@ public static class LoggingServiceCollection
     /// <see cref="LoggerManagerSettings"/> and registers both <see cref="ICustomLoggerManager"/> 
     /// and <see cref="ILogRegistry"/> as singletons.
     /// </remarks>
+    /// 
+    /// <summary>
+    /// Registers the custom logging infrastructure, including settings, the logger manager, and the log registry.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+    /// <param name="config">The <see cref="IConfiguration"/> instance used to bind logging settings.</param>
+    /// <returns>The modified <see cref="IServiceCollection"/> for further chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> or <paramref name="config"/> is null.</exception>
     public static IServiceCollection AddCustomLogging(this IServiceCollection services, IConfiguration config)
     {
         if (services == null)

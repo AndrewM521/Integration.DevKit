@@ -4,9 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 namespace AndrewM5.DevKit.Logging.Flusher.Services;
 
 /// <summary>
-/// Provides a static entry point for interacting with the <see cref="ILogFlusher"/> service.
-/// This host must be initialized during application startup after the DI container is built.
+/// Provides a static entry point to access the Logger Flusher module 
 /// </summary>
+/// <remarks>
+/// This host acts as a static wrapper for services resolved from the Dependency Injection container. 
+/// It must be initialized during application startup (e.g., in Program.cs or Startup.cs) 
+/// after the service provider has been built.
+/// </remarks>
 public static class LogFlusherHost
 {
     private static ILogFlusher? _logFlushService;

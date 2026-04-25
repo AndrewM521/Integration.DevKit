@@ -3,7 +3,7 @@
 namespace AndrewM5.DevKit.Logging;
 
 /// <summary>
-/// Provides static utility methods for normalizing and formatting log messages into a standardized string representation.
+/// Utility method for normalizing and formatting log messages into a standardized string representation.
 /// </summary>
 public static class LogFormatter
 {
@@ -16,9 +16,13 @@ public static class LogFormatter
     /// <param name="logLevel">The severity level of the log. Defaults to <see cref="LogLevel.Information"/>.</param>
     /// <param name="ex">An optional <see cref="Exception"/> to append to the end of the formatted string.</param>
     /// <returns>
-    /// A formatted string. If <paramref name="includePrefix"/> is true, the format is: 
+    /// A formatted string. If <paramref name="includePrefix"/> is <see langword="true"/>, the format is: 
     /// <c>[PID:LEVEL]&lt;UNIX_MS&gt; Category - Message</c>.
     /// </returns>
+    /// <remarks>
+    /// This method uses <see cref="DateTimeOffset.Now"/> to generate Unix timestamps in milliseconds and 
+    /// <see cref="Environment.ProcessId"/> to identify the originating process.
+    /// </remarks>
     public static string Format(bool includePrefix, string category, string message, LogLevel logLevel = LogLevel.Information, Exception? ex = null)
     {
         string logLevelStr = "NONE";
@@ -39,6 +43,9 @@ public static class LogFormatter
                 break;
             case LogLevel.Debug:
                 logLevelStr = "DEBUG";
+                break;
+            case LogLevel.Trace:
+                logLevelStr = "TRCE";
                 break;
         }
 

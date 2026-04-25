@@ -9,14 +9,12 @@ namespace AndrewM5.DevKit.Logging.Contracts.Interfaces;
 public interface ILogFlusher
 {
     /// <summary>
-    /// Gets the current operational settings for the log flushing service, 
-    /// such as intervals or batch sizes.
+    /// Gets the current operational settings for the log flushing service.
     /// </summary>
     public LogFlushServiceSettings RuntimeSettings { get; }
 
     /// <summary>
-    /// Captures the current state of the <see cref="RuntimeSettings"/> and 
-    /// outputs them to the Debug log.
+    /// Logging method to output current <see cref="LogFlushServiceSettings"/> to the logs.
     /// </summary>
-    public void OutputRuntimeSettings();
+    public void LogRuntimeSettings();
 }

@@ -6,6 +6,10 @@ namespace AndrewM5.DevKit.Logging.Contracts.Interfaces;
 /// Defines a custom logging interface that extends the standard <see cref="ILogger"/> 
 /// with additional controls for managing logger state and output visibility.
 /// </summary>
+/// <remarks>
+/// This interface allows for runtime toggling of logging behavior without needing to 
+/// reconfigure the underlying <see cref="ILoggerProvider"/>.
+/// </remarks>
 public interface ICustomLogger : ILogger
 {
     /// <summary>
@@ -27,15 +31,18 @@ public interface ICustomLogger : ILogger
     /// <summary>
     /// Deactivates the logger, preventing further log messages from being processed.
     /// </summary>
+    /// <remarks>
+    /// When disabled, calls to <see cref="ILogger.Log"/> should return immediately without processing.
+    /// </remarks>
     public void DisableLogger();
 
     /// <summary>
-    /// Enables the routing of log output specifically to the console.
+    /// Enables the routing of log output to the console.
     /// </summary>
     public void EnableConsoleOutput();
 
     /// <summary>
-    /// Disables the routing of log output to the console without affecting other sinks.
+    /// Disables the routing of log output to the console.
     /// </summary>
     public void DisableConsoleOutput();
 }

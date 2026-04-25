@@ -31,7 +31,7 @@ public class CustomLogger : ICustomLogger
     /// <param name="categoryName">The name of the category for this logger (e.g., the class name).</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="loggerManager"/> is null.</exception>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="logRegistry"/> is null.</exception>
-    public CustomLogger(ICustomLoggerManager loggerManager, ILogRegistry logRegistry, string categoryName = "Unknown Category")
+    internal CustomLogger(ICustomLoggerManager loggerManager, ILogRegistry logRegistry, string categoryName = "Unknown Category")
     {
         if (loggerManager == null)
         {
@@ -49,9 +49,11 @@ public class CustomLogger : ICustomLogger
     }
 
     /// <summary>
-    /// Begins a logical operation scope. This implementation returns a <see cref="NullScope"/> 
-    /// as scoped logging is not currently supported.
+    /// Begins a logical operation scope.
     /// </summary>
+    /// <remarks>
+    /// This implementation returns a <see cref="NullScope"/> as scoped logging is not currently supported.
+    /// </remarks>
     /// <typeparam name="TState">The type of the state to begin scope for.</typeparam>
     /// <param name="state">The identifier for the scope.</param>
     /// <returns>An <see cref="IDisposable"/> that ends the logical operation scope on dispose.</returns>
@@ -65,7 +67,7 @@ public class CustomLogger : ICustomLogger
     /// state and the minimum <see cref="LogLevel"/> defined in <see cref="ICustomLoggerManager.RuntimeSettings"/>.
     /// </summary>
     /// <param name="logLevel">The level to check.</param>
-    /// <returns><see langword="true"/> if enabled; otherwise, <see langword="false"/>.</returns>
+    /// <returns><see langword="true"/> if the logger is enabled for the specified level; otherwise, <see langword="false"/>.</returns>
     public bool IsEnabled(LogLevel logLevel)
     {
         if (_isLoggerEnabled && logLevel >= _loggerManager.RuntimeSettings.DebugLogLevel)
@@ -77,9 +79,12 @@ public class CustomLogger : ICustomLogger
     }
 
     /// <summary>
-    /// Writes a log entry to the configured sinks (Registry, Debug, and optionally Console).
+    /// Writes a log entry to the configured outputs
     /// </summary>
     /// <inheritdoc cref="ILogger.Log{TState}(LogLevel, EventId, TState, Exception?, Func{TState, Exception?, string})"/>
+    /// <remarks>
+    /// Messages are automatically formatted using an internal <c>LogFormatter</c> before being enqueued.
+    /// </remarks>
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
         if (!IsEnabled(logLevel))

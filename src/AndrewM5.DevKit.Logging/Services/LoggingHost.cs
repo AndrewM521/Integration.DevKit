@@ -3,9 +3,13 @@ using Microsoft.Extensions.DependencyInjection;
 namespace AndrewM5.DevKit.Logging.Services;
 
 /// <summary>
-/// Provides a static entry point to access logging services across the application. 
-/// This class must be initialized during application startup to function.
+/// Provides a static entry point to access the Logging module. 
 /// </summary>
+/// <remarks>
+/// This host acts as a static wrapper for services resolved from the Dependency Injection container. 
+/// It must be initialized during application startup (e.g., in Program.cs or Startup.cs) 
+/// after the service provider has been built.
+/// </remarks>
 public static class LoggingHost
 {
     private const string NoInit = "LoggingHost has not been initialized.";

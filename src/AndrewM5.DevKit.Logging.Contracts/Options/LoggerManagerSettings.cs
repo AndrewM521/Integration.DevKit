@@ -6,18 +6,27 @@ namespace AndrewM5.DevKit.Logging.Abstractions.Options;
 /// Provides configuration settings for managing logging behavior, 
 /// specifically defining filtering levels for different output targets.
 /// </summary>
+/// <remarks>
+/// These settings allow for independent control over what is captured for 
+/// immediate debugging versus what is persisted to primary output.
+/// </remarks>
 public class LoggerManagerSettings
 {
     /// <summary>
     /// Gets or sets the minimum <see cref="LogLevel"/> required for log entries 
     /// to be processed in a debugging context.
     /// </summary>
+    /// <value>The default is <see cref="LogLevel.Debug"/>.</value>
+    /// <remarks>
+    /// Messages below this level will be ignored.
+    /// </remarks>
     public LogLevel DebugLogLevel { get; set; } = LogLevel.Debug;
 
     /// <summary>
     /// Gets or sets the minimum <see cref="LogLevel"/> required for log entries 
-    /// to be written to the primary output (e.g., Console or File).
+    /// to be written to the file output
     /// </summary>
+    /// <value>The default is <see cref="LogLevel.Information"/>.</value>
     public LogLevel OutputLogLevel { get; set; } = LogLevel.Information;
     
     /// <summary>

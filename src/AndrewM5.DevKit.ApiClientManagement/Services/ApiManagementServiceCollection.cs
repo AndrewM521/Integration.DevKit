@@ -1,5 +1,5 @@
-﻿using AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
-using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

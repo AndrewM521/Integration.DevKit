@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace AndrewM5.DevKit.ApiClientManagement.Services;
 
 /// <summary>
-/// Provides a static entry point to access the APIManagement classes 
+/// Provides a static entry point to access the APIManagement module 
 /// </summary>
 /// <remarks>
 /// This host acts as a static wrapper for services resolved from the Dependency Injection container. 

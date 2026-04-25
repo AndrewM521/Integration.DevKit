@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 
 namespace AndrewM5.DevKit.Logging;
 
+
 /// <summary>
-/// An internal implementation of <see cref="ILogRegistry"/> that manages an in-memory 
-/// thread-safe buffer for log messages using a <see cref="ConcurrentQueue{T}"/>.
+/// Concrete Implementation of <see cref="ILogRegistry"/>
 /// </summary>
 internal class LogRegistry : ILogRegistry
 {
@@ -33,8 +33,8 @@ internal class LogRegistry : ILogRegistry
 
     /// <inheritdoc />
     /// <remarks>
-    /// This method performs a destructive read, clearing the internal queue as it 
-    /// populates the return array.
+    /// This method performs a destructive read, draining the internal queue entirely. 
+    /// Messages are returned in the order they were enqueued (FIFO).
     /// </remarks>
     public string[] DequeueFromLogFileBuffer()
     {

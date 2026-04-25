@@ -9,11 +9,15 @@ public class LogFlushServiceSettings
     /// <summary>
     /// Gets or sets a value indicating whether a physical log file should be created.
     /// </summary>
+    /// <value>Default is <see langword="false"/>.</value>
     public bool CreateLogFile { get; set; } = false;
 
     /// <summary>
     /// Gets or sets the full directory path or filename where logs will be stored.
     /// </summary>
+    /// <remarks>
+    /// If <see cref="CreateLogFile"/> is <see langword="false"/>, this setting is ignored.
+    /// </remarks>
     public string LogFilePath { get; set; } = string.Empty;
 
     /// <summary>
@@ -26,12 +30,17 @@ public class LogFlushServiceSettings
     /// Gets or sets the time interval, in seconds, at which the buffer 
     /// is automatically flushed regardless of the current buffer count.
     /// </summary>
-    public int FlushIntervalSeconds { get; set; } = 5;
+    /// <value>The interval in seconds. Default is 30 seconds.</value>
+    public int FlushIntervalSeconds { get; set; } = 30;
 
     /// <summary>
     /// Gets or sets a value indicating whether the service is permitted 
     /// to create files when running inside a containerized environment (e.g., Docker).
     /// </summary>
+    /// <remarks>
+    /// Writing to a container's ephemeral storage is generally discouraged in favor 
+    /// of volumes or external log collectors.
+    /// </remarks>
     public bool AllowCreateFileInContainer { get; set; } = false;
 
     /// <summary>
