@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 namespace AndrewM5.DevKit.TaskManagement;
 
 /// <summary>
-/// A concrete implementation of <see cref="IManagedTaskSnapshot"/> providing a 
+/// Concrete implementation of <see cref="IManagedTaskSnapshot"/> providing a 
 /// thread-safe, read-only view of a task's metrics and state.
 /// </summary>
 public sealed class ManagedTaskSnapshot : IManagedTaskSnapshot
@@ -51,6 +51,11 @@ public sealed class ManagedTaskSnapshot : IManagedTaskSnapshot
         Settings = settings;
     }
 
+    /// <summary>
+    /// Generates a formatted summary string of the task's current metrics and state.
+    /// </summary>
+    /// <param name="showIterations">If set to <c>true</c>, appends the detailed info of every iteration in the <see cref="IterationHistory"/>.</param>
+    /// <returns>A formatted string representing the task's point-in-time status.</returns>
     public string GetSnapshotInfo(bool showIterations = false)
     {
         string msg = @$"

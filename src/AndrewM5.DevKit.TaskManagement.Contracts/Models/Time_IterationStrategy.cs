@@ -6,30 +6,50 @@ using Microsoft.VisualBasic;
 namespace AndrewM5.DevKit.TaskManagement.Contracts.Models;
 
 /// <summary>
-/// Provides a base implementation for defining when a task should next execute.
-/// Handles initial start times and tracking of the last execution target.
+/// Provides a base implementation for iteration strategies that determine execution 
+/// cycles based on specific points in time (clock-based scheduling).
 /// </summary>
+/// <remarks>
+/// This abstract class handles the complex logic of time synchronization, including 
+/// scheduling catch-up (fast-forwarding), smart polling intervals to reduce CPU usage, 
+/// and initial start-time resolution. 
+/// </remarks>
 public abstract class Time_IterationStrategy : BaseIterationStrategy
 {
     private const string outputDTMFormat = "yyyy-MM-dd hh:mm:ss tt";
-    
+
+    /// <summary>
+    /// Gets the internal configuration settings used to drive the time-based logic.
+    /// </summary>
     internal TimeStrategySettings RuntimeSettings { get; }
 
     /// <summary>
     /// Gets or sets the timestamp of the last calculated execution target.
-    /// Used as a reference point for calculating the subsequent run.
     /// </summary>
+    /// <remarks>
+    /// This serves as the anchor point for calculating the next run. It is updated 
+    /// every time a scheduled slot is successfully reached and handed off to the manager.
+    /// </remarks>
     public DateTime LastTargetDTM { get; set; } = default;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="NextRunStrategy"/> class.
+    /// Initializes a new instance of the <see cref="Time_IterationStrategy"/> class.
     /// </summary>
+    /// <param name="settings">The time-specific configuration</param>
     protected Time_IterationStrategy(TimeStrategySettings settings)
     {
         RuntimeSettings = settings;      
     }
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// This implementation performs a multi-phase wait:
+    /// <list type="number">
+    /// <item><description><b>Resolution:</b> Determines the next target <see cref="DateTime"/>.</description></item>
+    /// <item><description><b>Catch-up:</b> If enabled, bypasses past dates until reaching the current time.</description></item>
+    /// <item><description><b>Waiting:</b> Performs a "Smart Wait" using tiered polling to reach the target with high precision.</description></item>
+    /// </list>
+    /// </remarks>
     public override async Task WaitForReadyAsync(IManagedTaskHandle handle, CancellationToken cancellationToken, ICustomLogger? logger = null)
     {
         // Initial State Resolution
@@ -114,17 +134,11 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
         }
     }
 
-    private string GetTargetRuntimeStr(DateTimeOffset localTarget, DateTimeOffset utcTarget)
-    {
-        return $"Local: {localTarget.ToString(outputDTMFormat)} | UTC: {utcTarget.ToString(outputDTMFormat)}";
-    }
-
     /// <summary>
-    /// Determines the next scheduled execution time. 
-    /// If no previous run has occurred, it returns the start time; otherwise, it triggers the inherited computation logic.
+    /// Determines the next scheduled execution time, initializing the start point if necessary.
     /// </summary>
     /// <param name="currentIteration">The current iteration count of the task.</param>
-    /// <returns>The <see cref="DateTime"/> for the next execution.</returns>
+    /// <returns>The <see cref="DateTime"/> representing the next scheduled run.</returns>
     public DateTime GetNextTargetDTM(int currentIteration)
     {
         if (LastTargetDTM == default)
@@ -136,10 +150,14 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
     }
 
     /// <summary>
-    /// When implemented in a derived class, calculates the next execution time based on the strategy's specific recurrence rules.
+    /// When implemented in a derived class, calculates the next execution time based on specific recurrence rules.
     /// </summary>
     /// <param name="currentIteration">The current iteration count of the task.</param>
-    /// <returns>The calculated <see cref="DateTime"/> for the next run.</returns>
+    /// <returns>The calculated <see cref="DateTime"/> for the subsequent run.</returns>
+    /// <remarks>
+    /// Derived classes (e.g., Cron or Interval strategies) should use <see cref="LastTargetDTM"/> 
+    /// as the basis for this calculation.
+    /// </remarks>
     protected abstract DateTime ComputeNextTargetDTM(int currentIteration);
 
     /// <summary>
@@ -171,12 +189,12 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
     /// Calculates a variable sleep interval based on the time remaining until the next execution target.
     /// </summary>
     /// <remarks>
-    /// This implemention uses a tiered approach to optimize resource usage:
+    /// This implementation uses a tiered approach to optimize resource usage:
     /// <list type="bullet">
-    /// <item><description>Critical (&lt; 5m): 1-second precision heartbeat.</description></item>
-    /// <item><description>Near (&lt; 30m): 5-minute polling.</description></item>
-    /// <item><description>Medium (&lt; 1h): 20-minute polling.</description></item>
-    /// <item><description>Distant (&gt; 1h): 1-hour sleep cycles.</description></item>
+    /// <item><description><b>Critical (&lt; 5m):</b> 1-second precision heartbeat for accurate triggering.</description></item>
+    /// <item><description><b>Near (&lt; 30m):</b> 5-minute polling intervals.</description></item>
+    /// <item><description><b>Medium (&lt; 1h):</b> 20-minute polling intervals.</description></item>
+    /// <item><description><b>Distant (&gt; 1h):</b> 1-hour sleep cycles to minimize thread/timer activity.</description></item>
     /// </list>
     /// </remarks>
     /// <param name="remaining">The duration of time left until the scheduled execution.</param>
@@ -197,5 +215,16 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
         }
 
         return TimeSpan.FromHours(1);
+    }
+
+    /// <summary>
+    /// Formats a target time into a human-readable string for logging.
+    /// </summary>
+    /// <param name="localTarget">The target time in the local timezone.</param>
+    /// <param name="utcTarget">The target time in UTC.</param>
+    /// <returns>A formatted string containing both local and UTC representations.</returns>
+    private string GetTargetRuntimeStr(DateTimeOffset localTarget, DateTimeOffset utcTarget)
+    {
+        return $"Local: {localTarget.ToString(outputDTMFormat)} | UTC: {utcTarget.ToString(outputDTMFormat)}";
     }
 }

@@ -13,6 +13,7 @@ public interface ITaskManager
     /// <summary>
     /// Gets the current active configuration and limits for the task manager.
     /// </summary>
+    /// <value>A <see cref="TaskManagerSettings"/> instance containing concurrency limits and timeout values.</value>
     public TaskManagerSettings RuntimeSettings { get; }
 
     /// <summary>
@@ -22,21 +23,24 @@ public interface ITaskManager
     /// <param name="executionMode">Specifies whether the task should run synchronously or asynchronously.</param>
     /// <param name="settings">Execution-specific settings for this task instance.</param>
     /// <param name="cancellationToken">An external token to monitor for cancellation requests.</param>
-    /// <returns>An <see cref="OperationResult{ITaskHandle}"/> containing the handle to the started task if successful.</returns>
+    /// <returns>
+    /// An <see cref="OperationResult{ITaskHandle}"/> containing the handle to the started task if successful; 
+    /// otherwise, a failure result explaining why the task could not be initiated.
+    /// </returns>
     public Task<OperationResult<IManagedTaskHandle>> StartTask(ManagedTask managedTask, TaskExecutionMode executionMode, ManagedTaskSettings settings, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Requests the cancellation of a specific task.
     /// </summary>
     /// <param name="taskKey">The unique identifier of the task to cancel.</param>
-    /// <param name="forceCancel">If true, attempts an immediate termination; otherwise, requests a graceful shutdown.</param>
+    /// <param name="forceCancel">If <see langword="true"/>, attempts an immediate termination; otherwise, requests a graceful shutdown.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating success or failure of the cancellation request.</returns>
     public NullOperationResult CancelTask(string taskKey, bool forceCancel = false);
 
     /// <summary>
     /// Requests the cancellation of all currently tracked tasks.
     /// </summary>
-    /// <param name="forceCancel">If true, attempts an immediate termination of all tasks; otherwise, requests a graceful shutdown.</param>
+    /// <param name="forceCancel">If <see langword="true"/>, attempts an immediate termination of all tasks; otherwise, requests a graceful shutdown.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the overall outcome of the bulk cancellation.</returns>
     public NullOperationResult CancelAllTasks(bool forceCancel = false);
 
@@ -44,7 +48,9 @@ public interface ITaskManager
     /// Checks whether a task associated with the specified key is currently in a running state.
     /// </summary>
     /// <param name="taskKey">The unique identifier of the task.</param>
-    /// <returns>An <see cref="OperationResult{Boolean}"/> where the value is true if the task is active.</returns>
+    /// <returns>
+    /// An <see cref="OperationResult{Boolean}"/> where the value is <see langword="true"/> if the task exists and is active.
+    /// </returns>
     public OperationResult<bool> IsTaskRunning(string taskKey);
 
     /// <summary>
@@ -61,9 +67,9 @@ public interface ITaskManager
     public Task AwaitAllTasksToFinish(List<Task> tasksList);
 
     /// <summary>
-    /// Logs or outputs the current <see cref="RuntimeSettings"/> for diagnostic purposes.
+    /// Logging method to output current <see cref="TaskManagerSettings"/> to the logs.
     /// </summary>
-    public void OutputRuntimeSettings();
+    public void LogRuntimeSettings();
 }
 
 /// <summary>

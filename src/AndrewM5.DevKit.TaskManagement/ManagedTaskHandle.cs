@@ -2,6 +2,9 @@
 
 namespace AndrewM5.DevKit.TaskManagement;
 
+/// <summary>
+/// Concrete Implementation of <see cref="IManagedTaskHandle"/> providing a public-facing handle for monitoring and controlling a managed task.
+/// </summary>
 public sealed class ManagedTaskHandle : IManagedTaskHandle
 {
     /// <inheritdoc />
@@ -27,6 +30,10 @@ public sealed class ManagedTaskHandle : IManagedTaskHandle
 
     private readonly ManagedTaskRuntime _managedTaskRuntime;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ManagedTaskHandle"/> class.
+    /// </summary>
+    /// <param name="managedTaskRuntime">The internal runtime instance to wrap.</param>
     internal ManagedTaskHandle(ManagedTaskRuntime managedTaskRuntime)
     {
         _managedTaskRuntime = managedTaskRuntime;

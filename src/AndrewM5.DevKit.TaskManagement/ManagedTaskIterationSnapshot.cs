@@ -4,20 +4,36 @@ using Microsoft.Extensions.Logging;
 
 namespace AndrewM5.DevKit.TaskManagement;
 
+/// <summary>
+/// Concrete Implementation of <see cref="IManagedTaskIterationSnapshot"/> representing a static, 
+/// read-only snapshot of a managed task iteration's state at a specific point in time.
+/// </summary>
 public sealed class ManagedTaskIterationSnapshot : IManagedTaskIterationSnapshot
 {
+    /// <inheritdoc/>
     public int IterationNumber { get; internal set; }
 
+    /// <inheritdoc/>
     public ManagedTaskState State { get; internal set; }
 
+    /// <inheritdoc/>
     public DateTime StartDTM { get; internal set; }
 
+    /// <inheritdoc/>
     public DateTime EndDTM { get; internal set; }
 
+    /// <inheritdoc/>
     public TimeSpan Runtime { get; internal set; }
 
+    /// <inheritdoc/>
     public Exception? Exception { get; internal set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ManagedTaskIterationSnapshot"/> class 
+    /// by capturing the current values from a <see cref="ManagedTaskIterationRuntime"/>.
+    /// </summary>
+    /// <param name="runtime">The live runtime to snapshot.</param>
+    /// <param name="ex">An optional exception to associate with this snapshot.</param>
     internal ManagedTaskIterationSnapshot(ManagedTaskIterationRuntime runtime, Exception? ex = null)
     {
         IterationNumber = runtime.IterationNumber;
@@ -28,6 +44,11 @@ public sealed class ManagedTaskIterationSnapshot : IManagedTaskIterationSnapshot
         Exception = ex;
     }
 
+    /// <summary>
+    /// Returns a formatted string containing detailed information about the iteration.
+    /// </summary>
+    /// <param name="includeIndent">If set to <c>true</c>, prefixes each line with a standard four-space indent.</param>
+    /// <returns>A multiline string representation of the iteration metrics and state.</returns>
     public string GetIterationInfo(bool includeIndent = true)
     {
         string indent = "";

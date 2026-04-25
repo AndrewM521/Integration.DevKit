@@ -7,11 +7,18 @@ namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 /// Defines a thread-safe registry for storing and retrieving metadata snapshots 
 /// of managed tasks.
 /// </summary>
+/// <remarks>
+/// This registry serves as the "source of truth" for the current state of tasks managed by the system.
+/// </remarks>
 public interface ITaskRegistry
 {
     /// <summary>
     /// Gets the collection of all current task snapshots, keyed by their unique task identifiers.
     /// </summary>
+    /// <value>
+    /// A <see cref="ConcurrentDictionary{String, IManagedTaskSnapshot}"/> where the key is the 
+    /// unique Task ID and the value is the last reported state of that task.
+    /// </value>
     public ConcurrentDictionary<string, IManagedTaskSnapshot> Snapshots { get; }
 
     /// <summary>
@@ -19,6 +26,7 @@ public interface ITaskRegistry
     /// </summary>
     /// <param name="snapshot">The task snapshot containing the current state and metadata to store.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating whether the upsert operation was successful.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="snapshot"/> is null.</exception>
     public NullOperationResult Upsert(IManagedTaskSnapshot snapshot);
 
     /// <summary>
@@ -28,7 +36,7 @@ public interface ITaskRegistry
     /// <returns>
     /// A <see cref="NullableOperationResult{IManagedTaskSnapshot}"/> containing the snapshot if found, 
     /// or a successful result with a null value if the key does not exist.
-    /// </returns>
+    /// </returns> 
     public NullableOperationResult<IManagedTaskSnapshot?> TryGet(string taskKey);
 
     /// <summary>

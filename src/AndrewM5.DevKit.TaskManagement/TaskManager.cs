@@ -1,5 +1,4 @@
-﻿using AndrewM5.DevKit.Core;
-using AndrewM5.DevKit.Core.Results;
+﻿using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Contracts.Models;
@@ -7,16 +6,13 @@ using AndrewM5.DevKit.TaskManagement.Contracts.Options;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
 using System.Collections.Concurrent;
 using System.Reflection;
-using System.Threading;
 
 namespace AndrewM5.DevKit.TaskManagement;
 
 /// <summary>
-/// The central coordinator for the task management system. 
-/// Handles task initiation, concurrency limiting, lifecycle monitoring, and host shutdown integration.
+/// Concrete Implementation of <see cref="ITaskManager"/>
 /// </summary>
 public class TaskManager : ITaskManager
 {
@@ -26,17 +22,19 @@ public class TaskManager : ITaskManager
     private readonly ConcurrentDictionary<string, ManagedTaskRuntime> _tasks = new ConcurrentDictionary<string, ManagedTaskRuntime>();
     private readonly IHostApplicationLifetime _appLifetime;
     private readonly ICustomLogger _logger;
-
-    /// <summary>
-    /// Limits the number of concurrent tasks allowed to run based on <see cref="TaskManagerSettings.MaxConcurrentTasks"/>.
-    /// </summary>
     private readonly SemaphoreSlim _taskLimiter;
     private readonly TaskRegistryRuntime _taskRegistryRuntime;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TaskManager"/>.
-    /// Hooks into <see cref="IHostApplicationLifetime"/> to ensure all tasks are signaled for cancellation during shutdown.
+    /// Initializes a new instance of the <see cref="TaskManager"/> class.
+    /// Configures concurrency limits and registers a global cancellation callback with the 
+    /// <see cref="IHostApplicationLifetime"/> to ensure graceful shutdown of all managed tasks.
     /// </summary>
+    /// <param name="appLifetime">The application lifetime for monitoring host shutdown events.</param>
+    /// <param name="loggerManager">The manager used to resolve the internal logger.</param>
+    /// <param name="taskRegistry">The registry used for persisting and tracking task states.</param>
+    /// <param name="settings">The configuration settings for task management and limits.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="appLifetime"/>, <paramref name="loggerManager"/>, or <paramref name="taskRegistry"/> is null.</exception>
     public TaskManager(
         IHostApplicationLifetime appLifetime,
         ICustomLoggerManager loggerManager,
@@ -160,6 +158,7 @@ public class TaskManager : ITaskManager
     }
 
     /// <inheritdoc/>
+    /// 
     public NullOperationResult CancelTask(string taskKey, bool forceCancel = false)
     {
         var result = new NullOperationResult();
@@ -252,7 +251,7 @@ public class TaskManager : ITaskManager
     }
 
     /// <inheritdoc/>
-    public void OutputRuntimeSettings()
+    public void LogRuntimeSettings()
     {
         _logger?.LogDebug($"--- Task Manager Settings ---");
 
@@ -268,11 +267,6 @@ public class TaskManager : ITaskManager
 
 
     #region Helpers
-    /// <summary>
-    /// The core execution engine for a managed task. 
-    /// Manages scheduling (via NextRunStrategy), iteration loops, linked cancellation tokens, 
-    /// timeouts (watchdogs), and retry logic.
-    /// </summary>
     private async Task RunManagedTaskAsync(ManagedTaskRuntime managedTaskRuntime)
     {
         ConcurrentQueue<Exception> exceptions = new ConcurrentQueue<Exception>();

@@ -7,6 +7,11 @@ namespace AndrewM5.DevKit.TaskManagement.Contracts.Models;
 /// Provides a base implementation for a task that can be managed by the task management system.
 /// Implements basic identification and validation logic.
 /// </summary>
+/// <remarks>
+/// Inherit from this class to define specific units of work. The task manager handles 
+/// the lifecycle, but the derived class defines the actual functional logic within 
+/// the <see cref="DoTaskWork"/> method.
+/// </remarks>
 public abstract class ManagedTask : IDisposable
 {
     /// <summary>
@@ -21,14 +26,19 @@ public abstract class ManagedTask : IDisposable
 
     /// <summary>
     /// Gets a unique string key used for lookups within the task registry. 
-    /// This is often a combination of the Name and ID.
     /// </summary>
+    /// <value>
+    /// A string formatted as "{TaskName}_{TaskId}".
+    /// </value>
     public string TaskKey { get; }
 
     /// <summary>
     /// Gets the maximum amount of time the task is allowed to run before being automatically canceled.
-    /// If null, the task will run indefinitely until completion or manual cancellation.
     /// </summary>
+    /// <value>
+    /// A <see cref="TimeSpan"/> representing the timeout limit. If <see langword="null"/>, 
+    /// the task will run indefinitely until completion or manual cancellation.
+    /// </value>
     public TimeSpan? Timeout { get; protected set; }
 
     /// <summary>
@@ -36,7 +46,7 @@ public abstract class ManagedTask : IDisposable
     /// </summary>
     /// <param name="taskName">The friendly display name of the task.</param>
     /// <param name="id">A unique identifier for this specific task instance.</param>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="taskName"/> is null/whitespace or <paramref name="id"/> is <see cref="Guid.Empty"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="taskName"/> is null or whitespace, or if <paramref name="id"/> is <see cref="Guid.Empty"/>.</exception>
     protected ManagedTask(string taskName, Guid id)
     {
         if (string.IsNullOrWhiteSpace(taskName))
@@ -55,22 +65,25 @@ public abstract class ManagedTask : IDisposable
     }
 
     /// <summary>
-    /// Contains the core logic to be executed by the task manager.
+    /// Contains the core logic to be executed by the task manager during a single iteration.
     /// </summary>
-    /// <param name="cancellationToken">A token that will be signaled if the task needs to stop (e.g., due to timeout or manual cancellation).</param>
+    /// <param name="iterationHandle">The handle providing context, telemetry, and cancellation support for the current cycle.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     /// <remarks>
-    /// Both <see cref="IManagedTaskHandle.IterationEndTime"/> and <see cref="IManagedTaskHandle.EndDTM"/> are set after this method completes. 
-    /// Calling <see cref="IManagedTaskHandle.GetTaskIterationRuntime"/> or <see cref="IManagedTaskHandle.GetTaskRuntime"/> inside this method
-    /// will return the runtime between the Start Time and the Current Time
-    /// </remarks> 
+    /// When this method completes, the manager will update terminal timestamps (like EndDTM) 
+    /// and proceed to the <see cref="IIterationStrategy"/> to determine when to run the next cycle.
+    /// <para/>
+    /// Accessing <see cref="IManagedTaskIterationHandle.Runtime"/> within this method will 
+    /// provide the elapsed time from the start of the current iteration to the present moment.
+    /// </remarks>
     public abstract Task DoTaskWork(IManagedTaskIterationHandle iterationHandle);
 
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
     /// </summary>
     /// <remarks>
-    /// Overriding this method is optional for derived tasks that do not hold onto disposable resources.
+    /// Derived classes should override this if they utilize <see cref="CancellationTokenSource"/>, 
+    /// file handles, or other disposable objects within their task logic.
     /// </remarks>
     public virtual void Dispose() {}
 }

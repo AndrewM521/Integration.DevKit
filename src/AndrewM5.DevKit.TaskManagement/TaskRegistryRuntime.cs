@@ -1,16 +1,20 @@
 ﻿using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.TaskManagement.Contracts.Options;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AndrewM5.DevKit.TaskManagement;
 
 /// <summary>
 /// Orchestrates the synchronization between active task runtimes and the persistent task registry.
-/// Handles snapshot creation, state mapping, and registry capacity management.
 /// </summary>
+/// <remarks>
+/// This class handles the conversion of live runtime data into static snapshots. It also implements 
+/// capacity management policies, ensuring that neither the global registry nor individual task histories 
+/// exceed the limits defined in <see cref="TaskManagerSettings"/>.
+/// </remarks>
 internal class TaskRegistryRuntime
 {
     private readonly ITaskRegistry _taskRegistry;
@@ -19,15 +23,16 @@ internal class TaskRegistryRuntime
 
     /// <summary>
     /// Tracks the order in which tasks were added to the registry to facilitate 
-    /// First-In-First-Out (FIFO) trimming.
+    /// First-In-First-Out (FIFO) trimming of the global registry.
     /// </summary>
     private readonly ConcurrentQueue<string> _insertionOrder = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskRegistryRuntime"/> class.
     /// </summary>
-    /// <param name="taskManager">The manager providing global runtime settings.</param>
+    /// <param name="taskManager">The manager providing global runtime settings and limits.</param>
     /// <param name="taskRegistry">The underlying storage for task snapshots.</param>
+    /// <param name="loggerManager">Optional logger manager to provide contextual logging.</param>
     public TaskRegistryRuntime(ITaskManager taskManager, ITaskRegistry taskRegistry, ICustomLoggerManager? loggerManager = null)
     {
         _taskRegistry = taskRegistry;
@@ -37,11 +42,13 @@ internal class TaskRegistryRuntime
     }
 
     /// <summary>
-    /// Updates or creates a snapshot in the registry based on the current state of a <see cref="ManagedTaskRuntime"/>.
+    /// Updates or creates a snapshot in the registry based on the current state of a task and its iterations.
     /// </summary>
-    /// <param name="managedTaskRuntime">The active runtime to capture data from.</param>
-    /// <param name="snapshotEx">An optional exception to associate with the snapshot (e.g., if the task just faulted).</param>
-    /// <returns>A <see cref="NullOperationResult"/> indicating the success of the update and subsequent trim check.</returns>
+    /// <param name="managedTaskRuntime">The active task runtime to capture data from.</param>
+    /// <param name="iterationRuntime">The specific iteration context to record, if applicable.</param>
+    /// <param name="taskException">An exception associated with the overall task failure, if any.</param>
+    /// <param name="iterationException">An exception associated with a specific iteration failure, if any.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating whether the snapshot and trimming logic executed successfully.</returns>
     public NullOperationResult Upsert(ManagedTaskRuntime managedTaskRuntime, ManagedTaskIterationRuntime? iterationRuntime = null, Exception? taskException = null, Exception? iterationException = null)
     {
         var result = new NullOperationResult();

@@ -8,11 +8,10 @@ public sealed class TimeStrategy_Interval : Time_IterationStrategy
     private readonly TimeSpan _interval;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TimeStrategy_Interval"/> class.
+    /// Initializes a new instance of the <see cref="TimeStrategy_Interval"/> class with a specific interval and configuration.
     /// </summary>
-    /// <param name="interval">The amount of time to add between each execution.</param>
-    /// <param name="customStartDate">The specific date to start the schedule. If null, defaults to the current date.</param>
-    /// <param name="customStartTime">The specific time of day the schedule should begin. If null, defaults to the current time.</param>
+    /// <param name="interval">The amount of time to wait between the start of each execution cycle.</param>
+    /// <param name="settings">The time-specific configuration used for start-time resolution and catch-up policies.</param>
     public TimeStrategy_Interval(TimeSpan interval, TimeStrategySettings settings) : base(settings)
     {
         _interval = interval;
@@ -23,6 +22,18 @@ public sealed class TimeStrategy_Interval : Time_IterationStrategy
     /// </summary>
     /// <param name="iteration">The current iteration count of the task.</param>
     /// <returns>A <see cref="DateTime"/> representing the last target time plus the specified interval.</returns>
+    /// 
+    /// <summary>
+    /// Calculates the next execution time by adding the defined interval to the <see cref="Time_IterationStrategy.LastTargetDTM"/>.
+    /// </summary>
+    /// <param name="iteration">The current iteration count of the task.</param>
+    /// <returns>
+    /// A <see cref="DateTime"/> representing the previous target time incremented by the configured <see cref="TimeSpan"/>.
+    /// </returns>
+    /// <remarks>
+    /// By adding the interval to the <c>Target</c> time rather than the <c>Current</c> time, this strategy 
+    /// maintains a consistent schedule even if the task work takes several minutes or hours to complete.
+    /// </remarks>
     protected override DateTime ComputeNextTargetDTM(int iteration)
     {
         return LastTargetDTM.Add(_interval);

@@ -4,18 +4,15 @@ using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 namespace AndrewM5.DevKit.TaskManagement.Contracts.Models;
 
 /// <summary>
-/// Provides a default, non-blocking implementation for task iteration control.
+/// Concrete Implementation of <see cref="IIterationStrategy"/>
 /// </summary>
-/// <remarks>
-/// This class serves as the base for all iteration strategies. By default, it does not 
-/// introduce any delay, allowing the task execution engine to proceed to the next 
-/// iteration immediately.
-/// </remarks>
 public class BaseIterationStrategy : IIterationStrategy
 {
     /// <inheritdoc/>
     /// <remarks>
-    /// Default implementation: Returns immediately to start the next iteration without delay.
+    /// The base implementation returns <see cref="Task.CompletedTask"/> immediately. 
+    /// It does not block or await any external triggers, effectively allowing the 
+    /// execution engine to start the next task iteration immediately.
     /// </remarks>
     public virtual Task WaitForReadyAsync(IManagedTaskHandle handle, CancellationToken cancellationToken, ICustomLogger? logger = null)
     {

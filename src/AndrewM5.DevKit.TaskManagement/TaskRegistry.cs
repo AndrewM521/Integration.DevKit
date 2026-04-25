@@ -4,9 +4,10 @@ using System.Collections.Concurrent;
 
 namespace AndrewM5.DevKit.TaskManagement;
 
+
+
 /// <summary>
-/// An internal implementation of <see cref="ITaskRegistry"/> that utilizes a 
-/// <see cref="ConcurrentDictionary{TKey, TValue}"/> to manage task metadata in a thread-safe manner.
+/// Concrete Implementation of <see cref="ITaskRegistry"/>
 /// </summary>
 internal class TaskRegistry : ITaskRegistry
 {
@@ -14,7 +15,7 @@ internal class TaskRegistry : ITaskRegistry
     public ConcurrentDictionary<string, IManagedTaskSnapshot> Snapshots { get; private set; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TaskRegistry"/> class.
+    /// Initializes a new instance of the <see cref="TaskRegistry"/> class with an empty snapshot collection.
     /// </summary>
     public TaskRegistry() {
         Snapshots = new ConcurrentDictionary<string, IManagedTaskSnapshot>();
@@ -41,9 +42,6 @@ internal class TaskRegistry : ITaskRegistry
     }
 
     /// <inheritdoc/>
-    /// <remarks>
-    /// Uses the dictionary indexer to ensure that any existing snapshot with the same key is overwritten.
-    /// </remarks>
     public NullOperationResult Upsert(IManagedTaskSnapshot snapshot)
     {
         var result = new NullOperationResult();
@@ -62,8 +60,7 @@ internal class TaskRegistry : ITaskRegistry
 
     /// <inheritdoc/>
     /// <remarks>
-    /// If the key does not exist, the operation is still returned as successful, 
-    /// as the desired end state (the key being absent) is achieved.
+    /// If the key does not exist, the operation is still returned as successful
     /// </remarks>
     public NullOperationResult Remove(string taskKey)
     {

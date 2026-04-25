@@ -6,6 +6,11 @@ namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 /// Defines a read-only snapshot of a managed task's state and execution metrics 
 /// at a specific point in time.
 /// </summary>
+/// <remarks>
+/// Snapshots are immutable representations of a task's progress. They are ideal for 
+/// UI binding, logging, or passing state between service boundaries without 
+/// exposing the underlying running task logic.
+/// </remarks>
 public interface IManagedTaskSnapshot
 {
     /// <summary>
@@ -31,7 +36,6 @@ public interface IManagedTaskSnapshot
 
     /// <summary>
     /// Gets the date and time when the task execution concluded. 
-    /// If the task is still running, this may represent <see cref="DateTime.MinValue"/> or a default value.
     /// </summary>
     public DateTime EndDTM { get; }
 
@@ -43,9 +47,22 @@ public interface IManagedTaskSnapshot
     /// <summary>
     /// Gets the exception that caused the task to fail, if the state is <see cref="ManagedTaskState.Faulted"/>.
     /// </summary>
-    public Exception Exception { get; }
+    /// <value>An <see cref="Exception"/> instance if the task faulted; otherwise, <see langword="null"/></value>
+    public Exception? Exception { get; }
 
+    /// <summary>
+    /// Gets a historical record of individual iterations completed by this task.
+    /// </summary>
+    /// <value>
+    /// A <see cref="SortedDictionary{Int32, IManagedTaskIterationSnapshot}"/> where the key 
+    /// is the iteration index and the value is the performance data for that specific cycle.
+    /// </value>
     public SortedDictionary<int, IManagedTaskIterationSnapshot> IterationHistory { get; }
 
+    /// <summary>
+    /// Generates a formatted string summarizing the current state and metrics of the task.
+    /// </summary>
+    /// <param name="showIterations">If <see langword="true"/>, includes detailed history from <see cref="IterationHistory"/> in the output.</param>
+    /// <returns>A human-readable string containing the snapshot details.</returns>
     public string GetSnapshotInfo(bool showIterations = false);
 }

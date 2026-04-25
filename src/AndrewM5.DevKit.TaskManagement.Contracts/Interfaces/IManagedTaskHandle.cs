@@ -3,9 +3,12 @@
 namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 
 /// <summary>
-/// Provides a handle for monitoring and interacting with a task 
-/// that has been queued or started by the task manager.
+/// Provides access to the context and telemetry of a specific task iteration during its execution.
 /// </summary>
+/// <remarks>
+/// Unlike a snapshot, a handle provides a "live" link to the iteration, allowing for 
+/// real-time monitoring of runtime and the ability to trigger cancellation.
+/// </remarks>
 public interface IManagedTaskHandle
 {
     /// <summary>
@@ -19,12 +22,13 @@ public interface IManagedTaskHandle
     public ManagedTaskState State { get; }
 
     /// <summary>
-    /// The <see cref="Task"/> object of the Managed Task
+    /// Gets the underlying <see cref="Task"/> object representing the execution of the Managed Task.
     /// </summary>
     /// <remarks>
-    /// Note: This is NOT the <see cref="Task"/> object for each iteration, this is 
-    /// the lifetime <see cref="Task"/> for the custom <see cref="Models.ManagedTask"/>
+    /// This represents the total lifetime of the <see cref="Models.ManagedTask"/>. 
+    /// To monitor individual execution cycles, refer to the iteration handles or snapshots instead.
     /// </remarks>
+    /// <value>The running <see cref="Task"/> if the task has started; otherwise, <see langword="null"/>.</value>
     public Task? RunningTask { get; }
 
     /// <summary>
@@ -39,12 +43,26 @@ public interface IManagedTaskHandle
 
     /// <summary>
     /// Gets the calculated duration of the task. 
-    /// If the task is still active, it returns the duration from <see cref="StartDTM"/> to current UTC time.
     /// </summary>
     public TimeSpan Runtime { get; }
 
     /// <summary>
-    /// Gets the current iteration count
+    /// Gets the current number of iterations completed or currently in progress.
     /// </summary>
+    /// <remarks>
+    /// This value is incremented at the start of each new execution cycle within the managed task.
+    /// </remarks>
     public int CurrentIterationCount { get; }
+
+    /// <summary>
+    /// Initiates a request to cancel the task and all associated workloads.
+    /// </summary>
+    /// <remarks>
+    /// Calling this method signals the root cancellation token for the managed task. 
+    /// This signal propagates down to any currently running iteration(s), triggering 
+    /// their respective <see cref="IManagedTaskIterationHandle.Token"/> to stop the 
+    /// underlying execution cycles and prevent subsequent iterations 
+    /// from starting.
+    /// </remarks>
+    public void Cancel();
 }
