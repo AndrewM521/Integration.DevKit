@@ -1,5 +1,5 @@
-﻿using AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
-using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
 using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,6 +15,7 @@ public class ApiManager : IApiManager
 {
     /// <inheritdoc/>
     public ApiManagerSettings RuntimeSettings { get; set; }
+    ApiManagerSettings IApiManager.RuntimeSettings { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
     private readonly ConcurrentDictionary<string, IApiClient> _clients = new ConcurrentDictionary<string, IApiClient>(StringComparer.OrdinalIgnoreCase);
     

@@ -4,16 +4,16 @@ using System.Text.Json;
 namespace AndrewM5.DevKit.Core;
 
 /// <summary>
-/// Provides a set of utility methods for handling JSON serialization, 
-/// deserialization, and deep-path value extraction.
+/// Utilities for JSON serialization, deserialization, and complex path-based data extraction from <see cref="Dictionary{TKey, TValue}"/> structures.
 /// </summary>
 public static class JsonUtils
 {
+    #region Core Serialization
     /// <summary>
-    /// Converts a JSON string into a native C# object (typically a Dictionary or List).
+    /// Converts a JSON string into native C# objects (typically <see cref="Dictionary{string, Object}"/> or <see cref="List{Object}"/>).
     /// </summary>
     /// <param name="json">The JSON string to parse.</param>
-    /// <returns>A <see cref="NullableOperationResult{T}"/> containing the parsed object or an exception on failure.</returns>
+    /// <returns>A <see cref="NullableOperationResult{T}"/> indicating the status of the operation.</returns>
     public static NullableOperationResult<object?> ConvertJsonToObject(string json)
     {
         var result = new NullableOperationResult<object>();
@@ -34,10 +34,10 @@ public static class JsonUtils
     }
 
     /// <summary>
-    /// Serializes a C# object into an indented JSON string.
+    /// Serializes a C# object into an indented, human-readable JSON string.
     /// </summary>
     /// <param name="obj">The object to serialize.</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing the JSON string.</returns>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the formatted JSON string.</returns>
     public static OperationResult<string> SerializeObjectToJson(object obj)
     {
         var result = new OperationResult<string>();
@@ -53,14 +53,21 @@ public static class JsonUtils
             return result.SetMethodFailure(ex);
         }
     }
+    #endregion
 
+    #region Filtering & Path Extraction
     /// <summary>
-    /// Parses a JSON string and optionally filters it to include only specific keys before casting to a type.
+    /// Parses a JSON string and extracts specific values. 
+    /// Supports both simple keys and deep-path dot-notation (e.g., "User.Profile.Name").
     /// </summary>
-    /// <typeparam name="T">The expected return type.</typeparam>
-    /// <param name="rawJson">The raw JSON string.</param>
-    /// <param name="keys">Optional list of dot-notation keys to extract. Defaults to null meaning no filter</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing the filtered and typed result.</returns>
+    /// <typeparam name="T">The expected return type of the resulting data.</typeparam>
+    /// <param name="rawJson">The raw JSON string to process.</param>
+    /// <param name="keys">Optional list of keys or paths to extract. If null, the entire object is returned.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the extracted data.</returns>
+    /// <remarks>
+    /// Note: Dot-notation is supported for traversing nested objects but is not required; 
+    /// regular top-level keys will work as expected.
+    /// </remarks>
     public static OperationResult<T> ParseAndFilterJson<T>(string rawJson, List<string>? keys = null)
     {
         var result = new OperationResult<T>();
@@ -87,11 +94,15 @@ public static class JsonUtils
     }
 
     /// <summary>
-    /// Filters an existing Dictionary based on a list of keys, returning a new Dictionary.
+    /// Filters an existing <see cref="Dictionary{string, Object}"/> by specific keys or paths.
     /// </summary>
     /// <param name="source">The source dictionary.</param>
-    /// <param name="keys">The list of keys (or paths) to extract. Defaults to null meaning no filter</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing the filtered Dictionary.</returns>
+    /// <param name="keys">The list of keys or paths to extract.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the subset of data.</returns>
+    /// <remarks>
+    /// This method internally serializes the dictionary to JSON and then uses 
+    /// <see cref="ParseAndFilterJson{T}"/> to extract the requested keys.
+    /// </remarks>
     public static OperationResult<Dictionary<string, object>> FilterDictionary(Dictionary<string, object> source, List<string>? keys = null)
     {
         var result = new OperationResult<Dictionary<string, object>>();
@@ -117,37 +128,54 @@ public static class JsonUtils
             return result.SetMethodFailure(ex);
         }
     }
+    #endregion
 
+    #region Dictionary Navigation
     /// <summary>
-    /// Retrieves a nested Dictionary from a source Dictionary
+    /// Retrieves a <see cref="List{T}"/> of dictionaries from a source dictionary.
     /// </summary>
-    /// <param name="source">The source dictionary.</param>
-    /// <param name="keyPath">The key (or path) to the dictionary (e.g., "User.Profile.Settings").</param>
-    /// <returns>A <see cref="NullableOperationResult{T}"/> containing the nested Dictionary.</returns>
-    public static NullableOperationResult<Dictionary<string, object>> GetDictionary(Dictionary<string, object> source, string keyPath)
+    /// <param name="dictionary">The source dictionary.</param>
+    /// <param name="keyPath">The key or dot-notation path to the list.</param>
+    /// <returns>A <see cref="NullableOperationResult{T}"/> containing the list of dictionaries.</returns>
+    /// <remarks>
+    /// This method is a specialized <b>wrapper</b> around <see cref="GetDictionaryValue{T}(Dictionary{string, object}, string, T)"/>. 
+    /// It simplifies the call by automatically handling the type casting and providing an empty 
+    /// <see cref="List{Dictionary{string, object}}"/> as the default value if the path is not found.
+    /// </remarks>
+    public static NullableOperationResult<Dictionary<string, object>> GetDictionary(Dictionary<string, object> dictionary, string keyPath)
     {
-        return GetDictionaryValue(source, keyPath, new Dictionary<string, object>());
+        return GetDictionaryValue(dictionary, keyPath, new Dictionary<string, object>());
     }
 
     /// <summary>
-    /// Retrieves a list of Dictionaries from a source Dictionary
+    /// Retrieves a list of dictionaries from the source using a key or dot-notation path.
     /// </summary>
-    /// <param name="dictionary">The source dictionary.</param>
-    /// <param name="keyPath">The key (or path) to the dictionary.</param>
-    /// <returns>A <see cref="NullableOperationResult{T}"/> containing the list of Dictionaries.</returns>
+    /// <param name="dictionary">The source dictionary to search.</param>
+    /// <param name="keyPath">The key or dot-notation path (e.g., "Data.Items") to the target list.</param>
+    /// <returns>A <see cref="NullableOperationResult{T}"/> containing the list of dictionaries.</returns>
+    /// <remarks>
+    /// This method acts as a <b>wrapper</b> around <see cref="GetDictionaryValue{T}(Dictionary{string, object}, string, T)"/>.
+    /// It provides a simplified by automatically handling the type casting and providing an empty <see cref="List{Dictionary{string, object}}"/>
+    /// as the default value if the path is not found.
+    /// </remarks>
     public static NullableOperationResult<List<Dictionary<string, object>>> GetListDictionary(Dictionary<string, object> dictionary, string keyPath)
     {
         return GetDictionaryValue(dictionary, keyPath, new List<Dictionary<string, object>>());
     }
 
     /// <summary>
-    /// Navigates a Dictionary by key or path and attempts to convert the value found to type <typeparamref name="T"/>.
+    /// Navigates a dictionary by a specific key or a dot-notation path and attempts 
+    /// to convert the found value to <typeparamref name="T"/>.
     /// </summary>
-    /// <typeparam name="T">The type to convert the found value to.</typeparam>
+    /// <typeparam name="T">The target type for conversion.</typeparam>
     /// <param name="dictionary">The source dictionary.</param>
-    /// <param name="keyPath">The key or path to the value.</param>
-    /// <param name="defaultVal">The default value to return if the path is not found or the dictionary is null.</param>
-    /// <returns>A <see cref="NullableOperationResult{T}"/> containing the converted value.</returns>
+    /// <param name="keyPath">The key or dot-notation path (e.g., "Id" or "Meta.Metadata.Id").</param>
+    /// <param name="defaultVal">The value to return if the key/path is not found.</param>
+    /// <returns>A <see cref="NullableOperationResult{T}"/> containing the result or the default value.</returns>
+    /// <remarks>
+    /// This method is designed to be flexible: it treats <paramref name="keyPath"/> as a standard 
+    /// dictionary key first, only traversing deeper if the path is in dot notation.
+    /// </remarks>
     public static NullableOperationResult<T> GetDictionaryValue<T>(Dictionary<string, object> dictionary, string keyPath, T defaultVal = default!)
     {
         var result = new NullableOperationResult<T>();
@@ -238,12 +266,13 @@ public static class JsonUtils
             return result.SetMethodFailure(ex)!;
         }
     }
+    #endregion
 
+    #region Helpers
     /// <summary>
-    /// Recursively converts a <see cref="JsonElement"/> into native .NET types (Dictionary, List, string, int, etc.).
+    /// Recursively converts a <see cref="JsonElement"/> into its native .NET equivalent.
     /// </summary>
     /// <param name="element">The JSON element to convert.</param>
-    /// <returns>The native .NET equivalent of the JSON element.</returns>
     public static object? ConvertJsonElementToNativeObject(JsonElement element)
     {
         switch (element.ValueKind)
@@ -285,9 +314,6 @@ public static class JsonUtils
         }
     }
 
-    /// <summary>
-    /// Logic for parsing and extracting specific paths from a JSON string.
-    /// </summary>
     private static NullableOperationResult<object?> InternalParseAndFilterJson(string rawJSON, List<string>? keys = null)
     {
         var result = new NullableOperationResult<object?>();
@@ -338,9 +364,6 @@ public static class JsonUtils
         }
     }
 
-    /// <summary>
-    /// Traverses a <see cref="JsonElement"/> tree to find a value at the specified dot-notation path.
-    /// </summary>
     private static JsonElement? GetValueByPath(JsonElement element, string path)
     {
         var keys = path.Split('.', StringSplitOptions.RemoveEmptyEntries);
@@ -360,4 +383,6 @@ public static class JsonUtils
 
         return element;
     }
+
+    #endregion
 }

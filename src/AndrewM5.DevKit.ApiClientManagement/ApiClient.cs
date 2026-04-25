@@ -1,11 +1,10 @@
-﻿using AndrewM5.DevKit.ApiClientManagement.Abstractions.Options;
-using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
 using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 
@@ -24,6 +23,8 @@ public class ApiClient : IApiClient
 
     /// <inheritdoc/>
     public IApiClientMetrics ClientMetrics => _metrics;
+
+    ApiClientSettings IApiClient.RuntimeSettings => throw new NotImplementedException();
 
     private readonly HttpClient _httpClient;
     private readonly SemaphoreSlim _rateLimiter;

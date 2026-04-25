@@ -3,10 +3,9 @@
 namespace AndrewM5.DevKit.Core.Results;
 
 /// <summary>
-/// A concrete implementation of <see cref="IOperationResult{T}"/> that enforces 
-/// a non-null result upon success.
+/// A concrete implementation of <see cref="IOperationResult{T}"/> that does not allow a null result.
 /// </summary>
-/// <typeparam name="T">The type of the result data.</typeparam>
+/// <typeparam name="T">The type of the result data to return within the operation.</typeparam>
 public class OperationResult<T> : IOperationResult<T>
 {
     private bool _methodSuccess = false;
@@ -19,10 +18,7 @@ public class OperationResult<T> : IOperationResult<T>
     /// <inheritdoc />
     public T Result => _result;
 
-    /// <summary>
-    /// Gets the exception associated with the failure. 
-    /// If no exception was provided, returns a default "No Error" exception.
-    /// </summary>
+    /// <inheritdoc />
     public Exception Exception { 
         get { 
             if (_exception == null)
@@ -37,12 +33,12 @@ public class OperationResult<T> : IOperationResult<T>
     /// <summary>
     /// Sets the state of the result to success and assigns the provided result data.
     /// </summary>
+    /// <param name="result">The successful output of the operation. Must not be null.</param>
+    /// <returns>The current <see cref="OperationResult{T}"/> instance for method chaining.</returns>
     /// <remarks>
     /// If <paramref name="result"/> is null, this method will automatically transition 
     /// to a failure state, as <see cref="OperationResult{T}"/> does not support null results.
     /// </remarks>
-    /// <param name="result">The successful output of the operation.</param>
-    /// <returns>The current <see cref="OperationResult{T}"/> instance for method chaining.</returns>
     public OperationResult<T> SetMethodSuccess(T result)
     {
         if (result == null)
@@ -72,10 +68,12 @@ public class OperationResult<T> : IOperationResult<T>
     }
 
     /// <summary>
-    /// Returns a string representation of the operation result, 
-    /// including success status and either the result data or the error message.
+    /// Returns a string representation of the operation result.
     /// </summary>
-    /// <returns>A formatted string describing the outcome.</returns>
+    /// <returns>
+    /// A formatted string indicating "Success" with the result data, 
+    /// or "Fail" with the exception message.
+    /// </returns>
     public override string ToString()
     {
         string retVal = string.Empty;

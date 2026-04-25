@@ -7,7 +7,7 @@ namespace AndrewM5.DevKit.Core.Results;
 /// Represents the result of an API operation, extending <see cref="NullableOperationResult{T}"/> 
 /// with HTTP-specific metadata such as status codes, request URLs, and raw response bodies.
 /// </summary>
-/// <typeparam name="T">The type of the data deserialized from the API response.</typeparam>
+/// <typeparam name="T">The type of the result data to return within the operation.</typeparam>
 public class ApiOperationResult<T> : NullableOperationResult<T>
 {
     private string _requestUrl = string.Empty;
@@ -22,7 +22,6 @@ public class ApiOperationResult<T> : NullableOperationResult<T>
 
     /// <summary>
     /// Gets the HTTP status code returned by the server. 
-    /// Defaults to <see cref="HttpStatusCode.InternalServerError"/>.
     /// </summary>
     public HttpStatusCode StatusCode => _statusCode;
 
@@ -39,7 +38,7 @@ public class ApiOperationResult<T> : NullableOperationResult<T>
     /// <summary>
     /// Sets the URL for the request.
     /// </summary>
-    /// <param name="url">The request URL string.</param>
+    /// <param name="url">The request URL string. If null or whitespace, an empty string is stored.</param>
     public void SetRequestUrl(string url)
     {
         if (string.IsNullOrWhiteSpace(url))
@@ -101,10 +100,12 @@ public class ApiOperationResult<T> : NullableOperationResult<T>
     }
 
     /// <summary>
-    /// Returns a detailed string representation of the API operation result, 
-    /// including the URL, Status Code, and a truncated version of the response body.
+    /// Returns a detailed string representation of the API operation result
     /// </summary>
-    /// <returns>A formatted string summarizing the API transaction.</returns>
+    /// <returns>
+    /// A formatted string including Success/Fail status, the Request URL, and the Status Code.
+    /// If a response body exists, it is truncated to the first 100 characters.
+    /// </returns>
     public override string ToString()
     {
         string retVal = string.Empty;

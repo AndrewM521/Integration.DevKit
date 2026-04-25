@@ -2,6 +2,15 @@
 
 namespace AndrewM5.DevKit.Core;
 
+/// <summary>
+/// Provides throttled management of the .NET Garbage Collector to prevent excessive 
+/// collection cycles while ensuring memory pressure remains within defined limits.
+/// </summary>
+/// <remarks>
+/// This manager uses a combination of time-based and heap-growth-based triggers to 
+/// determine if a forced collection is necessary. It is thread-safe and prevents 
+/// concurrent collection attempts.
+/// </remarks>
 public static class GCManager
 {
     private static readonly TimeSpan _maxElapsedFromLastCall = TimeSpan.FromMinutes(20);
@@ -9,9 +18,30 @@ public static class GCManager
 
     private static DateTime _lastCallToCollect = DateTime.MinValue;
     private static long _lastHeapBaseline;
-    
+
+    /// <summary>
+    /// The threshold for heap growth (20 MB) that triggers a collection.
+    /// </summary>
     private const long _maxHeapDelta = 20L * 1024 * 1024; // 20 MB
 
+    /// <summary>
+    /// Evaluates memory pressure and elapsed time to decide whether to force a full Garbage Collection.
+    /// </summary>
+    /// <param name="description">An optional message to include in the debug logs if a collection occurs.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <remarks>
+    /// <para>
+    /// A collection is only performed if:
+    /// <list type="number">
+    /// <item>The heap has grown by more than 20 MB since the last managed collection.</item>
+    /// <item>More than 20 minutes have passed since the last managed collection.</item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// If a collection is triggered, it performs a full collection across all generations 
+    /// and waits for pending finalizers. Results are output to <see cref="Debug.WriteLine(string)"/>.
+    /// </para>
+    /// </remarks>
     public static async Task CallGC_Collect(string? description = null)
     {
         if (Interlocked.Exchange(ref _gcRunning, 1) == 1)
@@ -99,9 +129,11 @@ public static class GCManager
 
             Debug.WriteLine(msg);
 
+            // Update baselines for the next cycle
             _lastHeapBaseline = GC.GetGCMemoryInfo().HeapSizeBytes;
             _lastCallToCollect = DateTime.UtcNow;
 
+            // Brief delay to allow system stabilization
             await Task.Delay(1000);
         }
         catch (Exception ex)
@@ -110,6 +142,7 @@ public static class GCManager
         }
         finally
         {
+            // Reset the interlock flag
             Volatile.Write(ref _gcRunning, 0);
         }
     }

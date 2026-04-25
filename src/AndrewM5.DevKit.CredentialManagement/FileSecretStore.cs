@@ -6,9 +6,13 @@ using System.Text.Json;
 namespace AndrewM5.DevKit.CredentialManagement;
 
 /// <summary>
-/// A file-based implementation of <see cref="ISecretStore"/> that stores encrypted JSON 
-/// dictionaries on the local file system.
+/// A file-based implementation of <see cref="SecretStoreBase"/> that persists encrypted JSON 
+/// dictionaries to the local file system.
 /// </summary>
+/// <remarks>
+/// This store organizes secrets into ".secret" files. Each file contains a dictionary of keys and values,
+/// all of which are encrypted as a single block using the underlying <see cref="SecretStoreBase.Encrypt(string)"/> logic.
+/// </remarks>
 public class FileSecretStore : SecretStoreBase
 {
     private readonly string _secretsDir;
@@ -16,9 +20,9 @@ public class FileSecretStore : SecretStoreBase
     /// <summary>
     /// Initializes a new instance of the <see cref="FileSecretStore"/> class.
     /// </summary>
-    /// <param name="provider">The data protection provider for encryption.</param>
-    /// <param name="applicationName">The name of the application, used as part of the store identity.</param>
-    /// <param name="secretsDir">The directory path where secret files will be persisted.</param>
+    /// <param name="provider">The <see cref="IDataProtectionProvider"/> used for cryptographic operations.</param>
+    /// <param name="applicationName">The name of the application, used to identify the store and isolate its data.</param>
+    /// <param name="secretsDir">The root directory path where the encrypted secret files will be saved.</param>
     public FileSecretStore(IDataProtectionProvider provider, string applicationName, string secretsDir) : base(provider, "FileSecretStore", applicationName)
     {
         _secretsDir = secretsDir;
@@ -26,8 +30,9 @@ public class FileSecretStore : SecretStoreBase
 
     /// <inheritdoc />
     /// <remarks>
-    /// This method performs an atomic-style write by updating a temporary file and moving it 
-    /// to the final destination to prevent data loss during power failure or crashes.
+    /// <b>Atomic Write Pattern:</b> To ensure data integrity, this method writes to a temporary file 
+    /// (<c>.tmp</c>) first. Once the write is successful, it replaces the original file. This prevents 
+    /// partial writes or file corruption in the event of an application crash or power loss.
     /// </remarks>
     public override NullOperationResult SetKey(string fileName, string key, string value)
     {
@@ -81,6 +86,7 @@ public class FileSecretStore : SecretStoreBase
     }
 
     /// <inheritdoc />
+    /// <exception cref="KeyNotFoundException">Thrown if the specified <paramref name="key"/> does not exist within the file.</exception>
     public override OperationResult<string> GetKey(string fileName, string key)
     {
         var result = new OperationResult<string>();
@@ -115,6 +121,10 @@ public class FileSecretStore : SecretStoreBase
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// This method is idempotent. If the file or the key does not exist, it returns a successful result.
+    /// Changes are committed using the atomic write pattern.
+    /// </remarks>
     public override NullOperationResult DeleteKey(string fileName, string key)
     {
         var result = new NullOperationResult();
@@ -210,10 +220,10 @@ public class FileSecretStore : SecretStoreBase
     }
 
     /// <summary>
-    /// Loads the encrypted file from disk, decrypts it, and deserializes the JSON content into a dictionary.
+    /// Loads the encrypted file from disk, decrypts it, and deserializes the JSON content.
     /// </summary>
     /// <param name="path">The full path to the secret file.</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing the decrypted key-value pairs.</returns>
+    /// <returns>A result containing a dictionary of secret keys and values. Returns an empty dictionary if the file does not exist.</returns>
     private OperationResult<Dictionary<string, object>> Load(string path)
     {
         var result = new OperationResult<Dictionary<string, object>>();
@@ -249,10 +259,10 @@ public class FileSecretStore : SecretStoreBase
     }
 
     /// <summary>
-    /// Generates a sanitized file path based on the provided <paramref name="keyName"/>.
+    /// Generates a sanitized file path by replacing invalid characters with underscores.
     /// </summary>
-    /// <param name="keyName">The name of the secret file/container.</param>
-    /// <returns>An <see cref="OperationResult{string}"/> containing the safe absolute path.</returns>
+    /// <param name="keyName">The requested name for the secret container.</param>
+    /// <returns>The sanitized absolute path to the file.</returns>
     private OperationResult<string> GetFilePath(string keyName)
     {
         var result = new OperationResult<string>();
@@ -275,11 +285,9 @@ public class FileSecretStore : SecretStoreBase
     }
 
     /// <summary>
-    /// Helper method to extract a string value from various object types, 
-    /// specifically handling <see cref="JsonElement"/> variations during deserialization.
+    /// Handles extraction of strings from various types, including <see cref="JsonElement"/> 
+    /// types returned by the JSON deserializer.
     /// </summary>
-    /// <param name="value">The object to convert.</param>
-    /// <returns>The string representation of the object.</returns>
     private static string GetString(object value)
     {
         return value switch

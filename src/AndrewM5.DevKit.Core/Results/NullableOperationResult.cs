@@ -3,10 +3,9 @@
 namespace AndrewM5.DevKit.Core.Results;
 
 /// <summary>
-/// A concrete implementation of <see cref="IOperationResult{T}"/> that allows 
-/// for a null result even when the operation is marked as successful.
+/// A concrete implementation of <see cref="IOperationResult{T}"/> that allows a null result.
 /// </summary>
-/// <typeparam name="T">The type of the result data.</typeparam>
+/// <typeparam name="T">The type of the result data to return within the operation.</typeparam>
 public class NullableOperationResult<T> : IOperationResult<T?>
 {
     private bool _methodSuccess = false;
@@ -19,10 +18,7 @@ public class NullableOperationResult<T> : IOperationResult<T?>
     /// <inheritdoc />
     public T? Result => _result;
 
-    /// <summary>
-    /// Gets the exception associated with the failure. 
-    /// If no exception was provided, returns a default "No Error" exception.
-    /// </summary>
+    /// <inheritdoc />
     public Exception Exception { 
         get { 
             if (_exception == null)
@@ -35,8 +31,7 @@ public class NullableOperationResult<T> : IOperationResult<T?>
     }
 
     /// <summary>
-    /// Sets the state of the result to success and assigns the provided result data, 
-    /// which may be null.
+    /// Sets the state of the result to success and assigns the provided result data.
     /// </summary>
     /// <param name="result">The output of the operation (can be null).</param>
     /// <returns>The current <see cref="NullableOperationResult{T}"/> instance for method chaining.</returns>
@@ -66,7 +61,10 @@ public class NullableOperationResult<T> : IOperationResult<T?>
     /// <summary>
     /// Returns a string representation of the operation result.
     /// </summary>
-    /// <returns>A formatted string describing the outcome.</returns>
+    /// <returns>
+    /// A formatted string describing the outcome, including the result data on success 
+    /// or the exception message on failure.
+    /// </returns>
     public override string ToString()
     {
         string retVal = string.Empty;

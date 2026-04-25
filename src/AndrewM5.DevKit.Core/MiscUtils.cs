@@ -3,7 +3,7 @@
 namespace AndrewM5.DevKit.Core;
 
 /// <summary>
-/// Provides miscellaneous utility methods for common data conversions and system operations.
+/// Utility methods for miscellaneous data conversions and system operations.
 /// </summary>
 public static class MiscUtils
 {
@@ -16,6 +16,26 @@ public static class MiscUtils
     /// </remarks>
     /// <param name="unixSeconds">The number of seconds that have elapsed since the Unix epoch (January 1, 1970).</param>
     /// <returns>A <see cref="DateTime"/> object representing the equivalent time in the Central Time Zone.</returns>
+    /// 
+    /// <summary>
+    /// Converts a Unix timestamp into a <see cref="DateTime"/> adjusted to the Central Time Zone (CST/CDT).
+    /// </summary>
+    /// <param name="unixSeconds">The number of seconds elapsed since the Unix epoch (January 1, 1970, UTC).</param>
+    /// <returns>A <see cref="DateTime"/> representing the equivalent local time in the Central Time Zone.</returns>
+    /// <remarks>
+    /// <para>
+    /// This method is <b>cross-platform aware</b>. It automatically resolves the correct Time Zone ID 
+    /// based on the host operating system:
+    /// <list type="bullet">
+    /// <item><description><b>Windows:</b> Uses "Central Standard Time".</description></item>
+    /// <item><description><b>Linux/macOS/Containers:</b> Uses the IANA ID "America/Chicago".</description></item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// This ensures reliable time conversion across local development (Windows) and 
+    /// cloud deployment (Linux-based Docker containers).
+    /// </para>
+    /// </remarks>
     public static DateTime ConvertUnixToCentralTime(long unixSeconds)
     {
         // 1. Convert Unix seconds to UTC DateTimeOffset

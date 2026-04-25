@@ -4,7 +4,7 @@
 /// Defines a standardized structure for the output of a method, 
 /// encapsulating the success status, any resulting data, and error information.
 /// </summary>
-/// <typeparam name="T">The type of the result data contained within the operation.</typeparam>
+/// <typeparam name="T">The type of the result data to return within the operation.</typeparam>
 public interface IOperationResult<T>
 {
     /// <summary>

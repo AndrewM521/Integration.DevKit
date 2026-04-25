@@ -2,7 +2,7 @@
 
 /// <summary>
 /// A specialized <see cref="NullableOperationResult{T}"/> for operations that do not 
-/// return a value. This effectively acts as a "Void" operation result.
+/// return a value. This effectively acts as a "Void" operation result wrapper.
 /// </summary>
 public class NullOperationResult : NullableOperationResult<object?>
 {
@@ -28,9 +28,11 @@ public class NullOperationResult : NullableOperationResult<object?>
     }
 
     /// <summary>
-    /// Returns a string representation of the null operation result.
+    /// Returns a string representation of the operation result.
     /// </summary>
-    /// <returns>A formatted string describing the outcome.</returns>
+    /// <returns>
+    /// A string indicating "Success" or "Fail" along with the exception message if the operation failed.
+    /// </returns>
     public override string ToString()
     {
         return MethodSuccess ? "Result: Success, null" : $"Result: Fail, {Exception.Message}";

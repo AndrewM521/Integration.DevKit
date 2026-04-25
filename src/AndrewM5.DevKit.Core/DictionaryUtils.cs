@@ -3,18 +3,24 @@
 namespace AndrewM5.DevKit.Core;
 
 /// <summary>
-/// Provides utility methods for navigating, filtering, and transforming complex 
+/// Utility methods for navigating, filtering, and transforming complex 
 /// Dictionary and List structures, specifically targeting <see cref="Dictionary{TKey, TValue}"/> 
-/// where the value is an <see cref="object"/>.
+/// and <see cref="List{T}"/> where the values are loosely typed as <see cref="object"/>.
 /// </summary>
 public static class DictionaryUtils
 {
     /// <summary>
-    /// Recursively traverses an object structure (dictionaries and lists) following a specified path of keys.
+    /// Recursively traverses an object structure following a specified path of keys.
     /// </summary>
-    /// <param name="curObject">The root object to begin traversal.</param>
-    /// <param name="path">An array of strings representing the keys to follow.</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing a list of objects that match the full path.</returns>
+    /// <remarks>
+    /// If a <see cref="List{object}"/> is encountered during traversal, the method branches and 
+    /// continues the search for the current path index across all items in that list.
+    /// </remarks>
+    /// <param name="curObject">The root object (usually a Dictionary or List) to begin traversal.</param>
+    /// <param name="path">An ordered array of strings representing the keys to follow.</param>
+    /// <returns>
+    /// An <see cref="OperationResult{T}"/> containing a list of all objects found at the end of the path.
+    /// </returns>
     public static OperationResult<List<object>> TraverseByPath(object curObject, string[] path)
     {
         var result = new OperationResult<List<object>>();
@@ -33,11 +39,14 @@ public static class DictionaryUtils
     }
 
     /// <summary>
-    /// Filters a list of dictionaries, returning a new list containing only the specified keys.
+    /// Creates a subset of dictionaries by filtering each entry in the source list to only include specified keys.
     /// </summary>
-    /// <param name="source">The source list of dictionaries.</param>
-    /// <param name="keys">The list of keys to keep in the subset.</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing the filtered list of dictionaries.</returns>
+    /// <param name="source">The source list of dictionaries to process.</param>
+    /// <param name="keys">The list of keys to retain in the resulting dictionaries.</param>
+    /// <returns>
+    /// An <see cref="OperationResult{T}"/> containing a new list of dictionaries, 
+    /// each containing only the intersection of the requested keys and the available data.
+    /// </returns>
     public static OperationResult<List<Dictionary<string, object>>> ExtractSubsetByKeys(List<Dictionary<string, object>> source, List<string> keys)
     {
         var result = new OperationResult<List<Dictionary<string, object>>>();
@@ -85,12 +94,12 @@ public static class DictionaryUtils
     }
 
     /// <summary>
-    /// Retrieves the first dictionary from a list of dictionaries.
+    /// Safely retrieves the first dictionary from a list.
     /// </summary>
     /// <param name="dictionaries">The list of dictionaries.</param>
     /// <returns>
-    /// An <see cref="OperationResult{T}"/> containing the first dictionary if found; 
-    /// otherwise, an empty dictionary.
+    /// An <see cref="OperationResult{T}"/> containing the dictionary at index 0. 
+    /// If the list is null, empty, or the first element is null, returns a new empty dictionary.
     /// </returns>
     public static OperationResult<Dictionary<string, object>> GetFirstDictionary(List<Dictionary<string, object>> dictionaries)
     {
@@ -105,12 +114,17 @@ public static class DictionaryUtils
     }
 
     /// <summary>
-    /// Extracts data from a dictionary identified by a key and flattens it into a single dictionary.
+    /// Locates a nested collection by key and flattens its contents into a single dictionary.
     /// </summary>
+    /// <remarks>
+    /// If the value at <paramref name="searchKey"/> is a <see cref="List{object}"/>, 
+    /// the method iterates through the list and merges all key-value pairs from any contained dictionaries into the result.
+    /// Duplicate keys will be overwritten by the last occurrence found.
+    /// </remarks>
     /// <param name="source">The source dictionary containing the nested data.</param>
     /// <param name="searchKey">The key used to locate the nested dictionary or list.</param>
     /// <returns>
-    /// An <see cref="OperationResult{T}"/> containing a flattened dictionary of all found key-value pairs.
+    /// An <see cref="OperationResult{T}"/> containing a flattened dictionary of all merged key-value pairs.
     /// </returns>
     public static OperationResult<Dictionary<string, object>> FlattenListByKey(Dictionary<string, object> source, string searchKey)
     {
@@ -152,15 +166,15 @@ public static class DictionaryUtils
     }
 
     /// <summary>
-    /// Retrieves a value from the dictionary and attempts to cast or convert it to the specified type.
+    /// Retrieves a value and attempts to cast or convert it to <typeparamref name="T"/>.
     /// </summary>
-    /// <typeparam name="T">The desired type of the return value.</typeparam>
+    /// <typeparam name="T">The target type for the value.</typeparam>
     /// <param name="dict">The dictionary to search.</param>
     /// <param name="key">The key to look up.</param>
-    /// <param name="defaultValue">The value to return if the key is not found or conversion fails.</param>
+    /// <param name="defaultValue">The value to return if the key is missing, the value is null, or conversion fails.</param>
     /// <returns>The value converted to <typeparamref name="T"/>, or <paramref name="defaultValue"/>.</returns>
     /// <remarks>
-    /// This method first attempts a direct cast. If that fails, it uses <see cref="Convert.ChangeType(object, Type)"/>.
+    /// This method first attempts a direct cast. If that fails, it attempts to use <see cref="Convert.ChangeType(object, Type)"/>.
     /// </remarks>
     public static T GetValueOrDefault<T>(Dictionary<string, object> dict, string key, T defaultValue)
     {
@@ -186,11 +200,11 @@ public static class DictionaryUtils
     }
 
     /// <summary>
-    /// Retrieves a nested dictionary from the source dictionary.
+    /// Safely retrieves a nested <see cref="Dictionary{string, object}"/>.
     /// </summary>
-    /// <param name="source">The source dictionary.</param>
-    /// <param name="key">The key for the nested dictionary.</param>
-    /// <returns>The nested dictionary if found and of the correct type; otherwise, null.</returns>
+    /// <param name="source">The parent dictionary.</param>
+    /// <param name="key">The key identifying the nested dictionary.</param>
+    /// <returns>The nested dictionary if it exists and matches the type; otherwise, <see langword="null"/>.</returns>
     public static Dictionary<string, object>? GetDictionary(Dictionary<string, object> source, string key)
     {
         if (!source.TryGetValue(key, out var value))
@@ -207,12 +221,12 @@ public static class DictionaryUtils
     }
 
     /// <summary>
-    /// Retrieves a list of dictionaries associated with the specified key.
+    /// Retrieves a list of dictionaries associated with a specific key.
     /// </summary>
     /// <param name="source">The source dictionary.</param>
-    /// <param name="key">The key for the nested list.</param>
+    /// <param name="key">The key identifying the list.</param>
     /// <returns>
-    /// A list of dictionaries if found; returns null if the key is missing, 
+    /// A list of dictionaries if found. Returns <see langword="null"/> if the key is missing, 
     /// the value is not a list, or the list contains no valid dictionaries.
     /// </returns>
     public static List<Dictionary<string, object>>? GetListDictionary(Dictionary<string, object> source, string key)
@@ -246,11 +260,11 @@ public static class DictionaryUtils
     }
 
     /// <summary>
-    /// Retrieves a generic list of objects associated with the specified key.
+    /// Safely retrieves a <see cref="List{object}"/> associated with the specified key.
     /// </summary>
     /// <param name="source">The source dictionary.</param>
-    /// <param name="key">The key for the nested list.</param>
-    /// <returns>The list of objects if found and of the correct type; otherwise, null.</returns>
+    /// <param name="key">The key identifying the list.</param>
+    /// <returns>The list if found and of the correct type; otherwise, <see langword="null"/>.</returns>
     public static List<object>? GetList(Dictionary<string, object> source, string key)
     {
         if (!source.TryGetValue(key, out var value))
@@ -267,12 +281,12 @@ public static class DictionaryUtils
     }
 
     /// <summary>
-    /// Internal recursive method to navigate through dictionaries and lists.
+    /// Core recursive engine for path traversal.
     /// </summary>
-    /// <param name="current">The current object in the recursion.</param>
-    /// <param name="path">The full path of keys being searched.</param>
-    /// <param name="depth">The current index within the path array.</param>
-    /// <param name="matches">A reference to the list where matching objects are collected.</param>
+    /// <param name="current">The current level's object context.</param>
+    /// <param name="path">The full array of keys to navigate.</param>
+    /// <param name="depth">The current index within the <paramref name="path"/>.</param>
+    /// <param name="matches">The collection being populated with found leaf-node objects.</param>
     private static void TraverseInternal(object current, string[] path, int depth, ref List<object> matches)
     {
         if (depth == path.Length)
@@ -291,6 +305,8 @@ public static class DictionaryUtils
         {
             foreach (var item in list)
             {
+                // Note: We do not increment depth here because we are searching 
+                // for the SAME key across all items in the current list.
                 TraverseInternal(item, path, depth, ref matches);
             }
         }

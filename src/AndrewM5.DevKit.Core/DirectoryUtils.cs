@@ -3,7 +3,8 @@
 namespace AndrewM5.DevKit.Core;
 
 /// <summary>
-/// Provides utility methods for directory-level file system operations.
+/// Utility methods for directory-level file system operations, 
+/// including creation, deletion, validation, and sanitization.
 /// </summary>
 public static class DirectoryUtils
 {
@@ -11,11 +12,17 @@ public static class DirectoryUtils
 
     #region Main Methods
     /// <summary>
-    /// Validates the path and creates the directory if it does not already exist.
+    /// Validates the provided path and creates the directory if it does not already exist.
     /// </summary>
     /// <param name="path">The full path of the directory to create.</param>
-    /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
-    /// <exception cref="ArgumentException">Thrown if the path is invalid or is not recognized as a directory.</exception>
+    /// <returns>
+    /// A <see cref="NullOperationResult"/> indicating success. 
+    /// If the path is invalid or the operation fails, the result will contain the relevant <see cref="Exception"/>.
+    /// </returns>
+    /// <remarks>
+    /// This method internally uses <see cref="IsStringValidDirectoryPath(string)"/> to ensure the path 
+    /// format is correct before attempting creation.
+    /// </remarks>
     public static NullOperationResult CreateDirectory(string path)
     {
         var result = new NullOperationResult();
@@ -50,8 +57,18 @@ public static class DirectoryUtils
     /// Deletes the specified directory if it exists.
     /// </summary>
     /// <param name="path">The path of the directory to delete.</param>
-    /// <param name="recursive"><c>true</c> to remove directories, subdirectories, and files in path; otherwise, <c>false</c>. Defaults to <c>false</c></param>
-    /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
+    /// <param name="recursive">
+    /// <see langword="true"/> to remove directories, subdirectories, and files within the path; 
+    /// <see langword="false"/> to delete only the directory if it is empty.
+    /// </param>
+    /// <returns>
+    /// A <see cref="NullOperationResult"/> indicating success. 
+    /// Returns failure if the path format is invalid or if an <see cref="IOException"/> occurs.
+    /// </returns>
+    /// <remarks>
+    /// This method internally uses <see cref="IsStringValidDirectoryPath(string)"/> to ensure the path 
+    /// format is correct before attempting creation.
+    /// </remarks>
     public static NullOperationResult DeleteDirectory(string path, bool recursive = false)
     {
         var result = new NullOperationResult();
@@ -83,11 +100,19 @@ public static class DirectoryUtils
     }
 
     /// <summary>
-    /// Returns the names of files (including their paths) that match the specified search pattern in the specified directory.
+    /// Retrieves the names of files (including full paths) that match a search pattern within a directory.
     /// </summary>
     /// <param name="path">The relative or absolute path to the directory to search.</param>
-    /// <param name="searchPattern">The search string to match against the names of files in path (e.g., "*.txt").</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing an array of file paths.</returns>
+    /// <param name="searchPattern">
+    /// The search string to match against file names (e.g., "*.txt", "data_??.json").
+    /// </param>
+    /// <returns>
+    /// An <see cref="OperationResult{T}"/> containing a string array of matching file paths.
+    /// </returns>
+    /// <remarks>
+    /// This method internally uses <see cref="IsStringValidDirectoryPath(string)"/> to ensure the path 
+    /// format is correct before attempting creation.
+    /// </remarks>
     public static OperationResult<string[]> GetFiles(string path, string searchPattern)
     {
         var result = new OperationResult<string[]>();
@@ -116,15 +141,16 @@ public static class DirectoryUtils
     }
 
     /// <summary>
-    /// Performs a heuristic check to determine if a string is a valid directory path format.
+    /// Performs a heuristic check to determine if a string is formatted as a valid directory path.
     /// </summary>
     /// <param name="path">The string path to validate.</param>
     /// <returns>
-    /// An <see cref="OperationResult{T}"/> where the result is <c>true</c> if the path is valid and 
-    /// appears to be a directory (ends in a separator or has no file extension).
+    /// An <see cref="OperationResult{T}"/> where the result is <see langword="true"/> if the string 
+    /// is a valid path format and lacks a file extension or ends with a directory separator.
     /// </returns>
     /// <remarks>
-    /// This method checks for null/whitespace and invalid path characters before determining directory status.
+    /// This method does not check if the directory actually exists on disk; it only validates the 
+    /// string structure and checks for invalid characters.
     /// </remarks>
     public static OperationResult<bool> IsStringValidDirectoryPath(string path)
     {
@@ -158,13 +184,16 @@ public static class DirectoryUtils
     }
 
     /// <summary>
-    /// Sanitizes a string to be used as a valid directory name by replacing invalid characters.
+    /// Sanitizes a string for use as a directory name by replacing invalid characters.
     /// </summary>
     /// <param name="directoryName">The potential directory name to sanitize.</param>
     /// <param name="replacement">The character used to replace invalid file system characters. Defaults to '_'.</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing the sanitized string.</returns>
+    /// <returns>
+    /// An <see cref="OperationResult{T}"/> containing the sanitized directory name.
+    /// </returns>
     /// <remarks>
-    /// Also trims trailing periods and spaces, which are invalid in many file systems.
+    /// This method removes trailing periods and spaces and replaces characters identified by 
+    /// <see cref="Path.GetInvalidFileNameChars"/>.
     /// </remarks>
     public static OperationResult<string> GetSafeDirectoryName(string directoryName, char replacement = '_')
     {
@@ -220,10 +249,10 @@ public static class DirectoryUtils
     }
 
     /// <summary>
-    /// Determines whether the given path refers to an existing directory.
+    /// Determines whether the specified path refers to an existing directory on disk.
     /// </summary>
     /// <param name="path">The path to test.</param>
-    /// <returns><c>true</c> if the directory exists; otherwise, <c>false</c>.</returns>
+    /// <returns><see langword="true"/> if the directory exists; otherwise, <see langword="false"/>.</returns>
     public static bool DoesDirectoryExist(string path)
     {
         return Directory.Exists(path);
