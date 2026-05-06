@@ -52,9 +52,9 @@ public class ApiClient : IApiClient
 
         RuntimeSettings = clientSettings;
 
-        if (RuntimeSettings.RequestCountBeforeRateLimiting < 0)
+        if (RuntimeSettings.MaxConcurrentRequests < 0)
         {
-            RuntimeSettings.RequestCountBeforeRateLimiting = int.MaxValue;
+            RuntimeSettings.MaxConcurrentRequests = int.MaxValue;
         }
 
         if (RuntimeSettings.HttpTimeout_Seconds != null)
@@ -86,7 +86,7 @@ public class ApiClient : IApiClient
             AddDefaultHeader(header.Key, header.Value);
         }
 
-        _rateLimiter = new SemaphoreSlim(RuntimeSettings.RequestCountBeforeRateLimiting);
+        _rateLimiter = new SemaphoreSlim(RuntimeSettings.MaxConcurrentRequests);
         _metrics = new ApiClientMetrics();
     }
 

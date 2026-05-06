@@ -103,6 +103,15 @@ public class ManagedTaskSettings
     public int MaxConcurrentParallelTasks { get; set; } = 2;
 
     /// <summary>
+    /// Gets the maximum amount of time the task is allowed to run before being automatically canceled.
+    /// </summary>
+    /// <value>
+    /// A <see cref="TimeSpan"/> representing the timeout limit. If <see langword="null"/>, 
+    /// the task will run indefinitely until completion or manual cancellation.
+    /// </value>
+    public TimeSpan? Timeout { get; set; } = null;
+
+    /// <summary>
     /// Creates a deep copy clone of the current settings.
     /// </summary>
     /// <returns>A new instance of <see cref="ManagedTaskSettings"/> with the same configuration values.</returns>

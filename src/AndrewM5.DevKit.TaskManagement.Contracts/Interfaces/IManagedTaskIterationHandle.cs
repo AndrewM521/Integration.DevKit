@@ -1,5 +1,4 @@
-﻿
-namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
+﻿namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 
 /// <summary>
 /// Provides access to the context and telemetry of a specific task iteration during its execution.
@@ -33,7 +32,7 @@ public interface IManagedTaskIterationHandle
     /// this specific iteration is cancelled via <see cref="Cancel"/> or if the 
     /// parent <see cref="TaskHandle"/> is cancelled.
     /// </remarks>
-    public CancellationToken Token { get; }
+    public CancellationToken CancelationToken { get; }
 
     /// <summary>
     /// Gets the calculated duration of this iteration. 
@@ -49,7 +48,7 @@ public interface IManagedTaskIterationHandle
     /// Requests cancellation for this specific iteration only.
     /// </summary>
     /// <remarks>
-    /// Calling this method triggers the <see cref="Token"/>, allowing the current iteration 
+    /// Calling this method triggers the <see cref="CancelationToken"/>, allowing the current iteration 
     /// to exit gracefully without necessarily terminating the entire parent task.
     /// </remarks>
     public void Cancel();

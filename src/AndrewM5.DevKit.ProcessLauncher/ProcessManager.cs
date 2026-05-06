@@ -3,6 +3,8 @@ using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 using AndrewM5.DevKit.ProcessLauncher.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Threading;
 
 namespace AndrewM5.DevKit.ProcessLauncher;
 
@@ -20,7 +22,7 @@ public class ProcessManager : IProcessManager
     /// Initializes a new instance of the <see cref="ProcessManager"/> class.
     /// </summary>
     /// <param name="loggerManager">An optional logger manager to provide contextual logging for the launcher.</param>
-    internal ProcessManager (ICustomLoggerManager? loggerManager = null)
+    public ProcessManager (ICustomLoggerManager? loggerManager = null)
     {
         _logger = loggerManager?.GetLogger("ProcessLauncherManager");
     }
@@ -49,7 +51,7 @@ public class ProcessManager : IProcessManager
 
             var process = new ManagedProcess(config, _logger);
             
-            var startProcess = process.Start();
+            var startProcess = StartProcess(process);
             if (!startProcess.MethodSuccess)
             {
                 throw startProcess.Exception;
@@ -147,6 +149,104 @@ public class ProcessManager : IProcessManager
         {
             _logger?.LogError($"Failed to check if proccess {processKey} is running.");
 
+            return result.SetMethodFailure(ex);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task WaitForExitAsync(Process process, CancellationToken token = default)
+    {
+        while (process != null && !process.HasExited)
+        {
+            await Task.Delay(250, token);
+        }
+    }
+
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Configures event handlers for asynchronous stream reading and begins process execution. 
+    /// Once started, a background monitoring loop is initiated.
+    /// </remarks>
+    private NullOperationResult StartProcess(ManagedProcess managedProcess)
+    {
+        var result = new NullOperationResult();
+
+        try
+        {
+            managedProcess.Process = new Process { StartInfo = managedProcess._startInfo, EnableRaisingEvents = true };
+
+            if (!managedProcess._startInfo.UseShellExecute)
+            {
+                managedProcess.Process.OutputDataReceived += (_, e) => {
+                    if (e.Data != null)
+                    {
+                        managedProcess._stdout.AppendLine(e.Data);
+                    }
+                };
+                managedProcess.Process.ErrorDataReceived += (_, e) => {
+                    if (e.Data != null)
+                    {
+                        managedProcess._stderr.AppendLine(e.Data);
+                    }
+                };
+            }
+
+            managedProcess.Process.Exited += (_, _) => {
+                _logger?.LogInformation($"Process '{managedProcess.ProcessKey}' exited with code {managedProcess.Process?.ExitCode}");
+
+                if (_processes.TryGetValue(managedProcess.ProcessKey, out var foundProcess))
+                {
+                    _processes.Remove(foundProcess.ProcessKey, out ManagedProcess? _);
+                }
+            };
+
+            managedProcess.Process.Start();
+
+            if (!managedProcess._startInfo.UseShellExecute)
+            {
+                managedProcess.Process.BeginOutputReadLine();
+                managedProcess.Process.BeginErrorReadLine();
+            }
+
+            managedProcess.StartTime = DateTime.UtcNow;
+
+            managedProcess.MonitorTask = Task.Run(async () =>
+            {
+                try
+                {
+                    if (managedProcess._timeout.HasValue)
+                    {
+                        using var timeoutCts = new CancellationTokenSource(managedProcess._timeout.Value);
+                        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(managedProcess._cts.Token, timeoutCts.Token);
+
+
+                        await WaitForExitAsync(managedProcess.Process, linkedCts.Token);
+                    }
+                    else
+                    {
+                        await WaitForExitAsync(managedProcess.Process, managedProcess._cts.Token);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    if (managedProcess._cts.IsCancellationRequested)
+                    {
+                        _logger?.LogInformation($"Process '{managedProcess.ProcessKey}' cancelled by user.");
+                    }
+                    else
+                    {
+                        _logger?.LogWarning($"Process '{managedProcess.ProcessKey}' timed out after {managedProcess._timeout}.");
+                    }
+
+                    managedProcess.Cancel(true);
+                }
+            });
+
+            return result.SetMethodSuccess();
+        }
+        catch (Exception ex)
+        {
             return result.SetMethodFailure(ex);
         }
     }

@@ -14,28 +14,29 @@ namespace AndrewM5.DevKit.ProcessLauncher;
 public class ManagedProcess : IManagedProcess
 {
     private readonly ICustomLogger? _logger;
-    private readonly ProcessStartInfo _startInfo;
-    private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-    private readonly StringBuilder _stdout = new StringBuilder();
-    private readonly StringBuilder _stderr = new StringBuilder();
-    private readonly TimeSpan? _timeout;
+
+    internal readonly ProcessStartInfo _startInfo;
+    internal readonly StringBuilder _stdout = new StringBuilder();
+    internal readonly StringBuilder _stderr = new StringBuilder();
+    internal readonly TimeSpan? _timeout;
+    internal readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
     /// <inheritdoc />
     public string ProcessKey { get; }
 
     /// <inheritdoc />
     /// <value>The underlying <see cref="Process"/>; remains available until the instance is disposed.</value>
-    public Process? Process { get; private set; }
+    public Process? Process { get; internal set; }
 
     /// <inheritdoc />
     /// <remarks>
     /// This task runs for the duration of the process lifetime. It completes when the process 
     /// exits naturally, times out, or is explicitly cancelled.
     /// </remarks>
-    public Task? MonitorTask { get; private set; }
+    public Task? MonitorTask { get; internal set; }
 
     /// <inheritdoc />
-    public DateTime StartTime { get; private set; }
+    public DateTime StartTime { get; internal set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ManagedProcess"/> class.
@@ -44,8 +45,9 @@ public class ManagedProcess : IManagedProcess
     /// <param name="logger">An optional logger for internal event tracking.</param>
     internal ManagedProcess(IManagedProcessConfig config, ICustomLogger? logger = null)
     {
-        ProcessKey = config.ProcessKey;
         _logger = logger;
+
+        ProcessKey = config.ProcessKey;
         _timeout = TimeSpan.FromSeconds(config.TimeoutSeconds);
 
         _startInfo = new ProcessStartInfo
@@ -71,92 +73,11 @@ public class ManagedProcess : IManagedProcess
 
     /// <inheritdoc />
     /// <remarks>
-    /// Configures event handlers for asynchronous stream reading and begins process execution. 
-    /// Once started, a background monitoring loop is initiated.
-    /// </remarks>
-    public NullOperationResult Start()
-    {
-        var result = new NullOperationResult();
-        
-        try
-        {
-            Process = new Process { StartInfo = _startInfo, EnableRaisingEvents = true };
-            
-            if (!_startInfo.UseShellExecute)
-            {
-                Process.OutputDataReceived += (_, e) => {
-                    if (e.Data != null)
-                    {
-                        _stdout.AppendLine(e.Data);
-                    }
-                };
-                Process.ErrorDataReceived += (_, e) => {
-                    if (e.Data != null)
-                    {
-                        _stderr.AppendLine(e.Data);
-                    }
-                };
-            }
-
-            Process.Exited += (_, _) => {
-                _logger?.LogInformation($"Process '{ProcessKey}' exited with code {Process?.ExitCode}");
-            };
-
-            Process.Start();
-
-            if (!_startInfo.UseShellExecute)
-            {
-                Process.BeginOutputReadLine();
-                Process.BeginErrorReadLine();
-            }
-
-            StartTime = DateTime.UtcNow;
-
-            MonitorTask = Task.Run(async () =>
-            {
-                try
-                {
-                    if (_timeout.HasValue)
-                    {
-                        using var timeoutCts = new CancellationTokenSource(_timeout.Value);
-                        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, timeoutCts.Token);
-                        await WaitForExitAsync(Process, linkedCts.Token);
-                    }
-                    else
-                    {
-                        await WaitForExitAsync(Process, _cts.Token);
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    if (_cts.IsCancellationRequested)
-                    {
-                        _logger?.LogInformation($"Process '{ProcessKey}' cancelled by user.");
-                    }
-                    else
-                    {
-                        _logger?.LogWarning($"Process '{ProcessKey}' timed out after {_timeout}.");
-                    }
-
-                    Cancel(true);
-                }
-            });
-
-            return result.SetMethodSuccess();
-        }
-        catch (Exception ex)
-        {
-            return result.SetMethodFailure(ex);
-        }
-    }
-
-    /// <inheritdoc />
-    /// <remarks>
     /// When <paramref name="forceKill"/> is <see langword="false"/>, the method attempts 
     /// <see cref="Process.CloseMainWindow"/> and waits up to 3 seconds. If the process does 
     /// not exit within that window, a recursive <see cref="Process.Kill(bool)"/> is performed.
     /// </remarks>
-    public NullOperationResult Cancel(bool forceKill)
+    public NullOperationResult Cancel(bool forceKill = false)
     {
         var result = new NullOperationResult();
 
@@ -180,11 +101,20 @@ public class ManagedProcess : IManagedProcess
                 TimeSpan waitTime = TimeSpan.FromSeconds(3);
                 Process.CloseMainWindow();
 
-                if (!Process.WaitForExit((int)waitTime.TotalMilliseconds))
+                try
                 {
-                    Process.Kill(true);
+                    if (!Process.WaitForExit((int)waitTime.TotalMilliseconds))
+                    {
+                        Process.Kill(true);
 
-                    _logger?.LogWarning($"Failure to close proccess after waiting {waitTime.Seconds} seconds. Process '{ProcessKey}' force killed.");
+                        _logger?.LogWarning($"Failure to close proccess after waiting {waitTime.Seconds} seconds. Process '{ProcessKey}' force killed.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError($"Failed to cancel, trying to foce cancel now..");
+
+                    Process.Kill(true);
                 }
             }
 
@@ -225,19 +155,6 @@ public class ManagedProcess : IManagedProcess
         catch (Exception ex)
         {
             return result.SetMethodFailure(ex);
-        }
-    }
-
-    /// <summary>
-    /// Periodically polls the process status until it exits or the cancellation token is triggered.
-    /// </summary>
-    /// <param name="process">The process to monitor.</param>
-    /// <param name="token">A token to signal abandonment of the wait operation.</param>
-    private static async Task WaitForExitAsync(Process process, CancellationToken token)
-    {
-        while (!process.HasExited)
-        {
-            await Task.Delay(250, token);
         }
     }
 

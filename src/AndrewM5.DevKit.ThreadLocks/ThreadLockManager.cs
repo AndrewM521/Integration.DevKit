@@ -31,19 +31,48 @@ public class ThreadLockManager : IThreadLockManager
                 timeoutMilliseconds = -1;
             }
 
-            var lockInfo = _syncLocks.GetOrAdd(key, _ => new ThreadLockInfo_Sync());
-
-            Interlocked.Increment(ref lockInfo.RefCount);
-
-            if (!Monitor.TryEnter(lockInfo.LockObject, timeoutMilliseconds))
+            while (true) // Loop to handle the race condition
             {
-                Interlocked.Decrement(ref lockInfo.RefCount);
-                throw new TimeoutException("Timeout while waiting for lock.");
+                var lockInfo = _syncLocks.GetOrAdd(key, _ => new ThreadLockInfo_Sync());
+
+                // Use a temporary increment to "signal" interest
+                Interlocked.Increment(ref lockInfo.RefCount);
+
+                // Verify this is still the active object in the map
+                if (_syncLocks.TryGetValue(key, out var current) && ReferenceEquals(current, lockInfo))
+                {
+                    // ACTUALLY attempt the Monitor lock
+                    if (!Monitor.TryEnter(lockInfo.LockObject, timeoutMilliseconds))
+                    {
+                        // We failed to get the lock (timeout)
+                        Interlocked.Decrement(ref lockInfo.RefCount);
+                        return result.SetMethodFailure(new TimeoutException($"Lock timeout for: {key}"));
+                    }
+
+                    lockInfo.UpdateLastAccessTime();
+                    return result.SetMethodSuccess();
+                }
+                else
+                {
+                    // If we get here, the lockInfo was removed/replaced by another thread 
+                    // while we were trying to increment it. Back out and loop.
+                    Interlocked.Decrement(ref lockInfo.RefCount);
+                }
             }
 
-            lockInfo.UpdateLastAccessTime();
+            //var lockInfo = _syncLocks.GetOrAdd(key, _ => new ThreadLockInfo_Sync());
 
-            return result.SetMethodSuccess();
+            //Interlocked.Increment(ref lockInfo.RefCount);
+
+            //if (!Monitor.TryEnter(lockInfo.LockObject, timeoutMilliseconds))
+            //{
+            //    Interlocked.Decrement(ref lockInfo.RefCount);
+            //    throw new TimeoutException("Timeout while waiting for lock.");
+            //}
+
+            //lockInfo.UpdateLastAccessTime();
+
+            //return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -77,7 +106,7 @@ public class ThreadLockManager : IThreadLockManager
 
                 if (Interlocked.Decrement(ref lockInfo.RefCount) <= 0)
                 {
-                    _syncLocks.TryRemove(key, out _);
+                    _syncLocks.TryRemove(new KeyValuePair<string, ThreadLockInfo_Sync>(key, lockInfo));
                 }
             }
 

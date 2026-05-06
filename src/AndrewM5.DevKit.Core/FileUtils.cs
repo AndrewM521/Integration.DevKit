@@ -1,4 +1,5 @@
 ﻿using AndrewM5.DevKit.Core.Results;
+using System.IO;
 using System.Text;
 
 namespace AndrewM5.DevKit.Core;
@@ -6,7 +7,7 @@ namespace AndrewM5.DevKit.Core;
 /// <summary>
 /// Utility methods for file operations, including reading, writing, moving, and validating file paths and extensions.
 /// </summary>
-public static class FileExtension
+public static class FileUtils
 {
     private static readonly string RequiredDirectoryPathErrorMsg = "Path must be a Directory.";
     private static readonly string RequiredFilePathErrorMsg = "Path must be a File Path.";
@@ -466,25 +467,154 @@ public static class FileExtension
     }
 
     /// <summary>
-    /// Synchronously writes a string to a file.
+    /// Synchronously writes a string to a file, ensuring the target directory exists.
     /// </summary>
+    /// <param name="path">The destination file path.</param>
+    /// <param name="content">The text content to write.</param>
+    /// <param name="append"><see langword="true"/> to append to the file; <see langword="false"/> to overwrite. Defaults to <see langword="false"/>.</param>
+    /// <param name="encoding">The text encoding to use. Defaults to <see cref="Encoding.UTF8"/> if null.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating the status of the operation.</returns>
     /// <remarks>
-    /// This is a wrapper around <see cref="WriteToFileAsync(string, string, bool, Encoding?)"/> that blocks until completion.
+    /// This method performs several automatic actions:
+    /// <list type="bullet">
+    /// <item>Creates the parent directory if it does not exist.</item>
+    /// <item>Ensures the content ends with <see cref="Environment.NewLine"/>.</item>
+    /// <item>Writes data in 100MB chunks to optimize memory usage for large strings.</item>
+    /// <item>Locks the file (<see cref="FileShare.None"/>) during the write operation.</item>
+    /// </list>
     /// </remarks>
     public static NullOperationResult WriteToFile(string path, string content, bool append = false, Encoding? encoding = null)
     {
-        return WriteToFileAsync(path, content, append, encoding).GetAwaiter().GetResult();
+        var result = new NullOperationResult();
+        Encoding encoder = Encoding.UTF8;
+
+        try
+        {
+            if (encoding != null)
+            {
+                encoder = encoding;
+            }
+
+            var validatePath = IsStringValidFilePath(path);
+            if (!validatePath.MethodSuccess)
+            {
+                throw validatePath.Exception;
+            }
+
+            if (!validatePath.Result)
+            {
+                throw new ArgumentException(RequiredFilePathErrorMsg);
+            }
+
+            if (string.IsNullOrEmpty(content))
+            {
+                return result.SetMethodSuccess();
+            }
+
+            var directory = Path.GetDirectoryName(path);
+            var createDir = DirectoryUtils.CreateDirectory(directory!);
+            if (!createDir.MethodSuccess)
+            {
+                throw createDir.Exception;
+            }
+
+            if (!content.EndsWith(Environment.NewLine))
+            {
+                content += Environment.NewLine;
+            }
+
+            var mode = FileMode.Create;
+
+            if (append)
+            {
+                mode = FileMode.Append;
+            }
+
+            long maxChunkSizeInBytes = 100 * 1024 * 1024;
+            int startIndex = 0;
+
+            //FileShare: No other process or thread can open the file while this stream is open.
+            //BufferSize: Buffer size for creating IO instructions. Windows default size is 4096, and windows combines multiple IO calls anyway, its not necessary to increase the size
+
+            // Note: useAsync: false is the key here
+            using (var stream = new FileStream(path, mode, FileAccess.Write, FileShare.None, 4096, useAsync: false))
+            {
+                using (var writer = new StreamWriter(stream, encoding ?? Encoding.UTF8))
+                {
+                    while (startIndex < content.Length)
+                    {
+                        int length = 0;
+                        long byteCount = 0;
+
+                        while (startIndex + length < content.Length)
+                        {
+                            char character = content[startIndex + length];
+                            long bytes = encoder.GetByteCount(new[] { character });
+
+                            if (byteCount + bytes > maxChunkSizeInBytes)
+                            {
+                                break;
+                            }
+
+                            byteCount += bytes;
+                            length++;
+                        }
+
+                        string chunk = content.Substring(startIndex, length);
+
+                        writer.Write(chunk);
+                        writer.Flush();
+
+                        startIndex += length;
+                    }
+                }
+            }
+            
+            return result.SetMethodSuccess();
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
     }
 
     /// <summary>
-    /// Synchronously writes an array of strings to a file.
+    /// Synchronously writes an array of strings to a file, joining them with line breaks.
     /// </summary>
+    /// <param name="path">The destination file path.</param>
+    /// <param name="content">The array of strings to write.</param>
+    /// <param name="append"><see langword="true"/> to append; <see langword="false"/> to overwrite.</param>
+    /// <param name="encoding">The text encoding to use. Defaults to <see cref="Encoding.UTF8"/> if null.</param>
+    /// <returns>A <see cref="NullOperationResult"/>.</returns>
     /// <remarks>
-    /// This is a wrapper around <see cref="WriteToFileAsync(string, string[], bool, Encoding?)"/> that blocks until completion.
+    /// This method internally calls <see cref="WriteToFile(string, string, bool, Encoding?)"/> after 
+    /// joining the array elements with <see cref="Environment.NewLine"/>. 
     /// </remarks>
     public static NullOperationResult WriteToFile(string path, string[] content, bool append = false, Encoding? encoding = null)
     {
-        return WriteToFileAsync(path, content, append, encoding).GetAwaiter().GetResult();
+        var result = new NullOperationResult();
+
+        try
+        {
+            if (content == null || content.Length == 0)
+            {
+                return result.SetMethodSuccess();
+            }
+
+            string combinedContent = string.Join(Environment.NewLine, content);
+
+            var writeToFile = WriteToFile(path, combinedContent, append, encoding);
+            if (!writeToFile.MethodSuccess)
+            {
+                throw writeToFile.Exception;
+            }
+
+            return result.SetMethodSuccess();
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
     }
 
     /// <summary>
@@ -494,7 +624,28 @@ public static class FileExtension
     /// <returns>An <see cref="OperationResult{T}"/> containing the array of lines.</returns>
     public static OperationResult<string[]> ReadFileLines(string path)
     {
-        return ReadFileLinesAsync(path).GetAwaiter().GetResult();
+        var result = new OperationResult<string[]>();
+        try
+        {
+            var validatePath = IsStringValidFilePath(path);
+            if (!validatePath.MethodSuccess)
+            {
+                throw validatePath.Exception;
+            }
+
+            if (!validatePath.Result)
+            {
+                throw new ArgumentException(RequiredFilePathErrorMsg);
+            }
+
+            string[] lines = File.ReadAllLines(path);
+
+            return result.SetMethodSuccess(lines);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
     }
 
     /// <summary>
@@ -504,7 +655,28 @@ public static class FileExtension
     /// <returns>An <see cref="OperationResult{T}"/> containing the file text.</returns>
     public static OperationResult<string> ReadFileText(string path)
     {
-        return ReadFileTextAsync(path).GetAwaiter().GetResult();
+        var result = new OperationResult<string>();
+        try
+        {
+            var validatePath = IsStringValidFilePath(path);
+            if (!validatePath.MethodSuccess)
+            {
+                throw validatePath.Exception;
+            }
+
+            if (!validatePath.Result)
+            {
+                throw new ArgumentException(RequiredFilePathErrorMsg);
+            }
+
+            string lines = File.ReadAllText(path);
+
+            return result.SetMethodSuccess(lines);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
     }
 
     /// <summary>

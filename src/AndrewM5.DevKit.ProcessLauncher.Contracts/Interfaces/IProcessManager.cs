@@ -1,4 +1,5 @@
 ﻿using AndrewM5.DevKit.Core.Results;
+using System.Diagnostics;
 
 namespace AndrewM5.DevKit.ProcessLauncher.Contracts.Interfaces;
 
@@ -61,4 +62,11 @@ public interface IProcessManager
     /// found and currently running; otherwise, <see langword="false"/>.
     /// </returns>
     public OperationResult<bool> IsRunning(string processKey);
+
+    /// <summary>
+    /// Periodically polls the process status until it exits or the cancellation token is triggered.
+    /// </summary>
+    /// <param name="process">The process to monitor.</param>
+    /// <param name="token">A token to signal abandonment of the wait operation.</param>
+    public Task WaitForExitAsync(Process process, CancellationToken token = default);
 }

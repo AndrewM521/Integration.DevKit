@@ -24,7 +24,7 @@ public sealed class ManagedTaskIterationHandle : IManagedTaskIterationHandle
     public DateTime EndDTM => _taskIterationRuntime.EndDTM;
 
     /// <inheritdoc/>
-    public CancellationToken Token => _taskIterationRuntime.Token;
+    public CancellationToken CancelationToken => _taskIterationRuntime.Token;
 
     /// <inheritdoc/>
     public TimeSpan Runtime => _taskIterationRuntime.Runtime;

@@ -30,7 +30,7 @@ public class ApiClientSettings
     /// Gets or sets the threshold for the number of requests allowed before rate limiting is engaged. 
     /// Default is <see cref="int.MaxValue"/>.
     /// </summary>
-    public int RequestCountBeforeRateLimiting { get; set; } = int.MaxValue;
+    public int MaxConcurrentRequests { get; set; } = int.MaxValue;
 
     /// <summary>
     /// Gets the collection of HTTP headers that are automatically included in every request.

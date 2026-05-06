@@ -15,7 +15,6 @@ public class ApiManager : IApiManager
 {
     /// <inheritdoc/>
     public ApiManagerSettings RuntimeSettings { get; set; }
-    ApiManagerSettings IApiManager.RuntimeSettings { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
     private readonly ConcurrentDictionary<string, IApiClient> _clients = new ConcurrentDictionary<string, IApiClient>(StringComparer.OrdinalIgnoreCase);
     
@@ -29,7 +28,7 @@ public class ApiManager : IApiManager
     /// <param name="httpFactory">The factory used to create underlying <see cref="HttpClient"/> instances.</param>
     /// <param name="loggerManager">Optional manager to resolve the "ApiManager" logger.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="settings"/> is null.</exception>
-    internal ApiManager(IOptions<ApiManagerSettings> settings, IHttpClientFactory httpFactory, ICustomLoggerManager? loggerManager = null)
+    public ApiManager(IOptions<ApiManagerSettings> settings, IHttpClientFactory httpFactory, ICustomLoggerManager? loggerManager = null)
     {
         if (settings == null)
         {

@@ -65,13 +65,13 @@ public class FileSecretStore : SecretStoreBase
 
             var encrypted = Encrypt(getJson.Result);
 
-            var writeToFile = FileExtension.WriteToFile(tmpFilePath, encrypted);
+            var writeToFile = FileUtils.WriteToFile(tmpFilePath, encrypted);
             if (!writeToFile.MethodSuccess)
             {
                 throw writeToFile.Exception;
             }
 
-            var moveFile = FileExtension.MoveFile(tmpFilePath, filePath, true);
+            var moveFile = FileUtils.MoveFile(tmpFilePath, filePath, true);
             if (!moveFile.MethodSuccess)
             {
                 throw moveFile.Exception;
@@ -139,7 +139,7 @@ public class FileSecretStore : SecretStoreBase
 
             var filePath = getPath.Result;
 
-            if (!FileExtension.DoesFileExist(filePath))
+            if (!FileUtils.DoesFileExist(filePath))
             {
                 // Nothing to delete — treat as success
                 return result.SetMethodSuccess();
@@ -169,13 +169,13 @@ public class FileSecretStore : SecretStoreBase
 
             var encrypted = Encrypt(getJson.Result);
 
-            var writeToFile = FileExtension.WriteToFile(tmpFilePath, encrypted);
+            var writeToFile = FileUtils.WriteToFile(tmpFilePath, encrypted);
             if (!writeToFile.MethodSuccess)
             {
                 throw writeToFile.Exception;
             }
 
-            var moveFile = FileExtension.MoveFile(tmpFilePath, filePath, true);
+            var moveFile = FileUtils.MoveFile(tmpFilePath, filePath, true);
             if (!moveFile.MethodSuccess)
             {
                 throw moveFile.Exception;
@@ -202,9 +202,9 @@ public class FileSecretStore : SecretStoreBase
                 throw getPath.Exception;
             }
 
-            if (FileExtension.DoesFileExist(getPath.Result))
+            if (FileUtils.DoesFileExist(getPath.Result))
             {
-                var deleteFile = FileExtension.DeleteFile(getPath.Result);
+                var deleteFile = FileUtils.DeleteFile(getPath.Result);
                 if (!deleteFile.MethodSuccess)
                 {
                     throw deleteFile.Exception;
@@ -230,12 +230,12 @@ public class FileSecretStore : SecretStoreBase
 
         try
         {
-            if (!FileExtension.DoesFileExist(path))
+            if (!FileUtils.DoesFileExist(path))
             {
                 return result.SetMethodSuccess(new Dictionary<string, object>());
             }
 
-            var getContent = FileExtension.ReadFileText(path);
+            var getContent = FileUtils.ReadFileText(path);
             if (!getContent.MethodSuccess)
             {
                 throw getContent.Exception;
@@ -243,9 +243,13 @@ public class FileSecretStore : SecretStoreBase
 
             var json = Decrypt(getContent.Result);
 
-            object? parsedObj = JsonUtils.ConvertJsonToObject(json);
+            var getParsedObj = JsonUtils.ConvertJsonToObject(json);
+            if (!getParsedObj.MethodSuccess)
+            {
+                throw getParsedObj.Exception;
+            }
 
-            if (parsedObj is not Dictionary<string, object> parsedDictionary)
+            if (getParsedObj.Result is not Dictionary<string, object> parsedDictionary)
             {
                 throw new Exception("Parsed object is not a Dictionary<string, object>");
             }

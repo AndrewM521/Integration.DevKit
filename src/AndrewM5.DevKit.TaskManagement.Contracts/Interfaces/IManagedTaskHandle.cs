@@ -60,7 +60,7 @@ public interface IManagedTaskHandle
     /// <remarks>
     /// Calling this method signals the root cancellation token for the managed task. 
     /// This signal propagates down to any currently running iteration(s), triggering 
-    /// their respective <see cref="IManagedTaskIterationHandle.Token"/> to stop the 
+    /// their respective <see cref="IManagedTaskIterationHandle.CancelationToken"/> to stop the 
     /// underlying execution cycles and prevent subsequent iterations 
     /// from starting.
     /// </remarks>

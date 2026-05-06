@@ -1,12 +1,11 @@
 ﻿using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Contracts.Models;
-using System.Diagnostics;
 
 namespace TestApp;
 
-internal class SimpleBrokenTask : ManagedTask
+internal class SimpleLongTask_NoTokenChecking : ManagedTask
 {
-    public SimpleBrokenTask() : base("SimpleBrokenTask", Guid.NewGuid()) {}
+    public SimpleLongTask_NoTokenChecking() : base("SimpleLongTask_NoTokenChecking", Guid.NewGuid()) {}
 
     public override async Task DoTaskWork(IManagedTaskIterationHandle iterationHandle)
     {
@@ -14,16 +13,14 @@ internal class SimpleBrokenTask : ManagedTask
         Console.WriteLine($"Start Time: {iterationHandle.TaskHandle.StartDTM}");
         Console.WriteLine($"Start Iteration Time: {iterationHandle.StartDTM}");
 
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 10; i++)
         {
             Console.WriteLine(i);
 
-            await Task.Delay(1000, iterationHandle.CancelationToken);
+            await Task.Delay(1000);
         }
 
         Console.WriteLine($"End Time: {DateTime.Now}. Elapsed Iteration Time: {iterationHandle.Runtime}");
         Console.WriteLine($"End Time: {DateTime.Now}. Elapsed Time: {iterationHandle.TaskHandle.Runtime}");
-
-        throw new NotImplementedException();
     }
 }

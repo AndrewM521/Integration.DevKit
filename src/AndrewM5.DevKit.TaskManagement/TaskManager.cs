@@ -59,7 +59,7 @@ public class TaskManager : ITaskManager
         _appLifetime = appLifetime;
         _appLifetime.ApplicationStopping.Register(() =>
         {
-            var cancelResult = CancelAllTasks(true);
+            var cancelResult = CancelAllTasks();
             if (cancelResult.MethodSuccess)
             {
                 _logger?.LogInformation($"[{nameof(TaskManager)}] All tasks called to cancel during host shutdown.");
@@ -159,7 +159,7 @@ public class TaskManager : ITaskManager
 
     /// <inheritdoc/>
     /// 
-    public NullOperationResult CancelTask(string taskKey, bool forceCancel = false)
+    public NullOperationResult CancelTask(string taskKey)
     {
         var result = new NullOperationResult();
 
@@ -190,14 +190,14 @@ public class TaskManager : ITaskManager
     }
 
     /// <inheritdoc/>
-    public NullOperationResult CancelAllTasks(bool forceCancel = false)
+    public NullOperationResult CancelAllTasks()
     {
         var result = new NullOperationResult();
         var errors = new List<Exception>();
 
         foreach (var taskKey in _tasks.Keys.ToList())
         {
-            var cancelTask = CancelTask(taskKey, forceCancel);
+            var cancelTask = CancelTask(taskKey);
             if (!cancelTask.MethodSuccess)
             {
                 errors.Add(cancelTask.Exception);
@@ -368,8 +368,8 @@ public class TaskManager : ITaskManager
             await Task.Delay(50);
 
             // If we exited the loop because of cancellation and no other state has been set, ensure we mark it as Canceled.
-            if (managedTaskRuntime._lifecycleCTS.Token.IsCancellationRequested &&
-                managedTaskRuntime.State == ManagedTaskState.Running)
+            if (managedTaskRuntime._lifecycleCTS.Token.IsCancellationRequested && 
+                (managedTaskRuntime.State == ManagedTaskState.Running || managedTaskRuntime.State == ManagedTaskState.CancelRequested))
             {
                 managedTaskRuntime.State = ManagedTaskState.Canceled;
             }
@@ -398,9 +398,16 @@ public class TaskManager : ITaskManager
             Exception? finalEx = null;
             if (exceptions.Count > 0)
             {
+                //This needs to set the state to Faulted because the main Task may not have faulted but a iteration may have.
                 managedTaskRuntime.State = ManagedTaskState.Faulted;
 
                 finalEx = new AggregateException(exceptions);
+            }
+
+            if (managedTaskRuntime.State != ManagedTaskState.Canceled &&
+                managedTaskRuntime.State != ManagedTaskState.Faulted)
+            {
+                managedTaskRuntime.State = ManagedTaskState.Completed;
             }
 
             // Final Registry Update
@@ -449,14 +456,35 @@ public class TaskManager : ITaskManager
                 // 1. Start the actual work
                 workerTask = managedTaskRuntime.UserTask.DoTaskWork(iterationRuntime.IterationHandle);
 
-                // 2. Setup the Timeout Watchdog if a timeout is defined
+                // 2. Setup the Cancel Watchdog
+                Task cancelWatchdog = Task.Run(async() => {
+                    //Watch for the cancelation token call
+                    await Task.Delay(Timeout.Infinite, linkedToken);
+
+                    //Wait a small amount of time to prevent a false positive "still running" warning
+                    await Task.Delay(1000);
+                });
+
+                // 3. Setup the Timeout Watchdog if a timeout is defined
                 Task? timeoutWatchdog = null;
-                if (managedTaskRuntime.UserTask.Timeout.HasValue)
+                if (runtimeSettings.Timeout.HasValue)
                 {
-                    timeoutWatchdog = Task.Delay(managedTaskRuntime.UserTask.Timeout.Value, linkedToken);
+                    timeoutWatchdog = Task.Run(async() => {
+                        try
+                        {
+                            await Task.Delay(runtimeSettings.Timeout.Value, linkedToken);
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            //If the linked token is canceled it will wait for the cancelWatchdog to finish.
+                            //This is so that if the task has a timeout set and the task is canceled, it will 
+                            //will not throw a "timeout triggered" message before the actual cancel finishes
+                            await cancelWatchdog;
+                        }
+                    }); 
                 }
 
-                List<Task> tasksToWatch = new List<Task> { workerTask! };
+                List<Task> tasksToWatch = new List<Task> { workerTask!, cancelWatchdog };
                 if (timeoutWatchdog != null)
                 {
                     tasksToWatch.Add(timeoutWatchdog);
@@ -470,6 +498,17 @@ public class TaskManager : ITaskManager
                     _logger?.LogDebug($"Task '{taskKey}' iteration {iterationRuntime.IterationNumber} timeout triggered.");
 
                     iterationRuntime.Cancel();
+                }
+
+                if (completedTask != workerTask && managedTaskRuntime._lifecycleCTS.IsCancellationRequested)
+                {
+                    // Warn if the main task is still running unexpectedly
+                    // NOTE: In .NET, there is no built-in way to forcibly terminate a Task from outside. 
+                    // Even though we stopped awaiting it (via force cancel or watchdog), the task may still be executing.
+                    // This can happen if the task ignored cancellation requests or is stuck in a blocking operation.
+                    // Logging this is crucial because it may continue consuming resources or causing unintended side effects.
+
+                    _logger?.LogWarning($"Task '{taskKey}' iteration {iterationRuntime.IterationNumber} running longer than 1 second after being canceled. Are you checking the iteration cancelation token?");
                 }
             }
             catch (TaskCanceledException)
@@ -558,14 +597,6 @@ public class TaskManager : ITaskManager
                 else
                 {
                     iterationRuntime.State = ManagedTaskState.Canceled;
-
-                    // Warn if the main task is still running unexpectedly
-                    // NOTE: In .NET, there is no built-in way to forcibly terminate a Task from outside. 
-                    // Even though we stopped awaiting it (via force cancel or watchdog), the task may still be executing.
-                    // This can happen if the task ignored cancellation requests or is stuck in a blocking operation.
-                    // Logging this is crucial because it may continue consuming resources or causing unintended side effects.
-
-                    _logger?.LogWarning($"Task '{taskKey}' iteration {iterationRuntime.IterationNumber} still running after being canceled. Are you checking the iteration token?");
                 }
             }
 

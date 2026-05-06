@@ -18,7 +18,7 @@ public static class ApiManagementServiceCollection
     /// <returns>The original <see cref="IServiceCollection"/> for chaining calls.</returns>
     public static IServiceCollection AddApiManagement(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<ApiManagerSettings>(configuration.GetSection("AndrewM5.DevKit:ApiManager"));
+        services.Configure<ApiManagerSettings>(configuration.GetSection("AndrewM5.DevKit:ApiClientManagement"));
 
         services.AddSingleton<IApiManager, ApiManager>();
 

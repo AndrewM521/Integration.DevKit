@@ -22,7 +22,7 @@ public class ThreadSafeFileIO
     /// <param name="threadLockManager">The manager used to handle synchronization locks.</param>
     /// <param name="loggerManager">The manager used to resolve the internal logger.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="threadLockManager"/> or <paramref name="loggerManager"/> is null.</exception>
-    internal ThreadSafeFileIO(IThreadLockManager threadLockManager, ICustomLoggerManager loggerManager)
+    public ThreadSafeFileIO(IThreadLockManager threadLockManager, ICustomLoggerManager loggerManager)
     {
         if (threadLockManager == null)
         {
@@ -55,7 +55,7 @@ public class ThreadSafeFileIO
                 throw lockResult.Exception;
             }
 
-            return await FileExtension.WriteToFileAsync(path, content, append, encoding);
+            return await FileUtils.WriteToFileAsync(path, content, append, encoding);
         }
         catch (Exception ex)
         {
@@ -94,7 +94,7 @@ public class ThreadSafeFileIO
                 throw lockResult.Exception;
             }
 
-            return await FileExtension.WriteToFileAsync(path, content, append, encoding);
+            return await FileUtils.WriteToFileAsync(path, content, append, encoding);
         }
         catch (Exception ex)
         {
@@ -130,7 +130,7 @@ public class ThreadSafeFileIO
                 throw lockResult.Exception;
             }
 
-            var readResult = await FileExtension.ReadFileLinesAsync(path);
+            var readResult = await FileUtils.ReadFileLinesAsync(path);
             if (!readResult.MethodSuccess)
             {
                 throw readResult.Exception;
@@ -172,7 +172,7 @@ public class ThreadSafeFileIO
                 throw lockResult.Exception;
             }
 
-            var readResult = await FileExtension.ReadFileTextAsync(path);
+            var readResult = await FileUtils.ReadFileTextAsync(path);
             if (!readResult.MethodSuccess)
             {
                 throw readResult.Exception;
@@ -219,7 +219,7 @@ public class ThreadSafeFileIO
                 throw lockResult.Exception;
             }
 
-            return FileExtension.WriteToFile(path, content, append, encoding);
+            return FileUtils.WriteToFile(path, content, append, encoding);
         }
         catch (Exception ex)
         {
@@ -258,7 +258,7 @@ public class ThreadSafeFileIO
                 throw lockResult.Exception;
             }
 
-            return FileExtension.WriteToFile(path, content, append, encoding);
+            return FileUtils.WriteToFile(path, content, append, encoding);
         }
         catch (Exception ex)
         {
@@ -294,7 +294,7 @@ public class ThreadSafeFileIO
                 throw lockResult.Exception;
             }
 
-            var readResult = FileExtension.ReadFileLines(path);
+            var readResult = FileUtils.ReadFileLines(path);
             if (!readResult.MethodSuccess)
             {
                 throw readResult.Exception;
@@ -336,7 +336,7 @@ public class ThreadSafeFileIO
                 throw lockResult.Exception;
             }
 
-            var readResult = FileExtension.ReadFileText(path);
+            var readResult = FileUtils.ReadFileText(path);
             if (!readResult.MethodSuccess)
             {
                 throw readResult.Exception;

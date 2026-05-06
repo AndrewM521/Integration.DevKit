@@ -9,14 +9,15 @@ internal class SimpleLongTask : ManagedTask
 
     public override async Task DoTaskWork(IManagedTaskIterationHandle iterationHandle)
     {
+        Console.WriteLine($"\n-----Iteration {iterationHandle.IterationNumber}-----");
         Console.WriteLine($"Start Time: {iterationHandle.TaskHandle.StartDTM}");
         Console.WriteLine($"Start Iteration Time: {iterationHandle.StartDTM}");
 
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 10; i++)
         {
             Console.WriteLine(i);
 
-            await Task.Delay(500, iterationHandle.Token);
+            await Task.Delay(1000, iterationHandle.CancelationToken);
         }
 
         Console.WriteLine($"End Time: {DateTime.Now}. Elapsed Iteration Time: {iterationHandle.Runtime}");

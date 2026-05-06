@@ -40,15 +40,6 @@ public interface IManagedProcess : IAsyncDisposable
     public DateTime StartTime { get; }
 
     /// <summary>
-    /// Attempts to start the process using the configured startup information.
-    /// </summary>
-    /// <returns>
-    /// A <see cref="NullOperationResult"/> indicating whether the process started successfully. 
-    /// </returns>
-    /// <exception cref="InvalidOperationException">Thrown if the process is already running.</exception>
-    public NullOperationResult Start();
-
-    /// <summary>
     /// Cancels the running process.
     /// </summary>
     /// <param name="forceKill">
@@ -58,7 +49,7 @@ public interface IManagedProcess : IAsyncDisposable
     /// <returns>
     /// A <see cref="NullOperationResult"/> indicating the outcome of the cancellation request.
     /// </returns>
-    public NullOperationResult Cancel(bool forceKill);
+    public NullOperationResult Cancel(bool forceKill = false);
 
     /// <summary>
     /// Captures and returns the standard output (STDOUT) produced by the process.

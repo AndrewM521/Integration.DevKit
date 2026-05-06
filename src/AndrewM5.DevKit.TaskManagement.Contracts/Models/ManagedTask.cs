@@ -1,5 +1,4 @@
-﻿
-using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
+﻿using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 
 namespace AndrewM5.DevKit.TaskManagement.Contracts.Models;
 
@@ -31,15 +30,6 @@ public abstract class ManagedTask : IDisposable
     /// A string formatted as "{TaskName}_{TaskId}".
     /// </value>
     public string TaskKey { get; }
-
-    /// <summary>
-    /// Gets the maximum amount of time the task is allowed to run before being automatically canceled.
-    /// </summary>
-    /// <value>
-    /// A <see cref="TimeSpan"/> representing the timeout limit. If <see langword="null"/>, 
-    /// the task will run indefinitely until completion or manual cancellation.
-    /// </value>
-    public TimeSpan? Timeout { get; protected set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ManagedTask"/> class.

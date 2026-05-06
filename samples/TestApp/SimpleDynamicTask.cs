@@ -8,7 +8,8 @@ internal class SimpleDynamicTask : ManagedTask
     public SimpleDynamicTask() : base("SimpleDynamicTask", Guid.NewGuid()) {}
 
     public override async Task DoTaskWork(IManagedTaskIterationHandle iterationHandle)
-    { 
+    {
+        Console.WriteLine($"\n-----Iteration {iterationHandle.IterationNumber}-----");
         Console.WriteLine($"Start Time: {iterationHandle.TaskHandle.StartDTM}");
         Console.WriteLine($"Start Iteration Time: {iterationHandle.StartDTM}");
 

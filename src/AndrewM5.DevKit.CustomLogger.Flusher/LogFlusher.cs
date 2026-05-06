@@ -111,7 +111,7 @@ public class LogFlusher : BackgroundService, ILogFlusher
 
             if (allowCreateFile && !string.IsNullOrWhiteSpace(RuntimeSettings.LogFilePath))
             {
-                var writeToFile = FileExtension.WriteToFile(RuntimeSettings.LogFilePath, output, true);
+                var writeToFile = FileUtils.WriteToFile(RuntimeSettings.LogFilePath, output, true);
                 if (!writeToFile.MethodSuccess)
                 {
                     throw writeToFile.Exception;

@@ -33,16 +33,14 @@ public interface ITaskManager
     /// Requests the cancellation of a specific task.
     /// </summary>
     /// <param name="taskKey">The unique identifier of the task to cancel.</param>
-    /// <param name="forceCancel">If <see langword="true"/>, attempts an immediate termination; otherwise, requests a graceful shutdown.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating success or failure of the cancellation request.</returns>
-    public NullOperationResult CancelTask(string taskKey, bool forceCancel = false);
+    public NullOperationResult CancelTask(string taskKey);
 
     /// <summary>
     /// Requests the cancellation of all currently tracked tasks.
     /// </summary>
-    /// <param name="forceCancel">If <see langword="true"/>, attempts an immediate termination of all tasks; otherwise, requests a graceful shutdown.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the overall outcome of the bulk cancellation.</returns>
-    public NullOperationResult CancelAllTasks(bool forceCancel = false);
+    public NullOperationResult CancelAllTasks();
 
     /// <summary>
     /// Checks whether a task associated with the specified key is currently in a running state.
