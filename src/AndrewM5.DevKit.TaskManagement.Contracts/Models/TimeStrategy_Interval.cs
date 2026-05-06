@@ -1,4 +1,10 @@
-﻿namespace AndrewM5.DevKit.TaskManagement.Contracts.Models;
+﻿/*
+ * Copyright (c) 2026 AndrewM5
+ * Licensed under the MIT License.
+ * See LICENSE file in the project root for full license information.
+ */
+
+namespace AndrewM5.DevKit.TaskManagement.Contracts.Models;
 
 /// <summary>
 /// Represents a flexible scheduling strategy that calculates the next execution time based on a fixed <see cref="TimeSpan"/> interval.

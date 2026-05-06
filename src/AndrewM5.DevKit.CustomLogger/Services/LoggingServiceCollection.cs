@@ -1,4 +1,10 @@
-﻿using AndrewM5.DevKit.CustomLogger;
+﻿/*
+ * Copyright (c) 2026 AndrewM5
+ * Licensed under the MIT License.
+ * See LICENSE file in the project root for full license information.
+ */
+
+using AndrewM5.DevKit.CustomLogger;
 using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 using AndrewM5.DevKit.CustomLogger.Contracts.Options;
 using Microsoft.Extensions.Configuration;

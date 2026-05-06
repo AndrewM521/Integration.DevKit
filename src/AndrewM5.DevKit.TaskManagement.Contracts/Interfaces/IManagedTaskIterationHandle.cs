@@ -1,4 +1,10 @@
-﻿namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
+﻿/*
+ * Copyright (c) 2026 AndrewM5
+ * Licensed under the MIT License.
+ * See LICENSE file in the project root for full license information.
+ */
+
+namespace AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 
 /// <summary>
 /// Provides access to the context and telemetry of a specific task iteration during its execution.

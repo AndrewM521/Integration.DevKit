@@ -1,4 +1,10 @@
-﻿namespace AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
+﻿/*
+ * Copyright (c) 2026 AndrewM5
+ * Licensed under the MIT License.
+ * See LICENSE file in the project root for full license information.
+ */
+
+namespace AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 
 /// <summary>
 /// Defines a central registry that acts as a buffer for log messages, 

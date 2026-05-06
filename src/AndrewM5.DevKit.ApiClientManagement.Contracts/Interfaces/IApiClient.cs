@@ -1,4 +1,10 @@
-﻿using AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
+﻿/*
+ * Copyright (c) 2026 AndrewM5
+ * Licensed under the MIT License.
+ * See LICENSE file in the project root for full license information.
+ */
+
+using AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
 using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
 using System.Text;

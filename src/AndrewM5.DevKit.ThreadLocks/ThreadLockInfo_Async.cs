@@ -1,4 +1,10 @@
-﻿namespace AndrewM5.DevKit.ThreadLocks;
+﻿/*
+ * Copyright (c) 2026 AndrewM5
+ * Licensed under the MIT License.
+ * See LICENSE file in the project root for full license information.
+ */
+
+namespace AndrewM5.DevKit.ThreadLocks;
 
 /// <summary>
 /// Represents the internal state and synchronization primitives for an asynchronous named lock.

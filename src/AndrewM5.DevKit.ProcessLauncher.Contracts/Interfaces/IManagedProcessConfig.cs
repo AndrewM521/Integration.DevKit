@@ -1,4 +1,10 @@
-﻿namespace AndrewM5.DevKit.ProcessLauncher.Contracts.Interfaces;
+﻿/*
+ * Copyright (c) 2026 AndrewM5
+ * Licensed under the MIT License.
+ * See LICENSE file in the project root for full license information.
+ */
+
+namespace AndrewM5.DevKit.ProcessLauncher.Contracts.Interfaces;
 
 /// <summary>
 /// Defines the configuration settings required to initialize and manage an external process.

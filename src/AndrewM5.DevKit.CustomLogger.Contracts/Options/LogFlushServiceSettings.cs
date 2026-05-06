@@ -1,4 +1,10 @@
-﻿namespace AndrewM5.DevKit.CustomLogger.Contracts.Options;
+﻿/*
+ * Copyright (c) 2026 AndrewM5
+ * Licensed under the MIT License.
+ * See LICENSE file in the project root for full license information.
+ */
+
+namespace AndrewM5.DevKit.CustomLogger.Contracts.Options;
 
 /// <summary>
 /// Defines the configuration settings for the log flushing service, 
