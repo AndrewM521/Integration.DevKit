@@ -6,7 +6,7 @@
 
 using System.Data;
 
-namespace AndrewM5.DevKit.SqlManagement;
+namespace AndrewM5.DevKit.SQLManagement;
 
 /// <summary>
 /// Utility methods to simplify data extraction from database records, handling null conversions 

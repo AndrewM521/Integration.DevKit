@@ -6,11 +6,11 @@
 
 using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
-using AndrewM5.DevKit.SqlManagement.Abstractions.Options;
+using AndrewM5.DevKit.SQLManagement.Contracts.Options;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
-namespace AndrewM5.DevKit.SqlManagement.Contracts.Interfaces;
+namespace AndrewM5.DevKit.SQLManagement.Contracts.Interfaces;
 
 /// <summary>
 /// Defines a contract for a SQL Database Client capable of executing commands, 

@@ -4,9 +4,9 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.SqlManagement.Abstractions.Options;
+using AndrewM5.DevKit.SQLManagement.Contracts.Options;
 
-namespace AndrewM5.DevKit.SqlManagement.Contracts.Interfaces;
+namespace AndrewM5.DevKit.SQLManagement.Contracts.Interfaces;
 
 /// <summary>
 /// Defines a contract for a manager responsible for the lifecycle, orchestration, and retrieval 

@@ -6,7 +6,7 @@
 
 using System.Collections.Concurrent;
 
-namespace AndrewM5.DevKit.SqlManagement.Abstractions.Options;
+namespace AndrewM5.DevKit.SQLManagement.Contracts.Options;
 
 /// <summary>
 /// Represents the global configuration settings for the SQL Database Manager, 

@@ -4,14 +4,15 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.SqlManagement.Abstractions.Options;
-using AndrewM5.DevKit.SqlManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
+using AndrewM5.DevKit.SQLManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.SQLManagement.Contracts.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace AndrewM5.DevKit.SqlManagement;
+namespace AndrewM5.DevKit.SQLManagement;
 
 /// <summary>
 /// Concrete Implementation of <see cref="ISqlDBManager"/>

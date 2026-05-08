@@ -4,10 +4,10 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.SqlManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.SQLManagement.Contracts.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AndrewM5.DevKit.SqlManagement.Services;
+namespace AndrewM5.DevKit.SQLManagement.Services;
 
 /// <summary>
 /// Provides extension methods for <see cref="IServiceCollection"/> to facilitate the registration 

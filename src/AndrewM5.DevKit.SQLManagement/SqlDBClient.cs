@@ -8,15 +8,14 @@ using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
-using AndrewM5.DevKit.Logging.Contracts.Interfaces;
-using AndrewM5.DevKit.SqlManagement.Abstractions.Options;
-using AndrewM5.DevKit.SqlManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.SQLManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.SQLManagement.Contracts.Options;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using System.Data;
 using System.Reflection;
 
-namespace AndrewM5.DevKit.SqlManagement;
+namespace AndrewM5.DevKit.SQLManagement;
 
 /// <summary>
 /// Concrete Implementation of <see cref="ISqlDBClient"/>

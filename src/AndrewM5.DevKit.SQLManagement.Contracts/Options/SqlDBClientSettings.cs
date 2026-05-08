@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-namespace AndrewM5.DevKit.SqlManagement.Abstractions.Options;
+namespace AndrewM5.DevKit.SQLManagement.Contracts.Options;
 
 /// <summary>
 /// Represents the configuration and connection settings for a specific <c>ISqlDBClient</c>,
