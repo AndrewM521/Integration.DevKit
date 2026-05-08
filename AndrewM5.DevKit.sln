@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.CustomLogge
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ApiClientManagement", "src\AndrewM5.DevKit.ApiClientManagement\AndrewM5.DevKit.ApiClientManagement.csproj", "{87133A8B-AFAD-447A-806F-D8024BDF390D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.SqlClientManagement", "src\AndrewM5.DevKit.SqlClientManagement\AndrewM5.DevKit.SqlClientManagement.csproj", "{56FE305E-40D7-43BD-9937-146A5F524A9C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.SQLManagement", "src\AndrewM5.DevKit.SQLManagement\AndrewM5.DevKit.SQLManagement.csproj", "{56FE305E-40D7-43BD-9937-146A5F524A9C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ProcessLauncher", "src\AndrewM5.DevKit.ProcessLauncher\AndrewM5.DevKit.ProcessLauncher.csproj", "{87E521E9-C31D-426E-88FD-167AB128E798}"
 EndProject
@@ -33,7 +33,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.CustomLogge
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.ProcessLauncher.Contracts", "src\AndrewM5.DevKit.ProcessLauncher.Contracts\AndrewM5.DevKit.ProcessLauncher.Contracts.csproj", "{551AF839-B035-4D84-806C-ACD3C2A03AB5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.SqlClientManagement.Contracts", "src\AndrewM5.DevKit.SqlClientManagement.Contracts\AndrewM5.DevKit.SqlClientManagement.Contracts.csproj", "{0DAB595E-A959-F18B-410C-19A3B9A2215D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.SQLManagement.Contracts", "src\AndrewM5.DevKit.SQLManagement.Contracts\AndrewM5.DevKit.SQLManagement.Contracts.csproj", "{0DAB595E-A959-F18B-410C-19A3B9A2215D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AndrewM5.DevKit.TaskManagement.Contracts", "src\AndrewM5.DevKit.TaskManagement.Contracts\AndrewM5.DevKit.TaskManagement.Contracts.csproj", "{6D0B9FB7-17C9-0BA9-3F66-69EFFB30AE3B}"
 EndProject
@@ -58,8 +58,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ModuleInfo", "ModuleInfo", 
 		docs\ModuleInfo\CredentialManagement.md = docs\ModuleInfo\CredentialManagement.md
 		docs\ModuleInfo\CustomLogger.md = docs\ModuleInfo\CustomLogger.md
 		docs\ModuleInfo\ProcessLauncher.md = docs\ModuleInfo\ProcessLauncher.md
-		docs\ModuleInfo\SqlClientManagement.md = docs\ModuleInfo\SqlClientManagement.md
 		docs\ModuleInfo\TaskManagement.md = docs\ModuleInfo\TaskManagement.md
+		docs\ModuleInfo\SqlManagement.md = docs\ModuleInfo\SqlManagement.md
 		docs\ModuleInfo\ThreadLocks.md = docs\ModuleInfo\ThreadLocks.md
 		docs\ModuleInfo\ThreadSafeItems.md = docs\ModuleInfo\ThreadSafeItems.md
 	EndProjectSection

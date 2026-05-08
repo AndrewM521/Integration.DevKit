@@ -7,6 +7,7 @@
 using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
 using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using AndrewM5.DevKit.SqlManagement.Abstractions.Options;
 using AndrewM5.DevKit.SqlManagement.Contracts.Interfaces;

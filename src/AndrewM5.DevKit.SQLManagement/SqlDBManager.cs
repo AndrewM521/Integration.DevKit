@@ -4,7 +4,6 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.Logging.Contracts.Interfaces;
 using AndrewM5.DevKit.SqlManagement.Abstractions.Options;
 using AndrewM5.DevKit.SqlManagement.Contracts.Interfaces;
 using Microsoft.Extensions.Logging;

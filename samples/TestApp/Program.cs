@@ -47,6 +47,7 @@ public class Program
                 services.AddThreadLocks();
                 services.AddThreadSafeItems();
                 services.AddTaskManagement(config);
+                //services.AddSqlManagement(config); NEED TO MAKE
 
                 // Register your app entry
                 services.AddSingleton<AppEntry>();
@@ -60,6 +61,8 @@ public class Program
         ThreadLocksHost.Initialize(host.Services);
         ThreadSafeItemsHost.Initialize(host.Services);
         TaskManagementHost.InitializeTaskManagement(host.Services);
+
+        //SqlManagementHost.Initialize(host.Services); NEED TO MAKE
 
 
         CredentialManagementHost.InitializeFileSecretStore(host.Services);
@@ -88,7 +91,7 @@ public class AppEntry
         //await TestProcessLauncher();
         //await TestApiManagement();
         //TestCredentialManagement();
-        //await TestThreadSafeItems();
+        await TestThreadSafeItems();
         await TestTaskManagement();
         //await TestTaskManagement_SyncManagedTask();
         //await TestTaskManagement_AsyncManagedTask();
@@ -98,6 +101,7 @@ public class AppEntry
 
         //await TestApiManagementCredentials(true, false);
         //await TestFileSecretStore();
+
 
         Console.WriteLine("Press enter to exit");
         Console.ReadLine();
