@@ -4,9 +4,9 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
+using AndrewM5.DevKit.RESTApiManagement.Contracts.Options;
 
-namespace AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+namespace AndrewM5.DevKit.RESTApiManagement.Contracts.Interfaces;
 
 /// <summary>
 /// Defines a contract for a manager responsible for orchestrating multiple <see cref="IApiClient"/> instances 

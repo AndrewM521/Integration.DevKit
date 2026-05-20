@@ -4,12 +4,12 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
-using AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
+using AndrewM5.DevKit.RESTApiManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.RESTApiManagement.Contracts.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AndrewM5.DevKit.ApiClientManagement.Services;
+namespace AndrewM5.DevKit.RESTApiManagement.Services;
 
 /// <summary>
 /// Extension methods for setting up the APIManagement module in an <see cref="IServiceCollection"/>.

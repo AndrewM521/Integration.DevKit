@@ -17,19 +17,19 @@ namespace AndrewM5.DevKit.SQLManagement.Services;
 /// It must be initialized during application startup (e.g., in Program.cs or Startup.cs) 
 /// after the service provider has been built.
 /// </remarks>
-public class SqlDBManagementHost
+public class SQLManagementHost
 {
     private const string NoInit = "SqlManagementHost has not been initialized.";
 
-    private static ISqlDBManager? _sqlManager;
+    private static ISQLManager? _sqlManager;
 
     /// <summary>
-    /// Initializes the static host with a service provider to resolve the <see cref="ISqlDBManager"/>.
+    /// Initializes the static host with a service provider to resolve the <see cref="ISQLManager"/>.
     /// </summary>
     /// <param name="sp">The service provider containing the registered SQL management services.</param>
     /// <exception cref="ArgumentNullException">Thrown if the provided <paramref name="sp"/> is <see langword="null"/>.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if <see cref="ISqlDBManager"/> is not registered in the service collection.
+    /// Thrown if <see cref="ISQLManager"/> is not registered in the service collection.
     /// </exception>
     public static void Initialize(IServiceProvider sp)
     {
@@ -38,23 +38,23 @@ public class SqlDBManagementHost
             throw new ArgumentNullException(nameof(sp));
         }
 
-        _sqlManager = sp.GetService<ISqlDBManager>();
+        _sqlManager = sp.GetService<ISQLManager>();
         if (_sqlManager == null)
         {
-            throw new InvalidOperationException($"{nameof(ISqlDBManager)} is not registered. Make sure you call AddSqlDBManagement() when configuring services.");
+            throw new InvalidOperationException($"{nameof(ISQLManager)} is not registered. Make sure you call AddSqlDBManagement() when configuring services.");
         }
     }
 
     /// <summary>
-    /// Gets the singleton instance of the <see cref="ISqlDBManager"/> for the current process.
+    /// Gets the singleton instance of the <see cref="ISQLManager"/> for the current process.
     /// </summary>
     /// <value>
-    /// The global <see cref="ISqlDBManager"/> instance used to orchestrate database clients.
+    /// The global <see cref="ISQLManager"/> instance used to orchestrate database clients.
     /// </value>
     /// <exception cref="InvalidOperationException">
     /// Thrown if the host has not been initialized via <see cref="Initialize"/>.
     /// </exception>
-    public static ISqlDBManager ProcessManager
+    public static ISQLManager SQLManager
     {
         get
         {

@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-namespace AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+namespace AndrewM5.DevKit.RESTApiManagement.Contracts.Interfaces;
 
 /// <summary>
 /// Provides a read-only snapshot of HTTP request metrics and execution statistics 

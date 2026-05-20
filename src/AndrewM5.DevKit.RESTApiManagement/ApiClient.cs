@@ -4,8 +4,8 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
-using AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
+using AndrewM5.DevKit.RESTApiManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.RESTApiManagement.Contracts.Options;
 using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.CredentialManagement.Contracts.Interfaces;
@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text;
 
-namespace AndrewM5.DevKit.ApiClientManagement;
+namespace AndrewM5.DevKit.RESTApiManagement;
 
 /// <summary>
 /// Concrete Implementation of <see cref="IApiClient"/>

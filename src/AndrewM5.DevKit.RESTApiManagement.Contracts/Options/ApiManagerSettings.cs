@@ -4,10 +4,10 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.RESTApiManagement.Contracts.Interfaces;
 using System.Collections.Concurrent;
 
-namespace AndrewM5.DevKit.ApiClientManagement.Contracts.Options;
+namespace AndrewM5.DevKit.RESTApiManagement.Contracts.Options;
 
 /// <summary>
 /// Represents the configuration for the <see cref="IApiManager"/>.

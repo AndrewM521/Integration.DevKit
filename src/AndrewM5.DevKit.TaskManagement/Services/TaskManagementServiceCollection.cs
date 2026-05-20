@@ -50,9 +50,6 @@ public static class TaskManagementServiceCollection
         // Register TaskManager as singleton
         services.AddSingleton<ITaskManager, TaskManager>();
 
-        // Optionally, also register ThreadLockManager if you want it auto-resolved
-        services.AddSingleton<IThreadLockManager, ThreadLockManager>();
-
         return services;
     }
 }

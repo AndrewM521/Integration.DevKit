@@ -8,7 +8,7 @@ using AndrewM5.DevKit.Core.Results;
 using System.Net;
 using System.Net.Http.Headers;
 
-namespace AndrewM5.DevKit.ApiClientManagement;
+namespace AndrewM5.DevKit.RESTApiManagement;
 
 /// <summary>
 /// Provides static helper methods for performing common HTTP operations and wrapping responses in an <see cref="ApiOperationResult{T}"/>.

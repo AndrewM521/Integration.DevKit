@@ -19,7 +19,6 @@ public static class TaskManagementHost
     private const string NoInit = "TaskManagementHost has not been initialized.";
 
     private static ITaskManager? _taskManager;
-    private static IThreadLockManager? _threadLockManager;
     private static ITaskRegistry? _taskRegistry;
 
     /// <summary>
@@ -31,7 +30,7 @@ public static class TaskManagementHost
     /// Thrown if <see cref="ITaskRegistry"/>, <see cref="ITaskManager"/>, or <see cref="IThreadLockManager"/> 
     /// are not registered in the service collection.
     /// </exception>
-    public static void InitializeTaskManagement(IServiceProvider sp)
+    public static void Initialize(IServiceProvider sp)
     {
         if (sp == null)
         {
@@ -49,18 +48,12 @@ public static class TaskManagementHost
         {
             throw new InvalidOperationException($"{nameof(ITaskManager)} is not registered. Make sure you call AddTaskManager() when configuring services.");
         }
-
-        _threadLockManager = sp.GetService<IThreadLockManager>();
-        if (_threadLockManager == null)
-        {
-            throw new InvalidOperationException($"{nameof(IThreadLockManager)} is not registered. Make sure you call AddTaskManager() when configuring services.");
-        }
     }
 
     /// <summary>
     /// Gets the global <see cref="ITaskManager"/> instance.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="InitializeTaskManagement"/> is called.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
     public static ITaskManager TaskManager
     {
         get
@@ -75,26 +68,9 @@ public static class TaskManagementHost
     }
 
     /// <summary>
-    /// Gets the global <see cref="IThreadLockManager"/> instance.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="InitializeTaskManagement"/> is called.</exception>
-    public static IThreadLockManager ThreadLockManager
-    {
-        get
-        {
-            if (_threadLockManager == null)
-            {
-                throw new InvalidOperationException(NoInit);
-            }
-
-            return _threadLockManager;
-        }
-    }
-
-    /// <summary>
     /// Gets the global <see cref="ITaskRegistry"/> instance.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="InitializeTaskManagement"/> is called.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
     public static ITaskRegistry TaskRegistry
     {
         get

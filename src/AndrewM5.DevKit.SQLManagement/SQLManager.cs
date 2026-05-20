@@ -15,24 +15,24 @@ using System.Reflection;
 namespace AndrewM5.DevKit.SQLManagement;
 
 /// <summary>
-/// Concrete Implementation of <see cref="ISqlDBManager"/>
+/// Concrete Implementation of <see cref="ISQLManager"/>
 /// </summary>
 
-public class SqlDBManager : ISqlDBManager
+public class SQLManager : ISQLManager
 {
     /// <inheritdoc/>
-    public SqlDBManagerSettings RuntimeSettings { get; set; }
+    public SQLManagerSettings RuntimeSettings { get; set; }
 
-    private readonly ConcurrentDictionary<string, ISqlDBClient> _clients = new ConcurrentDictionary<string, ISqlDBClient>(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, ISQLClient> _clients = new ConcurrentDictionary<string, ISQLClient>(StringComparer.OrdinalIgnoreCase);
     private readonly ICustomLogger? _logger;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SqlDBManager"/> class.
+    /// Initializes a new instance of the <see cref="SQLManager"/> class.
     /// </summary>
     /// <param name="settings">The injected options containing initial SQL configurations.</param>
     /// <param name="loggerManager">An optional logger manager to provide diagnostic logging.</param>
     /// <exception cref="ArgumentNullException">Thrown when the <paramref name="settings"/> argument is <see langword="null"/>.</exception>
-    internal SqlDBManager(IOptions<SqlDBManagerSettings> settings, ICustomLoggerManager? loggerManager = null)
+    internal SQLManager(IOptions<SQLManagerSettings> settings, ICustomLoggerManager? loggerManager = null)
     {
         if (settings == null)
         {
@@ -48,18 +48,18 @@ public class SqlDBManager : ISqlDBManager
     /// <remarks>
     /// This method uses a thread-safe factory approach. If the specified <paramref name="clientName"/> 
     /// is not found in <see cref="RuntimeSettings"/>, a warning is logged and a client is 
-    /// generated using an empty <see cref="SqlDBClientSettings"/> instance.
+    /// generated using an empty <see cref="SQLClientSettings"/> instance.
     /// </remarks>
-    public ISqlDBClient GetClient(string clientName)
+    public ISQLClient GetClient(string clientName)
     {
         if (!RuntimeSettings.Clients.TryGetValue(clientName, out var clientSettings))
         {
             _logger?.LogWarning($"SqlDB Client '{clientName}' is not configured. Using default settings instead");
             
-            clientSettings = new SqlDBClientSettings();
+            clientSettings = new SQLClientSettings();
         }
 
-        return _clients.GetOrAdd(clientName, _ => { return new SqlDBClient(this, clientName, clientSettings); });
+        return _clients.GetOrAdd(clientName, _ => { return new SQLClient(this, clientName, clientSettings); });
     }
 
     /// <inheritdoc/>
@@ -74,7 +74,7 @@ public class SqlDBManager : ISqlDBManager
         {
             object? value = property.GetValue(RuntimeSettings);
 
-            if (value is ConcurrentDictionary<string, SqlDBClientSettings> dict)
+            if (value is ConcurrentDictionary<string, SQLClientSettings> dict)
             {
                 _logger?.LogDebug($"  {property.Name}:");
 
@@ -93,7 +93,7 @@ public class SqlDBManager : ISqlDBManager
     }
 
     /// <summary>
-    /// Asynchronously disposes of all managed <see cref="ISqlDBClient"/> instances.
+    /// Asynchronously disposes of all managed <see cref="ISQLClient"/> instances.
     /// </summary>
     /// <returns>A <see cref="ValueTask"/> representing the completion of the disposal.</returns>
     public ValueTask DisposeAsync()

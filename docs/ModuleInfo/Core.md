@@ -5,3 +5,5 @@
 ## 2. Setup
 
 ## 3. Examples
+
+## [NOTE]

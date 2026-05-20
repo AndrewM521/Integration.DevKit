@@ -10,7 +10,7 @@ namespace AndrewM5.DevKit.SQLManagement.Contracts.Options;
 /// Represents the configuration and connection settings for a specific <c>ISqlDBClient</c>,
 /// utilizing a full connection string for database connectivity and defining connection behavior.
 /// </summary>
-public class SqlDBClientSettings
+public class SQLClientSettings
 {
     /// <summary>
     /// Gets or sets the complete SQL Server connection string used to establish a connection.

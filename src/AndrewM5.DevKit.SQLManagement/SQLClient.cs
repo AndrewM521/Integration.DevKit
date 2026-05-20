@@ -18,12 +18,12 @@ using System.Reflection;
 namespace AndrewM5.DevKit.SQLManagement;
 
 /// <summary>
-/// Concrete Implementation of <see cref="ISqlDBClient"/>
+/// Concrete Implementation of <see cref="ISQLClient"/>
 /// </summary>
-public class SqlDBClient : ISqlDBClient
+public class SQLClient : ISQLClient
 {
     /// <inheritdoc/>
-    public SqlDBClientSettings RuntimeSettings { get; set; }
+    public SQLClientSettings RuntimeSettings { get; set; }
 
     /// <inheritdoc/>
     public string ClientName { get; set; }
@@ -39,13 +39,13 @@ public class SqlDBClient : ISqlDBClient
     private SqlConnection? _mainSqlConnection;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SqlDBClient"/> class.
+    /// Initializes a new instance of the <see cref="SQLClient"/> class.
     /// </summary>
     /// <param name="sqlDBManager">The parent manager responsible for this client.</param>
     /// <param name="clientName">The unique name identifying this specific client instance.</param>
     /// <param name="settings">The configuration and connectivity settings.</param>
     /// <param name="logger">An optional logger instance for diagnostic reporting.</param>
-    internal SqlDBClient(ISqlDBManager sqlDBManager, string clientName, SqlDBClientSettings settings, ICustomLogger? logger = null)
+    internal SQLClient(ISQLManager sqlDBManager, string clientName, SQLClientSettings settings, ICustomLogger? logger = null)
     {
         ClientName = clientName;
 
@@ -357,7 +357,7 @@ public class SqlDBClient : ISqlDBClient
 
     /// <summary>
     /// Retrieves a SQL connection instance. 
-    /// Depending on <see cref="SqlDBClientSettings.UseSingleConnection"/>, this either returns a 
+    /// Depending on <see cref="SQLClientSettings.UseSingleConnection"/>, this either returns a 
     /// cached instance or a new connection object.
     /// </summary>
     /// <returns>An <see cref="OperationResult{T}"/> containing the <see cref="SqlConnection"/>.</returns>

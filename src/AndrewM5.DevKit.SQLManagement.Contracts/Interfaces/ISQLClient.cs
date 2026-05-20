@@ -16,12 +16,12 @@ namespace AndrewM5.DevKit.SQLManagement.Contracts.Interfaces;
 /// Defines a contract for a SQL Database Client capable of executing commands, 
 /// managing credentials, and testing connectivity both synchronously and asynchronously.
 /// </summary>
-public interface ISqlDBClient : IDisposable
+public interface ISQLClient : IDisposable
 {
     /// <summary>
     /// Gets or sets the configuration settings used by the client at runtime.
     /// </summary>
-    public SqlDBClientSettings RuntimeSettings { get; set; }
+    public SQLClientSettings RuntimeSettings { get; set; }
 
     /// <summary>
     /// Gets or sets the unique name or identifier for this client instance.
@@ -134,7 +134,7 @@ public interface ISqlDBClient : IDisposable
     #endregion
 
     /// <summary>
-    /// Logging method to output current <see cref="SqlDBClientSettings"/> to the logs.
+    /// Logging method to output current <see cref="SQLClientSettings"/> to the logs.
     /// </summary>
     /// <param name="calledFromManager">Indicates if the call originated from a management orchestrator.</param>
     public void LogRuntimeSettings(bool calledFromManager = false);

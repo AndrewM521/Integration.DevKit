@@ -4,9 +4,9 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.RESTApiManagement.Contracts.Interfaces;
 
-namespace AndrewM5.DevKit.ApiClientManagement;
+namespace AndrewM5.DevKit.RESTApiManagement;
 
 /// <summary>
 /// Implementation of <see cref="IApiClientMetrics"/> that tracks HTTP request statistics 

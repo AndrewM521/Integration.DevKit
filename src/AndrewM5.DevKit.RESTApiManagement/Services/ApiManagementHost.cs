@@ -4,10 +4,10 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.RESTApiManagement.Contracts.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AndrewM5.DevKit.ApiClientManagement.Services;
+namespace AndrewM5.DevKit.RESTApiManagement.Services;
 
 /// <summary>
 /// Provides a static entry point to access the APIManagement module 

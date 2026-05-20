@@ -12,7 +12,7 @@ namespace AndrewM5.DevKit.SQLManagement;
 /// Utility methods to simplify data extraction from database records, handling null conversions 
 /// and transforming data sets into standard collection types.
 /// </summary>
-public static class SqlDBUtils
+public static class SQLUtils
 {
     /// <summary>
     /// Converts a null object reference to <see cref="DBNull.Value"/> for database insertion.

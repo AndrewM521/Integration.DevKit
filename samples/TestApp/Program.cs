@@ -4,10 +4,10 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.ApiClientManagement;
-using AndrewM5.DevKit.ApiClientManagement.Contracts.Interfaces;
-using AndrewM5.DevKit.ApiClientManagement.Contracts.Models;
-using AndrewM5.DevKit.ApiClientManagement.Services;
+using AndrewM5.DevKit.RESTApiManagement;
+using AndrewM5.DevKit.RESTApiManagement.Contracts.Interfaces;
+using AndrewM5.DevKit.RESTApiManagement.Contracts.Models;
+using AndrewM5.DevKit.RESTApiManagement.Services;
 using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Core.Results;
 using AndrewM5.DevKit.CredentialManagement.Services;
@@ -15,6 +15,7 @@ using AndrewM5.DevKit.CustomLogger.Flusher.Services;
 using AndrewM5.DevKit.Logging.Services;
 using AndrewM5.DevKit.ProcessLauncher;
 using AndrewM5.DevKit.ProcessLauncher.Services;
+using AndrewM5.DevKit.SQLManagement.Services;
 using AndrewM5.DevKit.TaskManagement;
 using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Contracts.Models;
@@ -47,7 +48,7 @@ public class Program
                 services.AddThreadLocks();
                 services.AddThreadSafeItems();
                 services.AddTaskManagement(config);
-                //services.AddSqlManagement(config); NEED TO MAKE
+                services.AddSQLManagement(config);
 
                 // Register your app entry
                 services.AddSingleton<AppEntry>();
@@ -60,10 +61,8 @@ public class Program
         ApiManagementHost.Initialize(host.Services);
         ThreadLocksHost.Initialize(host.Services);
         ThreadSafeItemsHost.Initialize(host.Services);
-        TaskManagementHost.InitializeTaskManagement(host.Services);
-
-        //SqlManagementHost.Initialize(host.Services); NEED TO MAKE
-
+        TaskManagementHost.Initialize(host.Services);
+        SQLManagementHost.Initialize(host.Services); //NEED TO MAKE
 
         CredentialManagementHost.InitializeFileSecretStore(host.Services);
 
@@ -91,8 +90,8 @@ public class AppEntry
         //await TestProcessLauncher();
         //await TestApiManagement();
         //TestCredentialManagement();
-        await TestThreadSafeItems();
-        await TestTaskManagement();
+        //await TestThreadSafeItems();
+        //await TestTaskManagement();
         //await TestTaskManagement_SyncManagedTask();
         //await TestTaskManagement_AsyncManagedTask();
 
@@ -329,7 +328,7 @@ public class AppEntry
         Console.WriteLine("----------------------------------------------------");
         Console.WriteLine("DELETE Post: ");
 
-        var buildUrlDELETE = Posts.BuildPositionalUrl(new List<object?> { 1 });
+        var buildUrlDELETE = Posts.BuildPositionalUrl(new List<object> { 1 });
         if (!buildUrlDELETE.MethodSuccess)
         {
             Console.WriteLine(buildUrlDELETE.Exception.Message);

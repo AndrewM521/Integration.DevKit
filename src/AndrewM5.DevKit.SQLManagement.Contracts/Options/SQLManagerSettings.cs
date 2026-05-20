@@ -12,7 +12,7 @@ namespace AndrewM5.DevKit.SQLManagement.Contracts.Options;
 /// Represents the global configuration settings for the SQL Database Manager, 
 /// including default behaviors and a collection of managed clients.
 /// </summary>
-public class SqlDBManagerSettings
+public class SQLManagerSettings
 {
     /// <summary>
     /// Gets or sets the thread-safe dictionary of client configurations, 
@@ -20,19 +20,19 @@ public class SqlDBManagerSettings
     /// </summary>
     /// <value>
     /// A <see cref="ConcurrentDictionary{TKey, TValue}"/> where the key is the client's unique name 
-    /// and the value is its corresponding <see cref="SqlDBClientSettings"/>.
+    /// and the value is its corresponding <see cref="SQLClientSettings"/>.
     /// </value>
-    public ConcurrentDictionary<string, SqlDBClientSettings> Clients { get; set; } = new ConcurrentDictionary<string, SqlDBClientSettings>();
+    public ConcurrentDictionary<string, SQLClientSettings> Clients { get; set; } = new ConcurrentDictionary<string, SQLClientSettings>();
 
     /// <summary>
     /// Creates a deep copy of the current settings
     /// </summary>
-    /// <returns>A new <see cref="SqlDBManagerSettings"/> instance independent of the original.</returns>
-    public SqlDBManagerSettings Clone()
+    /// <returns>A new <see cref="SQLManagerSettings"/> instance independent of the original.</returns>
+    public SQLManagerSettings Clone()
     {
-        return new SqlDBManagerSettings
+        return new SQLManagerSettings
         {
-            Clients = new ConcurrentDictionary<string, SqlDBClientSettings> (this.Clients)
+            Clients = new ConcurrentDictionary<string, SQLClientSettings> (this.Clients)
         };
     }
 }
