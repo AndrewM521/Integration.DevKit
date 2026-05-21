@@ -53,15 +53,20 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documents", "Documents", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ModuleInfo", "ModuleInfo", "{DBD3590E-D57A-4919-8E15-F38BEA284513}"
 	ProjectSection(SolutionItems) = preProject
-		docs\ModuleInfo\ApiClientManagement.md = docs\ModuleInfo\ApiClientManagement.md
 		docs\ModuleInfo\Core.md = docs\ModuleInfo\Core.md
 		docs\ModuleInfo\CredentialManagement.md = docs\ModuleInfo\CredentialManagement.md
 		docs\ModuleInfo\CustomLogger.md = docs\ModuleInfo\CustomLogger.md
 		docs\ModuleInfo\ProcessLauncher.md = docs\ModuleInfo\ProcessLauncher.md
 		docs\ModuleInfo\SqlManagement.md = docs\ModuleInfo\SqlManagement.md
+		docs\ModuleInfo\RESTApiManagement.md = docs\ModuleInfo\RESTApiManagement.md
 		docs\ModuleInfo\TaskManagement.md = docs\ModuleInfo\TaskManagement.md
 		docs\ModuleInfo\ThreadLocks.md = docs\ModuleInfo\ThreadLocks.md
 		docs\ModuleInfo\ThreadSafeItems.md = docs\ModuleInfo\ThreadSafeItems.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D056A9C0-B94A-4ACA-87FB-3B25DDDC4F14}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
 	EndProjectSection
 EndProject
 Global
@@ -149,6 +154,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}
 		{DBD3590E-D57A-4919-8E15-F38BEA284513} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{D056A9C0-B94A-4ACA-87FB-3B25DDDC4F14} = {8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {32CFCE47-8C5C-4E17-B597-FE7AFF0AA062}

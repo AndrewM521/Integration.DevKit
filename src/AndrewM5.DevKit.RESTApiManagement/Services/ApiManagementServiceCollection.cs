@@ -22,7 +22,7 @@ public static class ApiManagementServiceCollection
     /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
     /// <param name="configuration">The application configuration used to bind <see cref="ApiManagerSettings"/>.</param>
     /// <returns>The original <see cref="IServiceCollection"/> for chaining calls.</returns>
-    public static IServiceCollection AddApiManagement(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddRESTApiManagement(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<ApiManagerSettings>(configuration.GetSection("AndrewM5.DevKit:ApiClientManagement"));
 

@@ -43,7 +43,7 @@ public class Program
                 services.AddCustomLogging(config);
                 services.AddCustomLogFlusher(config);
                 services.AddProcessLauncher();
-                services.AddApiManagement(config);
+                services.AddRESTApiManagement(config);
                 services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
                 services.AddThreadLocks();
                 services.AddThreadSafeItems();
