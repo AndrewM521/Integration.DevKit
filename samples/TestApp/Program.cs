@@ -26,6 +26,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace TestApp;
 
@@ -40,8 +41,8 @@ public class Program
         var host = Host.CreateDefaultBuilder(args)
             .ConfigureServices((context, services) =>
             {
-                services.AddCustomLogging(config);
-                services.AddCustomLogFlusher(config);
+                //services.AddCustomLogging(config);
+                //services.AddCustomLogFlusher(config);
                 services.AddProcessLauncher();
                 services.AddRESTApiManagement(config);
                 services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
@@ -55,8 +56,8 @@ public class Program
             })
             .Build();
 
-        LoggingHost.Initialize(host.Services);
-        LogFlusherHost.Initalize(host.Services);
+        //LoggingHost.Initialize(host.Services);
+        //LogFlusherHost.Initalize(host.Services);
         ProcessLauncherHost.Initialize(host.Services);
         ApiManagementHost.Initialize(host.Services);
         ThreadLocksHost.Initialize(host.Services);
@@ -83,8 +84,6 @@ public class AppEntry
 
     public async Task RunAsync(string[] args)
     {
-        Console.WriteLine("Setup License manager https://github.com/rubicon-oss/LicenseHeaderManager");
-
         //TestCustomLogger();
         //await TestCustomLoggerFlusher();
         //await TestProcessLauncher();
@@ -648,7 +647,6 @@ public class AppEntry
     }
     private async Task TestTaskManagement()
     {
-        var logger = LoggingHost.LoggerManager.GetLogger("App");
         var _taskManager = TaskManagementHost.TaskManager;
         var _taskRegistry = TaskManagementHost.TaskRegistry;
         _taskManager.LogRuntimeSettings();
@@ -656,71 +654,70 @@ public class AppEntry
         OperationResult<IManagedTaskHandle> createTask;
         var settings = new ManagedTaskSettings();
 
-        //Console.WriteLine("\n==Test 1: Start Single Task==");
-        //Console.WriteLine("NOTE: Look at output logs");
-        //createTask = await _taskManager.StartTask(new SimpleLongTask(), TaskExecutionMode.Asyncronous, settings);
-        //if (!createTask.MethodSuccess)
-        //{
-        //    Console.WriteLine("Error: " + createTask.Exception.Message);
-        //}
+        Console.WriteLine("\n==Test 1: Start Single Task==");
+        Console.WriteLine("NOTE: Look at output logs");
+        createTask = await _taskManager.StartTask(new SimpleLongTask(), TaskExecutionMode.Asyncronous, settings);
+        if (!createTask.MethodSuccess)
+        {
+            Console.WriteLine("Error: " + createTask.Exception.Message);
+        }
 
-        //Console.WriteLine("waiting 2 seconds for next task");
-        //await Task.Delay(2000);
+        Console.WriteLine("waiting 2 seconds for next task");
+        await Task.Delay(2000);
 
-        //Console.WriteLine("\n==Test 2: Cancel Single Task==");
-        //Console.WriteLine("NOTE: Look at output logs");
-        //createTask.Result.Cancel();
+        Console.WriteLine("\n==Test 2: Cancel Single Task==");
+        Console.WriteLine("NOTE: Look at output logs");
+        createTask.Result.Cancel();
 
-        //Console.WriteLine("waiting for task to finish");
-        //await createTask.Result.RunningTask!;
-        //Console.WriteLine("taks finished");
+        Console.WriteLine("waiting for task to finish");
+        await createTask.Result.RunningTask!;
+        Console.WriteLine("taks finished");
 
-        //settings = new ManagedTaskSettings();
+        settings = new ManagedTaskSettings();
 
-        //Console.WriteLine("\n==Test 3: Start Single Task==");
-        //Console.WriteLine("NOTE: Look at output logs");
-        //createTask = await _taskManager.StartTask(new SimpleLongTask_NoTokenChecking(), TaskExecutionMode.Asyncronous, settings);
-        //if (!createTask.MethodSuccess)
-        //{
-        //    Console.WriteLine("Error: " + createTask.Exception.Message);
-        //}
+        Console.WriteLine("\n==Test 3: Start Single Task==");
+        Console.WriteLine("NOTE: Look at output logs");
+        createTask = await _taskManager.StartTask(new SimpleLongTask_NoTokenChecking(), TaskExecutionMode.Asyncronous, settings);
+        if (!createTask.MethodSuccess)
+        {
+            Console.WriteLine("Error: " + createTask.Exception.Message);
+        }
 
-        //Console.WriteLine("waiting 2 seconds for next task");
-        //await Task.Delay(2000);
+        Console.WriteLine("waiting 2 seconds for next task");
+        await Task.Delay(2000);
 
-        //Console.WriteLine("\n==Test 4: Cancel Single Task==");
-        //Console.WriteLine("This task does not check if the cancelation token is canceled so this will continue to run even after a cancel. ");
-        //Console.WriteLine("However the RunningTask will be canceled so you wont get stuck waiting for something that wont cancel");
-        //Console.WriteLine("NOTE: Look at output logs");
-        //createTask.Result.Cancel();
+        Console.WriteLine("\n==Test 4: Cancel Single Task==");
+        Console.WriteLine("This task does not check if the cancelation token is canceled so this will continue to run even after a cancel. ");
+        Console.WriteLine("However the RunningTask will be canceled so you wont get stuck waiting for something that wont cancel");
+        Console.WriteLine("NOTE: Look at output logs");
+        createTask.Result.Cancel();
 
-        //Console.WriteLine("waiting for task to finish");
-        //await createTask.Result.RunningTask!; 
-        //Console.WriteLine("task finished");
+        Console.WriteLine("waiting for task to finish");
+        await createTask.Result.RunningTask!;
+        Console.WriteLine("task finished");
 
-        //settings = new ManagedTaskSettings();
+        settings = new ManagedTaskSettings();
 
-        //Console.WriteLine("\n==Test 5: Start Task with Timeout==");
-        //Console.WriteLine("NOTE: Look at output logs");
-        //settings.Timeout = TimeSpan.FromSeconds(3);
+        Console.WriteLine("\n==Test 5: Start Task with Timeout==");
+        Console.WriteLine("NOTE: Look at output logs");
+        settings.Timeout = TimeSpan.FromSeconds(3);
 
-        //createTask = await _taskManager.StartTask(new SimpleLongTask(), TaskExecutionMode.Asyncronous, settings);
-        //if (!createTask.MethodSuccess)
-        //{
-        //    Console.WriteLine("Error: " + createTask.Exception.Message);
-        //}
+        createTask = await _taskManager.StartTask(new SimpleLongTask(), TaskExecutionMode.Asyncronous, settings);
+        if (!createTask.MethodSuccess)
+        {
+            Console.WriteLine("Error: " + createTask.Exception.Message);
+        }
 
-        //Console.WriteLine("waiting for task to finish");
-        //await createTask.Result.RunningTask!;
-        //Console.WriteLine("task finished");
+        Console.WriteLine("waiting for task to finish");
+        await createTask.Result.RunningTask!;
+        Console.WriteLine("task finished");
 
-        //settings = new ManagedTaskSettings();
+        settings = new ManagedTaskSettings();
     }
     private async Task TestTaskManagement_SyncManagedTask()
     {
         Console.WriteLine("----|----|Task Management|----|----");
 
-        var logger = LoggingHost.LoggerManager.GetLogger("App");
         var _taskManager = TaskManagementHost.TaskManager;
         var _taskRegistry = TaskManagementHost.TaskRegistry;
         _taskManager.LogRuntimeSettings();
@@ -945,7 +942,6 @@ public class AppEntry
         Console.WriteLine("Task Snapshot in Registry");
         string history = tryGetHistory.Result?.GetSnapshotInfo(true)!;
         Console.WriteLine(history);
-        logger?.LogInformation(history);
 
         settings = new ManagedTaskSettings();
     }
@@ -953,7 +949,6 @@ public class AppEntry
     {
         Console.WriteLine("----|----|Task Management|----|----");
 
-        var logger = LoggingHost.LoggerManager.GetLogger("App");
         var _taskManager = TaskManagementHost.TaskManager;
         var _taskRegistry = TaskManagementHost.TaskRegistry;
         _taskManager.LogRuntimeSettings();
@@ -1217,7 +1212,7 @@ public class AppEntry
                 throw tryGet1.Exception;
             }
 
-            logger?.LogInformation(tryGet1.Result?.GetSnapshotInfo(true));
+            Debug.WriteLine(tryGet1.Result?.GetSnapshotInfo(true));
 
             await Task.Delay(2000);
         }
@@ -1231,7 +1226,6 @@ public class AppEntry
         Console.WriteLine("Task Snapshot in Registry");
         string history = tryGetHistory.Result?.GetSnapshotInfo(true)!;
         Console.WriteLine(history);
-        logger?.LogInformation(history);
 
         settings = new ManagedTaskSettings();
     }

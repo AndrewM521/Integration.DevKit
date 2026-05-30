@@ -27,8 +27,8 @@ public class ThreadSafeFileIO
     /// </summary>
     /// <param name="threadLockManager">The manager used to handle synchronization locks.</param>
     /// <param name="loggerManager">The manager used to resolve the internal logger.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="threadLockManager"/> or <paramref name="loggerManager"/> is null.</exception>
-    public ThreadSafeFileIO(IThreadLockManager threadLockManager, ICustomLoggerManager loggerManager)
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="threadLockManager"/>.</exception>
+    public ThreadSafeFileIO(IThreadLockManager threadLockManager, ICustomLoggerManager? loggerManager = null)
     {
         if (threadLockManager == null)
         {

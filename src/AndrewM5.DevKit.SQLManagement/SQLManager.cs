@@ -32,7 +32,7 @@ public class SQLManager : ISQLManager
     /// <param name="settings">The injected options containing initial SQL configurations.</param>
     /// <param name="loggerManager">An optional logger manager to provide diagnostic logging.</param>
     /// <exception cref="ArgumentNullException">Thrown when the <paramref name="settings"/> argument is <see langword="null"/>.</exception>
-    internal SQLManager(IOptions<SQLManagerSettings> settings, ICustomLoggerManager? loggerManager = null)
+    public SQLManager(IOptions<SQLManagerSettings> settings, ICustomLoggerManager? loggerManager = null)
     {
         if (settings == null)
         {

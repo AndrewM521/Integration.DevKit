@@ -27,7 +27,7 @@ public class TaskManager : ITaskManager
 
     private readonly ConcurrentDictionary<string, ManagedTaskRuntime> _tasks = new ConcurrentDictionary<string, ManagedTaskRuntime>();
     private readonly IHostApplicationLifetime _appLifetime;
-    private readonly ICustomLogger _logger;
+    private readonly ICustomLogger? _logger;
     private readonly SemaphoreSlim _taskLimiter;
     private readonly TaskRegistryRuntime _taskRegistryRuntime;
 
@@ -40,21 +40,16 @@ public class TaskManager : ITaskManager
     /// <param name="loggerManager">The manager used to resolve the internal logger.</param>
     /// <param name="taskRegistry">The registry used for persisting and tracking task states.</param>
     /// <param name="settings">The configuration settings for task management and limits.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="appLifetime"/>, <paramref name="loggerManager"/>, or <paramref name="taskRegistry"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="appLifetime"/> or <paramref name="taskRegistry"/> is null.</exception>
     public TaskManager(
         IHostApplicationLifetime appLifetime,
-        ICustomLoggerManager loggerManager,
         ITaskRegistry taskRegistry,
-        IOptions<TaskManagerSettings> settings)
+        IOptions<TaskManagerSettings> settings,
+        ICustomLoggerManager? loggerManager = null)
     {
         if (appLifetime == null)
         {
             throw new ArgumentNullException(nameof(appLifetime));
-        }
-
-        if (loggerManager == null)
-        {
-            throw new ArgumentNullException(nameof(loggerManager));
         }
 
         if (taskRegistry == null)
@@ -76,7 +71,7 @@ public class TaskManager : ITaskManager
             }
         });
 
-        _logger = loggerManager.GetLogger("TaskManager");
+        _logger = loggerManager?.GetLogger("TaskManager");
         _taskRegistryRuntime = new TaskRegistryRuntime(this, taskRegistry);
 
         RuntimeSettings = settings.Value.Clone();
