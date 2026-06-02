@@ -13,12 +13,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AndrewM5.DevKit.CredentialManagement\AndrewM5.DevKit.CredentialManagement.csproj" />
+    <ProjectReference Include="..\..\src\AndrewM5.DevKit.CredentialMgmt\AndrewM5.DevKit.CredentialMgmt.csproj" />
     <ProjectReference Include="..\..\src\AndrewM5.DevKit.CustomLogger.Flusher\AndrewM5.DevKit.CustomLogger.Flusher.csproj" />
     <ProjectReference Include="..\..\src\AndrewM5.DevKit.ProcessLauncher\AndrewM5.DevKit.ProcessLauncher.csproj" />
-    <ProjectReference Include="..\..\src\AndrewM5.DevKit.RESTApiManagement\AndrewM5.DevKit.RESTApiManagement.csproj" />
-    <ProjectReference Include="..\..\src\AndrewM5.DevKit.SQLManagement\AndrewM5.DevKit.SQLManagement.csproj" />
-    <ProjectReference Include="..\..\src\AndrewM5.DevKit.TaskManagement\AndrewM5.DevKit.TaskManagement.csproj" />
+    <ProjectReference Include="..\..\src\AndrewM5.DevKit.RESTApiMgmt\AndrewM5.DevKit.RESTApiMgmt.csproj" />
+    <ProjectReference Include="..\..\src\AndrewM5.DevKit.SQLMgmt\AndrewM5.DevKit.SQLMgmt.csproj" />
+    <ProjectReference Include="..\..\src\AndrewM5.DevKit.TaskMgmt\AndrewM5.DevKit.TaskMgmt.csproj" />
     <ProjectReference Include="..\..\src\AndrewM5.DevKit.ThreadSafeItems\AndrewM5.DevKit.ThreadSafeItems.csproj" />
   </ItemGroup>
 

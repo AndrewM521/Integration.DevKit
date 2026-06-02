@@ -4,8 +4,8 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
-using AndrewM5.DevKit.TaskManagement.Contracts.Models;
+using AndrewM5.DevKit.TaskMgmt.Contracts.Interfaces;
+using AndrewM5.DevKit.TaskMgmt.Contracts.Models;
 
 namespace TestApp;
 

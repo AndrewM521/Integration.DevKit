@@ -4,22 +4,22 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.RESTApiManagement;
-using AndrewM5.DevKit.RESTApiManagement.Contracts.Interfaces;
-using AndrewM5.DevKit.RESTApiManagement.Contracts.Models;
-using AndrewM5.DevKit.RESTApiManagement.Services;
+using AndrewM5.DevKit.RESTApiMgmt;
+using AndrewM5.DevKit.RESTApiMgmt.Contracts.Interfaces;
+using AndrewM5.DevKit.RESTApiMgmt.Contracts.Models;
+using AndrewM5.DevKit.RESTApiMgmt.Services;
 using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.CredentialManagement.Services;
+using AndrewM5.DevKit.CredentialMgmt.Services;
 using AndrewM5.DevKit.CustomLogger.Flusher.Services;
 using AndrewM5.DevKit.Logging.Services;
 using AndrewM5.DevKit.ProcessLauncher;
 using AndrewM5.DevKit.ProcessLauncher.Services;
-using AndrewM5.DevKit.SQLManagement.Services;
-using AndrewM5.DevKit.TaskManagement;
-using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
-using AndrewM5.DevKit.TaskManagement.Contracts.Models;
-using AndrewM5.DevKit.TaskManagement.Services;
+using AndrewM5.DevKit.SQLMgmt.Services;
+using AndrewM5.DevKit.TaskMgmt;
+using AndrewM5.DevKit.TaskMgmt.Contracts.Interfaces;
+using AndrewM5.DevKit.TaskMgmt.Contracts.Models;
+using AndrewM5.DevKit.TaskMgmt.Services;
 using AndrewM5.DevKit.ThreadLocks.Services;
 using AndrewM5.DevKit.ThreadSafeItems.Services;
 using Microsoft.Extensions.Configuration;
