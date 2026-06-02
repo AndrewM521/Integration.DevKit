@@ -95,8 +95,6 @@ public class AppEntry
         //await TestTaskManagement_AsyncManagedTask();
 
         //await TaskCoreClasses(); 
-
-
         //await TestApiManagementCredentials(true, false);
         //await TestFileSecretStore();
 

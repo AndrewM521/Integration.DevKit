@@ -4,7 +4,10 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using Microsoft.Data.SqlClient;
 using System.Data;
+using System.Data.Common;
+using System.Diagnostics;
 
 namespace AndrewM5.DevKit.SQLManagement;
 
@@ -18,12 +21,20 @@ public static class SQLUtils
     /// Converts a null object reference to <see cref="DBNull.Value"/> for database insertion.
     /// </summary>
     /// <param name="value">The value to check for <see langword="null"/>.</param>
+    /// <param name="nullEquivalentValue">Optional value to say an object is null</param>
     /// <returns>
     /// The original <paramref name="value"/> if not null; otherwise, returns <see cref="DBNull.Value"/>.
     /// </returns>
-    public static object GetDBNullIfNull(object? value)
+    public static object GetDBNullIfNull(object? value, object? nullEquivalentValue = null)
     {
+        // Check if the primary value is null
         if (value == null)
+        {
+            return DBNull.Value;
+        }
+
+        // Check if the value matches your custom null equivalent (e.g., -1, "N/A", or an empty string)
+        if (nullEquivalentValue != null && object.Equals(value, nullEquivalentValue))
         {
             return DBNull.Value;
         }
@@ -45,7 +56,7 @@ public static class SQLUtils
     /// This method performs an ordinal lookup and handles type conversion using <see cref="Convert.ChangeType(object, Type)"/> 
     /// if a direct cast is not possible.
     /// </remarks>
-    public static T GetValueOrDefaultFromReader<T>(this IDataRecord reader, string columnName, T defaultValue)
+    public static T GetValueOrDefault<T>(this IDataRecord reader, string columnName, T defaultValue)
     {
         try
         {
@@ -123,5 +134,110 @@ public static class SQLUtils
         }
 
         return list;
+    }
+
+    /// <summary>
+    /// Asynchronously converts the data from a <see cref="DbDataReader"/> into a list of string arrays, 
+    /// formatted and sanitized for CSV output.
+    /// </summary>
+    /// <param name="reader">The active database data reader to extract data from.</param>
+    /// <param name="columnsToInclude">
+    /// Optional. A list of specific column names to include in the output. 
+    /// If null or empty, all columns from the data reader are exported in their default database order.
+    /// </param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains a list of string arrays, 
+    /// where the first element is the header row, followed by the data rows.
+    /// </returns>
+    /// <exception cref="OperationCanceledException">Thrown when the <paramref name="cancellationToken"/> is canc
+    public static async Task<List<string[]>> ToCsvContentAsync(this DbDataReader reader, List<string>? columnsToInclude = null, CancellationToken cancellationToken = default)
+    {
+        var csvContent = new List<string[]>();
+
+        if (reader == null || !reader.HasRows)
+        {
+            return csvContent;
+        }
+
+        // Map out the column names and their database indices
+        var schemaMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        for (int i = 0; i < reader.FieldCount; i++)
+        {
+            schemaMap[reader.GetName(i)] = i;
+        }
+
+        // Determine target column indices based on user selection or full schema
+        List<int> targetIndices = new List<int>();
+        string[] headers;
+
+        if (columnsToInclude != null && columnsToInclude.Count > 0)
+        {
+            var headersList = new List<string>();
+            // Filter and order based on the user's provided list
+            foreach (var colName in columnsToInclude)
+            {
+                if (schemaMap.TryGetValue(colName, out int index))
+                {
+                    targetIndices.Add(index);
+                    headersList.Add(colName);
+                }
+                else
+                {
+                    Debug.WriteLine($"Column '{colName}' requested for CSV export was not found in the data reader source.");
+                }
+            }
+            headers = headersList.ToArray();
+        }
+        else
+        {
+            // Default behavior: Include all columns in their natural DB order
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                targetIndices.Add(i);
+            }
+            headers = schemaMap.Keys.ToArray();
+        }
+
+        // Add the headers to the CSV output
+        csvContent.Add(headers);
+        int targetFieldCount = targetIndices.Count;
+
+        // Extract Rows dynamically
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            if (cancellationToken.IsCancellationRequested) break;
+
+            string[] row = new string[targetFieldCount];
+
+            for (int i = 0; i < targetFieldCount; i++)
+            {
+                int dbIndex = targetIndices[i];
+
+                if (await reader.IsDBNullAsync(dbIndex, cancellationToken))
+                {
+                    row[i] = "";
+                }
+                else
+                {
+                    string val = reader.GetValue(dbIndex)?.ToString() ?? "";
+
+                    // Standard CSV escaping
+                    if (val.Contains(",") || val.Contains("\r") || val.Contains("\n") || val.Contains("\""))
+                    {
+                        val = val.Replace("\"", "")
+                                 .Replace(",", " ")
+                                 .Replace("\r", "")
+                                 .Replace("\n", "");
+                    }
+
+                    row[i] = val;
+                }
+            }
+
+            csvContent.Add(row);
+        }
+
+        return csvContent;
     }
 }

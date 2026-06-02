@@ -6,8 +6,6 @@
 
 using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskManagement.Contracts.Options;
-using AndrewM5.DevKit.ThreadLocks;
-using AndrewM5.DevKit.ThreadLocks.Contracts.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,7 +25,7 @@ public static class TaskManagementServiceCollection
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> or <paramref name="config"/> is null.</exception>
     /// <remarks>
     /// This method binds configuration from the "AndrewM5.DevKit:TaskManager" section and registers 
-    /// <see cref="ITaskRegistry"/>, <see cref="ITaskManager"/>, and <see cref="IThreadLockManager"/> as Singletons.
+    /// <see cref="ITaskRegistry"/>, and <see cref="ITaskManager"/> as Singletons.
     /// </remarks>
     public static IServiceCollection AddTaskManagement(this IServiceCollection services, IConfiguration config)
     {

@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AndrewM5.DevKit.Core\AndrewM5.DevKit.Core.csproj" />
-    <ProjectReference Include="..\AndrewM5.DevKit.ThreadLocks.Contracts\AndrewM5.DevKit.ThreadLocks.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

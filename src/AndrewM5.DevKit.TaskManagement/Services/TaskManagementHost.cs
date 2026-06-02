@@ -5,7 +5,6 @@
  */
 
 using AndrewM5.DevKit.TaskManagement.Contracts.Interfaces;
-using AndrewM5.DevKit.ThreadLocks.Contracts.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AndrewM5.DevKit.TaskManagement.Services;
@@ -27,8 +26,7 @@ public static class TaskManagementHost
     /// <param name="sp">The <see cref="IServiceProvider"/> used to resolve required services.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if <see cref="ITaskRegistry"/>, <see cref="ITaskManager"/>, or <see cref="IThreadLockManager"/> 
-    /// are not registered in the service collection.
+    /// Thrown if <see cref="ITaskRegistry"/> or <see cref="ITaskManager"/> are not registered in the service collection.
     /// </exception>
     public static void Initialize(IServiceProvider sp)
     {
