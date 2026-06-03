@@ -10,6 +10,7 @@
     <Authors>AndrewM5</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <PackageOutputPath>..\..\packages</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
