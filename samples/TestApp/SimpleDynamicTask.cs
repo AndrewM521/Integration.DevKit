@@ -11,7 +11,7 @@ namespace TestApp;
 
 internal class SimpleDynamicTask : ManagedTask
 {
-    public SimpleDynamicTask() : base("SimpleDynamicTask", Guid.NewGuid()) {}
+    public SimpleDynamicTask() : base("SimpleDynamicTask") {}
 
     public override async Task DoTaskWork(IManagedTaskIterationHandle iterationHandle)
     {

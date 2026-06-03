@@ -116,9 +116,9 @@ public class ManagedProcess : IManagedProcess
                         _logger?.LogWarning($"Failure to close proccess after waiting {waitTime.Seconds} seconds. Process '{ProcessKey}' force killed.");
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
-                    _logger?.LogError($"Failed to cancel, trying to foce cancel now..");
+                    _logger?.LogError($"Failed to cancel, trying to force cancel now..");
 
                     Process.Kill(true);
                 }

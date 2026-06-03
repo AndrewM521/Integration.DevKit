@@ -4,10 +4,11 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using AndrewM5.DevKit.ThreadLocks;
 using AndrewM5.DevKit.ThreadLocks.Contracts.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AndrewM5.DevKit.ThreadSafeItems.Services;
+namespace AndrewM5.DevKit.ThreadSafeItems;
 
 /// <summary>
 /// Provides static access to thread-safe service instances within the application.
@@ -17,11 +18,31 @@ namespace AndrewM5.DevKit.ThreadSafeItems.Services;
 /// It must be initialized during application startup (e.g., in Program.cs or Startup.cs) 
 /// after the service provider has been built.
 /// </remarks>
-public static class ThreadSafeItemsHost
+public static class Service_ThreadSafeItems
 {
-    private const string NoInit = "ThreadSafeItemsHost has not been initialized.";
+    private const string NoInit = "Service_ThreadSafeItems has not been initialized.";
 
     private static ThreadSafeFileIO? _threadSafeFileIO;
+
+    /// <summary>
+    /// Adds the <see cref="ThreadSafeFileIO"/> service to the service collection as a singleton.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the service to.</param>
+    /// <returns>
+    /// The same <see cref="IServiceCollection"/> instance to support a fluent configuration syntax.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> is <see langword="null"/>.</exception>
+    public static IServiceCollection AddThreadSafeItems(this IServiceCollection services)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
+        services.AddSingleton<ThreadSafeFileIO>();
+
+        return services;
+    }
 
     /// <summary>
     /// Initializes the static host by resolving <see cref="ThreadSafeFileIO"/> and validating 
@@ -46,7 +67,7 @@ public static class ThreadSafeItemsHost
         }
         catch (Exception)
         {
-            throw new InvalidOperationException($"{nameof(ThreadSafeItemsServiceCollection)} requires the ThreadLocks module. Call AddThreadLocks() before AddThreadSafeItems()");
+            throw new InvalidOperationException($"{nameof(Service_ThreadSafeItems)} requires the ThreadLocks module. Call AddThreadLocks() before AddThreadSafeItems()");
         }
 
         _threadSafeFileIO = sp.GetService<ThreadSafeFileIO>();

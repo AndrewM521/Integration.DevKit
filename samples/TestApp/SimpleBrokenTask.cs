@@ -12,7 +12,7 @@ namespace TestApp;
 
 internal class SimpleBrokenTask : ManagedTask
 {
-    public SimpleBrokenTask() : base("SimpleBrokenTask", Guid.NewGuid()) {}
+    public SimpleBrokenTask() : base("SimpleBrokenTask") {}
 
     public override async Task DoTaskWork(IManagedTaskIterationHandle iterationHandle)
     {

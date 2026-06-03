@@ -41,23 +41,27 @@ public abstract class ManagedTask : IDisposable
     /// Initializes a new instance of the <see cref="ManagedTask"/> class.
     /// </summary>
     /// <param name="taskName">The friendly display name of the task.</param>
-    /// <param name="id">A unique identifier for this specific task instance.</param>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="taskName"/> is null or whitespace, or if <paramref name="id"/> is <see cref="Guid.Empty"/>.</exception>
-    protected ManagedTask(string taskName, Guid id)
+    /// <param name="id">Optional <see cref="Guid"/> for Task. Otherwise set to a new <see cref="Guid"/></param>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="taskName"/> is null or whitespace</exception>
+    protected ManagedTask(string taskName, Guid? id = null)
     {
         if (string.IsNullOrWhiteSpace(taskName))
         {
             throw new ArgumentException("Task name cannot be null or whitespace.");
         }
 
-        if (id == Guid.Empty)
-        {
-            throw new ArgumentException("Task id cannot be empty.");
-        }
-
         TaskName = taskName;
-        TaskId = id;
-        TaskKey = $"{taskName}_{id}";
+        
+        if (id == null)
+        {
+            TaskId = Guid.NewGuid();
+        }
+        else
+        {
+            TaskId = (Guid)id;
+        }
+        
+        TaskKey = $"{TaskName}_{TaskId}";
     }
 
     /// <summary>

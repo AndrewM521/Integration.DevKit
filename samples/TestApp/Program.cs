@@ -7,26 +7,23 @@
 using AndrewM5.DevKit.RESTApiMgmt;
 using AndrewM5.DevKit.RESTApiMgmt.Contracts.Interfaces;
 using AndrewM5.DevKit.RESTApiMgmt.Contracts.Models;
-using AndrewM5.DevKit.RESTApiMgmt.Services;
 using AndrewM5.DevKit.Core;
 using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.CredentialMgmt.Services;
-using AndrewM5.DevKit.CustomLogger.Flusher.Services;
-using AndrewM5.DevKit.Logging.Services;
 using AndrewM5.DevKit.ProcessLauncher;
-using AndrewM5.DevKit.ProcessLauncher.Services;
-using AndrewM5.DevKit.SQLMgmt.Services;
 using AndrewM5.DevKit.TaskMgmt;
 using AndrewM5.DevKit.TaskMgmt.Contracts.Interfaces;
 using AndrewM5.DevKit.TaskMgmt.Contracts.Models;
-using AndrewM5.DevKit.TaskMgmt.Services;
-using AndrewM5.DevKit.ThreadLocks.Services;
-using AndrewM5.DevKit.ThreadSafeItems.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using AndrewM5.DevKit.CredentialMgmt;
+using AndrewM5.DevKit.CustomLogger;
+using AndrewM5.DevKit.CustomLogger.Flusher;
+using AndrewM5.DevKit.SQLMgmt;
+using AndrewM5.DevKit.ThreadLocks;
+using AndrewM5.DevKit.ThreadSafeItems;
 
 namespace TestApp;
 
@@ -41,31 +38,31 @@ public class Program
         var host = Host.CreateDefaultBuilder(args)
             .ConfigureServices((context, services) =>
             {
-                //services.AddCustomLogging(config);
-                //services.AddCustomLogFlusher(config);
+                services.AddCustomLogging(config);
+                services.AddCustomLogFlusher(config);
                 services.AddProcessLauncher();
-                services.AddRESTApiManagement(config);
+                services.AddRESTApiMgmt(config);
                 services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
                 services.AddThreadLocks();
                 services.AddThreadSafeItems();
-                services.AddTaskManagement(config);
-                services.AddSQLManagement(config);
+                services.AddTaskMgmt(config);
+                services.AddSQLMgmt(config);
 
                 // Register your app entry
                 services.AddSingleton<AppEntry>();
             })
             .Build();
 
-        //LoggingHost.Initialize(host.Services);
-        //LogFlusherHost.Initalize(host.Services);
-        ProcessLauncherHost.Initialize(host.Services);
-        ApiManagementHost.Initialize(host.Services);
-        ThreadLocksHost.Initialize(host.Services);
-        ThreadSafeItemsHost.Initialize(host.Services);
-        TaskManagementHost.Initialize(host.Services);
-        SQLManagementHost.Initialize(host.Services); //NEED TO MAKE
-
-        CredentialManagementHost.InitializeFileSecretStore(host.Services);
+        
+        Service_CustomLogger.Initialize(host.Services);
+        Service_LogFlusher.Initalize(host.Services);
+        Service_ProcessLauncher.Initialize(host.Services);
+        Service_RESTApiMgmt.Initialize(host.Services);
+        Service_ThreadLocks.Initialize(host.Services);
+        Service_ThreadSafeItems.Initialize(host.Services);
+        Service_TaskMgmt.Initialize(host.Services);
+        Service_SQLMgmt.Initialize(host.Services);
+        Service_CredentialMgmt.InitializeFileSecretStore(host.Services);
 
         // Start hosted services (LogFlushService will start running in the background)
         await host.StartAsync();
@@ -108,7 +105,7 @@ public class AppEntry
         Console.WriteLine("----|----|Custom Logger Management|----|----");
         Console.WriteLine("Custom Logger Test (Look at Visual Studio output panel)");
 
-        var _loggerManager = LoggingHost.LoggerManager;
+        var _loggerManager = Service_CustomLogger.LoggerManager;
 
         _loggerManager.LogRuntimeSettings();
 
@@ -140,8 +137,8 @@ public class AppEntry
         Console.WriteLine("----|----|Custom Logger Flusher|----|----");
         Console.WriteLine("Custom Logger Flusher Test (Look at Visual Studio output panel)");
 
-        var _loggerManager = LoggingHost.LoggerManager;
-        var _logFlushService = LogFlusherHost.LogFlushService;
+        var _loggerManager = Service_CustomLogger.LoggerManager;
+        var _logFlushService = Service_LogFlusher.LogFlushService;
 
         _loggerManager.LogRuntimeSettings();
         _logFlushService.LogRuntimeSettings();
@@ -170,7 +167,7 @@ public class AppEntry
     private async Task TestProcessLauncher()
     {
         Console.WriteLine("----|----|Process Launcher|----|----");
-        var _processManager = ProcessLauncherHost.ProcessManager;
+        var _processManager = Service_ProcessLauncher.ProcessManager;
 
         Console.WriteLine("Console Command Ping Test (Limited)");
         var processConfig_Limited = new ManagedProcessConfig
@@ -220,7 +217,7 @@ public class AppEntry
     private async Task TestApiManagement()
     {
         Console.WriteLine("----|----|Api Management|----|----");
-        var _apiManager = ApiManagementHost.ApiManager;
+        var _apiManager = Service_RESTApiMgmt.ApiManager;
         var _client = _apiManager.GetClient("TestClient");
 
         _apiManager.LogRuntimeSettings();
@@ -356,7 +353,7 @@ public class AppEntry
     private void TestCredentialManagement()
     {
         Console.WriteLine("----|----|Credential Management|----|----");
-        var store = CredentialManagementHost.FileSecretStore;
+        var store = Service_CredentialMgmt.FileSecretStore;
 
         string fileName = "Api";
         string initialKey = "ApiKey";
@@ -423,7 +420,7 @@ public class AppEntry
     {
         Console.WriteLine("----|----|Thread Safe FileIO |----|----");
 
-        var _threadSafeFileIO = ThreadSafeItemsHost.ThreadSafeFileIOClass;
+        var _threadSafeFileIO = Service_ThreadSafeItems.ThreadSafeFileIOClass;
         string filePath = "C:\\Users\\andre\\Projects\\Junk\\ThreadSafeTest.txt";
         string filePath_AsyncLock = "C:\\Users\\andre\\Projects\\Junk\\ThreadSafeTest_AsyncLock.txt";
         string filePath_SyncLock = "C:\\Users\\andre\\Projects\\Junk\\ThreadSafeTest_SyncLock.txt";
@@ -645,8 +642,8 @@ public class AppEntry
     }
     private async Task TestTaskManagement()
     {
-        var _taskManager = TaskManagementHost.TaskManager;
-        var _taskRegistry = TaskManagementHost.TaskRegistry;
+        var _taskManager = Service_TaskMgmt.TaskManager;
+        var _taskRegistry = Service_TaskMgmt.TaskRegistry;
         _taskManager.LogRuntimeSettings();
 
         OperationResult<IManagedTaskHandle> createTask;
@@ -716,8 +713,8 @@ public class AppEntry
     {
         Console.WriteLine("----|----|Task Management|----|----");
 
-        var _taskManager = TaskManagementHost.TaskManager;
-        var _taskRegistry = TaskManagementHost.TaskRegistry;
+        var _taskManager = Service_TaskMgmt.TaskManager;
+        var _taskRegistry = Service_TaskMgmt.TaskRegistry;
         _taskManager.LogRuntimeSettings();
 
         OperationResult<IManagedTaskHandle> createTask;
@@ -947,8 +944,8 @@ public class AppEntry
     {
         Console.WriteLine("----|----|Task Management|----|----");
 
-        var _taskManager = TaskManagementHost.TaskManager;
-        var _taskRegistry = TaskManagementHost.TaskRegistry;
+        var _taskManager = Service_TaskMgmt.TaskManager;
+        var _taskRegistry = Service_TaskMgmt.TaskRegistry;
         _taskManager.LogRuntimeSettings();
 
         OperationResult<IManagedTaskHandle> createTask;

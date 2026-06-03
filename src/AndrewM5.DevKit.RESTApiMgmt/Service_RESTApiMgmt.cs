@@ -5,23 +5,41 @@
  */
 
 using AndrewM5.DevKit.RESTApiMgmt.Contracts.Interfaces;
+using AndrewM5.DevKit.RESTApiMgmt.Contracts.Options;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AndrewM5.DevKit.RESTApiMgmt.Services;
+namespace AndrewM5.DevKit.RESTApiMgmt;
 
 /// <summary>
 /// Provides a static entry point to access the APIManagement module 
 /// </summary>
 /// <remarks>
 /// This host acts as a static wrapper for services resolved from the Dependency Injection container. 
-/// It must be initialized during application startup (e.g., in Program.cs or Startup.cs) 
-/// after the service provider has been built.
+/// It must be registered and initialized during application startup (e.g., in Program.cs or Startup.cs)
 /// </remarks>
-public static class ApiManagementHost
+public static class Service_RESTApiMgmt
 {
-    private const string NoInit = "ApiManagementHost has not been initialized.";
+    private const string NoInit = "Service_RESTApiMgmt has not been initialized.";
 
     private static IApiManager? _apiManager;
+
+    /// <summary>
+    /// Adds the API management infrastructure to the service collection
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
+    /// <param name="configuration">The application configuration used to bind <see cref="ApiManagerSettings"/>.</param>
+    /// <returns>The original <see cref="IServiceCollection"/> for chaining calls.</returns>
+    public static IServiceCollection AddRESTApiMgmt(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<ApiManagerSettings>(configuration.GetSection("AndrewM5.DevKit:ApiClientManagement"));
+
+        services.AddSingleton<IApiManager, ApiManager>();
+
+        services.AddHttpClient();
+
+        return services;
+    }
 
     /// <summary>
     /// Initializes the static host with the <see cref="IApiManager"/> resolved from the service provider.

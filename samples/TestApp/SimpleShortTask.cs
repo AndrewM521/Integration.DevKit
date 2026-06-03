@@ -11,7 +11,7 @@ namespace TestApp;
 
 internal class SimpleShortTask : ManagedTask
 {
-    public SimpleShortTask() : base("SimpleShortTask", Guid.NewGuid()) {}
+    public SimpleShortTask() : base("SimpleShortTask") {}
 
     public override async Task DoTaskWork(IManagedTaskIterationHandle iterationHandle)
     {

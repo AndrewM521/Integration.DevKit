@@ -7,7 +7,7 @@
 using AndrewM5.DevKit.ThreadLocks.Contracts.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AndrewM5.DevKit.ThreadLocks.Services;
+namespace AndrewM5.DevKit.ThreadLocks;
 
 /// <summary>
 /// Provides a static entry point for accessing the <see cref="IThreadLockManager"/> instance.
@@ -17,11 +17,32 @@ namespace AndrewM5.DevKit.ThreadLocks.Services;
 /// It must be initialized during application startup (e.g., in Program.cs or Startup.cs) 
 /// after the service provider has been built.
 /// </remarks>
-public static class ThreadLocksHost
+public static class Service_ThreadLocks
 {
-    private const string NoInit = "ThreadLocksHost has not been initialized.";
+    private const string NoInit = "Service_ThreadLocks has not been initialized.";
 
     private static IThreadLockManager? _threadLockManager;
+
+    /// <summary>
+    /// Registers the <see cref="IThreadLockManager"/> and its implementation as a singleton service.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+    /// <returns>
+    /// The same <see cref="IServiceCollection"/> instance so that multiple calls can be chained.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> is <see langword="null"/>.</exception>
+    public static IServiceCollection AddThreadLocks(this IServiceCollection services)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
+        // Optionally, also register ThreadLockManager if you want it auto-resolved
+        services.AddSingleton<IThreadLockManager, ThreadLockManager>();
+
+        return services;
+    }
 
     /// <summary>
     /// Initializes the static host with the required <see cref="IThreadLockManager"/> from the service provider.
@@ -41,7 +62,7 @@ public static class ThreadLocksHost
         _threadLockManager = sp.GetService<IThreadLockManager>();
         if (_threadLockManager == null)
         {
-            throw new InvalidOperationException($"{nameof(IThreadLockManager)} is not registered. Make sure you call AddThreadLocks() when configuring services before initializing {nameof(ThreadLocksHost)}.");
+            throw new InvalidOperationException($"{nameof(IThreadLockManager)} is not registered. Make sure you call AddThreadLocks() when configuring services before initializing {nameof(Service_ThreadLocks)}.");
         }
     }
 

@@ -11,7 +11,7 @@ namespace TestApp;
 
 internal class SimpleLongTask_NoTokenChecking : ManagedTask
 {
-    public SimpleLongTask_NoTokenChecking() : base("SimpleLongTask_NoTokenChecking", Guid.NewGuid()) {}
+    public SimpleLongTask_NoTokenChecking() : base("SimpleLongTask_NoTokenChecking") {}
 
     public override async Task DoTaskWork(IManagedTaskIterationHandle iterationHandle)
     {

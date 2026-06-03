@@ -59,7 +59,7 @@ public class SQLManager : ISQLManager
             clientSettings = new SQLClientSettings();
         }
 
-        return _clients.GetOrAdd(clientName, _ => { return new SQLClient(this, clientName, clientSettings); });
+        return _clients.GetOrAdd(clientName, _ => { return new SQLClient(clientName, clientSettings); });
     }
 
     /// <inheritdoc/>

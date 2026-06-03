@@ -41,11 +41,10 @@ public class SQLClient : ISQLClient
     /// <summary>
     /// Initializes a new instance of the <see cref="SQLClient"/> class.
     /// </summary>
-    /// <param name="sqlDBManager">The parent manager responsible for this client.</param>
     /// <param name="clientName">The unique name identifying this specific client instance.</param>
     /// <param name="settings">The configuration and connectivity settings.</param>
     /// <param name="logger">An optional logger instance for diagnostic reporting.</param>
-    internal SQLClient(ISQLManager sqlDBManager, string clientName, SQLClientSettings settings, ICustomLogger? logger = null)
+    internal SQLClient(string clientName, SQLClientSettings settings, ICustomLogger? logger = null)
     {
         ClientName = clientName;
 

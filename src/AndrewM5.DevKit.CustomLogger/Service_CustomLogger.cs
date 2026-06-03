@@ -5,23 +5,54 @@
  */
 
 using AndrewM5.DevKit.CustomLogger.Contracts.Interfaces;
+using AndrewM5.DevKit.CustomLogger.Contracts.Options;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-namespace AndrewM5.DevKit.Logging.Services;
+namespace AndrewM5.DevKit.CustomLogger;
 
 /// <summary>
 /// Provides a static entry point to access the Logging module. 
 /// </summary>
 /// <remarks>
-/// This host acts as a static wrapper for services resolved from the Dependency Injection container. 
-/// It must be initialized during application startup (e.g., in Program.cs or Startup.cs) 
-/// after the service provider has been built.
+/// This acts as a static wrapper for services resolved from the Dependency Injection container. 
+/// It must be registered and initialized during application startup (e.g., in Program.cs or Startup.cs)
 /// </remarks>
-public static class LoggingHost
+public static class Service_CustomLogger
 {
-    private const string NoInit = "LoggingHost has not been initialized.";
+    private const string NoInit = "Service_CustomLogger has not been initialized.";
 
     private static ILogRegistry? _logRegistry;
     private static ICustomLoggerManager? _loggerManager;
+
+    /// <summary>
+    /// Registers the custom logging infrastructure, including settings, the logger manager, and the log registry.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+    /// <param name="config">The <see cref="IConfiguration"/> instance used to bind logging settings.</param>
+    /// <returns>The modified <see cref="IServiceCollection"/> for further chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> or <paramref name="config"/> is null.</exception>
+    public static IServiceCollection AddCustomLogging(this IServiceCollection services, IConfiguration config)
+    {
+        if (services == null)
+        {
+            throw new ArgumentNullException(nameof(services));
+        }
+
+        if (config == null)
+        {
+            throw new ArgumentNullException(nameof(config));
+        }
+
+        // Bind LoggerManagerSettings
+        services.Configure<LoggerManagerSettings>(config.GetSection("AndrewM5.DevKit:CustomLogger"));
+
+        // Register the concrete class
+        services.AddSingleton<ICustomLoggerManager, CustomLoggerManager>();
+
+        services.AddSingleton<ILogRegistry, LogRegistry>();
+
+        return services;
+    }
 
     /// <summary>
     /// Initializes the static logging host with the required services from the service provider.
