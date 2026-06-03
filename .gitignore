@@ -3,14 +3,6 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-# -------------------------------------------------------------
-# Track the packages folder container, but ignore its contents
-packages/*
-
-# Make an exception so the placeholder file is tracked
-!packages/.gitkeep
-# -------------------------------------------------------------
-
 # User-specific files
 *.rsuser
 *.suo
