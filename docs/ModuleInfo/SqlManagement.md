@@ -5,7 +5,7 @@ which handles the lifecycle and configuration of database connections, and the S
 ## 1. Access and Configuration 
 This module relies on the standard .NET Options pattern for configuration. It maps settings from your appsettings.json to the manager's runtime state.
 
-Namespace: AndrewM5.DevKit.SqlManagement
+Namespace: Integration.DevKit.SqlManagement
 
 ### Configuration (appsettings.json)
 Define your named database clients in the SqlClientManagement section:

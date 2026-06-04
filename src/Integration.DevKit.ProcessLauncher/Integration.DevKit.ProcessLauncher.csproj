@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Title>DevKit.ProcessLauncher</Title>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Integration.DevKit.ProcessLauncher.Contracts\Integration.DevKit.ProcessLauncher.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

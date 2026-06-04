@@ -5,7 +5,7 @@ It manages resources efficiently using reference counting, automatically cleanin
 ## 1. Access
 The ThreadLocks module utilizes a static "Host" wrapper to provide global access to the locking service after initialization.
 
-Namespace: AndrewM5.DevKit.ThreadLocks
+Namespace: Integration.DevKit.ThreadLocks
 
 Key Normalization: To prevent deadlocks caused by casing differences, all keys are automatically trimmed and normalized to lowercase (Invariant Culture).
 Thread Safety: The manager uses ConcurrentDictionary and Interlocked operations to ensure the management of the locks themselves is thread-safe.

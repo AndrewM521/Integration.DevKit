@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Title>DevKit.ThreadLocks</Title>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Integration.DevKit.ThreadLocks.Contracts\Integration.DevKit.ThreadLocks.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

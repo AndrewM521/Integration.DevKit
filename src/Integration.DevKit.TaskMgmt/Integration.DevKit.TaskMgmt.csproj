@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Title>DevKit.TaskMgmt</Title>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Integration.DevKit.TaskMgmt.Contracts\Integration.DevKit.TaskMgmt.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -13,13 +13,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AndrewM5.DevKit.CredentialMgmt\AndrewM5.DevKit.CredentialMgmt.csproj" />
-    <ProjectReference Include="..\..\src\AndrewM5.DevKit.CustomLogger.Flusher\AndrewM5.DevKit.CustomLogger.Flusher.csproj" />
-    <ProjectReference Include="..\..\src\AndrewM5.DevKit.ProcessLauncher\AndrewM5.DevKit.ProcessLauncher.csproj" />
-    <ProjectReference Include="..\..\src\AndrewM5.DevKit.RESTApiMgmt\AndrewM5.DevKit.RESTApiMgmt.csproj" />
-    <ProjectReference Include="..\..\src\AndrewM5.DevKit.SQLMgmt\AndrewM5.DevKit.SQLMgmt.csproj" />
-    <ProjectReference Include="..\..\src\AndrewM5.DevKit.TaskMgmt\AndrewM5.DevKit.TaskMgmt.csproj" />
-    <ProjectReference Include="..\..\src\AndrewM5.DevKit.ThreadSafeItems\AndrewM5.DevKit.ThreadSafeItems.csproj" />
+    <ProjectReference Include="..\..\src\Integration.DevKit.CredentialMgmt\Integration.DevKit.CredentialMgmt.csproj" />
+    <ProjectReference Include="..\..\src\Integration.DevKit.CustomLogger.Flusher\Integration.DevKit.CustomLogger.Flusher.csproj" />
+    <ProjectReference Include="..\..\src\Integration.DevKit.ProcessLauncher\Integration.DevKit.ProcessLauncher.csproj" />
+    <ProjectReference Include="..\..\src\Integration.DevKit.RESTApiMgmt\Integration.DevKit.RESTApiMgmt.csproj" />
+    <ProjectReference Include="..\..\src\Integration.DevKit.SQLMgmt\Integration.DevKit.SQLMgmt.csproj" />
+    <ProjectReference Include="..\..\src\Integration.DevKit.TaskMgmt\Integration.DevKit.TaskMgmt.csproj" />
+    <ProjectReference Include="..\..\src\Integration.DevKit.ThreadSafeItems\Integration.DevKit.ThreadSafeItems.csproj" />
   </ItemGroup>
 
   <ItemGroup>

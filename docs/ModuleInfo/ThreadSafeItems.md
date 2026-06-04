@@ -6,7 +6,7 @@ The ThreadSafeItems module provides high-level utilities for common operations t
 This module acts as a consumer of the ThreadLocks and CustomLogger modules. It automates the "lock-try-finally-exit" pattern so you don't 
 have to write boilerplate synchronization code for every file operation.
 
-Namespace: AndrewM5.DevKit.ThreadSafeItems
+Namespace: Integration.DevKit.ThreadSafeItems
 
 Dependencies: Requires IThreadLockManager to be registered in the service container.
 

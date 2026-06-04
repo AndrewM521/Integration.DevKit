@@ -4,26 +4,26 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using AndrewM5.DevKit.RESTApiMgmt;
-using AndrewM5.DevKit.RESTApiMgmt.Contracts.Interfaces;
-using AndrewM5.DevKit.RESTApiMgmt.Contracts.Models;
-using AndrewM5.DevKit.Core;
-using AndrewM5.DevKit.Core.Results;
-using AndrewM5.DevKit.ProcessLauncher;
-using AndrewM5.DevKit.TaskMgmt;
-using AndrewM5.DevKit.TaskMgmt.Contracts.Interfaces;
-using AndrewM5.DevKit.TaskMgmt.Contracts.Models;
+using Integration.DevKit.RESTApiMgmt;
+using Integration.DevKit.RESTApiMgmt.Contracts.Interfaces;
+using Integration.DevKit.RESTApiMgmt.Contracts.Models;
+using Integration.DevKit.Core;
+using Integration.DevKit.Core.Results;
+using Integration.DevKit.ProcessLauncher;
+using Integration.DevKit.TaskMgmt;
+using Integration.DevKit.TaskMgmt.Contracts.Interfaces;
+using Integration.DevKit.TaskMgmt.Contracts.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using AndrewM5.DevKit.CredentialMgmt;
-using AndrewM5.DevKit.CustomLogger;
-using AndrewM5.DevKit.CustomLogger.Flusher;
-using AndrewM5.DevKit.SQLMgmt;
-using AndrewM5.DevKit.ThreadLocks;
-using AndrewM5.DevKit.ThreadSafeItems;
+using Integration.DevKit.CredentialMgmt;
+using Integration.DevKit.CustomLogger;
+using Integration.DevKit.CustomLogger.Flusher;
+using Integration.DevKit.SQLMgmt;
+using Integration.DevKit.ThreadLocks;
+using Integration.DevKit.ThreadSafeItems;
 
 namespace TestApp;
 
