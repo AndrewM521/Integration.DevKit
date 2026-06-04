@@ -32,7 +32,7 @@ public static class Service_RESTApiMgmt
     /// <returns>The original <see cref="IServiceCollection"/> for chaining calls.</returns>
     public static IServiceCollection AddRESTApiMgmt(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<ApiManagerSettings>(configuration.GetSection("AndrewM5.DevKit:ApiClientManagement"));
+        services.Configure<ApiManagerSettings>(configuration.GetSection("Integration.DevKit:ApiClientManagement"));
 
         services.AddSingleton<IApiManager, ApiManager>();
 

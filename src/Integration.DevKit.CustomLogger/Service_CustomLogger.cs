@@ -44,7 +44,7 @@ public static class Service_CustomLogger
         }
 
         // Bind LoggerManagerSettings
-        services.Configure<LoggerManagerSettings>(config.GetSection("AndrewM5.DevKit:CustomLogger"));
+        services.Configure<LoggerManagerSettings>(config.GetSection("Integration.DevKit:CustomLogger"));
 
         // Register the concrete class
         services.AddSingleton<ICustomLoggerManager, CustomLoggerManager>();

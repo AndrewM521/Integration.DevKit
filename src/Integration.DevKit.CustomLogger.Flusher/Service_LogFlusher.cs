@@ -45,7 +45,7 @@ public static class Service_LogFlusher
         }
 
         // Bind LogFlushServiceSettings
-        services.Configure<LogFlushServiceSettings>(config.GetSection("AndrewM5.DevKit:CustomLoggerFlusher"));
+        services.Configure<LogFlushServiceSettings>(config.GetSection("Integration.DevKit:CustomLoggerFlusher"));
 
         // Register the concrete class and inject ICustomLoggerManager
         services.AddSingleton(sp =>

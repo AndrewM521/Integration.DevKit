@@ -33,7 +33,7 @@ public static class Service_SQLMgmt
     public static IServiceCollection AddSQLMgmt(this IServiceCollection services, IConfiguration configuration)
     {
         // Bind settings
-        services.Configure<SQLManagerSettings>(configuration.GetSection("AndrewM5.DevKit:SQLManagement"));
+        services.Configure<SQLManagerSettings>(configuration.GetSection("Integration.DevKit:SQLManagement"));
 
         // Register the concrete class
         services.AddSingleton<ISQLManager, SQLManager>();

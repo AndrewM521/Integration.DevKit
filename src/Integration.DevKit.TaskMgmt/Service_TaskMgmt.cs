@@ -46,7 +46,7 @@ public static class Service_TaskMgmt
         }
 
         // Bind settings
-        services.Configure<TaskManagerSettings>(config.GetSection("AndrewM5.DevKit:TaskManagement"));
+        services.Configure<TaskManagerSettings>(config.GetSection("Integration.DevKit:TaskManagement"));
 
         // Register Task Registry (holds snapshots/history of tasks)
         services.AddSingleton<ITaskRegistry, TaskRegistry>();
