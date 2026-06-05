@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Title>DevKit.CustomLogger</Title>
+    <RootNamespace>Integration.DevKit.CustomLogger</RootNamespace>
+    <Version>1.0.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

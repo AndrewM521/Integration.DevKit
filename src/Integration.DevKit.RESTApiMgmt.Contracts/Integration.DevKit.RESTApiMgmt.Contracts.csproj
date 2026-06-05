@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Title>DevKit.RESTApiMgmt.Contracts</Title>
+    <RootNamespace>Integration.DevKit.RESTApiMgmt.Contracts</RootNamespace>
+    <Version>1.0.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

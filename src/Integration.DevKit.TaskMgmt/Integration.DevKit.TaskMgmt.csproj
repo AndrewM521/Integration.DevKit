@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Title>DevKit.TaskMgmt</Title>
+    <RootNamespace>Integration.DevKit.TaskMgmt</RootNamespace>
+    <Version>1.0.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

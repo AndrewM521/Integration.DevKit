@@ -64,18 +64,32 @@ public class SQLClient : ISQLClient
     {
         var result = new OperationResult<bool>();
 
+        var getConnection = GetConnection();
+        if (!getConnection.MethodSuccess)
+        {
+            return result.SetMethodFailure(getConnection.Exception);
+        }
+
+        var conn = getConnection.Result;
+        bool wasAlreadyOpen = conn.State == ConnectionState.Open;
+
         try
         {
-            var getConnection = GetConnection();
-            if (!getConnection.MethodSuccess)
-            {
-                throw getConnection.Exception;
-            }
-
-            await using (var conn = getConnection.Result)
+            // Only open it if it's currently closed
+            if (!wasAlreadyOpen)
             {
                 await conn.OpenAsync(cancellationToken);
+            }
 
+            // If we just want to verify it works, executing a tiny query 
+            // ensures the server is actually responding, not just pooled.
+            await using var cmd = new SqlCommand("SELECT 1;", conn);
+            await cmd.ExecuteScalarAsync(cancellationToken);
+
+            // If it was already open, leave it open 
+            // Otherwise, close it back down if we are pooling.
+            if (!wasAlreadyOpen && !RuntimeSettings.UseSingleConnection)
+            {
                 await conn.CloseAsync();
             }
 
@@ -85,9 +99,12 @@ public class SQLClient : ISQLClient
         {
             return result.SetMethodFailure(ex);
         }
-        finally
-        {
-            await GCManager.CallGC_Collect("SQL Test Connection");
+        finally 
+        { 
+            if (!RuntimeSettings.UseSingleConnection)
+            {
+                await conn.DisposeAsync();
+            }
         }
     }
 
@@ -100,36 +117,43 @@ public class SQLClient : ISQLClient
         var getConnection = GetConnection();
         if (!getConnection.MethodSuccess)
         {
-            throw getConnection.Exception;
+            return result.SetMethodFailure(getConnection.Exception);
         }
 
-        await using (var conn = getConnection.Result)
-        {
-            await using var cmd = new SqlCommand(sqlStatement, conn)
-            {
-                CommandType = commandType
-            };
+        var conn = getConnection.Result;
 
-            try
+        await using var cmd = new SqlCommand(sqlStatement, conn)
+        {
+            CommandType = commandType
+        };
+
+        try
+        {
+            if (conn.State != ConnectionState.Open)
             {
                 await conn.OpenAsync(cancellationToken);
-
-                configureParameters?.Invoke(cmd.Parameters);
-
-                int count = await cmd.ExecuteNonQueryAsync(cancellationToken);
-
-                return result.SetMethodSuccess(count);
             }
-            catch (Exception ex)
+
+            configureParameters?.Invoke(cmd.Parameters);
+
+            int count = await cmd.ExecuteNonQueryAsync(cancellationToken);
+
+            return result.SetMethodSuccess(count);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+        finally
+        {
+            cmd.Parameters.Clear();
+
+            if (!RuntimeSettings.UseSingleConnection)
             {
-                return result.SetMethodFailure(ex);
+                await conn.DisposeAsync();
             }
-            finally
-            {
-                cmd.Parameters.Clear();
 
-                await GCManager.CallGC_Collect("SQL NonQuery Command");
-            }
+            await GCManager.CallGC_Collect("SQL NonQuery Command");
         }
     }
 
@@ -142,34 +166,41 @@ public class SQLClient : ISQLClient
         var getConnection = GetConnection();
         if (!getConnection.MethodSuccess)
         {
-            throw getConnection.Exception;
+            return result.SetMethodFailure(getConnection.Exception);
         }
 
-        await using (var conn = getConnection.Result)
-        {
-            await using var cmd = new SqlCommand(sqlStatement, conn)
-            {
-                CommandType = commandType
-            };
+        var conn = getConnection.Result;
 
-            try
+        await using var cmd = new SqlCommand(sqlStatement, conn)
+        {
+            CommandType = commandType
+        };
+
+        try
+        {
+            if (conn.State != ConnectionState.Open)
             {
                 await conn.OpenAsync(cancellationToken);
-
-                await processCommand(cmd).ConfigureAwait(false);
-
-                return result.SetMethodSuccess();
             }
-            catch (Exception ex)
+
+            await processCommand(cmd).ConfigureAwait(false);
+
+            return result.SetMethodSuccess();
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+        finally
+        {
+            cmd.Parameters.Clear();
+
+            if (!RuntimeSettings.UseSingleConnection)
             {
-                return result.SetMethodFailure(ex);
+                await conn.DisposeAsync();
             }
-            finally
-            {
-                cmd.Parameters.Clear();
 
-                await GCManager.CallGC_Collect("SQL NonQuery Command");
-            }
+            await GCManager.CallGC_Collect("SQL NonQuery Command");
         }
     }
 
@@ -182,42 +213,49 @@ public class SQLClient : ISQLClient
         var getConnection = GetConnection();
         if (!getConnection.MethodSuccess)
         {
-            throw getConnection.Exception;
+            return result.SetMethodFailure(getConnection.Exception);
         }
 
-        await using (var conn = getConnection.Result)
-        {
-            await using var cmd = new SqlCommand(sqlStatement, conn)
-            {
-                CommandType = commandType
-            };
+        var conn = getConnection.Result;
 
-            try
+        await using var cmd = new SqlCommand(sqlStatement, conn)
+        {
+            CommandType = commandType
+        };
+
+        try
+        {
+            if (conn.State != ConnectionState.Open)
             {
                 await conn.OpenAsync(cancellationToken);
-
-                configureParameters?.Invoke(cmd.Parameters);
-
-                await using var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-
-                // The inner processReader method exists so that the caller access to the reader but not ownership of it.
-                // The reader is then disposed automatically when the callback completes ensuring the reader is released,
-                // preventing leaks.
-
-                await processReader(reader).ConfigureAwait(false);
-
-                return result.SetMethodSuccess();
             }
-            catch (Exception ex)
+
+            configureParameters?.Invoke(cmd.Parameters);
+
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+            // The inner processReader method exists so that the caller access to the reader but not ownership of it.
+            // The reader is then disposed automatically when the callback completes ensuring the reader is released,
+            // preventing leaks.
+
+            await processReader(reader).ConfigureAwait(false);
+
+            return result.SetMethodSuccess();
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+        finally
+        {
+            cmd.Parameters.Clear();
+
+            if (!RuntimeSettings.UseSingleConnection)
             {
-                return result.SetMethodFailure(ex);
+                await conn.DisposeAsync();
             }
-            finally
-            {
-                cmd.Parameters.Clear();
 
-                await GCManager.CallGC_Collect("SQL Data Reader");
-            }
+            await GCManager.CallGC_Collect("SQL Data Reader");
         }
     }
     #endregion
@@ -366,6 +404,12 @@ public class SQLClient : ISQLClient
         {
             if (RuntimeSettings.UseSingleConnection)
             {
+                if (_mainSqlConnection != null && (_mainSqlConnection.State == ConnectionState.Broken || _mainSqlConnection.State == ConnectionState.Closed))
+                {
+                    _mainSqlConnection.Dispose();
+                    _mainSqlConnection = null;
+                }
+
                 if (_mainSqlConnection == null)
                 {
                     var getConnectionStr = GetConnectionString();

@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Title>DevKit.SQLMgmt</Title>
+    <RootNamespace>Integration.DevKit.SQLMgmt</RootNamespace>
+    <Version>1.0.0.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
