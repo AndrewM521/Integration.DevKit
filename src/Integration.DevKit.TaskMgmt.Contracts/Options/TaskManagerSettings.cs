@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-namespace Integration.DevKit.TaskMgmt.Contracts.Options;
+namespace Integration.DevKit.TaskMgmt.Contracts;
 
 /// <summary>
 /// Provides global configuration settings for the Task Manager, 
@@ -21,15 +21,15 @@ public class TaskManagerSettings
     public int MaxConcurrentTasks { get; set; } = int.MaxValue;
 
     /// <summary>
-    /// Gets or sets the maximum number of task records allowed in the <see cref="Interfaces.ITaskRegistry"/>.
+    /// Gets or sets the maximum number of task records allowed in the <see cref="ITaskRegistry"/>.
     /// The default value is 2000.
     /// </summary>
     /// 
     /// <summary>
-    /// Gets or sets the maximum number of task records allowed in the <see cref="Interfaces.ITaskRegistry"/>.
+    /// Gets or sets the maximum number of task records allowed in the <see cref="ITaskRegistry"/>.
     /// </summary>
     /// <remarks>
-    /// This limit controls how many <see cref="Interfaces.IManagedTaskSnapshot"/> objects are 
+    /// This limit controls how many <see cref="IManagedTaskSnapshot"/> objects are 
     /// retained in memory. Once this limit is reached, the manager prunes old records
     /// </remarks>
     /// <value>Default value is 2000.</value>
@@ -39,7 +39,7 @@ public class TaskManagerSettings
     /// Gets or sets the maximum number of historical iteration records kept for each individual task.
     /// </summary>
     /// <remarks>
-    /// This property limits the size of the <see cref="Interfaces.IManagedTaskSnapshot.IterationHistory"/> 
+    /// This property limits the size of the <see cref="IManagedTaskSnapshot.IterationHistory"/> 
     /// dictionary. It is essential for long-running tasks to prevent the snapshot from 
     /// growing indefinitely over time.
     /// </remarks>

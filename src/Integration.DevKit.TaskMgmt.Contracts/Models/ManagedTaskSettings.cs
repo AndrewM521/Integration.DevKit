@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-namespace Integration.DevKit.TaskMgmt.Contracts.Models;
+namespace Integration.DevKit.TaskMgmt.Contracts;
 
 /// <summary>
 /// Defines the execution behavior, retry policies, and iteration limits for an individual managed task.

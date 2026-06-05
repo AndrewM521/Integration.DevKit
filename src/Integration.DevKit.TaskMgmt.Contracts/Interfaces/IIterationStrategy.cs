@@ -4,9 +4,9 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.CustomLogger.Contracts.Interfaces;
+using Integration.DevKit.CustomLogger.Contracts;
 
-namespace Integration.DevKit.TaskMgmt.Contracts.Interfaces;
+namespace Integration.DevKit.TaskMgmt.Contracts;
 
 /// <summary>
 /// Defines the contract for controlling the timing and flow of managed task iterations.

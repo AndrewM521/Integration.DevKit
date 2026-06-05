@@ -5,9 +5,8 @@
  */
 
 using Integration.DevKit.Core;
-using Integration.DevKit.Core.Results;
-using Integration.DevKit.CustomLogger.Contracts.Interfaces;
-using Integration.DevKit.ThreadLocks.Contracts.Interfaces;
+using Integration.DevKit.CustomLogger.Contracts;
+using Integration.DevKit.ThreadLocks.Contracts;
 using Microsoft.Extensions.Logging;
 using System.Text;
 

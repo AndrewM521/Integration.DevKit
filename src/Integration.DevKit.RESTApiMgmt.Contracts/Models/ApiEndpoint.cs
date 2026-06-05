@@ -1,13 +1,7 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
+﻿using System.Net;
+using Integration.DevKit.Core;
 
-using Integration.DevKit.Core.Results;
-using System.Net;
-
-namespace Integration.DevKit.RESTApiMgmt.Contracts.Models;
+namespace Integration.DevKit.RESTApiMgmt.Contracts;
 
 /// <summary>
 /// A utility class for constructing formatted endpoint URLs using various routing styles 

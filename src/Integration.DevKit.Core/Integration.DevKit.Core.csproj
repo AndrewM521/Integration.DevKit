@@ -5,9 +5,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Title>DevKit.Core</Title>
+    <RootNamespace>Integration.DevKit.Core</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Integration.DevKit.CustomLogger.Contracts\Integration.DevKit.CustomLogger.Contracts.csproj" />
+  
   </ItemGroup>
 </Project>

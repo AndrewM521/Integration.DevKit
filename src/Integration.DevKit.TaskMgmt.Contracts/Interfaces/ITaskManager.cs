@@ -1,14 +1,6 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
+﻿using Integration.DevKit.Core;
 
-using Integration.DevKit.Core.Results;
-using Integration.DevKit.TaskMgmt.Contracts.Models;
-using Integration.DevKit.TaskMgmt.Contracts.Options;
-
-namespace Integration.DevKit.TaskMgmt.Contracts.Interfaces;
+namespace Integration.DevKit.TaskMgmt.Contracts;
 
 /// <summary>
 /// Defines the core contract for a manager responsible for the lifecycle, 

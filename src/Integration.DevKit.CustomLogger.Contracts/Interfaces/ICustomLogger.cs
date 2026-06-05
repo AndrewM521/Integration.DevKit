@@ -6,7 +6,7 @@
 
 using Microsoft.Extensions.Logging;
 
-namespace Integration.DevKit.CustomLogger.Contracts.Interfaces;
+namespace Integration.DevKit.CustomLogger.Contracts;
 
 /// <summary>
 /// Defines a custom logging interface that extends the standard <see cref="ILogger"/> 

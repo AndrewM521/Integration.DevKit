@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-namespace Integration.DevKit.TaskMgmt.Contracts.Interfaces;
+namespace Integration.DevKit.TaskMgmt.Contracts;
 
 /// <summary>
 /// Defines a read-only snapshot of a managed task's state and execution metrics 

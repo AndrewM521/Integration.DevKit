@@ -4,9 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.TaskMgmt.Contracts.Interfaces;
-
-namespace Integration.DevKit.TaskMgmt.Contracts.Models;
+namespace Integration.DevKit.TaskMgmt.Contracts;
 
 /// <summary>
 /// Provides a base implementation for a task that can be managed by the task management system.

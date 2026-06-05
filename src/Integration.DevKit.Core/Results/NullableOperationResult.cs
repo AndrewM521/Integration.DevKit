@@ -4,9 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.Core.Abstractions;
-
-namespace Integration.DevKit.Core.Results;
+namespace Integration.DevKit.Core;
 
 /// <summary>
 /// A concrete implementation of <see cref="IOperationResult{T}"/> that allows a null result.

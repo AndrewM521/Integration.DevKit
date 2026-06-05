@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.RESTApiMgmt.Contracts.Interfaces;
+using Integration.DevKit.RESTApiMgmt.Contracts;
 
 namespace Integration.DevKit.RESTApiMgmt;
 

@@ -4,12 +4,11 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.RESTApiMgmt.Contracts.Options;
-using Integration.DevKit.Core.Results;
-using Integration.DevKit.CredentialMgmt.Contracts.Interfaces;
+using Integration.DevKit.Core;
+using Integration.DevKit.CredentialMgmt.Contracts;
 using System.Text;
 
-namespace Integration.DevKit.RESTApiMgmt.Contracts.Interfaces;
+namespace Integration.DevKit.RESTApiMgmt.Contracts;
 
 /// <summary>
 /// Defines a contract for a specialized HTTP client capable of performing RESTful operations,

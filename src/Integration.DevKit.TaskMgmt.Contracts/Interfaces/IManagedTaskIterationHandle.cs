@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-namespace Integration.DevKit.TaskMgmt.Contracts.Interfaces;
+namespace Integration.DevKit.TaskMgmt.Contracts;
 
 /// <summary>
 /// Provides access to the context and telemetry of a specific task iteration during its execution.

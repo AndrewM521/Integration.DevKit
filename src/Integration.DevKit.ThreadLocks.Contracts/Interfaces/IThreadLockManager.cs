@@ -4,9 +4,9 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.Core.Results;
+using Integration.DevKit.Core;
 
-namespace Integration.DevKit.ThreadLocks.Contracts.Interfaces;
+namespace Integration.DevKit.ThreadLocks.Contracts;
 
 /// <summary>
 /// Defines a contract for a thread synchronization manager that handles named locks.

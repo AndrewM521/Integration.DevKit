@@ -1,13 +1,6 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
+﻿using Integration.DevKit.CustomLogger.Contracts;
 
-using Integration.DevKit.CustomLogger.Contracts.Interfaces;
-using Integration.DevKit.TaskMgmt.Contracts.Interfaces;
-
-namespace Integration.DevKit.TaskMgmt.Contracts.Models;
+namespace Integration.DevKit.TaskMgmt.Contracts;
 
 /// <summary>
 /// Concrete Implementation of <see cref="IIterationStrategy"/>

@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-namespace Integration.DevKit.SQLMgmt.Contracts.Options;
+namespace Integration.DevKit.SQLMgmt.Contracts;
 
 /// <summary>
 /// Represents the configuration and connection settings for a specific <c>ISqlDBClient</c>,

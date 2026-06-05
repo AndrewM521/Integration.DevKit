@@ -1,15 +1,7 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
-
-using Integration.DevKit.CustomLogger.Contracts.Interfaces;
-using Integration.DevKit.TaskMgmt.Contracts.Interfaces;
+﻿using Integration.DevKit.CustomLogger.Contracts;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
 
-namespace Integration.DevKit.TaskMgmt.Contracts.Models;
+namespace Integration.DevKit.TaskMgmt.Contracts;
 
 /// <summary>
 /// Provides a base implementation for iteration strategies that determine execution 

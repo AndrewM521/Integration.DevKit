@@ -1,13 +1,7 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
+﻿using System.Diagnostics;
+using Integration.DevKit.Core;
 
-using Integration.DevKit.Core.Results;
-using System.Diagnostics;
-
-namespace Integration.DevKit.ProcessLauncher.Contracts.Interfaces;
+namespace Integration.DevKit.ProcessLauncher.Contracts;
 
 /// <summary>
 /// Defines the orchestrator responsible for spawning, tracking, and terminating managed processes.

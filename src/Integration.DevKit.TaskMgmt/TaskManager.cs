@@ -1,19 +1,11 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
-
-using Integration.DevKit.Core.Results;
-using Integration.DevKit.CustomLogger.Contracts.Interfaces;
-using Integration.DevKit.TaskMgmt.Contracts.Interfaces;
-using Integration.DevKit.TaskMgmt.Contracts.Models;
-using Integration.DevKit.TaskMgmt.Contracts.Options;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
+using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.CustomLogger.Contracts;
+using Integration.DevKit.Core;
 
 namespace Integration.DevKit.TaskMgmt;
 

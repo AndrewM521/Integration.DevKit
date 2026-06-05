@@ -1,13 +1,6 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
+﻿using System.Net;
 
-using Integration.DevKit.Core.Abstractions;
-using System.Net;
-
-namespace Integration.DevKit.Core.Results;
+namespace Integration.DevKit.Core;
 
 /// <summary>
 /// Represents the result of an API operation, extending <see cref="NullableOperationResult{T}"/> 

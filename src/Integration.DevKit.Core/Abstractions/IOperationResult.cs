@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-namespace Integration.DevKit.Core.Abstractions;
+namespace Integration.DevKit.Core;
 
 /// <summary>
 /// Defines a standardized structure for the output of a method, 

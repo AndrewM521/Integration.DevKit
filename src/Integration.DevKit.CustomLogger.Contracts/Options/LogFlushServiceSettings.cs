@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-namespace Integration.DevKit.CustomLogger.Contracts.Options;
+namespace Integration.DevKit.CustomLogger.Contracts;
 
 /// <summary>
 /// Defines the configuration settings for the log flushing service, 

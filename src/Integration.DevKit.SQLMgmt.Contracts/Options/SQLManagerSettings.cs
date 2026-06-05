@@ -6,7 +6,7 @@
 
 using System.Collections.Concurrent;
 
-namespace Integration.DevKit.SQLMgmt.Contracts.Options;
+namespace Integration.DevKit.SQLMgmt.Contracts;
 
 /// <summary>
 /// Represents the global configuration settings for the SQL Database Manager, 

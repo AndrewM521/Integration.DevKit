@@ -4,9 +4,9 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.Core.Results;
+using Integration.DevKit.Core;
 
-namespace Integration.DevKit.CredentialMgmt.Contracts.Interfaces;
+namespace Integration.DevKit.CredentialMgmt.Contracts;
 
 /// <summary>
 /// Defines a contract for a secure storage mechanism used to manage sensitive keys and secrets.

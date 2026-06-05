@@ -4,8 +4,6 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.Core.Results;
-
 namespace Integration.DevKit.Core;
 
 /// <summary>

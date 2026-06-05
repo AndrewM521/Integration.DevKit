@@ -4,8 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.ThreadLocks;
-using Integration.DevKit.ThreadLocks.Contracts.Interfaces;
+using Integration.DevKit.ThreadLocks.Contracts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Integration.DevKit.ThreadSafeItems;

@@ -1,16 +1,10 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
-
-using Integration.DevKit.Core.Results;
-using Integration.DevKit.CustomLogger.Contracts.Interfaces;
-using Integration.DevKit.ProcessLauncher.Contracts.Interfaces;
+﻿
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Threading;
+using Integration.DevKit.ProcessLauncher.Contracts;
+using Integration.DevKit.CustomLogger.Contracts;
+using Integration.DevKit.Core;
 
 namespace Integration.DevKit.ProcessLauncher;
 

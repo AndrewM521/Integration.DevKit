@@ -5,14 +5,13 @@
  */
 
 using Integration.DevKit.Core;
-using Integration.DevKit.CustomLogger.Contracts.Interfaces;
-using Integration.DevKit.CustomLogger.Contracts.Options;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using Integration.DevKit.CustomLogger.Contracts;
 
 namespace Integration.DevKit.CustomLogger.Flusher;
 

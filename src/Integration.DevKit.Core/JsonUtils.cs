@@ -1,11 +1,4 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
-
-using Integration.DevKit.Core.Results;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace Integration.DevKit.Core;
 

@@ -1,11 +1,5 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
-
-using Integration.DevKit.CustomLogger.Contracts.Interfaces;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
+using Integration.DevKit.CustomLogger.Contracts;
 
 namespace Integration.DevKit.CustomLogger;
 

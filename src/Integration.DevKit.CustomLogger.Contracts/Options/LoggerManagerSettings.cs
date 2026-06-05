@@ -6,7 +6,7 @@
 
 using Microsoft.Extensions.Logging;
 
-namespace Integration.DevKit.CustomLogger.Contracts.Options;
+namespace Integration.DevKit.CustomLogger.Contracts;
 
 /// <summary>
 /// Provides configuration settings for managing logging behavior, 

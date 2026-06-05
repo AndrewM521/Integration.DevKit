@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-namespace Integration.DevKit.TaskMgmt.Contracts.Models;
+namespace Integration.DevKit.TaskMgmt.Contracts;
 
 /// <summary>
 /// Represents a scheduling strategy that calculates the next execution time on a daily basis.

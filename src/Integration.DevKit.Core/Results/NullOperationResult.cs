@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-namespace Integration.DevKit.Core.Results;
+namespace Integration.DevKit.Core;
 
 /// <summary>
 /// A specialized <see cref="NullableOperationResult{T}"/> for operations that do not 

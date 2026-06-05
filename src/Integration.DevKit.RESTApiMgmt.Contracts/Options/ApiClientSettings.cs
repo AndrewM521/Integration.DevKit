@@ -4,9 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.RESTApiMgmt.Contracts.Interfaces;
-
-namespace Integration.DevKit.RESTApiMgmt.Contracts.Options;
+namespace Integration.DevKit.RESTApiMgmt.Contracts;
 
 /// <summary>
 /// Represents the configuration for an <see cref="IApiClient"/>.

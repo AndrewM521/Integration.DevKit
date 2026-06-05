@@ -4,8 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.SQLMgmt.Contracts.Interfaces;
-using Integration.DevKit.SQLMgmt.Contracts.Options;
+using Integration.DevKit.SQLMgmt.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

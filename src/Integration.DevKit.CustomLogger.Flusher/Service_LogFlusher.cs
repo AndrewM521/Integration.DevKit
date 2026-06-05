@@ -1,14 +1,7 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
-
-using Integration.DevKit.CustomLogger.Contracts.Interfaces;
-using Integration.DevKit.CustomLogger.Contracts.Options;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Integration.DevKit.CustomLogger.Contracts;
 
 namespace Integration.DevKit.CustomLogger.Flusher;
 

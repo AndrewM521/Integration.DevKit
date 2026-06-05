@@ -4,9 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.CustomLogger.Contracts.Options;
-
-namespace Integration.DevKit.CustomLogger.Contracts.Interfaces;
+namespace Integration.DevKit.CustomLogger.Contracts;
 
 /// <summary>
 /// Provides centralized management for creating and configuring custom logger instances 

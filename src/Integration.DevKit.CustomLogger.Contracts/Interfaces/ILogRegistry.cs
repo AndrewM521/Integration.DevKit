@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-namespace Integration.DevKit.CustomLogger.Contracts.Interfaces;
+namespace Integration.DevKit.CustomLogger.Contracts;
 
 /// <summary>
 /// Defines a central registry that acts as a buffer for log messages, 

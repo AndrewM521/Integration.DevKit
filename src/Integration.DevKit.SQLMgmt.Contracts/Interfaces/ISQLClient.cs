@@ -1,16 +1,9 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
-
-using Integration.DevKit.Core.Results;
-using Integration.DevKit.CredentialMgmt.Contracts.Interfaces;
-using Integration.DevKit.SQLMgmt.Contracts.Options;
+﻿using Integration.DevKit.Core;
+using Integration.DevKit.CredentialMgmt.Contracts;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
-namespace Integration.DevKit.SQLMgmt.Contracts.Interfaces;
+namespace Integration.DevKit.SQLMgmt.Contracts;
 
 /// <summary>
 /// Defines a contract for a SQL Database Client capable of executing commands, 

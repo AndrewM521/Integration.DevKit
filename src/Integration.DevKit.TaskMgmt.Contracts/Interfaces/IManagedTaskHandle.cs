@@ -1,12 +1,5 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
-
-using Integration.DevKit.Core.Results;
-
-namespace Integration.DevKit.TaskMgmt.Contracts.Interfaces;
+﻿
+namespace Integration.DevKit.TaskMgmt.Contracts;
 
 /// <summary>
 /// Provides access to the context and telemetry of a specific task iteration during its execution.
@@ -31,7 +24,7 @@ public interface IManagedTaskHandle
     /// Gets the underlying <see cref="Task"/> object representing the execution of the Managed Task.
     /// </summary>
     /// <remarks>
-    /// This represents the total lifetime of the <see cref="Models.ManagedTask"/>. 
+    /// This represents the total lifetime of the <see cref="ManagedTask"/>. 
     /// To monitor individual execution cycles, refer to the iteration handles or snapshots instead.
     /// </remarks>
     /// <value>The running <see cref="Task"/> if the task has started; otherwise, <see langword="null"/>.</value>

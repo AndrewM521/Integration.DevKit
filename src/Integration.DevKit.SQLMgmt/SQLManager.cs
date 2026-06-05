@@ -1,16 +1,9 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
-
-using Integration.DevKit.CustomLogger.Contracts.Interfaces;
-using Integration.DevKit.SQLMgmt.Contracts.Interfaces;
-using Integration.DevKit.SQLMgmt.Contracts.Options;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
+using Integration.DevKit.SQLMgmt.Contracts;
+using Integration.DevKit.CustomLogger.Contracts;
 
 namespace Integration.DevKit.SQLMgmt;
 

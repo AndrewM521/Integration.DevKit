@@ -1,13 +1,7 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
+﻿using System.Collections.Concurrent;
+using Integration.DevKit.Core;
 
-using Integration.DevKit.Core.Results;
-using System.Collections.Concurrent;
-
-namespace Integration.DevKit.TaskMgmt.Contracts.Interfaces;
+namespace Integration.DevKit.TaskMgmt.Contracts;
 
 /// <summary>
 /// Defines a thread-safe registry for storing and retrieving metadata snapshots 

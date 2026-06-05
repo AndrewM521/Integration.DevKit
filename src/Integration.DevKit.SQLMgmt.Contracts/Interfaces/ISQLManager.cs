@@ -4,9 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.SQLMgmt.Contracts.Options;
-
-namespace Integration.DevKit.SQLMgmt.Contracts.Interfaces;
+namespace Integration.DevKit.SQLMgmt.Contracts;
 
 /// <summary>
 /// Defines a contract for a manager responsible for the lifecycle, orchestration, and retrieval 

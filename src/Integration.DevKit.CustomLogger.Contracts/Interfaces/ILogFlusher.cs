@@ -1,12 +1,5 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
-
-using Integration.DevKit.CustomLogger.Contracts.Options;
-
-namespace Integration.DevKit.CustomLogger.Contracts.Interfaces;
+﻿
+namespace Integration.DevKit.CustomLogger.Contracts;
 
 /// <summary>
 /// Defines a service responsible for managing the flushing of log buffers 

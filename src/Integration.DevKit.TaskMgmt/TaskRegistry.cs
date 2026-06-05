@@ -1,12 +1,6 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
-
-using Integration.DevKit.Core.Results;
-using Integration.DevKit.TaskMgmt.Contracts.Interfaces;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
+using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.Core;
 
 namespace Integration.DevKit.TaskMgmt;
 

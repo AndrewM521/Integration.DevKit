@@ -1,11 +1,5 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
-
-using Integration.DevKit.Core.Results;
-using Integration.DevKit.CredentialMgmt.Contracts.Interfaces;
+﻿using Integration.DevKit.Core;
+using Integration.DevKit.CredentialMgmt.Contracts;
 using Microsoft.AspNetCore.DataProtection;
 
 namespace Integration.DevKit.CredentialMgmt;

@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-namespace Integration.DevKit.RESTApiMgmt.Contracts.Interfaces;
+namespace Integration.DevKit.RESTApiMgmt.Contracts;
 
 /// <summary>
 /// Provides a read-only snapshot of HTTP request metrics and execution statistics 

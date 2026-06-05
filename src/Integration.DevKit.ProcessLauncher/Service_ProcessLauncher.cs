@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.ProcessLauncher.Contracts.Interfaces;
+using Integration.DevKit.ProcessLauncher.Contracts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Integration.DevKit.ProcessLauncher;
