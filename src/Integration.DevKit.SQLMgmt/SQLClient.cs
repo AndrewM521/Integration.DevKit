@@ -33,7 +33,7 @@ public class SQLClient : ISQLClient
 
     private readonly string _secretStoreFileName;
     private ISecretStore? _secretStore;
-
+     
     private SqlConnection? _mainSqlConnection;
 
     /// <summary>
@@ -109,6 +109,53 @@ public class SQLClient : ISQLClient
     }
 
     /// <inheritdoc/>
+    public async Task<NullOperationResult> RunCustomCommandAsync(string sqlStatement, CommandType commandType,
+            Func<SqlCommand, Task> processCommand, CancellationToken cancellationToken = default)
+    {
+        var result = new NullOperationResult();
+
+        var getConnection = GetConnection();
+        if (!getConnection.MethodSuccess)
+        {
+            return result.SetMethodFailure(getConnection.Exception);
+        }
+
+        var conn = getConnection.Result;
+
+        await using var cmd = new SqlCommand(sqlStatement, conn)
+        {
+            CommandType = commandType
+        };
+
+        try
+        {
+            if (conn.State != ConnectionState.Open)
+            {
+                await conn.OpenAsync(cancellationToken);
+            }
+
+            await processCommand(cmd).ConfigureAwait(false);
+
+            return result.SetMethodSuccess();
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+        finally
+        {
+            cmd.Parameters.Clear();
+
+            if (!RuntimeSettings.UseSingleConnection)
+            {
+                await conn.DisposeAsync();
+            }
+
+            await GCManager.CallGC_Collect("SQL NonQuery Command");
+        }
+    }
+
+    /// <inheritdoc/>
     public async Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, 
         Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default)
     {
@@ -139,53 +186,6 @@ public class SQLClient : ISQLClient
             int count = await cmd.ExecuteNonQueryAsync(cancellationToken);
 
             return result.SetMethodSuccess(count);
-        }
-        catch (Exception ex)
-        {
-            return result.SetMethodFailure(ex);
-        }
-        finally
-        {
-            cmd.Parameters.Clear();
-
-            if (!RuntimeSettings.UseSingleConnection)
-            {
-                await conn.DisposeAsync();
-            }
-
-            await GCManager.CallGC_Collect("SQL NonQuery Command");
-        }
-    }
-
-    /// <inheritdoc/>
-    public async Task<NullOperationResult> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, 
-            Func<SqlCommand, Task> processCommand, CancellationToken cancellationToken = default)
-    {
-        var result = new NullOperationResult();
-
-        var getConnection = GetConnection();
-        if (!getConnection.MethodSuccess)
-        {
-            return result.SetMethodFailure(getConnection.Exception);
-        }
-
-        var conn = getConnection.Result;
-
-        await using var cmd = new SqlCommand(sqlStatement, conn)
-        {
-            CommandType = commandType
-        };
-
-        try
-        {
-            if (conn.State != ConnectionState.Open)
-            {
-                await conn.OpenAsync(cancellationToken);
-            }
-
-            await processCommand(cmd).ConfigureAwait(false);
-
-            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -268,16 +268,15 @@ public class SQLClient : ISQLClient
     }
 
     /// <inheritdoc/>
-    public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, Action<SqlParameterCollection>? configureParameters = null)
+    public NullOperationResult RunCustomCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand)
     {
-        return RunNonQueryCommandAsync(sqlStatement, commandType, configureParameters).GetAwaiter().GetResult();
+        return RunCustomCommandAsync(sqlStatement, commandType, command => processCommand(command)).GetAwaiter().GetResult();
     }
 
     /// <inheritdoc/>
-    public NullOperationResult RunNonQueryCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand)
+    public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, Action<SqlParameterCollection>? configureParameters = null)
     {
-        return RunNonQueryCommandAsync(sqlStatement, commandType, 
-            command => processCommand(command)).GetAwaiter().GetResult();
+        return RunNonQueryCommandAsync(sqlStatement, commandType, configureParameters).GetAwaiter().GetResult();
     }
 
     /// <inheritdoc/>

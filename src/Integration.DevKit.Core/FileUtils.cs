@@ -160,6 +160,73 @@ public static class FileUtils
     }
 
     /// <summary>
+    /// Asynchronously writes a byte array to a specified file path
+    /// </summary>
+    /// <param name="path">The file path where the bytes will be written.</param>
+    /// <param name="content">The byte array containing the data to write to the file.</param>
+    /// <param name="append"><see langword="true"/> to append the data to the end of the file; <see langword="false"/> to overwrite or create a new file.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating the status of the operation.</returns>
+    public static async Task<NullOperationResult> WriteBytesToFileAsync(string path, byte[] content, bool append = false)
+    {
+        var result = new NullOperationResult();
+
+        try
+        {
+            var validatePath = IsStringValidFilePath(path);
+            if (!validatePath.MethodSuccess)
+            {
+                throw validatePath.Exception;
+            }
+
+            if (!validatePath.Result)
+            {
+                throw new ArgumentException(RequiredFilePathErrorMsg);
+            }
+
+            if (content == null || content.Length == 0)
+            {
+                return result.SetMethodSuccess();
+            }
+
+            var directory = Path.GetDirectoryName(path);
+            var createDir = DirectoryUtils.CreateDirectory(directory!);
+            if (!createDir.MethodSuccess)
+            {
+                throw createDir.Exception;
+            }
+
+            var mode = append ? FileMode.Append : FileMode.Create;
+
+            // 100 MB chunk size in bytes
+            int maxChunkSizeInBytes = 100 * 1024 * 1024;
+            int startIndex = 0;
+
+            // 5. Asynchronous File Stream Writing
+            await using (var stream = new FileStream(path, mode, FileAccess.Write, FileShare.None, 4096, true))
+            {
+                while (startIndex < content.Length)
+                {
+                    // Calculate how many bytes to write in this chunk
+                    int bytesLeft = content.Length - startIndex;
+                    int chunkSize = Math.Min(bytesLeft, maxChunkSizeInBytes);
+
+                    // Write the chunk memory directly to the stream
+                    var chunk = new ReadOnlyMemory<byte>(content, startIndex, chunkSize);
+                    await stream.WriteAsync(chunk).ConfigureAwait(false);
+
+                    startIndex += chunkSize;
+                }
+            }
+
+            return result.SetMethodSuccess();
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+
+    /// <summary>
     /// Asynchronously reads all lines from the specified file.
     /// </summary>
     /// <param name="path">The path to the file.</param>
@@ -605,6 +672,71 @@ public static class FileUtils
             if (!writeToFile.MethodSuccess)
             {
                 throw writeToFile.Exception;
+            }
+
+            return result.SetMethodSuccess();
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+
+    /// <summary>
+    /// Synchronously writes a byte array to a specified file path
+    /// </summary>
+    /// <param name="path">The file path where the bytes will be written.</param>
+    /// <param name="content">The byte array containing the data to write to the file.</param>
+    /// <param name="append"><see langword="true"/> to append the data to the end of the file; <see langword="false"/> to overwrite or create a new file.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating the status of the operation.</returns>
+    public static NullOperationResult WriteBytesToFile(string path, byte[] content, bool append = false)
+    {
+        var result = new NullOperationResult();
+
+        try
+        {
+            var validatePath = IsStringValidFilePath(path);
+            if (!validatePath.MethodSuccess)
+            {
+                throw validatePath.Exception;
+            }
+
+            if (!validatePath.Result)
+            {
+                throw new ArgumentException(RequiredFilePathErrorMsg);
+            }
+
+            if (content == null || content.Length == 0)
+            {
+                return result.SetMethodSuccess();
+            }
+
+            var directory = Path.GetDirectoryName(path);
+            var createDir = DirectoryUtils.CreateDirectory(directory!);
+            if (!createDir.MethodSuccess)
+            {
+                throw createDir.Exception;
+            }
+
+            var mode = append ? FileMode.Append : FileMode.Create;
+
+            // 100 MB chunk size in bytes
+            int maxChunkSizeInBytes = 100 * 1024 * 1024;
+            int startIndex = 0;
+
+            using (var stream = new FileStream(path, mode, FileAccess.Write, FileShare.None, 4096, useAsync: false))
+            {
+                while (startIndex < content.Length)
+                {
+                    // Calculate how many bytes to write in this chunk
+                    int bytesLeft = content.Length - startIndex;
+                    int chunkSize = Math.Min(bytesLeft, maxChunkSizeInBytes);
+
+                    // Write the chunk directly from the array using an offset and count
+                    stream.Write(content, startIndex, chunkSize);
+
+                    startIndex += chunkSize;
+                }
             }
 
             return result.SetMethodSuccess();

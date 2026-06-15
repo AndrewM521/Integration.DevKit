@@ -31,7 +31,17 @@ public interface ISQLClient : IDisposable
     public Task<OperationResult<bool>> TestSqlConnectionAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Asynchronously executes a SQL statement and returns the number of rows affected.
+    /// Asynchronously executes a Custom SQL statement, providing direct access to the <see cref="SqlCommand"/> for custom processing.
+    /// </summary>
+    /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
+    /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
+    /// <param name="processCommand">An asynchronous function to process the <see cref="SqlCommand"/> before or during execution.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating the success or failure of the operation.</returns>
+    public Task<NullOperationResult> RunCustomCommandAsync(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Asynchronously executes a Non-Query SQL statement and returns the number of rows affected.
     /// </summary>
     /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
     /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted (e.g., Text or StoredProcedure).</param>
@@ -39,16 +49,6 @@ public interface ISQLClient : IDisposable
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the number of rows affected.</returns>
     public Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Asynchronously executes a SQL statement, providing direct access to the <see cref="SqlCommand"/> for custom processing.
-    /// </summary>
-    /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
-    /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
-    /// <param name="processCommand">An asynchronous function to process the <see cref="SqlCommand"/> before or during execution.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-    /// <returns>A <see cref="NullOperationResult"/> indicating the success or failure of the operation.</returns>
-    public Task<NullOperationResult> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously executes a query and provides a <see cref="SqlDataReader"/> to a callback for processing results.
@@ -70,22 +70,22 @@ public interface ISQLClient : IDisposable
     public OperationResult<bool> TestSqlConnection();
 
     /// <summary>
-    /// Synchronously executes a SQL statement and returns the number of rows affected.
+    /// Synchronously executes a custom SQL statement, providing direct access to the <see cref="SqlCommand"/> via a callback.
+    /// </summary>
+    /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
+    /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
+    /// <param name="processCommand">An asynchronous function (invoked synchronously) to process the <see cref="SqlCommand"/>.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
+    public NullOperationResult RunCustomCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand);
+
+    /// <summary>
+    /// Synchronously executes a Non-Query SQL statement and returns the number of rows affected.
     /// </summary>
     /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
     /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
     /// <param name="configureParameters">An optional action to populate the <see cref="SqlParameterCollection"/>.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the number of rows affected.</returns>
     public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, Action<SqlParameterCollection>? configureParameters = null);
-
-    /// <summary>
-    /// Synchronously executes a SQL statement, providing direct access to the <see cref="SqlCommand"/> via a callback.
-    /// </summary>
-    /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
-    /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
-    /// <param name="processCommand">An asynchronous function (invoked synchronously) to process the <see cref="SqlCommand"/>.</param>
-    /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
-    public NullOperationResult RunNonQueryCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand);
 
     /// <summary>
     /// Synchronously executes a query and provides a <see cref="SqlDataReader"/> to a callback for processing.

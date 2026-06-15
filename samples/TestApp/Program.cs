@@ -52,7 +52,7 @@ public class Program
 
         
         Service_CustomLogger.Initialize(host.Services);
-        Service_LogFlusher.Initalize(host.Services);
+        Service_CustomLogFlusher.Initalize(host.Services);
         Service_ProcessLauncher.Initialize(host.Services);
         Service_RESTApiMgmt.Initialize(host.Services);
         Service_ThreadLocks.Initialize(host.Services);
@@ -135,7 +135,7 @@ public class AppEntry
         Console.WriteLine("Custom Logger Flusher Test (Look at Visual Studio output panel)");
 
         var _loggerManager = Service_CustomLogger.LoggerManager;
-        var _logFlushService = Service_LogFlusher.LogFlushService;
+        var _logFlushService = Service_CustomLogFlusher.LogFlushService;
 
         _loggerManager.LogRuntimeSettings();
         _logFlushService.LogRuntimeSettings();

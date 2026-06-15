@@ -12,7 +12,7 @@ namespace Integration.DevKit.CustomLogger.Flusher;
 /// This acts as a static wrapper for services resolved from the Dependency Injection container. 
 /// It must be registered and initialized during application startup (e.g., in Program.cs or Startup.cs)
 /// </remarks>
-public static class Service_LogFlusher
+public static class Service_CustomLogFlusher
 {
     private static ILogFlusher? _logFlushService;
 
@@ -81,7 +81,7 @@ public static class Service_LogFlusher
         }
         catch (Exception)
         {
-            throw new InvalidOperationException($"{nameof(Service_LogFlusher)} requires the Logging module. Call AddCustomLogging() before AddCustomLogFlusher()");
+            throw new InvalidOperationException($"{nameof(Service_CustomLogFlusher)} requires the Logging module. Call AddCustomLogging() before AddCustomLogFlusher()");
         }
 
         _logFlushService = sp.GetService<ILogFlusher>();
