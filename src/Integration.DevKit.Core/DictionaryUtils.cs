@@ -175,12 +175,12 @@ public static class DictionaryUtils
     /// <typeparam name="T">The target type for the value.</typeparam>
     /// <param name="dict">The dictionary to search.</param>
     /// <param name="key">The key to look up.</param>
-    /// <param name="defaultValue">The value to return if the key is missing, the value is null, or conversion fails.</param>
+    /// <param name="defaultValue">Optional value to return if the key is missing, the value is null, or conversion fails.</param>
     /// <returns>The value converted to <typeparamref name="T"/>, or <paramref name="defaultValue"/>.</returns>
     /// <remarks>
     /// This method first attempts a direct cast. If that fails, it attempts to use <see cref="Convert.ChangeType(object, Type)"/>.
     /// </remarks>
-    public static T GetValueOrDefault<T>(Dictionary<string, object> dict, string key, T defaultValue)
+    public static T GetValue<T>(Dictionary<string, object> dict, string key, T defaultValue = default!)
     {
         if (dict.TryGetValue(key, out var value) && value != null)
         {

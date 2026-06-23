@@ -1273,17 +1273,17 @@ public class AppEntry
 
 
         //Valid key
-        dictVal = JsonUtils.GetDictionaryValue<int>(getDict.Result, "data.count").Result;
+        dictVal = JsonUtils.GetValue<int>(getDict.Result, "data.count").Result;
         dictionary = JsonUtils.GetDictionary(getDict.Result, "data").Result;
         listDictionary = JsonUtils.GetListDictionary(getDict.Result, "data.types").Result;
 
         //Missing Key
-        dictVal = JsonUtils.GetDictionaryValue<int>(getDict.Result, "data.count1").Result;
+        dictVal = JsonUtils.GetValue<int>(getDict.Result, "data.count1").Result;
         dictionary = JsonUtils.GetDictionary(getDict.Result, "data1").Result;
         listDictionary = JsonUtils.GetListDictionary(getDict.Result, "data.types1").Result;
 
         //Type Exception
-        dictVal = JsonUtils.GetDictionaryValue<int>(getDict.Result, "name").Result;
+        dictVal = JsonUtils.GetValue<int>(getDict.Result, "name").Result;
         dictionary = JsonUtils.GetDictionary(getDict.Result, "data.tags").Result;
         listDictionary = JsonUtils.GetListDictionary(getDict.Result, "data.tags").Result;
     }

@@ -36,9 +36,11 @@ public interface ISQLClient : IDisposable
     /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
     /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
     /// <param name="processCommand">An asynchronous function to process the <see cref="SqlCommand"/> before or during execution.</param>
+    /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the success or failure of the operation.</returns>
-    public Task<NullOperationResult> RunCustomCommandAsync(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand, CancellationToken cancellationToken = default);
+    public Task<NullOperationResult> RunCustomCommandAsync(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand, 
+        int commandTimeoutSeconds = 30, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously executes a Non-Query SQL statement and returns the number of rows affected.
@@ -46,9 +48,11 @@ public interface ISQLClient : IDisposable
     /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
     /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted (e.g., Text or StoredProcedure).</param>
     /// <param name="configureParameters">An optional action to populate the <see cref="SqlParameterCollection"/> before execution.</param>
+    /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the number of rows affected.</returns>
-    public Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default);
+    public Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, 
+        Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Asynchronously executes a query and provides a <see cref="SqlDataReader"/> to a callback for processing results.
@@ -57,9 +61,11 @@ public interface ISQLClient : IDisposable
     /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
     /// <param name="processReader">An asynchronous function to handle the data reading logic using the provided <see cref="SqlDataReader"/>.</param>
     /// <param name="configureParameters">An optional action to populate the <see cref="SqlParameterCollection"/>.</param>
+    /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the success or failure of the operation.</returns>
-    public Task<NullOperationResult> RunDataReaderAsync(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader, Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default);
+    public Task<NullOperationResult> RunDataReaderAsync(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader, 
+        Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30, CancellationToken cancellationToken = default);
     #endregion
 
     #region Synchronous Methods
@@ -75,8 +81,9 @@ public interface ISQLClient : IDisposable
     /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
     /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
     /// <param name="processCommand">An asynchronous function (invoked synchronously) to process the <see cref="SqlCommand"/>.</param>
+    /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
-    public NullOperationResult RunCustomCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand);
+    public NullOperationResult RunCustomCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand, int commandTimeoutSeconds = 30);
 
     /// <summary>
     /// Synchronously executes a Non-Query SQL statement and returns the number of rows affected.
@@ -84,8 +91,10 @@ public interface ISQLClient : IDisposable
     /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
     /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
     /// <param name="configureParameters">An optional action to populate the <see cref="SqlParameterCollection"/>.</param>
+    /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the number of rows affected.</returns>
-    public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, Action<SqlParameterCollection>? configureParameters = null);
+    public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, 
+        Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30);
 
     /// <summary>
     /// Synchronously executes a query and provides a <see cref="SqlDataReader"/> to a callback for processing.
@@ -94,8 +103,10 @@ public interface ISQLClient : IDisposable
     /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
     /// <param name="processReader">An asynchronous function (invoked synchronously) to handle the data reading logic.</param>
     /// <param name="configureParameters">An optional action to populate the <see cref="SqlParameterCollection"/>.</param>
+    /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
-    public NullOperationResult RunDataReader(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader, Action<SqlParameterCollection>? configureParameters = null);
+    public NullOperationResult RunDataReader(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader, 
+        Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30);
     #endregion
 
     #region Credentials

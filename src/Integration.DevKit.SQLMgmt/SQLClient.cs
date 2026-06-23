@@ -35,6 +35,7 @@ public class SQLClient : ISQLClient
     private ISecretStore? _secretStore;
      
     private SqlConnection? _mainSqlConnection;
+    private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SQLClient"/> class.
@@ -72,6 +73,14 @@ public class SQLClient : ISQLClient
 
         var conn = getConnection.Result;
         bool wasAlreadyOpen = conn.State == ConnectionState.Open;
+        
+        bool lockAcquired = false;
+        if (RuntimeSettings.UseSingleConnection)
+        {
+            // Wait for the previous query to finish before jumping in
+            await _connectionLock.WaitAsync(cancellationToken);
+            lockAcquired = true;
+        }
 
         try
         {
@@ -109,8 +118,8 @@ public class SQLClient : ISQLClient
     }
 
     /// <inheritdoc/>
-    public async Task<NullOperationResult> RunCustomCommandAsync(string sqlStatement, CommandType commandType,
-            Func<SqlCommand, Task> processCommand, CancellationToken cancellationToken = default)
+    public async Task<NullOperationResult> RunCustomCommandAsync(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand, 
+            int commandTimeoutSeconds = 30, CancellationToken cancellationToken = default)
     {
         var result = new NullOperationResult();
 
@@ -126,6 +135,16 @@ public class SQLClient : ISQLClient
         {
             CommandType = commandType
         };
+
+        cmd.CommandTimeout = commandTimeoutSeconds;
+
+        bool lockAcquired = false;
+        if (RuntimeSettings.UseSingleConnection)
+        {
+            // Wait for the previous query to finish before jumping in
+            await _connectionLock.WaitAsync(cancellationToken);
+            lockAcquired = true;
+        }
 
         try
         {
@@ -151,13 +170,18 @@ public class SQLClient : ISQLClient
                 await conn.DisposeAsync();
             }
 
+            if (lockAcquired)
+            {
+                _connectionLock.Release();
+            }
+
             await GCManager.CallGC_Collect("SQL NonQuery Command");
         }
     }
 
     /// <inheritdoc/>
     public async Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, 
-        Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default)
+        Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30, CancellationToken cancellationToken = default)
     {
         var result = new OperationResult<int>();
 
@@ -173,6 +197,16 @@ public class SQLClient : ISQLClient
         {
             CommandType = commandType
         };
+
+        cmd.CommandTimeout = commandTimeoutSeconds;
+
+        bool lockAcquired = false;
+        if (RuntimeSettings.UseSingleConnection)
+        {
+            // Wait for the previous query to finish before jumping in
+            await _connectionLock.WaitAsync(cancellationToken);
+            lockAcquired = true;
+        }
 
         try
         {
@@ -200,13 +234,18 @@ public class SQLClient : ISQLClient
                 await conn.DisposeAsync();
             }
 
+            if (lockAcquired)
+            {
+                _connectionLock.Release();
+            }
+
             await GCManager.CallGC_Collect("SQL NonQuery Command");
         }
     }
 
     /// <inheritdoc/>
-    public async Task<NullOperationResult> RunDataReaderAsync(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader,
-        Action<SqlParameterCollection>? configureParameters = null, CancellationToken cancellationToken = default)
+    public async Task<NullOperationResult> RunDataReaderAsync(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader, 
+        Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30, CancellationToken cancellationToken = default)
     {
         var result = new NullOperationResult();
 
@@ -222,6 +261,16 @@ public class SQLClient : ISQLClient
         {
             CommandType = commandType
         };
+
+        cmd.CommandTimeout = commandTimeoutSeconds;
+
+        bool lockAcquired = false;
+        if (RuntimeSettings.UseSingleConnection)
+        {
+            // Wait for the previous query to finish before jumping in
+            await _connectionLock.WaitAsync(cancellationToken);
+            lockAcquired = true;
+        }
 
         try
         {
@@ -254,6 +303,11 @@ public class SQLClient : ISQLClient
             {
                 await conn.DisposeAsync();
             }
+            
+            if (lockAcquired)
+            {
+                _connectionLock.Release();
+            }
 
             await GCManager.CallGC_Collect("SQL Data Reader");
         }
@@ -268,20 +322,22 @@ public class SQLClient : ISQLClient
     }
 
     /// <inheritdoc/>
-    public NullOperationResult RunCustomCommand(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand)
+    public NullOperationResult RunCustomCommand(string sqlStatement, CommandType commandType, 
+        Func<SqlCommand, Task> processCommand, int commandTimeoutSeconds = 30)
     {
         return RunCustomCommandAsync(sqlStatement, commandType, command => processCommand(command)).GetAwaiter().GetResult();
     }
 
     /// <inheritdoc/>
-    public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, Action<SqlParameterCollection>? configureParameters = null)
+    public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, 
+        Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30)
     {
         return RunNonQueryCommandAsync(sqlStatement, commandType, configureParameters).GetAwaiter().GetResult();
     }
 
     /// <inheritdoc/>
-    public NullOperationResult RunDataReader(string sql, CommandType commandType,
-        Func<SqlDataReader, Task> processReader, Action<SqlParameterCollection>? configureParameters = null)
+    public NullOperationResult RunDataReader(string sql, CommandType commandType, Func<SqlDataReader, Task> processReader, 
+        Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30)
     {
         return RunDataReaderAsync(sql, commandType, 
             reader => processReader(reader), configureParameters).GetAwaiter().GetResult();
@@ -499,5 +555,6 @@ public class SQLClient : ISQLClient
     public void Dispose()
     {
         _mainSqlConnection?.Dispose();
+        _connectionLock?.Dispose();
     }
 }

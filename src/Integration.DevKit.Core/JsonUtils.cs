@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text.Json;
 
 namespace Integration.DevKit.Core;
 
@@ -131,35 +133,25 @@ public static class JsonUtils
 
     #region Dictionary Navigation
     /// <summary>
-    /// Retrieves a <see cref="List{T}"/> of dictionaries from a source dictionary.
+    /// Retrieves a <see cref="List{T}"/> of dictionaries from the source using a key or dot-notation path.
     /// </summary>
     /// <param name="dictionary">The source dictionary.</param>
     /// <param name="keyPath">The key or dot-notation path to the list.</param>
-    /// <returns>A <see cref="NullableOperationResult{T}"/> containing the list of dictionaries.</returns>
-    /// <remarks>
-    /// This method is a specialized <b>wrapper</b> around <see cref="GetDictionaryValue{T}(Dictionary{string, object}, string, T)"/>. 
-    /// It simplifies the call by automatically handling the type casting and providing an empty 
-    /// <see cref="List{Dictionary{string, object}}"/> as the default value if the path is not found.
-    /// </remarks>
-    public static NullableOperationResult<Dictionary<string, object>> GetDictionary(Dictionary<string, object> dictionary, string keyPath)
+    /// <returns>A <see cref="Dictionary{string, object}"/> or an empty <see cref="Dictionary{string, object}"/>.</returns>
+    public static Dictionary<string, object> GetDictionary(Dictionary<string, object> dictionary, string keyPath)
     {
-        return GetDictionaryValue(dictionary, keyPath, new Dictionary<string, object>());
+        return GetValue(dictionary, keyPath, new Dictionary<string, object>());
     }
 
     /// <summary>
-    /// Retrieves a list of dictionaries from the source using a key or dot-notation path.
+    /// Retrieves a <see cref="List{Dictionary{string, object}}"/> from the source using a key or dot-notation path.
     /// </summary>
     /// <param name="dictionary">The source dictionary to search.</param>
     /// <param name="keyPath">The key or dot-notation path (e.g., "Data.Items") to the target list.</param>
-    /// <returns>A <see cref="NullableOperationResult{T}"/> containing the list of dictionaries.</returns>
-    /// <remarks>
-    /// This method acts as a <b>wrapper</b> around <see cref="GetDictionaryValue{T}(Dictionary{string, object}, string, T)"/>.
-    /// It provides a simplified by automatically handling the type casting and providing an empty <see cref="List{Dictionary{string, object}}"/>
-    /// as the default value if the path is not found.
-    /// </remarks>
-    public static NullableOperationResult<List<Dictionary<string, object>>> GetListDictionary(Dictionary<string, object> dictionary, string keyPath)
+    /// <returns>A <see cref="List{Dictionary{string, object}}"/> or an empty <see cref="List{Dictionary{string, object}}"/>.</returns>
+    public static List<Dictionary<string, object>> GetListDictionary(Dictionary<string, object> dictionary, string keyPath)
     {
-        return GetDictionaryValue(dictionary, keyPath, new List<Dictionary<string, object>>());
+        return GetValue(dictionary, keyPath, new List<Dictionary<string, object>>());
     }
 
     /// <summary>
@@ -169,19 +161,16 @@ public static class JsonUtils
     /// <typeparam name="T">The target type for conversion.</typeparam>
     /// <param name="dictionary">The source dictionary.</param>
     /// <param name="keyPath">The key or dot-notation path (e.g., "Id" or "Meta.Metadata.Id").</param>
-    /// <param name="defaultVal">The value to return if the key/path is not found.</param>
-    /// <returns>A <see cref="NullableOperationResult{T}"/> containing the result or the default value.</returns>
+    /// <param name="defaultValue">Optional value to return if the key is missing, the value is null, or conversion fails.</param>
+    /// <returns>The value converted to <typeparamref name="T"/>, or <paramref name="defaultValue"/>.</returns>
     /// <remarks>
-    /// This method is designed to be flexible: it treats <paramref name="keyPath"/> as a standard 
-    /// dictionary key first, only traversing deeper if the path is in dot notation.
+    /// This method first attempts a direct cast. If that fails, it attempts to use <see cref="Convert.ChangeType(object, Type)"/>.
     /// </remarks>
-    public static NullableOperationResult<T> GetDictionaryValue<T>(Dictionary<string, object> dictionary, string keyPath, T defaultVal = default!)
+    public static T GetValue<T>(Dictionary<string, object> dictionary, string keyPath, T defaultValue = default!)
     {
-        var result = new NullableOperationResult<T>();
-
         if (dictionary == null || string.IsNullOrWhiteSpace(keyPath))
         {
-            return result.SetMethodSuccess(defaultVal)!;
+            return defaultValue;
         }
 
         object? currentObj = dictionary;
@@ -197,72 +186,74 @@ public static class JsonUtils
             }
             else
             {
-                return result.SetMethodSuccess(defaultVal)!;
+                return defaultValue;
             }
         }
 
         if (currentObj is T typed)
         {
-            return result.SetMethodSuccess(typed)!;
+            return typed;
+        }
+
+        if (currentObj == null)
+        {
+            return defaultValue;
+        }
+
+        var targetType = typeof(T);
+        var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+        if (underlyingType.IsGenericType && underlyingType.GetGenericTypeDefinition() == typeof(List<>))
+        {
+            var itemType = underlyingType.GetGenericArguments()[0];
+
+            if (currentObj is IEnumerable<object?> objList)
+            {
+                var listType = typeof(List<>).MakeGenericType(itemType);
+                var list = (System.Collections.IList)Activator.CreateInstance(listType)!;
+
+                foreach (var item in objList)
+                {
+                    if (item == null)
+                    {
+                        list.Add(null);
+                        continue;
+                    }
+
+                    if (itemType.IsInstanceOfType(item))
+                    {
+                        list.Add(item);
+                        continue;
+                    }
+
+                    try
+                    {
+                        var convertedItem = Convert.ChangeType(item, itemType);
+                        list.Add(convertedItem);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Failed to convert list item to {itemType.Name}. {ex}");
+                        
+                        return defaultValue;
+                    }
+                }
+
+                return (T)list;
+            }
         }
 
         try
         {
-            if (currentObj == null)
-            {
-                return result.SetMethodSuccess(defaultVal)!;
-            }
-
-            var targetType = typeof(T);
-            var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
-
-            if (underlyingType.IsGenericType && underlyingType.GetGenericTypeDefinition() == typeof(List<>))
-            {
-                var itemType = underlyingType.GetGenericArguments()[0];
-
-                if (currentObj is IEnumerable<object?> objList)
-                {
-                    var listType = typeof(List<>).MakeGenericType(itemType);
-                    var list = (System.Collections.IList)Activator.CreateInstance(listType)!;
-
-                    foreach (var item in objList)
-                    {
-                        if (item == null)
-                        {
-                            list.Add(null);
-                            continue;
-                        }
-
-                        if (itemType.IsInstanceOfType(item))
-                        {
-                            list.Add(item);
-                            continue;
-                        }
-
-                        try
-                        {
-                            var convertedItem = Convert.ChangeType(item, itemType);
-                            list.Add(convertedItem);
-                        }
-                        catch (Exception ex)
-                        {
-                            return result.SetMethodFailure(
-                                new Exception($"Failed to convert list item to {itemType.Name}", ex)
-                            )!;
-                        }
-                    }
-
-                    return result.SetMethodSuccess((T)list)!;
-                }
-            }
-
             var converted = Convert.ChangeType(currentObj, underlyingType);
 
-            return result.SetMethodSuccess((T)converted!)!;
+            return (T)converted;
         }
         catch (Exception ex)
-        { 
-            return result.SetMethodFailure(ex)!;
+        {
+            Debug.WriteLine($"Failed to convert list to {underlyingType.Name}. {ex}");
+
+            return defaultValue;
         }
     }
     #endregion
