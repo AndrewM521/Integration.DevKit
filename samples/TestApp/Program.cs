@@ -1279,19 +1279,19 @@ public class AppEntry
 
 
         //Valid key
-        dictVal = JsonUtils.GetValue<int>(getDict.Result, "data.count");
-        dictionary = JsonUtils.GetDictionary(getDict.Result, "data");
-        listDictionary = JsonUtils.GetListDictionary(getDict.Result, "data.types");  
+        dictVal = DictionaryUtils.GetValue<int>(getDict.Result, "data.count");
+        dictionary = DictionaryUtils.GetDictionary(getDict.Result, "data");
+        listDictionary = DictionaryUtils.GetListDictionary(getDict.Result, "data.types");  
 
         //Missing Key
-        dictVal = JsonUtils.GetValue<int>(getDict.Result, "data.count1");
-        dictionary = JsonUtils.GetDictionary(getDict.Result, "data1");
-        listDictionary = JsonUtils.GetListDictionary(getDict.Result, "data.types1");
+        dictVal = DictionaryUtils.GetValue<int>(getDict.Result, "data.count1");
+        dictionary = DictionaryUtils.GetDictionary(getDict.Result, "data1");
+        listDictionary = DictionaryUtils.GetListDictionary(getDict.Result, "data.types1");
 
         //Type Exception
-        dictVal = JsonUtils.GetValue<int>(getDict.Result, "name");
-        dictionary = JsonUtils.GetDictionary(getDict.Result, "data.tags");
-        listDictionary = JsonUtils.GetListDictionary(getDict.Result, "data.tags");
+        dictVal = DictionaryUtils.GetValue<int>(getDict.Result, "name");
+        dictionary = DictionaryUtils.GetDictionary(getDict.Result, "data.tags");
+        listDictionary = DictionaryUtils.GetListDictionary(getDict.Result, "data.tags");
     }
     
 }
