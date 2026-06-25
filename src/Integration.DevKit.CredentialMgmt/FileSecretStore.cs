@@ -248,7 +248,7 @@ public class FileSecretStore : SecretStoreBase
 
             var json = Decrypt(getContent.Result);
 
-            var getParsedObj = JsonUtils.ConvertJsonToObject(json);
+            var getParsedObj = JsonUtils.DeserializeJsonToObject(json);
             if (!getParsedObj.MethodSuccess)
             {
                 throw getParsedObj.Exception;

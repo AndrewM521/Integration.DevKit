@@ -32,44 +32,51 @@ public class Program
             .AddJsonFile("appsettings.json", false)
             .Build();
 
-        var host = Host.CreateDefaultBuilder(args)
+        var builder = Host.CreateDefaultBuilder(args)
             .ConfigureServices((context, services) =>
             {
-                services.AddCustomLogging(config);
-                services.AddCustomLogFlusher(config);
-                services.AddProcessLauncher();
-                services.AddRESTApiMgmt(config);
-                services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
-                services.AddThreadLocks();
-                services.AddThreadSafeItems();
-                services.AddTaskMgmt(config);
-                services.AddSQLMgmt(config);
+                //services.AddCustomLogging(config);
+                //services.AddCustomLogFlusher(config);
+                //services.AddProcessLauncher();
+                //services.AddRESTApiMgmt(config);
+                //services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
+                //services.AddThreadLocks();
+                //services.AddThreadSafeItems();
+                //services.AddTaskMgmt(config);
+                //services.AddSQLMgmt(config);
 
                 // Register your app entry
                 services.AddSingleton<AppEntry>();
-            })
-            .Build();
+            });
 
-        
-        Service_CustomLogger.Initialize(host.Services);
-        Service_CustomLogFlusher.Initalize(host.Services);
-        Service_ProcessLauncher.Initialize(host.Services);
-        Service_RESTApiMgmt.Initialize(host.Services);
-        Service_ThreadLocks.Initialize(host.Services);
-        Service_ThreadSafeItems.Initialize(host.Services);
-        Service_TaskMgmt.Initialize(host.Services);
-        Service_SQLMgmt.Initialize(host.Services);
-        Service_CredentialMgmt.InitializeFileSecretStore(host.Services);
+        var app = builder.Build();
 
-        // Start hosted services (LogFlushService will start running in the background)
-        await host.StartAsync();
+        //Service_CustomLogger.Initialize(app.Services);
+        //Service_CustomLogFlusher.Initialize(app.Services);
+        //Service_ProcessLauncher.Initialize(app.Services);
+        //Service_RESTApiMgmt.Initialize(app.Services);
+        //Service_ThreadLocks.Initialize(app.Services);
+        //Service_ThreadSafeItems.Initialize(app.Services);
+        //Service_TaskMgmt.Initialize(app.Services);
+        //Service_SQLMgmt.Initialize(app.Services);
+        //Service_CredentialMgmt.InitializeFileSecretStore(app.Services);
 
-        // Run your application
-        var app = host.Services.GetRequiredService<AppEntry>();
+        var entry = app.Services.GetRequiredService<AppEntry>();
+        var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 
-        await app.RunAsync(args);
+        Service_CustomLogger.Initialize_OnDemand(config);
+        Service_CustomLogFlusher.Initialize_OnDemand(config);
+        Service_ProcessLauncher.Initialize_OnDemand();
+        Service_RESTApiMgmt.Initialize_OnDemand(config);
+        Service_ThreadLocks.Initialize_OnDemand();
+        Service_ThreadSafeItems.Initialize_OnDemand();
+        Service_TaskMgmt.Initialize_OnDemand(config, lifetime);
+        Service_SQLMgmt.Initialize_OnDemand(config);
+        Service_CredentialMgmt.InitializeFileSecretStore_OnDemand("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
 
-        await host.StopAsync();
+        var client = Service_SQLMgmt.SQLManager.GetClient("Cmd");
+
+        await entry.RunAsync(args);
     }
 }
 
@@ -88,9 +95,8 @@ public class AppEntry
         //await TestTaskManagement_SyncManagedTask();
         //await TestTaskManagement_AsyncManagedTask();
 
-        //await TaskCoreClasses(); 
+        await TaskCoreClasses(); 
         //await TestApiManagementCredentials(true, false);
-        //await TestFileSecretStore();
 
 
         Console.WriteLine("Press enter to exit");
@@ -1273,19 +1279,19 @@ public class AppEntry
 
 
         //Valid key
-        dictVal = JsonUtils.GetValue<int>(getDict.Result, "data.count").Result;
-        dictionary = JsonUtils.GetDictionary(getDict.Result, "data").Result;
-        listDictionary = JsonUtils.GetListDictionary(getDict.Result, "data.types").Result;
+        dictVal = JsonUtils.GetValue<int>(getDict.Result, "data.count");
+        dictionary = JsonUtils.GetDictionary(getDict.Result, "data");
+        listDictionary = JsonUtils.GetListDictionary(getDict.Result, "data.types");  
 
         //Missing Key
-        dictVal = JsonUtils.GetValue<int>(getDict.Result, "data.count1").Result;
-        dictionary = JsonUtils.GetDictionary(getDict.Result, "data1").Result;
-        listDictionary = JsonUtils.GetListDictionary(getDict.Result, "data.types1").Result;
+        dictVal = JsonUtils.GetValue<int>(getDict.Result, "data.count1");
+        dictionary = JsonUtils.GetDictionary(getDict.Result, "data1");
+        listDictionary = JsonUtils.GetListDictionary(getDict.Result, "data.types1");
 
         //Type Exception
-        dictVal = JsonUtils.GetValue<int>(getDict.Result, "name").Result;
-        dictionary = JsonUtils.GetDictionary(getDict.Result, "data.tags").Result;
-        listDictionary = JsonUtils.GetListDictionary(getDict.Result, "data.tags").Result;
+        dictVal = JsonUtils.GetValue<int>(getDict.Result, "name");
+        dictionary = JsonUtils.GetDictionary(getDict.Result, "data.tags");
+        listDictionary = JsonUtils.GetListDictionary(getDict.Result, "data.tags");
     }
     
 }

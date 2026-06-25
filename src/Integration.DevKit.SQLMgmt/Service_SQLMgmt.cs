@@ -19,6 +19,7 @@ namespace Integration.DevKit.SQLMgmt;
 /// </remarks>
 public static class Service_SQLMgmt
 {
+    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private const string NoInit = "Service_SQLMgmt has not been initialized.";
 
     private static ISQLManager? _sqlManager;
@@ -41,7 +42,7 @@ public static class Service_SQLMgmt
     }
 
     /// <summary>
-    /// Initializes the static host with a service provider to resolve the <see cref="ISQLManager"/>.
+    /// Initializes the static <see cref="SQLManager"/>.
     /// </summary>
     /// <param name="sp">The service provider containing the registered SQL management services.</param>
     /// <exception cref="ArgumentNullException">Thrown if the provided <paramref name="sp"/> is <see langword="null"/>.</exception>
@@ -60,6 +61,27 @@ public static class Service_SQLMgmt
         {
             throw new InvalidOperationException($"{nameof(ISQLManager)} is not registered. Make sure you call AddSqlDBManagement() when configuring services.");
         }
+    }
+
+    /// <summary>
+    /// Initializes the static <see cref="SQLManager"/>.
+    /// </summary>
+    /// <param name="configuration">The application configuration used to bind <see cref="SQLManagerSettings"/>.</param>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void Initialize_OnDemand(IConfiguration configuration)
+    {
+        if (configuration == null)
+        {
+            throw new ArgumentNullException(nameof(configuration));
+        }
+
+        _internalServiceCollection.AddSQLMgmt(configuration);
+
+        var provider = _internalServiceCollection.BuildServiceProvider();
+
+        _sqlManager = provider.GetRequiredService<ISQLManager>();
     }
 
     /// <summary>

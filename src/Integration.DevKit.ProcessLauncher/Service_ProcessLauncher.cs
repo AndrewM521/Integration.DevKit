@@ -4,7 +4,9 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using Integration.DevKit.CustomLogger.Contracts;
 using Integration.DevKit.ProcessLauncher.Contracts;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Integration.DevKit.ProcessLauncher;
@@ -18,6 +20,7 @@ namespace Integration.DevKit.ProcessLauncher;
 /// </remarks>
 public static class Service_ProcessLauncher
 {
+    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private const string NoInit = "Service_ProcessLauncher has not been initialized.";
 
     private static IProcessManager? _processManager;
@@ -48,7 +51,7 @@ public static class Service_ProcessLauncher
     }
 
     /// <summary>
-    /// Initializes the static host with the provided service provider.
+    /// Initializes the static <see cref="ProcessManager"/>.
     /// </summary>
     /// <param name="sp">The <see cref="IServiceProvider"/> used to resolve <see cref="IProcessManager"/>.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
@@ -67,6 +70,22 @@ public static class Service_ProcessLauncher
         {
             throw new InvalidOperationException($"{nameof(IProcessManager)} is not registered. Make sure you call AddProcessLauncher() when configuring services.");
         }
+    }
+
+
+    /// <summary>
+    /// Initializes the static <see cref="ProcessManager"/>.
+    /// </summary>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void Initialize_OnDemand()
+    {
+        _internalServiceCollection.AddProcessLauncher();
+
+        var provider = _internalServiceCollection.BuildServiceProvider();
+
+        _processManager = provider.GetRequiredService<IProcessManager>();
     }
 
     /// <summary>

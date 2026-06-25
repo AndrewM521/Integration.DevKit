@@ -14,6 +14,7 @@ namespace Integration.DevKit.CustomLogger.Flusher;
 /// </remarks>
 public static class Service_CustomLogFlusher
 {
+    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private static ILogFlusher? _logFlushService;
 
     private const string NoInit = "Service_LogFlusher has not been initialized.";
@@ -59,7 +60,7 @@ public static class Service_CustomLogFlusher
     }
 
     /// <summary>
-    /// Initializes the static flusher host and validates that all required logging dependencies are registered.
+    /// Initializes the static <see cref="LogFlushService"/>.
     /// </summary>
     /// <param name="sp">The <see cref="IServiceProvider"/> used to resolve logging and flushing services.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
@@ -67,7 +68,7 @@ public static class Service_CustomLogFlusher
     /// Thrown if the core Logging module is missing (requires <see cref="ICustomLoggerManager"/> and <see cref="ILogRegistry"/>) 
     /// or if the Flusher service itself has not been registered.
     /// </exception>
-    public static void Initalize(IServiceProvider sp)
+    public static void Initialize(IServiceProvider sp)
     {
         if (sp == null)
         {
@@ -91,11 +92,33 @@ public static class Service_CustomLogFlusher
         }
     }
 
+
+    /// <summary>
+    /// Initializes the static <see cref="Service_CustomLogger.LoggerManager"/>, <see cref="Service_CustomLogger.LogRegistry"/>, and <see cref="LogFlushService"/>.
+    /// </summary>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void Initialize_OnDemand(IConfiguration configuration)
+    {
+        if (configuration == null)
+        {
+            throw new ArgumentNullException(nameof(configuration));
+        }
+
+        _internalServiceCollection.AddCustomLogging(configuration);
+        _internalServiceCollection.AddCustomLogFlusher(configuration);
+
+        var provider = _internalServiceCollection.BuildServiceProvider();
+
+        _logFlushService = provider.GetRequiredService<ILogFlusher>();
+    }
+
     /// <summary>
     /// Gets the global instance of the <see cref="ILogFlusher"/> service.
     /// </summary>
     /// <value>The current log flusher instance.</value>
-    /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initalize"/> is called.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
     public static ILogFlusher LogFlushService
     {
         get

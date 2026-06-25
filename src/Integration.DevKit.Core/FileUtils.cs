@@ -289,6 +289,39 @@ public static class FileUtils
             return result.SetMethodFailure(ex);
         }
     }
+
+    /// <summary>
+    /// Asynchronously reads the entire byte content of a file.
+    /// </summary>
+    /// <param name="path">The path to the file.</param>
+    /// <returns>An <see cref="OperationResult{Byte[]}"/> containing the file's byte array.</returns>
+    public static async Task<OperationResult<byte[]>> ReadFileBytesAsync(string path)
+    {
+        var result = new OperationResult<byte[]>();
+
+        try
+        {
+            var validatePath = IsStringValidFilePath(path);
+            if (!validatePath.MethodSuccess)
+            {
+                throw validatePath.Exception;
+            }
+
+            if (!validatePath.Result)
+            {
+                throw new ArgumentException(RequiredFilePathErrorMsg);
+            }
+
+            // Read the file as raw binary data
+            byte[] bytes = await File.ReadAllBytesAsync(path);
+
+            return result.SetMethodSuccess(bytes);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
     #endregion
 
     #region Syncronous Methods
@@ -377,7 +410,7 @@ public static class FileUtils
                 DirectoryUtils.CreateDirectory(path);
             }
 
-            var getFiles = DirectoryUtils.GetFiles(path, searchPattern);
+            var getFiles = DirectoryUtils.GetFiles(path, SearchOption.TopDirectoryOnly, searchPattern);
             if (!getFiles.MethodSuccess)
             {
                 throw getFiles.Exception;
@@ -802,6 +835,40 @@ public static class FileUtils
             string lines = File.ReadAllText(path);
 
             return result.SetMethodSuccess(lines);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+
+
+    /// <summary>
+    /// Synchronously reads the entire byte content of a file.
+    /// </summary>
+    /// <param name="path">The path to the file.</param>
+    /// <returns>An <see cref="OperationResult{Byte[]}"/> containing the file's byte array.</returns>
+    public static OperationResult<byte[]> ReadFileBytes(string path)
+    {
+        var result = new OperationResult<byte[]>();
+
+        try
+        {
+            var validatePath = IsStringValidFilePath(path);
+            if (!validatePath.MethodSuccess)
+            {
+                throw validatePath.Exception;
+            }
+
+            if (!validatePath.Result)
+            {
+                throw new ArgumentException(RequiredFilePathErrorMsg);
+            }
+
+            // Read the file as raw binary data
+            byte[] bytes = File.ReadAllBytes(path);
+
+            return result.SetMethodSuccess(bytes);
         }
         catch (Exception ex)
         {

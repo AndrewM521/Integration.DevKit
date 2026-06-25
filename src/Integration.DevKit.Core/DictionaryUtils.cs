@@ -4,6 +4,8 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using System.Diagnostics;
+
 namespace Integration.DevKit.Core;
 
 /// <summary>
@@ -14,86 +16,134 @@ namespace Integration.DevKit.Core;
 public static class DictionaryUtils
 {
     /// <summary>
-    /// Recursively traverses an object structure following a specified path of keys.
+    /// Retrieves a <see cref="Dictionary{string, object}"/> from the source using a key or dot-notation path.
     /// </summary>
-    /// <remarks>
-    /// If a <see cref="List{object}"/> is encountered during traversal, the method branches and 
-    /// continues the search for the current path index across all items in that list.
-    /// </remarks>
-    /// <param name="curObject">The root object (usually a Dictionary or List) to begin traversal.</param>
-    /// <param name="path">An ordered array of strings representing the keys to follow.</param>
-    /// <returns>
-    /// An <see cref="OperationResult{T}"/> containing a list of all objects found at the end of the path.
-    /// </returns>
-    public static OperationResult<List<object>> TraverseByPath(object curObject, string[] path)
+    /// <param name="dictionary">The source dictionary.</param>
+    /// <param name="keyPath">The key or dot-notation path to the dictionary.</param>
+    /// <returns>A <see cref="Dictionary{string, object}"/> or an empty <see cref="Dictionary{string, object}"/>.</returns>
+    public static Dictionary<string, object> GetDictionary(Dictionary<string, object> dictionary, string keyPath)
     {
-        var result = new OperationResult<List<object>>();
-        var matches = new List<object>();
-
-        try
-        {
-            TraverseInternal(curObject, path, 0, ref matches);
-
-            return result.SetMethodSuccess(matches);
-        }
-        catch (Exception ex)
-        {
-            return result.SetMethodFailure(ex);
-        }
+        return GetValue(dictionary, keyPath, new Dictionary<string, object>());
     }
 
     /// <summary>
-    /// Creates a subset of dictionaries by filtering each entry in the source list to only include specified keys.
+    /// Retrieves a <see cref="List{object}"/> from the source using a key or dot-notation path.
     /// </summary>
-    /// <param name="source">The source list of dictionaries to process.</param>
-    /// <param name="keys">The list of keys to retain in the resulting dictionaries.</param>
-    /// <returns>
-    /// An <see cref="OperationResult{T}"/> containing a new list of dictionaries, 
-    /// each containing only the intersection of the requested keys and the available data.
-    /// </returns>
-    public static OperationResult<List<Dictionary<string, object>>> ExtractSubsetByKeys(List<Dictionary<string, object>> source, List<string> keys)
+    /// <param name="dictionary">The source dictionary.</param>Laura
+    /// <param name="keyPath">The key or dot-notation path to the list.</param>
+    /// <returns>The list if found and of the correct type; otherwise, <see langword="null"/>.</returns>
+    public static List<object?> GetList(Dictionary<string, object> dictionary, string keyPath)
     {
-        var result = new OperationResult<List<Dictionary<string, object>>>();
+        return GetValue(dictionary, keyPath, new List<object?>());
+    }
 
-        List<Dictionary<string, object>> resultList = new List<Dictionary<string, object>>();
-        HashSet<string> keySet = new HashSet<string>(keys);
+    /// <summary>
+    /// Retrieves a <see cref="List{Dictionary{string, object}}"/> from the source using a key or dot-notation path.
+    /// </summary>
+    /// <param name="dictionary">The source dictionary.</param>Laura
+    /// <param name="keyPath">The key or dot-notation path to the list.</param>
+    /// <returns>A <see cref="List{Dictionary{string, object}}"/> or an empty <see cref="List{Dictionary{string, object}}"/>.</returns>
+    public static List<Dictionary<string, object>> GetListDictionary(Dictionary<string, object> dictionary, string keyPath)
+    {
+        return GetValue(dictionary, keyPath, new List<Dictionary<string, object>>());
+    }
 
-        try
+    /// <summary>
+    /// Navigates a dictionary by a specific key or a dot-notation path and attempts to convert the value to <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The target type for conversion.</typeparam>
+    /// <param name="dictionary">The source dictionary.</param>
+    /// <param name="keyPath">The key or dot-notation path (e.g., "Id" or "Meta.Metadata.Id").</param>
+    /// <param name="defaultValue">Optional value to return if the key is missing, the value is null, or conversion fails.</param>
+    /// <returns>The value converted to <typeparamref name="T"/>, or <paramref name="defaultValue"/>.</returns>
+    public static T GetValue<T>(Dictionary<string, object> dictionary, string keyPath, T defaultValue = default!)
+    {
+        if (dictionary == null || string.IsNullOrWhiteSpace(keyPath))
         {
-            if (source == null || keys == null)
+            return defaultValue;
+        }
+
+        object? currentObj = dictionary;
+
+        var keys = keyPath.Split('.', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var key in keys)
+        {
+            if (currentObj is Dictionary<string, object> currentDict &&
+                currentDict.TryGetValue(key, out var next))
             {
-                return result.SetMethodSuccess(resultList);
+                currentObj = next;
             }
-
-
-            foreach (var originalDict in source)
+            else
             {
-                if (originalDict == null || originalDict.Count == 0)
-                {
-                    continue;
-                }
+                return defaultValue;
+            }
+        }
 
-                Dictionary<string, object> filteredDict = new Dictionary<string, object>(keySet.Count);
+        if (currentObj is T typed)
+        {
+            return typed;
+        }
 
-                foreach (string key in keySet)
+        if (currentObj == null)
+        {
+            return defaultValue;
+        }
+
+        var targetType = typeof(T);
+        var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+        if (underlyingType.IsGenericType && underlyingType.GetGenericTypeDefinition() == typeof(List<>))
+        {
+            var itemType = underlyingType.GetGenericArguments()[0];
+
+            if (currentObj is IEnumerable<object?> objList)
+            {
+                var listType = typeof(List<>).MakeGenericType(itemType);
+                var list = (System.Collections.IList)Activator.CreateInstance(listType)!;
+
+                foreach (var item in objList)
                 {
-                    if (originalDict.TryGetValue(key, out var value))
+                    if (item == null)
                     {
-                        filteredDict[key] = value;
+                        list.Add(null);
+                        continue;
+                    }
+
+                    if (itemType.IsInstanceOfType(item))
+                    {
+                        list.Add(item);
+                        continue;
+                    }
+
+                    try
+                    {
+                        var convertedItem = Convert.ChangeType(item, itemType);
+                        list.Add(convertedItem);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Failed to convert list item to {itemType.Name}. {ex}");
+
+                        return defaultValue;
                     }
                 }
 
-                if (filteredDict.Count > 0)
-                {
-                    resultList.Add(filteredDict);
-                }
+                return (T)list;
             }
+        }
 
-            return result.SetMethodSuccess(resultList);
+        try
+        {
+            var converted = Convert.ChangeType(currentObj, underlyingType);
+
+            return (T)converted;
         }
         catch (Exception ex)
         {
-            return result.SetMethodFailure(ex);
+            Debug.WriteLine($"Failed to convert list to {underlyingType.Name}. {ex}");
+
+            return defaultValue;
         }
     }
 
@@ -167,152 +217,5 @@ public static class DictionaryUtils
         }
 
         return result.SetMethodSuccess(resultDict);
-    }
-
-    /// <summary>
-    /// Retrieves a value and attempts to cast or convert it to <typeparamref name="T"/>.
-    /// </summary>
-    /// <typeparam name="T">The target type for the value.</typeparam>
-    /// <param name="dict">The dictionary to search.</param>
-    /// <param name="key">The key to look up.</param>
-    /// <param name="defaultValue">Optional value to return if the key is missing, the value is null, or conversion fails.</param>
-    /// <returns>The value converted to <typeparamref name="T"/>, or <paramref name="defaultValue"/>.</returns>
-    /// <remarks>
-    /// This method first attempts a direct cast. If that fails, it attempts to use <see cref="Convert.ChangeType(object, Type)"/>.
-    /// </remarks>
-    public static T GetValue<T>(Dictionary<string, object> dict, string key, T defaultValue = default!)
-    {
-        if (dict.TryGetValue(key, out var value) && value != null)
-        {
-            if (value is T result)
-            {
-                return result;
-            }
-
-            try
-            {
-                // Attempts to convert the object to the target type T
-                return (T)Convert.ChangeType(value, typeof(T));
-            }
-            catch
-            {
-                return defaultValue;
-            }
-        }
-
-        return defaultValue;
-    }
-
-    /// <summary>
-    /// Safely retrieves a nested <see cref="Dictionary{string, object}"/>.
-    /// </summary>
-    /// <param name="source">The parent dictionary.</param>
-    /// <param name="key">The key identifying the nested dictionary.</param>
-    /// <returns>The nested dictionary if it exists and matches the type; otherwise, <see langword="null"/>.</returns>
-    public static Dictionary<string, object>? GetDictionary(Dictionary<string, object> source, string key)
-    {
-        if (!source.TryGetValue(key, out var value))
-        {
-            return null;
-        }
-
-        if (value is not Dictionary<string, object> nested)
-        {
-            return null;
-        }
-
-        return nested;
-    }
-
-    /// <summary>
-    /// Retrieves a list of dictionaries associated with a specific key.
-    /// </summary>
-    /// <param name="source">The source dictionary.</param>
-    /// <param name="key">The key identifying the list.</param>
-    /// <returns>
-    /// A list of dictionaries if found. Returns <see langword="null"/> if the key is missing, 
-    /// the value is not a list, or the list contains no valid dictionaries.
-    /// </returns>
-    public static List<Dictionary<string, object>>? GetListDictionary(Dictionary<string, object> source, string key)
-    {
-        if (!source.TryGetValue(key, out var value))
-        {
-            return null;
-        }
-
-        if (value is not List<object> list)
-        {
-            return null;
-        }
-
-        var result = new List<Dictionary<string, object>>(list.Count);
-
-        foreach (var item in list)
-        {
-            if (item is Dictionary<string, object> dictionary)
-            {
-                result.Add(dictionary);
-            }
-        }
-
-        if (result.Count <= 0)
-        {
-            return null;
-        }
-
-        return result;
-    }
-
-    /// <summary>
-    /// Safely retrieves a <see cref="List{object}"/> associated with the specified key.
-    /// </summary>
-    /// <param name="source">The source dictionary.</param>
-    /// <param name="key">The key identifying the list.</param>
-    /// <returns>The list if found and of the correct type; otherwise, <see langword="null"/>.</returns>
-    public static List<object>? GetList(Dictionary<string, object> source, string key)
-    {
-        if (!source.TryGetValue(key, out var value))
-        {
-            return null;
-        }
-
-        if (value is not List<object> list)
-        {
-            return null;
-        }
-
-        return list;
-    }
-
-    /// <summary>
-    /// Core recursive engine for path traversal.
-    /// </summary>
-    /// <param name="current">The current level's object context.</param>
-    /// <param name="path">The full array of keys to navigate.</param>
-    /// <param name="depth">The current index within the <paramref name="path"/>.</param>
-    /// <param name="matches">The collection being populated with found leaf-node objects.</param>
-    private static void TraverseInternal(object current, string[] path, int depth, ref List<object> matches)
-    {
-        if (depth == path.Length)
-        {
-            matches.Add(current);
-            return;
-        }
-
-        string key = path[depth];
-
-        if (current is Dictionary<string, object> dictionary && dictionary.TryGetValue(key, out var next))
-        {
-            TraverseInternal(next, path, depth + 1, ref matches);
-        }
-        else if (current is List<object> list)
-        {
-            foreach (var item in list)
-            {
-                // Note: We do not increment depth here because we are searching 
-                // for the SAME key across all items in the current list.
-                TraverseInternal(item, path, depth, ref matches);
-            }
-        }
     }
 }

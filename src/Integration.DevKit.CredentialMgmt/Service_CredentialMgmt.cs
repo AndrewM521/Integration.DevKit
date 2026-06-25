@@ -5,6 +5,7 @@
  */
 
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Integration.DevKit.CredentialMgmt;
@@ -18,6 +19,8 @@ namespace Integration.DevKit.CredentialMgmt;
 /// </remarks>
 public static class Service_CredentialMgmt
 {
+    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
+
     private const string NoInitSuffix = " has not been initialized.";
 
     private static FileSecretStore? _fileSecretStore;
@@ -50,13 +53,11 @@ public static class Service_CredentialMgmt
     }
 
     /// <summary>
-    /// Initializes the static <see cref="FileSecretStore"/> instance by resolving it from the provided service provider.
+    /// Initializes the static <see cref="FileSecretStore"/> instance.
     /// </summary>
     /// <param name="sp">The <see cref="IServiceProvider"/> containing the registered <see cref="FileSecretStore"/>.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if <see cref="FileSecretStore"/> is not registered in the service collection.
-    /// </exception>
+    /// <exception cref="InvalidOperationException">Thrown if <see cref="FileSecretStore"/> is not registered in the service collection.</exception>
     public static void InitializeFileSecretStore(IServiceProvider sp)
     {
         _fileSecretStore = sp.GetService<FileSecretStore>();
@@ -64,6 +65,24 @@ public static class Service_CredentialMgmt
         {
             throw new InvalidOperationException($"{typeof(FileSecretStore).Name} is not registered, make sure to call AddFileSecretStore() when configuring services.");
         }
+    }
+
+    /// <summary>
+    /// Initializes the static <see cref="FileSecretStore"/> instance. 
+    /// </summary>
+    /// <param name="applicationName">The unique name of the application. This is used as the purpose string for Data Protection and the identity of the store.</param>
+    /// <param name="secretsFolder">The directory path where the encrypted secret files will be stored.</param>
+    /// <param name="keysFolder">The directory path where the Data Protection XML master keys will be persisted.</param>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void InitializeFileSecretStore_OnDemand(string applicationName, string secretsFolder, string keysFolder)
+    {
+        _internalServiceCollection.AddFileSecretStore(applicationName, secretsFolder, keysFolder);
+
+        var provider = _internalServiceCollection.BuildServiceProvider();
+
+        _fileSecretStore = provider.GetRequiredService<FileSecretStore>();
     }
 
     /// <summary>

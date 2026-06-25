@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <Title>DevKit.Core</Title>
     <RootNamespace>Integration.DevKit.Core</RootNamespace>
-    <Version>1.0.0.3</Version>
+    <Version>1.0.0.5</Version>
   </PropertyGroup>
 
   <ItemGroup>

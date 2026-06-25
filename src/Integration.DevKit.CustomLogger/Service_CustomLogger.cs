@@ -12,6 +12,7 @@ namespace Integration.DevKit.CustomLogger;
 /// </remarks>
 public static class Service_CustomLogger
 {
+    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private const string NoInit = "Service_CustomLogger has not been initialized.";
 
     private static ILogRegistry? _logRegistry;
@@ -48,7 +49,7 @@ public static class Service_CustomLogger
     }
 
     /// <summary>
-    /// Initializes the static logging host with the required services from the service provider.
+    /// Initializes the static <see cref="LoggerManager"/> and <see cref="LogRegistry"/>.
     /// </summary>
     /// <param name="sp">The <see cref="IServiceProvider"/> containing the registered logging services.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
@@ -74,6 +75,37 @@ public static class Service_CustomLogger
             throw new InvalidOperationException($"{nameof(ICustomLoggerManager)} is not registered, make sure to call AddCustomLogging() when configuring services.");
         }
     }
+
+    /// <summary>
+    /// Initializes the static <see cref="LoggerManager"/> and <see cref="LogRegistry"/>.
+    /// </summary>
+    /// <param name="configuration">The <see cref="IConfiguration"/> instance used to bind logging settings.</param>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void Initialize_OnDemand(IConfiguration configuration)
+    {
+        if (configuration == null)
+        {
+            throw new ArgumentNullException(nameof(configuration));
+        }
+
+        _internalServiceCollection.AddCustomLogging(configuration);
+
+        // Bind LoggerManagerSettings
+        _internalServiceCollection.Configure<LoggerManagerSettings>(configuration.GetSection("Integration.DevKit:CustomLogger"));
+
+        // Register the concrete class
+        _internalServiceCollection.AddSingleton<ICustomLoggerManager, CustomLoggerManager>();
+
+        _internalServiceCollection.AddSingleton<ILogRegistry, LogRegistry>();
+
+        var provider = _internalServiceCollection.BuildServiceProvider();
+
+        _loggerManager = provider.GetRequiredService<ICustomLoggerManager>();
+        _logRegistry = provider.GetRequiredService<ILogRegistry>();
+    }
+
 
     /// <summary>
     /// Gets the global instance of the <see cref="ICustomLoggerManager"/>.

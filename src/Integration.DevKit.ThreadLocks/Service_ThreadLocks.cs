@@ -5,6 +5,7 @@
  */
 
 using Integration.DevKit.ThreadLocks.Contracts;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Integration.DevKit.ThreadLocks;
@@ -19,6 +20,7 @@ namespace Integration.DevKit.ThreadLocks;
 /// </remarks>
 public static class Service_ThreadLocks
 {
+    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private const string NoInit = "Service_ThreadLocks has not been initialized.";
 
     private static IThreadLockManager? _threadLockManager;
@@ -64,6 +66,21 @@ public static class Service_ThreadLocks
         {
             throw new InvalidOperationException($"{nameof(IThreadLockManager)} is not registered. Make sure you call AddThreadLocks() when configuring services before initializing {nameof(Service_ThreadLocks)}.");
         }
+    }
+
+    /// <summary>
+    /// Initializes the static <see cref="ThreadLockManager"/>.
+    /// </summary>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void Initialize_OnDemand()
+    {
+        _internalServiceCollection.AddThreadLocks();
+
+        var provider = _internalServiceCollection.BuildServiceProvider();
+
+        _threadLockManager = provider.GetRequiredService<IThreadLockManager>();
     }
 
     /// <summary>

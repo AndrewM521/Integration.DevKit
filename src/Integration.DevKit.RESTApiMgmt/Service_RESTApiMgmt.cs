@@ -19,6 +19,7 @@ namespace Integration.DevKit.RESTApiMgmt;
 /// </remarks>
 public static class Service_RESTApiMgmt
 {
+    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private const string NoInit = "Service_RESTApiMgmt has not been initialized.";
 
     private static IApiManager? _apiManager;
@@ -41,7 +42,7 @@ public static class Service_RESTApiMgmt
     }
 
     /// <summary>
-    /// Initializes the static host with the <see cref="IApiManager"/> resolved from the service provider.
+    /// Initializes the static <see cref="ApiManager"/>.
     /// </summary>
     /// <param name="sp">The <see cref="IServiceProvider"/> containing the registered API management services.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
@@ -60,6 +61,26 @@ public static class Service_RESTApiMgmt
         {
             throw new InvalidOperationException($"{nameof(IApiManager)} is not registered, make sure to call AddApiManagement() when configuring services.");
         }
+    }
+
+    /// <summary>
+    /// Initializes the static <see cref="ApiManager"/>.
+    /// </summary>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void Initialize_OnDemand(IConfiguration configuration)
+    {
+        if (configuration == null)
+        {
+            throw new ArgumentNullException(nameof(configuration));
+        }
+
+        _internalServiceCollection.AddRESTApiMgmt(configuration);
+
+        var provider = _internalServiceCollection.BuildServiceProvider();
+
+        _apiManager = provider.GetRequiredService<IApiManager>();
     }
 
     /// <summary>

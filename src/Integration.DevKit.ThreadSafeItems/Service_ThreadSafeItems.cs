@@ -4,6 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using Integration.DevKit.ThreadLocks;
 using Integration.DevKit.ThreadLocks.Contracts;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,6 +20,7 @@ namespace Integration.DevKit.ThreadSafeItems;
 /// </remarks>
 public static class Service_ThreadSafeItems
 {
+    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private const string NoInit = "Service_ThreadSafeItems has not been initialized.";
 
     private static ThreadSafeFileIO? _threadSafeFileIO;
@@ -74,6 +76,23 @@ public static class Service_ThreadSafeItems
         {
             throw new InvalidOperationException($"{nameof(ThreadSafeFileIO)} is not registered. Make sure you call AddThreadSafeItems() when configuring services.");
         }
+    }
+
+
+    /// <summary>
+    /// Initializes the static <see cref="ThreadSafeFileIOClass"/>.
+    /// </summary>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void Initialize_OnDemand()
+    {
+        _internalServiceCollection.AddThreadLocks();
+        _internalServiceCollection.AddThreadSafeItems();
+
+        var provider = _internalServiceCollection.BuildServiceProvider();
+
+        _threadSafeFileIO = provider.GetRequiredService<ThreadSafeFileIO>();
     }
 
     /// <summary>

@@ -19,14 +19,7 @@ public static class DirectoryUtils
     /// Validates the provided path and creates the directory if it does not already exist.
     /// </summary>
     /// <param name="path">The full path of the directory to create.</param>
-    /// <returns>
-    /// A <see cref="NullOperationResult"/> indicating success. 
-    /// If the path is invalid or the operation fails, the result will contain the relevant <see cref="Exception"/>.
-    /// </returns>
-    /// <remarks>
-    /// This method internally uses <see cref="IsStringValidDirectoryPath(string)"/> to ensure the path 
-    /// format is correct before attempting creation.
-    /// </remarks>
+    /// <returns> A <see cref="NullOperationResult"/> indicating success or failure.</returns>
     public static NullOperationResult CreateDirectory(string path)
     {
         var result = new NullOperationResult();
@@ -65,14 +58,7 @@ public static class DirectoryUtils
     /// <see langword="true"/> to remove directories, subdirectories, and files within the path; 
     /// <see langword="false"/> to delete only the directory if it is empty.
     /// </param>
-    /// <returns>
-    /// A <see cref="NullOperationResult"/> indicating success. 
-    /// Returns failure if the path format is invalid or if an <see cref="IOException"/> occurs.
-    /// </returns>
-    /// <remarks>
-    /// This method internally uses <see cref="IsStringValidDirectoryPath(string)"/> to ensure the path 
-    /// format is correct before attempting creation.
-    /// </remarks>
+    /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
     public static NullOperationResult DeleteDirectory(string path, bool recursive = false)
     {
         var result = new NullOperationResult();
@@ -104,20 +90,13 @@ public static class DirectoryUtils
     }
 
     /// <summary>
-    /// Retrieves the names of files (including full paths) that match a search pattern within a directory.
+    /// Retrieves the file paths that match a search pattern within a directory.
     /// </summary>
     /// <param name="path">The relative or absolute path to the directory to search.</param>
-    /// <param name="searchPattern">
-    /// The search string to match against file names (e.g., "*.txt", "data_??.json").
-    /// </param>
-    /// <returns>
-    /// An <see cref="OperationResult{T}"/> containing a string array of matching file paths.
-    /// </returns>
-    /// <remarks>
-    /// This method internally uses <see cref="IsStringValidDirectoryPath(string)"/> to ensure the path 
-    /// format is correct before attempting creation.
-    /// </remarks>
-    public static OperationResult<string[]> GetFiles(string path, string searchPattern)
+    /// <param name="searchOption">Optional search option to include all subdirectories or only the current directory. Defaults to <see cref="SearchOption.TopDirectoryOnly"/>.</param>
+    /// <param name="searchPattern">Optional search string to match against file names (e.g., "*.txt", "data_??.json").</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing a string array of file paths.</returns>
+    public static OperationResult<string[]> GetFiles(string path, SearchOption searchOption = SearchOption.TopDirectoryOnly, string searchPattern = "*")
     {
         var result = new OperationResult<string[]>();
 
@@ -134,7 +113,7 @@ public static class DirectoryUtils
                 throw new ArgumentException(RequiredDirectoryPathErrorMsg);
             }
 
-            var files = Directory.GetFiles(path, searchPattern);
+            var files = Directory.GetFiles(path, searchPattern, searchOption);
 
             return result.SetMethodSuccess(files);
         }

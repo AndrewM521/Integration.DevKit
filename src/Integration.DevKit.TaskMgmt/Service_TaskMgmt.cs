@@ -7,6 +7,7 @@
 using Integration.DevKit.TaskMgmt.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Integration.DevKit.TaskMgmt;
 
@@ -16,6 +17,7 @@ namespace Integration.DevKit.TaskMgmt;
 /// </summary>
 public static class Service_TaskMgmt
 {
+    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private const string NoInit = "Service_TaskMgmt has not been initialized.";
 
     private static ITaskManager? _taskManager;
@@ -28,10 +30,6 @@ public static class Service_TaskMgmt
     /// <param name="config">The <see cref="IConfiguration"/> instance used to bind <see cref="TaskManagerSettings"/>.</param>
     /// <returns>The original <see cref="IServiceCollection"/> for chaining calls.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> or <paramref name="config"/> is null.</exception>
-    /// <remarks>
-    /// This method binds configuration from the "AndrewM5.DevKit:TaskManager" section and registers 
-    /// <see cref="ITaskRegistry"/>, and <see cref="ITaskManager"/> as Singletons.
-    /// </remarks>
     public static IServiceCollection AddTaskMgmt(this IServiceCollection services, IConfiguration config)
     {
         if (services == null)
@@ -82,6 +80,29 @@ public static class Service_TaskMgmt
         {
             throw new InvalidOperationException($"{nameof(ITaskManager)} is not registered. Make sure you call AddTaskManager() when configuring services.");
         }
+    }
+
+    /// <summary>
+    /// Initializes the static <see cref="TaskManager"/> and <see cref="TaskRegistry"/>.
+    /// </summary>
+    /// <param name="configuration">The application configuration used to bind <see cref="TaskManagerSettings"/>.</param>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void Initialize_OnDemand(IConfiguration configuration, IHostApplicationLifetime lifetime)
+    {
+        if (configuration == null)
+        {
+            throw new ArgumentNullException(nameof(configuration));
+        }
+
+        _internalServiceCollection.AddSingleton(lifetime);
+        _internalServiceCollection.AddTaskMgmt(configuration);
+
+        var provider = _internalServiceCollection.BuildServiceProvider();
+
+        _taskRegistry = provider.GetRequiredService<ITaskRegistry>();
+        _taskManager = provider.GetRequiredService<ITaskManager>();
     }
 
     /// <summary>
