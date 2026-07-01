@@ -133,8 +133,6 @@ public class ApiOperationResult<T> : NullableOperationResult<T>
             {
                 retVal += $", DisplaySummary: {DisplaySummary}";
             }
-
-            retVal += "}";
         }
         else
         {

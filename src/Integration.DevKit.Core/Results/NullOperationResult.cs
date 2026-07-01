@@ -41,6 +41,17 @@ public class NullOperationResult : NullableOperationResult<object?>
     /// </returns>
     public override string ToString()
     {
-        return MethodSuccess ? "Result: Success, null" : $"Result: Fail, {Exception.Message}";
+        string retVal = string.Empty;
+
+        if (MethodSuccess == true)
+        {
+            retVal = $"Result: Success, null";
+        }
+        else
+        {
+            retVal = $"Result: Fail, {Exception.Message}";
+        }
+
+        return retVal;
     }
 }

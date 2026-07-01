@@ -128,12 +128,10 @@ public static class DirectoryUtils
     /// </summary>
     /// <param name="path">The string path to validate.</param>
     /// <returns>
-    /// An <see cref="OperationResult{T}"/> where the result is <see langword="true"/> if the string 
-    /// is a valid path format and lacks a file extension or ends with a directory separator.
+    /// An <see cref="OperationResult{T}"/> where the result is <see langword="true"/> if the string is structurally valid to be a directory.
     /// </returns>
     /// <remarks>
-    /// This method does not check if the directory actually exists on disk; it only validates the 
-    /// string structure and checks for invalid characters.
+    /// This method does not check if the directory actually exists on disk; it only validates the string structure.
     /// </remarks>
     public static OperationResult<bool> IsStringValidDirectoryPath(string path)
     {
@@ -143,22 +141,40 @@ public static class DirectoryUtils
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                throw new ArgumentException("Path cannot be null or whitespace.");
+                return result.SetMethodSuccess(false);
             }
 
             if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
             {
-                throw new ArgumentException("Directory contains invalid characters.");
+                return result.SetMethodSuccess(false);
             }
 
-            bool isDirectory = false;
-            
-            if (path.EndsWith("/") || path.EndsWith("\\") || !Path.HasExtension(path))
+            /// WHY WE USE FileInfo: Even though this validates a directory path, we instantiate a FileInfo object 
+            /// to trick .NET into running the string through its strict, native OS-level path parsing engine. 
+            /// This instantly catches complex structural errors (like malformed drive syntax "C:::\\" or path length 
+            /// limits) without doing an expensive disk I/O check. We avoid DirectoryInfo here because it has a 
+            /// known quirk where it automatically strips trailing dots/spaces during parsing, which masks formatting errors.
+            var fileInfo = new FileInfo(path);
+
+            var lastSegment = Path.GetFileName(path);
+            if (!string.IsNullOrEmpty(lastSegment) && lastSegment.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
             {
-                isDirectory = true;
+                return result.SetMethodSuccess(false);
             }
 
-            return result.SetMethodSuccess(isDirectory);
+            var trimmedPath = path.TrimEnd();
+
+            // A valid directory intent means it explicitly ends with a slash OR it has no extension.
+            // If BOTH are false, it heavily implies a file intent, so we reject it.
+            bool hasDirectoryIntent = trimmedPath.EndsWith(Path.DirectorySeparatorChar) ||
+                                      trimmedPath.EndsWith(Path.AltDirectorySeparatorChar) ||
+                                      string.IsNullOrEmpty(fileInfo.Extension);
+            if (!hasDirectoryIntent)
+            {
+                return result.SetMethodSuccess(false);
+            }
+
+            return result.SetMethodSuccess(true);
         }
         catch (Exception ex)
         {

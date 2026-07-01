@@ -4,23 +4,25 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.RESTApiMgmt;
 using Integration.DevKit.Core;
+using Integration.DevKit.Core.Configuration;
+using Integration.DevKit.CredentialMgmt;
+using Integration.DevKit.CustomLogger;
+using Integration.DevKit.CustomLogger.Flusher;
 using Integration.DevKit.ProcessLauncher;
+using Integration.DevKit.RESTApiMgmt;
+using Integration.DevKit.RESTApiMgmt.Contracts;
+using Integration.DevKit.SQLMgmt;
 using Integration.DevKit.TaskMgmt;
+using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.ThreadLocks;
+using Integration.DevKit.ThreadSafeItems;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.Diagnostics;
-using Integration.DevKit.CredentialMgmt;
-using Integration.DevKit.CustomLogger;
-using Integration.DevKit.CustomLogger.Flusher;
-using Integration.DevKit.SQLMgmt;
-using Integration.DevKit.ThreadLocks;
-using Integration.DevKit.ThreadSafeItems;
-using Integration.DevKit.RESTApiMgmt.Contracts;
-using Integration.DevKit.TaskMgmt.Contracts;
 
 namespace TestApp;
 
@@ -30,7 +32,17 @@ public class Program
     {
         var config = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json", false)
-            .Build();
+            .EncryptJsonOnBuild(
+                new CryptoContract
+                {
+                    Signature = "ENC",
+                    Version = "v1",
+                    Provider = new Base64CryptoProvider()
+                },
+                (options) => {
+                    options.Encrypt("Integration.DevKit:RnadomManagement");
+                }
+            ).Build();
 
         var builder = Host.CreateDefaultBuilder(args)
             .ConfigureServices((context, services) =>
@@ -95,7 +107,7 @@ public class AppEntry
         //await TestTaskManagement_SyncManagedTask();
         //await TestTaskManagement_AsyncManagedTask();
 
-        await TaskCoreClasses(); 
+        await TestCoreClasses(); 
         //await TestApiManagementCredentials(true, false);
 
 
@@ -1230,68 +1242,156 @@ public class AppEntry
 
 
 
-    private async Task TaskCoreClasses()
+    private async Task TestCoreClasses()
     {
-        object jsonObject = null;
+        //OperationResult<string> json;
 
-        jsonObject = new Dictionary<string, object>
-        {
-            ["name"] = "test",
-            ["data"] = new Dictionary<string, object>
-            {
-                ["type"] = "type1",
-                ["count"] = 1,
-                ["tags"] = new List<string?> {
-                    "tag1",
-                    "tag2",
-                    null
-                },
-                ["types"] = new List<Dictionary<string, object>> {
-                    new Dictionary<string, object>{ ["name"] = "apple" },
-                    new Dictionary<string, object>{ ["name"] = "banana" },
-                    new Dictionary<string, object>{ ["name"] = "grape" },
-                }
-            }
-        };
+        //json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json1.txt");
+        //if (!json.MethodSuccess)
+        //{
+        //    throw json.Exception;
+        //}
 
-        //jsonObject = new List<string> {
-        //    "name",
-        //    "tag",
-        //    "type"
+        //json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json2.txt");
+        //if (!json.MethodSuccess)
+        //{
+        //    throw json.Exception;
+        //}
+
+        //json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json3.txt");
+        //if (!json.MethodSuccess)
+        //{
+        //    throw json.Exception;
+        //}
+
+        //object result = null;
+
+        //----Get Dictionary by single path----
+        //result = JsonUtils.GetDictionary(json.Result).Result;
+        //result = JsonUtils.GetDictionary(json.Result, "numbers").Result; //Primitive
+        //result = JsonUtils.GetDictionary(json.Result, "data").Result; //Dictionary
+        //result = JsonUtils.GetDictionary(json.Result, "house").Result; //Dictionary List
+        //result = JsonUtils.GetDictionary(json.Result, "index").Result; //List
+        //result = JsonUtils.GetDictionary(json.Result, "data.dictionary1").Result; //Sub Dictionary
+        //result = JsonUtils.GetDictionary(json.Result, "data.dictionary1.name").Result; //Sub Dictionary Object
+        //result = JsonUtils.GetDictionary(json.Result, "data.activities").Result; //Sub Dictionary List
+        //result = JsonUtils.GetDictionary(json.Result, "data.activities.0").Result; //Sub Dictionary List Item
+        //result = JsonUtils.GetDictionary(json.Result, "data.activities.0.id").Result; //Sub Dictionary List Item Object
+
+        //----Get List by single path----
+        //result = JsonUtils.GetList<int>(json.Result).Result; //Root
+        //result = JsonUtils.GetList<int>(json.Result, "testData.luckyNumbers").Result;
+        //result = JsonUtils.GetList<double>(json.Result, "testData.prices").Result;
+        //result = JsonUtils.GetList<string>(json.Result, "testData.allowedRoles").Result;
+        //result = JsonUtils.GetList<int>(json.Result, "testData.matrix.1.2").Result;
+        //result = JsonUtils.GetList<int>(json.Result, "testData.emptyList.1").Result;
+
+        //----Get Dictionary List by single path----
+        //result = JsonUtils.GetDictionaryList(json.Result).Result; //Root
+        //result = JsonUtils.GetDictionaryList(json.Result, "numbers").Result; //Primitive
+        //result = JsonUtils.GetDictionaryList(json.Result, "data").Result; //Dictionary
+        //result = JsonUtils.GetDictionaryList(json.Result, "house").Result; //Dictionary List
+        //result = JsonUtils.GetDictionaryList(json.Result, "index").Result; //List --Should return empty since the objects are not of Dictionary List so we cant convert
+        //result = JsonUtils.GetDictionaryList(json.Result, "data.dictionary1").Result; //Sub Dictionary
+        //result = JsonUtils.GetDictionaryList(json.Result, "data.dictionary1.name").Result; //Sub Dictionary Object
+        //result = JsonUtils.GetDictionaryList(json.Result, "data.activities").Result; //Dictionary List
+        //result = JsonUtils.GetDictionaryList(json.Result, "data.activities.0").Result; //Dictionary List Item
+        //result = JsonUtils.GetDictionaryList(json.Result, "data.activities.0.id").Result; //Dictionary List Item Object
+
+        //----Get Dictionary by multi-paths----
+        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "numbers", "world" }).Result; //Primitives
+        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data", "house" }).Result; //Dictionaries
+        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "index", "house" }).Result; //Lists
+        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.dictionary1", "house.0" }).Result; //Sub Dictionary
+        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.dictionary1.name", "data.jobs.0.id" }).Result; //Sub Dictionary Object
+        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.activities", "data.jobs" }).Result; //Sub Dictionary List
+        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.activities.0", "data.jobs.0" }).Result; //Sub Dictionary List Item
+        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.activities.0.id", "data.jobs.0.id" }).Result; //Sub Dictionary List Item Object
+
+        //string jsonResult = JsonUtils.SerializeObjectToJson(result).Result;
+
+        //Console.WriteLine(jsonResult);
+
+        //object jsonObject = null;
+
+        //jsonObject = new Dictionary<string, object>
+        //{
+        //    ["data"] = new Dictionary<string, object>
+        //    {
+        //        ["authToken"] = "1234",
+        //        ["key"] = "yes"
+        //    }
         //};
+
+        ////jsonObject = new Dictionary<string, object>
+        ////{
+        ////    ["name"] = "test",
+        ////    ["data"] = new Dictionary<string, object>
+        ////    {
+        ////        ["type"] = "type1",
+        ////        ["count"] = 1,
+        ////        ["tags"] = new List<string?> {
+        ////            "tag1",
+        ////            "tag2",
+        ////            null
+        ////        },
+        ////        ["types"] = new List<Dictionary<string, object>> {
+        ////            new Dictionary<string, object>{ ["name"] = "apple" },
+        ////            new Dictionary<string, object>{ ["name"] = "banana" },
+        ////            new Dictionary<string, object>{ ["name"] = "grape" },
+        ////        }
+        ////    }
+        ////};
+
+        ////jsonObject = new List<string> {
+        ////    "name",
+        ////    "tag",
+        ////    "type"
+        ////};
+
+
+        //var getJson = JsonUtils.SerializeObjectToJson(jsonObject);
+
+        //var tmp1 = JsonUtils.ParseAndFilterJson<Dictionary<string, object>>(getJson.Result, new List<string> { "data.authToken", "key" });
+
+        //string tmp = "";
+
+
+
+
 
         //jsonObject = new List<string> {};
 
-        var getJson = JsonUtils.SerializeObjectToJson(jsonObject);
-
-        //var keys = new List<string> { "name", "data.tags", "name.count" };
-        var keys = new List<string> { };
-
-        var getDict = JsonUtils.ParseAndFilterJson<Dictionary<string, object>>(getJson.Result, keys);
-        if (!getDict.MethodSuccess)
-        {
-            throw getDict.Exception;
-        }
-
-        int? dictVal;
-        Dictionary<string, object>? dictionary;
-        List<Dictionary<string, object>>? listDictionary;
 
 
-        //Valid key
-        dictVal = DictionaryUtils.GetValue<int>(getDict.Result, "data.count");
-        dictionary = DictionaryUtils.GetDictionary(getDict.Result, "data");
-        listDictionary = DictionaryUtils.GetListDictionary(getDict.Result, "data.types");  
+        ////var keys = new List<string> { "name", "data.tags", "name.count" };
+        //var keys = new List<string> { };
 
-        //Missing Key
-        dictVal = DictionaryUtils.GetValue<int>(getDict.Result, "data.count1");
-        dictionary = DictionaryUtils.GetDictionary(getDict.Result, "data1");
-        listDictionary = DictionaryUtils.GetListDictionary(getDict.Result, "data.types1");
+        //var getDict = JsonUtils.ParseAndFilterJson<Dictionary<string, object>>(getJson.Result, keys);
+        //if (!getDict.MethodSuccess)
+        //{
+        //    throw getDict.Exception;
+        //}
 
-        //Type Exception
-        dictVal = DictionaryUtils.GetValue<int>(getDict.Result, "name");
-        dictionary = DictionaryUtils.GetDictionary(getDict.Result, "data.tags");
-        listDictionary = DictionaryUtils.GetListDictionary(getDict.Result, "data.tags");
+        //int? dictVal;
+        //Dictionary<string, object>? dictionary;
+        //List<Dictionary<string, object>>? listDictionary;
+
+
+        ////Valid key
+        //dictVal = DictionaryUtils.GetValue<int>(getDict.Result, "data.count");
+        //dictionary = DictionaryUtils.GetDictionary(getDict.Result, "data");
+        //listDictionary = DictionaryUtils.GetListDictionary(getDict.Result, "data.types");  
+
+        ////Missing Key
+        //dictVal = DictionaryUtils.GetValue<int>(getDict.Result, "data.count1");
+        //dictionary = DictionaryUtils.GetDictionary(getDict.Result, "data1");
+        //listDictionary = DictionaryUtils.GetListDictionary(getDict.Result, "data.types1");
+
+        ////Type Exception
+        //dictVal = DictionaryUtils.GetValue<int>(getDict.Result, "name");
+        //dictionary = DictionaryUtils.GetDictionary(getDict.Result, "data.tags");
+        //listDictionary = DictionaryUtils.GetListDictionary(getDict.Result, "data.tags");
     }
     
 }

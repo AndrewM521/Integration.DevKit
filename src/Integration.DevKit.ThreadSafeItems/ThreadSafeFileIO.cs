@@ -45,10 +45,14 @@ public class ThreadSafeFileIO
     /// <param name="path">The full path to the file.</param>
     /// <param name="content">The string content to write.</param>
     /// <param name="append"><see langword="true"/> to append data; <see langword="false"/> to overwrite.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <param name="encoding">The character encoding to use. Defaults to UTF-8 if null.</param>
     /// <param name="lockTimeoutMs">Maximum time in milliseconds to wait for the file lock.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the outcome of the operation.</returns>
-    public async Task<NullOperationResult> WriteToFileAsync(string path, string content, bool append = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
+    public async Task<NullOperationResult> WriteToFileAsync(string path, string content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
     {
         var result = new NullOperationResult();
 
@@ -60,7 +64,7 @@ public class ThreadSafeFileIO
                 throw lockResult.Exception;
             }
 
-            return await FileUtils.WriteToFileAsync(path, content, append, encoding);
+            return await FileUtils.WriteToFileAsync(path, content, append, allowNoFileExtension, encoding);
         }
         catch (Exception ex)
         {
@@ -84,10 +88,14 @@ public class ThreadSafeFileIO
     /// <param name="path">The full path to the file. This path is used as the unique lock key.</param>
     /// <param name="content">The array of strings to write as lines.</param>
     /// <param name="append"><see langword="true"/> to append data; <see langword="false"/> to overwrite the existing file.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <param name="encoding">The character encoding to use. Defaults to UTF-8 if <see langword="null"/>.</param>
     /// <param name="lockTimeoutMs">The maximum time in milliseconds to wait for the file lock. Defaults to 5000ms.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the outcome of the operation.</returns>
-    public async Task<NullOperationResult> WriteToFileAsync(string path, string[] content, bool append = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
+    public async Task<NullOperationResult> WriteToFileAsync(string path, string[] content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
     {
         var result = new NullOperationResult();
 
@@ -99,7 +107,7 @@ public class ThreadSafeFileIO
                 throw lockResult.Exception;
             }
 
-            return await FileUtils.WriteToFileAsync(path, content, append, encoding);
+            return await FileUtils.WriteToFileAsync(path, content, append, allowNoFileExtension, encoding);
         }
         catch (Exception ex)
         {
@@ -209,10 +217,14 @@ public class ThreadSafeFileIO
     /// <param name="path">The full path to the file.</param>
     /// <param name="content">The string content to write.</param>
     /// <param name="append"><see langword="true"/> to append data; <see langword="false"/> to overwrite.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <param name="encoding">The character encoding to use. Defaults to UTF-8 if <see langword="null"/>.</param>
     /// <param name="lockTimeoutMs">The maximum time in milliseconds to wait for the file lock. Defaults to 5000ms.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the outcome of the operation.</returns>
-    public NullOperationResult WriteToFile(string path, string content, bool append = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
+    public NullOperationResult WriteToFile(string path, string content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
     {
         var result = new NullOperationResult();
 
@@ -224,7 +236,7 @@ public class ThreadSafeFileIO
                 throw lockResult.Exception;
             }
 
-            return FileUtils.WriteToFile(path, content, append, encoding);
+            return FileUtils.WriteToFile(path, content, append, allowNoFileExtension, encoding);
         }
         catch (Exception ex)
         {
@@ -248,10 +260,14 @@ public class ThreadSafeFileIO
     /// <param name="path">The full path to the file.</param>
     /// <param name="content">The array of strings to write.</param>
     /// <param name="append"><see langword="true"/> to append data; <see langword="false"/> to overwrite.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <param name="encoding">The character encoding to use. Defaults to UTF-8 if <see langword="null"/>.</param>
     /// <param name="lockTimeoutMs">The maximum time in milliseconds to wait for the file lock. Defaults to 5000ms.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the outcome of the operation.</returns>
-    public NullOperationResult WriteToFile(string path, string[] content, bool append = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
+    public NullOperationResult WriteToFile(string path, string[] content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
     {
         var result = new NullOperationResult();
 
@@ -263,7 +279,7 @@ public class ThreadSafeFileIO
                 throw lockResult.Exception;
             }
 
-            return FileUtils.WriteToFile(path, content, append, encoding);
+            return FileUtils.WriteToFile(path, content, append, allowNoFileExtension, encoding);
         }
         catch (Exception ex)
         {

@@ -20,21 +20,22 @@ public static class DictionaryUtils
     /// </summary>
     /// <param name="dictionary">The source dictionary.</param>
     /// <param name="keyPath">The key or dot-notation path to the dictionary.</param>
-    /// <returns>A <see cref="Dictionary{string, object}"/> or an empty <see cref="Dictionary{string, object}"/>.</returns>
+    /// <returns>A <see cref="Dictionary{string, object}"/> if found and of correct type; otherwise an empty <see cref="Dictionary{string, object}"/>.</returns>
     public static Dictionary<string, object> GetDictionary(Dictionary<string, object> dictionary, string keyPath)
     {
         return GetValue(dictionary, keyPath, new Dictionary<string, object>());
     }
 
     /// <summary>
-    /// Retrieves a <see cref="List{object}"/> from the source using a key or dot-notation path.
+    /// Retrieves a <see cref="List{T}"/> from the source using a key or dot-notation path.
     /// </summary>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
     /// <param name="dictionary">The source dictionary.</param>Laura
     /// <param name="keyPath">The key or dot-notation path to the list.</param>
-    /// <returns>The list if found and of the correct type; otherwise, <see langword="null"/>.</returns>
-    public static List<object?> GetList(Dictionary<string, object> dictionary, string keyPath)
+    /// <returns>A <see cref="List{T}"/> if found and of the correct type; otherwise an empty <see cref="List{T}"/>.</returns>
+    public static List<T> GetList<T>(Dictionary<string, object> dictionary, string keyPath)
     {
-        return GetValue(dictionary, keyPath, new List<object?>());
+        return GetValue(dictionary, keyPath, new List<T>());
     }
 
     /// <summary>
@@ -42,8 +43,8 @@ public static class DictionaryUtils
     /// </summary>
     /// <param name="dictionary">The source dictionary.</param>Laura
     /// <param name="keyPath">The key or dot-notation path to the list.</param>
-    /// <returns>A <see cref="List{Dictionary{string, object}}"/> or an empty <see cref="List{Dictionary{string, object}}"/>.</returns>
-    public static List<Dictionary<string, object>> GetListDictionary(Dictionary<string, object> dictionary, string keyPath)
+    /// <returns>A <see cref="List{Dictionary{string, object}}"/> if found and of correct type; otherwise an empty <see cref="List{Dictionary{string, object}}"/>.</returns>
+    public static List<Dictionary<string, object>> GetDictionaryList(Dictionary<string, object> dictionary, string keyPath)
     {
         return GetValue(dictionary, keyPath, new List<Dictionary<string, object>>());
     }

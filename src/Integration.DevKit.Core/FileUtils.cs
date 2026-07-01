@@ -17,18 +17,13 @@ public static class FileUtils
     /// <param name="path">The destination file path.</param>
     /// <param name="content">The text content to write.</param>
     /// <param name="append"><see langword="true"/> to append to the file; <see langword="false"/> to overwrite. Defaults to <see langword="false"/>.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <param name="encoding">The text encoding to use. Defaults to <see cref="Encoding.UTF8"/> if null.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the status of the operation.</returns>
-    /// <remarks>
-    /// This method performs several automatic actions:
-    /// <list type="bullet">
-    /// <item>Creates the parent directory if it does not exist.</item>
-    /// <item>Ensures the content ends with <see cref="Environment.NewLine"/>.</item>
-    /// <item>Writes data in 100MB chunks to optimize memory usage for large strings.</item>
-    /// <item>Locks the file (<see cref="FileShare.None"/>) during the write operation.</item>
-    /// </list>
-    /// </remarks>
-    public static async Task<NullOperationResult> WriteToFileAsync(string path, string content, bool append = false, Encoding? encoding = null)
+    public static async Task<NullOperationResult> WriteToFileAsync(string path, string content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null)
     {
         var result = new NullOperationResult();
         Encoding encoder = Encoding.UTF8;
@@ -40,7 +35,7 @@ public static class FileUtils
                 encoder = encoding;
             }
 
-            var validatePath = IsStringValidFilePath(path);
+            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
             if (!validatePath.MethodSuccess)
             {
                 throw validatePath.Exception;
@@ -126,13 +121,13 @@ public static class FileUtils
     /// <param name="path">The destination file path.</param>
     /// <param name="content">The array of strings to write.</param>
     /// <param name="append"><see langword="true"/> to append; <see langword="false"/> to overwrite.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <param name="encoding">The text encoding to use. Defaults to <see cref="Encoding.UTF8"/> if null.</param>
-    /// <returns>A <see cref="NullOperationResult"/>.</returns>
-    /// <remarks>
-    /// This method internally calls <see cref="WriteToFileAsync(string, string, bool, Encoding?)"/> after 
-    /// joining the array elements with <see cref="Environment.NewLine"/>. 
-    /// </remarks>
-    public static async Task<NullOperationResult> WriteToFileAsync(string path, string[] content, bool append = false, Encoding? encoding = null)
+    /// <returns>A <see cref="NullOperationResult"/> indicating the status of the operation.</returns>
+    public static async Task<NullOperationResult> WriteToFileAsync(string path, string[] content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null)
     {
         var result = new NullOperationResult();
 
@@ -145,7 +140,7 @@ public static class FileUtils
 
             string combinedContent = string.Join(Environment.NewLine, content);
 
-            var writeToFile = await WriteToFileAsync(path, combinedContent, append, encoding);
+            var writeToFile = await WriteToFileAsync(path, combinedContent, append, allowNoFileExtension, encoding);
             if (!writeToFile.MethodSuccess)
             {
                 throw writeToFile.Exception;
@@ -165,14 +160,18 @@ public static class FileUtils
     /// <param name="path">The file path where the bytes will be written.</param>
     /// <param name="content">The byte array containing the data to write to the file.</param>
     /// <param name="append"><see langword="true"/> to append the data to the end of the file; <see langword="false"/> to overwrite or create a new file.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the status of the operation.</returns>
-    public static async Task<NullOperationResult> WriteBytesToFileAsync(string path, byte[] content, bool append = false)
+    public static async Task<NullOperationResult> WriteBytesToFileAsync(string path, byte[] content, bool append = false, bool allowNoFileExtension = false)
     {
         var result = new NullOperationResult();
 
         try
         {
-            var validatePath = IsStringValidFilePath(path);
+            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
             if (!validatePath.MethodSuccess)
             {
                 throw validatePath.Exception;
@@ -230,14 +229,18 @@ public static class FileUtils
     /// Asynchronously reads all lines from the specified file.
     /// </summary>
     /// <param name="path">The path to the file.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>An <see cref="OperationResult{T}"/> containing an array of strings, one for each line.</returns>
-    public static async Task<OperationResult<string[]>> ReadFileLinesAsync(string path)
+    public static async Task<OperationResult<string[]>> ReadFileLinesAsync(string path, bool allowNoFileExtension = false)
     {
         var result = new OperationResult<string[]>();
 
         try
         {
-            var validatePath = IsStringValidFilePath(path);
+            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
             if (!validatePath.MethodSuccess)
             {
                 throw validatePath.Exception;
@@ -262,14 +265,18 @@ public static class FileUtils
     /// Asynchronously reads the entire text content of a file.
     /// </summary>
     /// <param name="path">The path to the file.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the file's text.</returns>
-    public static async Task<OperationResult<string>> ReadFileTextAsync(string path)
+    public static async Task<OperationResult<string>> ReadFileTextAsync(string path, bool allowNoFileExtension = false)
     {
         var result = new OperationResult<string>();
 
         try
         {
-            var validatePath = IsStringValidFilePath(path);
+            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
             if (!validatePath.MethodSuccess)
             {
                 throw validatePath.Exception;
@@ -294,14 +301,18 @@ public static class FileUtils
     /// Asynchronously reads the entire byte content of a file.
     /// </summary>
     /// <param name="path">The path to the file.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>An <see cref="OperationResult{Byte[]}"/> containing the file's byte array.</returns>
-    public static async Task<OperationResult<byte[]>> ReadFileBytesAsync(string path)
+    public static async Task<OperationResult<byte[]>> ReadFileBytesAsync(string path, bool allowNoFileExtension = false)
     {
         var result = new OperationResult<byte[]>();
 
         try
         {
-            var validatePath = IsStringValidFilePath(path);
+            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
             if (!validatePath.MethodSuccess)
             {
                 throw validatePath.Exception;
@@ -329,14 +340,18 @@ public static class FileUtils
     /// Creates a new empty file at the specified path.
     /// </summary>
     /// <param name="path">The path to create the file.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
-    public static NullOperationResult CreateFile(string path)
+    public static NullOperationResult CreateFile(string path, bool allowNoFileExtension = false)
     {
         var result = new NullOperationResult();
 
         try
         {
-            var validatePath = IsStringValidFilePath(path);
+            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
             if (!validatePath.MethodSuccess)
             {
                 throw validatePath.Exception;
@@ -361,14 +376,18 @@ public static class FileUtils
     /// Deletes a file from the file system if it exists.
     /// </summary>
     /// <param name="path">The path to the file.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>A <see cref="NullOperationResult"/>.</returns>
-    public static NullOperationResult DeleteFile(string path)
+    public static NullOperationResult DeleteFile(string path, bool allowNoFileExtension = false)
     {
         var result = new NullOperationResult();
 
         try
         {
-            var validatePath = IsStringValidFilePath(path);
+            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
             if (!validatePath.MethodSuccess)
             {
                 throw validatePath.Exception;
@@ -397,9 +416,13 @@ public static class FileUtils
     /// </summary>
     /// <param name="path">The directory containing the files.</param>
     /// <param name="searchPattern">The search pattern (e.g., "*.log").</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>A <see cref="NullOperationResult"/>.</returns>
     /// <exception cref="AggregateException">Thrown if one or more file deletions fail.</exception>
-    public static NullOperationResult DeleteFiles(string path, string searchPattern)
+    public static NullOperationResult DeleteFiles(string path, string searchPattern, bool allowNoFileExtension = false)
     {
         var result = new NullOperationResult();
 
@@ -450,8 +473,12 @@ public static class FileUtils
     /// <param name="sourcePath">The path of the file to copy.</param>
     /// <param name="destinationPath">The destination directory path.</param>
     /// <param name="overwrite"><see langword="true"/> to overwrite an existing file; otherwise, <see langword="false"/>.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>A <see cref="NullOperationResult"/>.</returns>
-    public static NullOperationResult CopyFile(string sourcePath, string destinationPath, bool overwrite = false)
+    public static NullOperationResult CopyFile(string sourcePath, string destinationPath, bool overwrite = false, bool allowNoFileExtension = false)
     {
         var result = new NullOperationResult();
 
@@ -502,12 +529,12 @@ public static class FileUtils
     /// <param name="sourcePath">The current file path.</param>
     /// <param name="destinationPath">The destination directory or new file path.</param>
     /// <param name="overwrite"><see langword="true"/> to overwrite; otherwise, <see langword="false"/>.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>A <see cref="NullOperationResult"/>.</returns>
-    /// <remarks>
-    /// This method detects if <paramref name="destinationPath"/> is a directory or a specific file path 
-    /// and handles the move accordingly.
-    /// </remarks>
-    public static NullOperationResult MoveFile(string sourcePath, string destinationPath, bool overwrite = false)
+    public static NullOperationResult MoveFile(string sourcePath, string destinationPath, bool overwrite = false, bool allowNoFileExtension = false)
     {
         var result = new NullOperationResult();
 
@@ -570,18 +597,13 @@ public static class FileUtils
     /// <param name="path">The destination file path.</param>
     /// <param name="content">The text content to write.</param>
     /// <param name="append"><see langword="true"/> to append to the file; <see langword="false"/> to overwrite. Defaults to <see langword="false"/>.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <param name="encoding">The text encoding to use. Defaults to <see cref="Encoding.UTF8"/> if null.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the status of the operation.</returns>
-    /// <remarks>
-    /// This method performs several automatic actions:
-    /// <list type="bullet">
-    /// <item>Creates the parent directory if it does not exist.</item>
-    /// <item>Ensures the content ends with <see cref="Environment.NewLine"/>.</item>
-    /// <item>Writes data in 100MB chunks to optimize memory usage for large strings.</item>
-    /// <item>Locks the file (<see cref="FileShare.None"/>) during the write operation.</item>
-    /// </list>
-    /// </remarks>
-    public static NullOperationResult WriteToFile(string path, string content, bool append = false, Encoding? encoding = null)
+    public static NullOperationResult WriteToFile(string path, string content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null)
     {
         var result = new NullOperationResult();
         Encoding encoder = Encoding.UTF8;
@@ -593,7 +615,7 @@ public static class FileUtils
                 encoder = encoding;
             }
 
-            var validatePath = IsStringValidFilePath(path);
+            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
             if (!validatePath.MethodSuccess)
             {
                 throw validatePath.Exception;
@@ -609,11 +631,15 @@ public static class FileUtils
                 return result.SetMethodSuccess();
             }
 
-            var directory = Path.GetDirectoryName(path);
-            var createDir = DirectoryUtils.CreateDirectory(directory!);
-            if (!createDir.MethodSuccess)
+            var directory = Path.GetDirectoryName(path) + "\\";
+
+            if (!string.IsNullOrWhiteSpace(directory))
             {
-                throw createDir.Exception;
+                var createDir = DirectoryUtils.CreateDirectory(directory!);
+                if (!createDir.MethodSuccess)
+                {
+                    throw createDir.Exception;
+                }
             }
 
             if (!content.EndsWith(Environment.NewLine))
@@ -682,13 +708,13 @@ public static class FileUtils
     /// <param name="path">The destination file path.</param>
     /// <param name="content">The array of strings to write.</param>
     /// <param name="append"><see langword="true"/> to append; <see langword="false"/> to overwrite.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <param name="encoding">The text encoding to use. Defaults to <see cref="Encoding.UTF8"/> if null.</param>
     /// <returns>A <see cref="NullOperationResult"/>.</returns>
-    /// <remarks>
-    /// This method internally calls <see cref="WriteToFile(string, string, bool, Encoding?)"/> after 
-    /// joining the array elements with <see cref="Environment.NewLine"/>. 
-    /// </remarks>
-    public static NullOperationResult WriteToFile(string path, string[] content, bool append = false, Encoding? encoding = null)
+    public static NullOperationResult WriteToFile(string path, string[] content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null)
     {
         var result = new NullOperationResult();
 
@@ -701,7 +727,7 @@ public static class FileUtils
 
             string combinedContent = string.Join(Environment.NewLine, content);
 
-            var writeToFile = WriteToFile(path, combinedContent, append, encoding);
+            var writeToFile = WriteToFile(path, combinedContent, append, allowNoFileExtension, encoding);
             if (!writeToFile.MethodSuccess)
             {
                 throw writeToFile.Exception;
@@ -721,14 +747,18 @@ public static class FileUtils
     /// <param name="path">The file path where the bytes will be written.</param>
     /// <param name="content">The byte array containing the data to write to the file.</param>
     /// <param name="append"><see langword="true"/> to append the data to the end of the file; <see langword="false"/> to overwrite or create a new file.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the status of the operation.</returns>
-    public static NullOperationResult WriteBytesToFile(string path, byte[] content, bool append = false)
+    public static NullOperationResult WriteBytesToFile(string path, byte[] content, bool append = false, bool allowNoFileExtension = false)
     {
         var result = new NullOperationResult();
 
         try
         {
-            var validatePath = IsStringValidFilePath(path);
+            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
             if (!validatePath.MethodSuccess)
             {
                 throw validatePath.Exception;
@@ -784,13 +814,17 @@ public static class FileUtils
     /// Synchronously reads all lines from a file.
     /// </summary>
     /// <param name="path">The path to the file.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the array of lines.</returns>
-    public static OperationResult<string[]> ReadFileLines(string path)
+    public static OperationResult<string[]> ReadFileLines(string path, bool allowNoFileExtension = false)
     {
         var result = new OperationResult<string[]>();
         try
         {
-            var validatePath = IsStringValidFilePath(path);
+            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
             if (!validatePath.MethodSuccess)
             {
                 throw validatePath.Exception;
@@ -815,13 +849,17 @@ public static class FileUtils
     /// Synchronously reads the entire text of a file.
     /// </summary>
     /// <param name="path">The path to the file.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the file text.</returns>
-    public static OperationResult<string> ReadFileText(string path)
+    public static OperationResult<string> ReadFileText(string path, bool allowNoFileExtension = false)
     {
         var result = new OperationResult<string>();
         try
         {
-            var validatePath = IsStringValidFilePath(path);
+            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
             if (!validatePath.MethodSuccess)
             {
                 throw validatePath.Exception;
@@ -847,14 +885,18 @@ public static class FileUtils
     /// Synchronously reads the entire byte content of a file.
     /// </summary>
     /// <param name="path">The path to the file.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>An <see cref="OperationResult{Byte[]}"/> containing the file's byte array.</returns>
-    public static OperationResult<byte[]> ReadFileBytes(string path)
+    public static OperationResult<byte[]> ReadFileBytes(string path, bool allowNoFileExtension = false)
     {
         var result = new OperationResult<byte[]>();
 
         try
         {
-            var validatePath = IsStringValidFilePath(path);
+            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
             if (!validatePath.MethodSuccess)
             {
                 throw validatePath.Exception;
@@ -880,14 +922,18 @@ public static class FileUtils
     /// Extracts the file extension from a path, normalized to lowercase.
     /// </summary>
     /// <param name="path">The file path.</param>
+    /// <param name="allowNoFileExtension">
+    /// Optional flag to allow file names without an extension to pass validation 
+    /// instead of requiring an explicit extension (e.g., '.txt').
+    /// </param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the extension (e.g., ".json").</returns>
-    public static OperationResult<string> GetExtension(string path)
+    public static OperationResult<string> GetExtension(string path, bool allowNoFileExtension = false)
     {
         var result = new OperationResult<string>();
 
         try
         {
-            var validatePath = IsStringValidFilePath(path);
+            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
             if (!validatePath.MethodSuccess)
             {
                 throw validatePath.Exception;
@@ -909,17 +955,14 @@ public static class FileUtils
     }
 
     /// <summary>
-    /// Validates if a string matches a valid file path format (has an extension and a filename).
+    /// Performs a heuristic check to determine if a string is formatted as a valid file path.
     /// </summary>
-    /// <param name="path">The path string to validate.</param>
+    /// <param name="path">The string path to validate.</param>
+    /// <param name="allowNoFileExtension">If <see langword="true"/>, paths targeting files without an extension (e.g., 'Dockerfile', 'LICENSE') are considered valid.</param>
     /// <returns>
-    /// An <see cref="OperationResult{T}"/> containing <see langword="true"/> if the format is valid.
+    /// An <see cref="OperationResult{T}"/> where the result is <see langword="true"/> if the string is structurally valid to be a file path.
     /// </returns>
-    /// <remarks>
-    /// This method does not check if the file actually exists on disk; it only validates the 
-    /// string structure and checks for invalid characters.
-    /// </remarks>
-    public static OperationResult<bool> IsStringValidFilePath(string path)
+    public static OperationResult<bool> IsStringValidFilePath(string path, bool allowNoFileExtension = false)
     {
         var result = new OperationResult<bool>();
 
@@ -927,23 +970,35 @@ public static class FileUtils
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                throw new ArgumentException("Path cannot be null or whitespace.");
+                return result.SetMethodSuccess(false);
             }
 
-            string fileName = Path.GetFileName(path);
-            if (fileName.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
+            if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
             {
-                throw new ArgumentException("File name contains invalid characters.");
+                return result.SetMethodSuccess(false);
             }
 
-            bool isFile = false;
-
-            if (Path.HasExtension(path) && !string.IsNullOrWhiteSpace(fileName))
+            var trimmedPath = path.TrimEnd();
+            if (trimmedPath.EndsWith(Path.DirectorySeparatorChar) || trimmedPath.EndsWith(Path.AltDirectorySeparatorChar))
             {
-                isFile = true;
+                return result.SetMethodSuccess(false);
             }
 
-            return result.SetMethodSuccess(isFile);
+            string fullPath = Path.GetFullPath(path);
+            string fileName = Path.GetFileName(fullPath);
+
+            if (string.IsNullOrEmpty(fileName) || fileName.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
+            {
+                return result.SetMethodSuccess(false);
+            }
+
+            // Ensure it actually has a file extension (e.g., ".txt")
+            if (!allowNoFileExtension && !Path.HasExtension(fileName))
+            {
+                return result.SetMethodSuccess(false);
+            }
+
+            return result.SetMethodSuccess(true);
         }
         catch (Exception ex)
         {

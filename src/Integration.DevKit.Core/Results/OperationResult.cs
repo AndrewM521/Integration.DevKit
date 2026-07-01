@@ -61,11 +61,12 @@ public class OperationResult<T> : IOperationResult<T>
     /// Sets the state of the result to failure and assigns the provided exception.
     /// </summary>
     /// <param name="ex">The exception that caused the operation to fail.</param>
+    /// <param name="defaultVal">Optional default value for <see cref="Result"/> on failure. Defaults to <typeparamref name="T"/> default.</param>
     /// <returns>The current <see cref="OperationResult{T}"/> instance for method chaining.</returns>
-    public OperationResult<T> SetMethodFailure(Exception ex)
+    public OperationResult<T> SetMethodFailure(Exception ex, T defaultVal = default!)
     {
         _methodSuccess = false;
-        _result = default!;
+        _result = defaultVal;
         _exception = ex;
 
         return this;
