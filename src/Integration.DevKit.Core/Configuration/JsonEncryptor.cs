@@ -2,14 +2,14 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Integration.DevKit.Core.Configuration;
+namespace Integration.DevKit.Core;
 
 public sealed class JsonEncryptor
 {
-    private readonly CryptoContract _contract;
+    private readonly ConfigProtectorContract _contract;
     private readonly EncryptionOptions _options;
 
-    public JsonEncryptor(CryptoContract contract, EncryptionOptions options)
+    public JsonEncryptor(ConfigProtectorContract contract, EncryptionOptions options)
     {
         _options = options;
         _contract = contract;
@@ -47,9 +47,22 @@ public sealed class JsonEncryptor
             throw new InvalidOperationException("appsettings.json is empty or invalid.");
         }
 
-        foreach (var path in _options.Paths)
+        IConfigProtector defaultProvider = new Base64ConfigProtector();
+        foreach (var path in _options.TargetPaths)
         {
-            EncryptNode(root, path);
+            var activeProvider = defaultProvider;
+
+            if (path.Value != null)
+            {
+                activeProvider = path.Value;
+            }
+
+            if (activeProvider.Name.Contains(_contract.Delimiter))
+            {
+                throw new InvalidOperationException($"Protector Name '{activeProvider.Name}' cannot contain the configured delimiter '{_contract.Delimiter}'.");
+            }
+
+            EncryptNode(root, path.Key, activeProvider);
         }
 
         var getJson = JsonUtils.SerializeObjectToJson(root);
@@ -65,37 +78,38 @@ public sealed class JsonEncryptor
         }
     }
 
-    private void EncryptNode(JsonObject root, string path)
+    private void EncryptNode(JsonObject root, string path, IConfigProtector protector)
     {
-        var parts = path.Split(':');
-
+        var targetPathParts = path.Split(":");
         JsonNode? currentNode = root;
 
-        foreach (var part in parts)
+        foreach (var part in targetPathParts)
         {
             currentNode = currentNode?[part];
 
             if (currentNode is null)
+            {
                 return;
+            }
         }
 
         switch (currentNode)
         {
             case JsonObject obj:
-                EncryptNode(obj);
+                EncryptNode(obj, protector);
                 break;
 
             case JsonValue value:
-                EncryptValue(value);
+                EncryptValue(value, protector);
                 break;
 
             case JsonArray array:
-                EncryptNode(array);
+                EncryptNode(array, protector);
                 break;
         }
     }
 
-    private void EncryptNode(JsonNode node)
+    private void EncryptNode(JsonNode node, IConfigProtector protector)
     {
         switch (node)
         {
@@ -104,7 +118,7 @@ public sealed class JsonEncryptor
                 {
                     if (property.Value is not null)
                     {
-                        EncryptNode(property.Value);
+                        EncryptNode(property.Value, protector);
                     }
                 }
                 break;
@@ -114,54 +128,54 @@ public sealed class JsonEncryptor
                 {
                     if (item is not null)
                     {
-                        EncryptNode(item);
+                        EncryptNode(item, protector);
                     }
                 }
                 break;
 
             case JsonValue value:
-                EncryptValue(value);
+                EncryptValue(value, protector);
                 break;
         }
     }
 
-    private void EncryptValue(JsonValue value)
+    private void EncryptValue(JsonValue value, IConfigProtector protector)
     {
         if (value.TryGetValue<string>(out var s) && _options.EncryptStrings)
         {
-            ReplaceEncrypted(value, s);
+            ReplaceEncrypted(value, s, protector);
             return;
         }
 
         if (value.TryGetValue<int>(out var i) && _options.EncryptIntegers)
         {
-            ReplaceEncrypted(value, i.ToString());
+            ReplaceEncrypted(value, i.ToString(), protector);
             return;
         }
 
         if (value.TryGetValue<bool>(out var b) && _options.EncryptBooleans)
         {
-            ReplaceEncrypted(value, b.ToString());
+            ReplaceEncrypted(value, b.ToString(), protector);
             return;
         }
 
         if (value.TryGetValue<decimal>(out var d) && _options.EncryptDecimals)
         {
-            ReplaceEncrypted(value, d.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            ReplaceEncrypted(value, d.ToString(System.Globalization.CultureInfo.InvariantCulture), protector);
             return;
         }
     }
 
-    private void ReplaceEncrypted(JsonValue value, string plainText)
+    private void ReplaceEncrypted(JsonValue value, string plainText, IConfigProtector protector)
     {
-        string prefix = _contract.BuildPrefix();
-
         if (plainText.StartsWith(_contract.Signature, StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
-        
-        var encrypted = $"{prefix}:{_contract.Provider.Encrypt(plainText)}";
+
+        string prefix = _contract.BuildPrefix(protector);
+
+        var encrypted = $"{prefix}{protector.Encrypt(plainText)}";
 
         value.ReplaceWith(JsonValue.Create(encrypted));
     }

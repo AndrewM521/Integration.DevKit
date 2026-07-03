@@ -56,14 +56,90 @@ public static class JsonUtils
     }
 
     /// <summary>
+    /// Extracts a single JSON target or merges multiple paths into a strongly-typed <see cref="Dictionary{String, Object}"/>.
+    /// Automatically converts JSON arrays or primitive scalar values into wrapped dictionary shapes if requested.
+    /// </summary>
+    /// <param name="json">The raw JSON string to parse.</param>
+    /// <param name="keyPath">The key or dot-notation path.</param>
+    /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the extracted dictionary, or an empty <see cref="Dictionary{String, Object}"/> fallback on failure.</returns>
+    public static OperationResult<Dictionary<string, object>> GetDictionary(string json, string keyPath, bool removeNulls = true)
+    {
+        return ParseAndFilterJson<Dictionary<string, object>>(json, new List<string> { keyPath }, removeNulls);
+    }
+
+    /// <summary>
+    /// Extracts and merges multiple dot-notation structural paths into a single, cohesive <see cref="Dictionary{String, Object}"/>.
+    /// </summary>
+    /// <param name="json">The raw JSON string to parse.</param>
+    /// <param name="keyPaths">A collection of key or dot-notation paths.</param>
+    /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the merged dictionary layout, or an empty <see cref="Dictionary{String, Object}"/> fallback on failure.</returns>
+    public static OperationResult<Dictionary<string, object>> GetDictionary(string json, List<string>? keyPaths = null, bool removeNulls = true)
+    {
+        return ParseAndFilterJson<Dictionary<string, object>>(json, keyPaths, removeNulls);
+    }
+
+    /// <summary>
+    /// Extracts a flat collection of items from a targeted path as a <see cref="List{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">The primitive or object type of the elements inside the list.</typeparam>
+    /// <param name="json">The raw JSON string to parse.</param>
+    /// <param name="keyPath">The key or dot-notation path.</param>
+    /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the typed collection, or an empty initialized <see cref="List{T}"/> fallback on failure.</returns>
+    public static OperationResult<List<T>> GetList<T>(string json, string keyPath, bool removeNulls = true)
+    {
+        return ParseAndFilterJson<List<T>>(json, new List<string> { keyPath }, removeNulls);
+    }
+
+    /// <summary>
+    /// Extracts elements across multiple paths, aggregating them into a unified <see cref="List{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of elements inside the collection.</typeparam>
+    /// <param name="json">The raw JSON string to parse.</param>
+    /// <param name="keyPaths">A collection of key or dot-notation paths.</param>
+    /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the aggregated list, or an empty initialized <see cref="List{T}"/> fallback on failure.</returns>
+    public static OperationResult<List<T>> GetList<T>(string json, List<string>? keyPaths = null, bool removeNulls = true)
+    {
+        return ParseAndFilterJson<List<T>>(json, keyPaths, removeNulls);
+    }
+
+    /// <summary>
+    /// Extracts a collection of JSON objects from a single target path, converting them safely into a <see cref="List{Dictionary{String, Object}}"/>.
+    /// </summary>
+    /// <param name="json">The raw JSON string to parse.</param>
+    /// <param name="keyPath">The key or dot-notation path.</param>
+    /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the list of dictionaries, or an empty <see cref="List{Dictionary{String, Object}}"/> fallback on failure.</returns>
+    public static OperationResult<List<Dictionary<string, object>>> GetDictionaryList(string json, string keyPath, bool removeNulls = true)
+    {
+        return GetList<Dictionary<string, object>>(json, keyPath, removeNulls);
+    }
+
+    /// <summary>
+    /// Extracts elements across multiple paths, aggregating them into a unified <see cref="List{Dictionary{String, Object}}"/>.
+    /// </summary>
+    /// <param name="json">The raw JSON string to parse.</param>
+    /// <param name="keyPaths">A collection of key or dot-notation paths.</param>
+    /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the processed list of dictionaries, or an empty <see cref="List{Dictionary{String, Object}}"/> fallback on failure.</returns>
+    public static OperationResult<List<Dictionary<string, object>>> GetDictionaryList(string json, List<string>? keyPaths = null, bool removeNulls = true)
+    {
+        return GetList<Dictionary<string, object>>(json, keyPaths, removeNulls);
+    }
+
+    /// <summary>
     /// Parses a JSON string and extracts specific values. 
     /// Supports both simple keys and deep-path dot-notation (e.g., "User.Profile.Name").
     /// </summary>
     /// <typeparam name="T">The expected return type of the resulting data.</typeparam>
     /// <param name="rawJson">The raw JSON string to process.</param>
     /// <param name="keys">Optional list of keys or paths to extract. If null, the root object is returned.</param>
+    /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the extracted data.</returns>
-    public static OperationResult<T> ParseAndFilterJson<T>(string rawJson, List<string>? keys = null)
+    public static OperationResult<T> ParseAndFilterJson<T>(string rawJson, List<string>? keys = null, bool removeNulls = true)
     {
         var result = new OperationResult<T>();
 
@@ -74,38 +150,18 @@ public static class JsonUtils
                 throw new ArgumentException("JSON string cannot be null or empty.", nameof(rawJson));
             }
 
-            object? parsedObject;
-            JsonElement? targetElement;
-
-            if (keys != null && keys.Count == 1)
+            var parseResult = InternalParseAndFilterJson(rawJson, keys, out var commonParentPath);
+            if (!parseResult.MethodSuccess)
             {
-                using var doc = JsonDocument.Parse(rawJson);
-                targetElement = GetValueByPath(doc.RootElement, keys[0]);
-
-                if (targetElement == null || targetElement.Value.ValueKind == JsonValueKind.Null)
-                {
-                    throw new Exception($"Path '{keys[0]}' not found in the JSON structure.");
-                }
-
-                parsedObject = ConvertJsonElementToNativeObject(targetElement.Value);
+                throw parseResult.Exception!;
             }
-            else
-            {
-                targetElement = null;
 
-                var parseResult = InternalParseAndFilterJson(rawJson, keys);
-                if (!parseResult.MethodSuccess)
-                {
-                    throw parseResult.Exception!;
-                }
-
-                parsedObject = parseResult.Result;
-            }
+            var parsedObject = parseResult.Result;
 
             // Target requested a single Dictionary and matched a Dictionary
             if (typeof(T) == typeof(Dictionary<string, object>) && parsedObject is Dictionary<string, object?> looseDict)
             {
-                var stronglyTypedDict = ConvertToStronglyTypedDictionary(looseDict);
+                var stronglyTypedDict = ConvertToStronglyTypedDictionary(looseDict, removeNulls);
                 return result.SetMethodSuccess((T)(object)stronglyTypedDict);
             }
 
@@ -118,7 +174,7 @@ public static class JsonUtils
                 {
                     if (item is Dictionary<string, object?> itemDict)
                     {
-                        cleanedList.Add(ConvertToStronglyTypedDictionary(itemDict));
+                        cleanedList.Add(ConvertToStronglyTypedDictionary(itemDict, removeNulls));
                     }
                     else
                     {
@@ -126,9 +182,24 @@ public static class JsonUtils
                     }
                 }
 
-                // Determine the property name key from the path (e.g., "activities" from "data.activities")
-                var pathSegments = keys![0].Split('.', StringSplitOptions.RemoveEmptyEntries);
-                var fallbackKey = pathSegments.Length > 0 ? pathSegments[^1] : "items";
+                // Determine the correct property name key
+                string fallbackKey = "items";
+
+                // 1. Check if we used a common parent path prefix (e.g., "data.activities")
+                if (!string.IsNullOrEmpty(commonParentPath))
+                {
+                    var parentSegments = commonParentPath.Split('.', StringSplitOptions.RemoveEmptyEntries);
+                    if (parentSegments.Length > 0)
+                    {
+                        fallbackKey = parentSegments[^1]; // Captures "activities"
+                    }
+                }
+                // 2. Fall back to evaluating the first single key path if no common parent prefix exists
+                else if (keys != null && keys.Count > 0)
+                {
+                    var pathSegments = keys[0].Split('.', StringSplitOptions.RemoveEmptyEntries);
+                    fallbackKey = pathSegments.Length > 0 ? pathSegments[^1] : "items";
+                }
 
                 // Synthesise the wrapper dictionary
                 var synthesisedDict = new Dictionary<string, object>
@@ -164,7 +235,7 @@ public static class JsonUtils
                 {
                     if (item is Dictionary<string, object?> looseDict1)
                     {
-                        var stronglyTypedDict = ConvertToStronglyTypedDictionary(looseDict1);
+                        var stronglyTypedDict = ConvertToStronglyTypedDictionary(looseDict1, removeNulls);
                         stronglyTypedList.Add(stronglyTypedDict);
                     }
                 }
@@ -174,7 +245,7 @@ public static class JsonUtils
             // Target requested a List of Dictionaries, but path navigation pulled back a Dictionary
             if (typeof(T) == typeof(List<Dictionary<string, object>>) && parsedObject is Dictionary<string, object?> targetedSingleDict)
             {
-                var stronglyTypedDict = ConvertToStronglyTypedDictionary(targetedSingleDict);
+                var stronglyTypedDict = ConvertToStronglyTypedDictionary(targetedSingleDict, removeNulls);
 
                 var wrappedList = new List<Dictionary<string, object>> { stronglyTypedDict };
                 return result.SetMethodSuccess((T)(object)wrappedList);
@@ -218,6 +289,11 @@ public static class JsonUtils
                             {
                                 typedListInstance.Add(Convert.ChangeType(item, underlyingType));
                             }
+                            else if (!removeNulls)
+                            {
+                                // Keeps a null item placeholder intact inside the primitive collection
+                                typedListInstance.Add(null);
+                            }
                         }
                     }
                     else
@@ -258,81 +334,6 @@ public static class JsonUtils
             return result.SetMethodFailure(ex);
         }
     }
-
-    /// <summary>
-    /// Extracts a single JSON target or merges multiple paths into a strongly-typed <see cref="Dictionary{String, Object}"/>.
-    /// Automatically converts JSON arrays or primitive scalar values into wrapped dictionary shapes if requested.
-    /// </summary>
-    /// <param name="json">The raw JSON string to parse.</param>
-    /// <param name="keyPath">The key or dot-notation path.</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing the extracted dictionary, or an empty <see cref="Dictionary{String, Object}"/> fallback on failure.</returns>
-    public static OperationResult<Dictionary<string, object>> GetDictionary(string json, string keyPath)
-    {
-        return ParseAndFilterJson<Dictionary<string, object>>(json, new List<string> { keyPath });
-    }
-
-    /// <summary>
-    /// Extracts and merges multiple dot-notation structural paths into a single, cohesive <see cref="Dictionary{String, Object}"/>.
-    /// </summary>
-    /// <param name="json">The raw JSON string to parse.</param>
-    /// <param name="keyPaths">A collection of key or dot-notation paths.</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing the merged dictionary layout, or an empty <see cref="Dictionary{String, Object}"/> fallback on failure.</returns>
-    public static OperationResult<Dictionary<string, object>> GetDictionary(string json, List<string>? keyPaths = null)
-    {
-        return ParseAndFilterJson<Dictionary<string, object>>(json, keyPaths);
-    }
-
-    /// <summary>
-    /// Extracts a flat collection of items from a targeted path as a <see cref="List{T}"/>.
-    /// </summary>
-    /// <typeparam name="T">The primitive or object type of the elements inside the list.</typeparam>
-    /// <param name="json">The raw JSON string to parse.</param>
-    /// <param name="keyPath">The key or dot-notation path.</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing the typed collection, or an empty initialized <see cref="List{T}"/> fallback on failure.</returns>
-    public static OperationResult<List<T>> GetList<T>(string json, string keyPath)
-    {
-        return ParseAndFilterJson<List<T>>(json, new List<string> { keyPath });
-    }
-
-    /// <summary>
-    /// Extracts elements across multiple paths, aggregating them into a unified <see cref="List{T}"/>.
-    /// </summary>
-    /// <typeparam name="T">The type of elements inside the collection.</typeparam>
-    /// <param name="json">The raw JSON string to parse.</param>
-    /// <param name="keyPaths">A collection of key or dot-notation paths.</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing the aggregated list, or an empty initialized <see cref="List{T}"/> fallback on failure.</returns>
-    public static OperationResult<List<T>> GetList<T>(string json, List<string>? keyPaths = null)
-    {
-        return ParseAndFilterJson<List<T>>(json, keyPaths);
-    }
-
-    /// <summary>
-    /// Extracts a collection of JSON objects from a single target path, converting them safely into a <see cref="List{Dictionary{String, Object}}"/>.
-    /// </summary>
-    /// <param name="json">The raw JSON string to parse.</param>
-    /// <param name="keyPath">The key or dot-notation path.</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing the list of dictionaries, or an empty <see cref="List{Dictionary{String, Object}}"/> fallback on failure.</returns>
-    public static OperationResult<List<Dictionary<string, object>>> GetDictionaryList(string json, string keyPath)
-    {
-        return GetList<Dictionary<string, object>>(json, keyPath);
-    }
-
-    /// <summary>
-    /// Extracts elements across multiple paths, aggregating them into a unified <see cref="List{Dictionary{String, Object}}"/>.
-    /// </summary>
-    /// <param name="json">The raw JSON string to parse.</param>
-    /// <param name="keyPaths">A collection of key or dot-notation paths.</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing the processed list of dictionaries, or an empty <see cref="List{Dictionary{String, Object}}"/> fallback on failure.</returns>
-    public static OperationResult<List<Dictionary<string, object>>> GetDictionaryList(string json, List<string>? keyPaths = null)
-    {
-        return GetList<Dictionary<string, object>>(json, keyPaths);
-    }
-    
-
-
-
-
-
 
     /// <summary>
     /// Recursively converts a <see cref="JsonElement"/> into its native .NET equivalent.
@@ -379,52 +380,10 @@ public static class JsonUtils
         }
     }
 
-    private static Dictionary<string, object> ConvertToStronglyTypedDictionary(Dictionary<string, object?> looseDict)
-    {
-        var target = new Dictionary<string, object>();
-        foreach (var kvp in looseDict)
-        {
-            if (kvp.Value is Dictionary<string, object?> nestedLoose)
-            {
-                target[kvp.Key] = ConvertToStronglyTypedDictionary(nestedLoose);
-            }
-            else if (kvp.Value is List<object?> nestedList)
-            {
-                // CRITICAL FIX: Convert arrays found inside the object tree layout
-                target[kvp.Key] = ConvertToStronglyTypedList(nestedList);
-            }
-            else if (kvp.Value != null)
-            {
-                target[kvp.Key] = kvp.Value;
-            }
-        }
-        return target;
-    }
-
-    private static List<object> ConvertToStronglyTypedList(List<object?> looseList)
-    {
-        var targetList = new List<object>();
-        foreach (var item in looseList)
-        {
-            if (item is Dictionary<string, object?> itemDict)
-            {
-                targetList.Add(ConvertToStronglyTypedDictionary(itemDict));
-            }
-            else if (item is List<object?> subList)
-            {
-                targetList.Add(ConvertToStronglyTypedList(subList));
-            }
-            else if (item != null)
-            {
-                targetList.Add(item);
-            }
-        }
-        return targetList;
-    }
-
-    private static NullableOperationResult<object?> InternalParseAndFilterJson(string rawJSON, List<string>? keys = null)
+    private static NullableOperationResult<object?> InternalParseAndFilterJson(string rawJSON, List<string>? keys, out string? commonParentPath)
     {
         var result = new NullableOperationResult<object?>();
+        commonParentPath = null; // Initialize the out parameter immediately
 
         if (string.IsNullOrWhiteSpace(rawJSON))
         {
@@ -443,8 +402,123 @@ public static class JsonUtils
                 return result.SetMethodSuccess(rootObject);
             }
 
-            var extracted = new Dictionary<string, object?>();
+            // CASE A: Pure Single-Path Extraction
+            if (keys.Count == 1)
+            {
+                var targetElement = GetValueByPath(doc.RootElement, keys[0]);
 
+                if (targetElement == null || targetElement.Value.ValueKind == JsonValueKind.Null)
+                {
+                    throw new Exception($"Path '{keys[0]}' not found in the JSON structure.");
+                }
+
+                var parsedObject = ConvertJsonElementToNativeObject(targetElement.Value);
+                return result.SetMethodSuccess(parsedObject);
+            }
+
+            // 2. CASE B: Try to find a common parent path prefix pointing to a JSON Object
+            string[]? commonSegments = null;
+
+            foreach (var key in keys)
+            {
+                var segments = key.Split('.', StringSplitOptions.RemoveEmptyEntries);
+                if (commonSegments == null)
+                {
+                    // On the first pass, assume the path is the commonSegment
+                    commonSegments = segments.ToArray();
+                }
+                else
+                {
+                    // Narrow down to the intersection of segments
+                    int matchingCount = 0;
+                    for (int i = 0; i < Math.Min(commonSegments.Length, segments.Length - 1); i++)
+                    {
+                        if (commonSegments[i] == segments[i]) matchingCount++;
+                        else break;
+                    }
+                    commonSegments = commonSegments.Take(matchingCount).ToArray();
+                }
+            }
+
+            commonParentPath = string.Join(".", commonSegments ?? Array.Empty<string>());
+
+            if (!string.IsNullOrEmpty(commonParentPath))
+            {
+                var parentElement = GetValueByPath(doc.RootElement, commonParentPath);
+
+                if (parentElement != null)
+                {
+                    // 1: Common Parent is a JSON Object
+                    if (parentElement.Value.ValueKind == JsonValueKind.Object)
+                    {
+                        var filteredDict = new Dictionary<string, object?>();
+
+                        foreach (var key in keys)
+                        {
+                            var relativePath = key.Substring(commonParentPath.Length).TrimStart('.');
+
+                            if (string.IsNullOrWhiteSpace(relativePath))
+                            {
+                                var fullParentNative = ConvertJsonElementToNativeObject(parentElement.Value);
+                                if (fullParentNative is Dictionary<string, object?> baseDict)
+                                {
+                                    foreach (var kvp in baseDict)
+                                    {
+                                        filteredDict[kvp.Key] = kvp.Value;
+                                    }
+                                }
+                                continue;
+                            }
+
+                            var relativeSegments = relativePath.Split('.', StringSplitOptions.RemoveEmptyEntries);
+                            MergePathIntoDictionary(parentElement.Value, relativePath, relativeSegments, 0, filteredDict);
+                        }
+
+                        return result.SetMethodSuccess(filteredDict);
+                    }
+
+                    // 2: Common Parent is a JSON Array
+                    if (parentElement.Value.ValueKind == JsonValueKind.Array)
+                    {
+                        var filteredList = new List<object?>();
+
+                        // Loop through every item inside the targeted array element
+                        foreach (var arrayItem in parentElement.Value.EnumerateArray())
+                        {
+                            var filteredItemDict = new Dictionary<string, object?>();
+
+                            foreach (var key in keys)
+                            {
+                                var relativePath = key.Substring(commonParentPath.Length).TrimStart('.');
+
+                                // If they just targeted the array itself with no child properties, grab the whole native item
+                                if (string.IsNullOrWhiteSpace(relativePath))
+                                {
+                                    filteredList.Add(ConvertJsonElementToNativeObject(arrayItem));
+                                    filteredItemDict = null; // Mark as handled so we don't double-add below
+                                    break;
+                                }
+
+                                var relativeSegments = relativePath.Split('.', StringSplitOptions.RemoveEmptyEntries);
+
+                                // If it's a wildcard array field expansion mapping (e.g. key was "data.activities.id" -> relative is "id")
+                                // Run our recursive builder locally on this specific item row!
+                                MergePathIntoDictionary(arrayItem, relativePath, relativeSegments, 0, filteredItemDict);
+                            }
+
+                            if (filteredItemDict != null)
+                            {
+                                filteredList.Add(filteredItemDict);
+                            }
+                        }
+
+                        return result.SetMethodSuccess(filteredList);
+                    }
+                }
+            }
+
+            // CASE C: Multi-Path Structural Re-creation Fallback
+            var extracted = new Dictionary<string, object?>();
             foreach (var key in keys)
             {
                 // We use a recursive helper to build/merge the paths into our extracted dictionary
@@ -455,7 +529,7 @@ public static class JsonUtils
         }
         catch (Exception ex)
         {
-            return result.SetMethodFailure(ex);
+            return result.SetMethodFailure(ex, null);
         }
     }
 
@@ -559,14 +633,6 @@ public static class JsonUtils
         }
     }
 
-
-
-
-
-
-
-
-
     private static JsonElement? GetValueByPath(JsonElement element, string path)
     {
         var keys = path.Split('.', StringSplitOptions.RemoveEmptyEntries);
@@ -630,5 +696,60 @@ public static class JsonUtils
         // Parse it back into a detached JsonDocument
         var doc = JsonDocument.Parse(stream.ToArray());
         return doc.RootElement.Clone(); // Clone to keep alive outside the using scope
+    }
+
+    private static Dictionary<string, object> ConvertToStronglyTypedDictionary(Dictionary<string, object?> looseDict, bool removeNulls)
+    {
+        var target = new Dictionary<string, object>();
+        foreach (var kvp in looseDict)
+        {
+            if (kvp.Value is Dictionary<string, object?> nestedLoose)
+            {
+                target[kvp.Key] = ConvertToStronglyTypedDictionary(nestedLoose, removeNulls);
+            }
+            else if (kvp.Value is List<object?> nestedList)
+            {
+                // CRITICAL FIX: Convert arrays found inside the object tree layout
+                target[kvp.Key] = ConvertToStronglyTypedList(nestedList, removeNulls);
+            }
+            else if (kvp.Value != null)
+            {
+                target[kvp.Key] = kvp.Value;
+            }
+
+            // If removeNulls is false, preserve null keys in the dictionary
+            else if (!removeNulls)
+            {
+                target[kvp.Key] = null!;
+            }
+        }
+        return target;
+    }
+
+    private static List<object> ConvertToStronglyTypedList(List<object?> looseList, bool removeNulls)
+    {
+        var targetList = new List<object>();
+        foreach (var item in looseList)
+        {
+            if (item is Dictionary<string, object?> itemDict)
+            {
+                targetList.Add(ConvertToStronglyTypedDictionary(itemDict, removeNulls));
+            }
+            else if (item is List<object?> subList)
+            {
+                targetList.Add(ConvertToStronglyTypedList(subList, removeNulls));
+            }
+            else if (item != null)
+            {
+                targetList.Add(item);
+            }
+
+            // If removeNulls is false, preserve null keys in the dictionary
+            else if (!removeNulls)
+            {
+                targetList.Add(null!);
+            }
+        }
+        return targetList;
     }
 }

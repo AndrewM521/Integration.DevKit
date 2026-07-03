@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Integration.DevKit.Core.Configuration;
+﻿namespace Integration.DevKit.Core;
 
 public sealed class EncryptionOptions
 {
@@ -16,12 +10,15 @@ public sealed class EncryptionOptions
     public bool EncryptBooleans { get; set; } = false;
     public bool EncryptDecimals { get; set; } = false;
 
+    public Dictionary<string, IConfigProtector> TargetPaths = new Dictionary<string, IConfigProtector>();
 
-    internal List<string> Paths { get; } = new List<string>();
-
-    public EncryptionOptions Encrypt(string jsonPath)
+    public void Encrypt(string jsonPath, IConfigProtector? protector = null)
     {
-        Paths.Add(jsonPath);
-        return this;
+        if (protector == null)
+        {
+            protector = new Base64ConfigProtector();
+        }
+
+        TargetPaths[jsonPath] = protector;
     }
 }

@@ -30,19 +30,25 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        var config = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", false)
-            .EncryptJsonOnBuild(
-                new CryptoContract
-                {
-                    Signature = "ENC",
-                    Version = "v1",
-                    Provider = new Base64CryptoProvider()
-                },
-                (options) => {
-                    options.Encrypt("Integration.DevKit:RnadomManagement");
-                }
-            ).Build();
+        var cryptoContract = new ConfigProtectorContract('|')
+        {
+            Signature = "ENC",
+            Version = "v1"
+        };
+        var base64Protector = new Base64ConfigProtector();
+        var aesProtector = new AesConfigProtector("my-super-secret-32-byte-long-key!!", "1234567890123456");
+
+        var configBuilder = new ConfigurationBuilder().AddJsonFile("appsettings.json", false);
+
+        var encryptedBuild = configBuilder.EncryptJsonOnBuild(
+            cryptoContract,
+            (options) =>
+            {
+                options.Encrypt("Integration.DevKit:RnadomManagement");
+                options.Encrypt("Integration.DevKit:SQLManagement:Clients:TestClient:ConnectionString", aesProtector);
+            }
+        ).Build();
+        var decryptedConfig = configBuilder.DecryptJsonOnBuild(cryptoContract, new List<IConfigProtector> { base64Protector, aesProtector }).Build();
 
         var builder = Host.CreateDefaultBuilder(args)
             .ConfigureServices((context, services) =>
@@ -76,17 +82,17 @@ public class Program
         var entry = app.Services.GetRequiredService<AppEntry>();
         var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 
-        Service_CustomLogger.Initialize_OnDemand(config);
-        Service_CustomLogFlusher.Initialize_OnDemand(config);
+        Service_CustomLogger.Initialize_OnDemand(decryptedConfig);
+        Service_CustomLogFlusher.Initialize_OnDemand(decryptedConfig);
         Service_ProcessLauncher.Initialize_OnDemand();
-        Service_RESTApiMgmt.Initialize_OnDemand(config);
+        Service_RESTApiMgmt.Initialize_OnDemand(decryptedConfig);
         Service_ThreadLocks.Initialize_OnDemand();
         Service_ThreadSafeItems.Initialize_OnDemand();
-        Service_TaskMgmt.Initialize_OnDemand(config, lifetime);
-        Service_SQLMgmt.Initialize_OnDemand(config);
+        Service_TaskMgmt.Initialize_OnDemand(decryptedConfig, lifetime);
+        Service_SQLMgmt.Initialize_OnDemand(decryptedConfig);
         Service_CredentialMgmt.InitializeFileSecretStore_OnDemand("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
 
-        var client = Service_SQLMgmt.SQLManager.GetClient("Cmd");
+        var client = Service_SQLMgmt.SQLManager.GetClient("TestClient");
 
         await entry.RunAsync(args);
     }
@@ -1244,7 +1250,11 @@ public class AppEntry
 
     private async Task TestCoreClasses()
     {
-        //OperationResult<string> json;
+        //TODO
+        //Both single and multi path need to return re-created json structure
+        //If the value is null do not remove
+
+        OperationResult<string> json;
 
         //json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json1.txt");
         //if (!json.MethodSuccess)
@@ -1258,16 +1268,17 @@ public class AppEntry
         //    throw json.Exception;
         //}
 
-        //json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json3.txt");
-        //if (!json.MethodSuccess)
-        //{
-        //    throw json.Exception;
-        //}
+        json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json3.txt");
+        if (!json.MethodSuccess)
+        {
+            throw json.Exception;
+        }
 
-        //object result = null;
+        object result = null;
+
 
         //----Get Dictionary by single path----
-        //result = JsonUtils.GetDictionary(json.Result).Result;
+        //result = JsonUtils.GetDictionary(json.Result).Result; //Root
         //result = JsonUtils.GetDictionary(json.Result, "numbers").Result; //Primitive
         //result = JsonUtils.GetDictionary(json.Result, "data").Result; //Dictionary
         //result = JsonUtils.GetDictionary(json.Result, "house").Result; //Dictionary List
@@ -1303,95 +1314,18 @@ public class AppEntry
         //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data", "house" }).Result; //Dictionaries
         //result = JsonUtils.GetDictionary(json.Result, new List<string> { "index", "house" }).Result; //Lists
         //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.dictionary1", "house.0" }).Result; //Sub Dictionary
-        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.dictionary1.name", "data.jobs.0.id" }).Result; //Sub Dictionary Object
+        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.dictionary1.name", "data.jobs.0" }).Result; //Sub Dictionary Object
         //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.activities", "data.jobs" }).Result; //Sub Dictionary List
         //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.activities.0", "data.jobs.0" }).Result; //Sub Dictionary List Item
         //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.activities.0.id", "data.jobs.0.id" }).Result; //Sub Dictionary List Item Object
+        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.dictionary1.id", "data.dictionary1.name" }).Result; //Sub Dictionary Same Parent
+        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.activities.id", "data.activities.name" }).Result; //Sub Dictionary List Same Parent
 
-        //string jsonResult = JsonUtils.SerializeObjectToJson(result).Result;
+        result = JsonUtils.GetDictionaryList(json.Result, new List<string> { "data.activities.id", "data.activities.name" }).Result; //Sub Dictionary List Same Parent
 
-        //Console.WriteLine(jsonResult);
+        string jsonResult = JsonUtils.SerializeObjectToJson(result).Result;
 
-        //object jsonObject = null;
-
-        //jsonObject = new Dictionary<string, object>
-        //{
-        //    ["data"] = new Dictionary<string, object>
-        //    {
-        //        ["authToken"] = "1234",
-        //        ["key"] = "yes"
-        //    }
-        //};
-
-        ////jsonObject = new Dictionary<string, object>
-        ////{
-        ////    ["name"] = "test",
-        ////    ["data"] = new Dictionary<string, object>
-        ////    {
-        ////        ["type"] = "type1",
-        ////        ["count"] = 1,
-        ////        ["tags"] = new List<string?> {
-        ////            "tag1",
-        ////            "tag2",
-        ////            null
-        ////        },
-        ////        ["types"] = new List<Dictionary<string, object>> {
-        ////            new Dictionary<string, object>{ ["name"] = "apple" },
-        ////            new Dictionary<string, object>{ ["name"] = "banana" },
-        ////            new Dictionary<string, object>{ ["name"] = "grape" },
-        ////        }
-        ////    }
-        ////};
-
-        ////jsonObject = new List<string> {
-        ////    "name",
-        ////    "tag",
-        ////    "type"
-        ////};
-
-
-        //var getJson = JsonUtils.SerializeObjectToJson(jsonObject);
-
-        //var tmp1 = JsonUtils.ParseAndFilterJson<Dictionary<string, object>>(getJson.Result, new List<string> { "data.authToken", "key" });
-
-        //string tmp = "";
-
-
-
-
-
-        //jsonObject = new List<string> {};
-
-
-
-        ////var keys = new List<string> { "name", "data.tags", "name.count" };
-        //var keys = new List<string> { };
-
-        //var getDict = JsonUtils.ParseAndFilterJson<Dictionary<string, object>>(getJson.Result, keys);
-        //if (!getDict.MethodSuccess)
-        //{
-        //    throw getDict.Exception;
-        //}
-
-        //int? dictVal;
-        //Dictionary<string, object>? dictionary;
-        //List<Dictionary<string, object>>? listDictionary;
-
-
-        ////Valid key
-        //dictVal = DictionaryUtils.GetValue<int>(getDict.Result, "data.count");
-        //dictionary = DictionaryUtils.GetDictionary(getDict.Result, "data");
-        //listDictionary = DictionaryUtils.GetListDictionary(getDict.Result, "data.types");  
-
-        ////Missing Key
-        //dictVal = DictionaryUtils.GetValue<int>(getDict.Result, "data.count1");
-        //dictionary = DictionaryUtils.GetDictionary(getDict.Result, "data1");
-        //listDictionary = DictionaryUtils.GetListDictionary(getDict.Result, "data.types1");
-
-        ////Type Exception
-        //dictVal = DictionaryUtils.GetValue<int>(getDict.Result, "name");
-        //dictionary = DictionaryUtils.GetDictionary(getDict.Result, "data.tags");
-        //listDictionary = DictionaryUtils.GetListDictionary(getDict.Result, "data.tags");
+        Console.WriteLine(jsonResult);
     }
-    
+
 }

@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
-namespace Integration.DevKit.Core.Configuration;
+namespace Integration.DevKit.Core;
 
-public sealed class Base64CryptoProvider : IStringCryptoProvider
+public sealed class Base64ConfigProtector : IConfigProtector
 {
     public string Name => "BASE64";
 
