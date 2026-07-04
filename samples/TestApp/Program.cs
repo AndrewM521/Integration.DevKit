@@ -1321,7 +1321,12 @@ public class AppEntry
         //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.dictionary1.id", "data.dictionary1.name" }).Result; //Sub Dictionary Same Parent
         //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.activities.id", "data.activities.name" }).Result; //Sub Dictionary List Same Parent
 
-        result = JsonUtils.GetDictionaryList(json.Result, new List<string> { "data.activities.id", "data.activities.name" }).Result; //Sub Dictionary List Same Parent
+
+        //result = JsonUtils.GetDictionary(json.Result, "data.dictionary1", JsonExtractionLayout.PreserveRoot).Result; //Sub Dictionary
+        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.activities.0.id", "data.jobs.0.id" }).Result; //Sub Dictionary List Item Object
+
+
+        //result = JsonUtils.GetDictionaryList(json.Result, new List<string> { "data.activities.id", "data.activities.name" }).Result; //Sub Dictionary List Same Parent
 
         string jsonResult = JsonUtils.SerializeObjectToJson(result).Result;
 

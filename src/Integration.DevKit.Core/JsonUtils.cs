@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Integration.DevKit.Core;
 
@@ -61,11 +62,16 @@ public static class JsonUtils
     /// </summary>
     /// <param name="json">The raw JSON string to parse.</param>
     /// <param name="keyPath">The key or dot-notation path.</param>
+    /// <param name="layout">
+    /// Determines the structural shape of the returned JSON. Use <see cref="JsonExtractionLayout.ExtractParent"/> to return a 
+    /// flat object starting at the closest shared parent container, or <see cref="JsonExtractionLayout.PreserveRoot"/> to always
+    /// reconstruct the entire ancestral tree from the root.
+    /// </param>
     /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the extracted dictionary, or an empty <see cref="Dictionary{String, Object}"/> fallback on failure.</returns>
-    public static OperationResult<Dictionary<string, object>> GetDictionary(string json, string keyPath, bool removeNulls = true)
+    public static OperationResult<Dictionary<string, object>> GetDictionary(string json, string keyPath, JsonExtractionLayout layout = JsonExtractionLayout.ExtractParent, bool removeNulls = true)
     {
-        return ParseAndFilterJson<Dictionary<string, object>>(json, new List<string> { keyPath }, removeNulls);
+        return ParseAndFilterJson<Dictionary<string, object>>(json, new List<string> { keyPath }, layout, removeNulls);
     }
 
     /// <summary>
@@ -73,11 +79,16 @@ public static class JsonUtils
     /// </summary>
     /// <param name="json">The raw JSON string to parse.</param>
     /// <param name="keyPaths">A collection of key or dot-notation paths.</param>
+    /// <param name="layout">
+    /// Determines the structural shape of the returned JSON. Use <see cref="JsonExtractionLayout.ExtractParent"/> to return a 
+    /// flat object starting at the closest shared parent container, or <see cref="JsonExtractionLayout.PreserveRoot"/> to always
+    /// reconstruct the entire ancestral tree from the root.
+    /// </param>
     /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the merged dictionary layout, or an empty <see cref="Dictionary{String, Object}"/> fallback on failure.</returns>
-    public static OperationResult<Dictionary<string, object>> GetDictionary(string json, List<string>? keyPaths = null, bool removeNulls = true)
+    public static OperationResult<Dictionary<string, object>> GetDictionary(string json, List<string>? keyPaths = null, JsonExtractionLayout layout = JsonExtractionLayout.ExtractParent, bool removeNulls = true)
     {
-        return ParseAndFilterJson<Dictionary<string, object>>(json, keyPaths, removeNulls);
+        return ParseAndFilterJson<Dictionary<string, object>>(json, keyPaths, layout, removeNulls);
     }
 
     /// <summary>
@@ -86,11 +97,16 @@ public static class JsonUtils
     /// <typeparam name="T">The primitive or object type of the elements inside the list.</typeparam>
     /// <param name="json">The raw JSON string to parse.</param>
     /// <param name="keyPath">The key or dot-notation path.</param>
+    /// <param name="layout">
+    /// Determines the structural shape of the returned JSON. Use <see cref="JsonExtractionLayout.ExtractParent"/> to return a 
+    /// flat object starting at the closest shared parent container, or <see cref="JsonExtractionLayout.PreserveRoot"/> to always
+    /// reconstruct the entire ancestral tree from the root.
+    /// </param>
     /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the typed collection, or an empty initialized <see cref="List{T}"/> fallback on failure.</returns>
-    public static OperationResult<List<T>> GetList<T>(string json, string keyPath, bool removeNulls = true)
+    public static OperationResult<List<T>> GetList<T>(string json, string keyPath, JsonExtractionLayout layout = JsonExtractionLayout.ExtractParent, bool removeNulls = true)
     {
-        return ParseAndFilterJson<List<T>>(json, new List<string> { keyPath }, removeNulls);
+        return ParseAndFilterJson<List<T>>(json, new List<string> { keyPath }, layout, removeNulls);
     }
 
     /// <summary>
@@ -99,11 +115,16 @@ public static class JsonUtils
     /// <typeparam name="T">The type of elements inside the collection.</typeparam>
     /// <param name="json">The raw JSON string to parse.</param>
     /// <param name="keyPaths">A collection of key or dot-notation paths.</param>
+    /// <param name="layout">
+    /// Determines the structural shape of the returned JSON. Use <see cref="JsonExtractionLayout.ExtractParent"/> to return a 
+    /// flat object starting at the closest shared parent container, or <see cref="JsonExtractionLayout.PreserveRoot"/> to always
+    /// reconstruct the entire ancestral tree from the root.
+    /// </param>
     /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the aggregated list, or an empty initialized <see cref="List{T}"/> fallback on failure.</returns>
-    public static OperationResult<List<T>> GetList<T>(string json, List<string>? keyPaths = null, bool removeNulls = true)
+    public static OperationResult<List<T>> GetList<T>(string json, List<string>? keyPaths = null, JsonExtractionLayout layout = JsonExtractionLayout.ExtractParent, bool removeNulls = true)
     {
-        return ParseAndFilterJson<List<T>>(json, keyPaths, removeNulls);
+        return ParseAndFilterJson<List<T>>(json, keyPaths, layout, removeNulls);
     }
 
     /// <summary>
@@ -111,11 +132,16 @@ public static class JsonUtils
     /// </summary>
     /// <param name="json">The raw JSON string to parse.</param>
     /// <param name="keyPath">The key or dot-notation path.</param>
+    /// <param name="layout">
+    /// Determines the structural shape of the returned JSON. Use <see cref="JsonExtractionLayout.ExtractParent"/> to return a 
+    /// flat object starting at the closest shared parent container, or <see cref="JsonExtractionLayout.PreserveRoot"/> to always
+    /// reconstruct the entire ancestral tree from the root.
+    /// </param>
     /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the list of dictionaries, or an empty <see cref="List{Dictionary{String, Object}}"/> fallback on failure.</returns>
-    public static OperationResult<List<Dictionary<string, object>>> GetDictionaryList(string json, string keyPath, bool removeNulls = true)
+    public static OperationResult<List<Dictionary<string, object>>> GetDictionaryList(string json, string keyPath, JsonExtractionLayout layout = JsonExtractionLayout.ExtractParent, bool removeNulls = true)
     {
-        return GetList<Dictionary<string, object>>(json, keyPath, removeNulls);
+        return GetList<Dictionary<string, object>>(json, keyPath, layout, removeNulls);
     }
 
     /// <summary>
@@ -123,11 +149,16 @@ public static class JsonUtils
     /// </summary>
     /// <param name="json">The raw JSON string to parse.</param>
     /// <param name="keyPaths">A collection of key or dot-notation paths.</param>
+    /// <param name="layout">
+    /// Determines the structural shape of the returned JSON. Use <see cref="JsonExtractionLayout.ExtractParent"/> to return a 
+    /// flat object starting at the closest shared parent container, or <see cref="JsonExtractionLayout.PreserveRoot"/> to always
+    /// reconstruct the entire ancestral tree from the root.
+    /// </param>
     /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the processed list of dictionaries, or an empty <see cref="List{Dictionary{String, Object}}"/> fallback on failure.</returns>
-    public static OperationResult<List<Dictionary<string, object>>> GetDictionaryList(string json, List<string>? keyPaths = null, bool removeNulls = true)
+    public static OperationResult<List<Dictionary<string, object>>> GetDictionaryList(string json, List<string>? keyPaths = null, JsonExtractionLayout layout = JsonExtractionLayout.ExtractParent, bool removeNulls = true)
     {
-        return GetList<Dictionary<string, object>>(json, keyPaths, removeNulls);
+        return GetList<Dictionary<string, object>>(json, keyPaths, layout, removeNulls);
     }
 
     /// <summary>
@@ -137,9 +168,14 @@ public static class JsonUtils
     /// <typeparam name="T">The expected return type of the resulting data.</typeparam>
     /// <param name="rawJson">The raw JSON string to process.</param>
     /// <param name="keys">Optional list of keys or paths to extract. If null, the root object is returned.</param>
+    /// <param name="layout">
+    /// Determines the structural shape of the returned JSON. Use <see cref="JsonExtractionLayout.ExtractParent"/> to return a 
+    /// flat object starting at the closest shared parent container, or <see cref="JsonExtractionLayout.PreserveRoot"/> to always
+    /// reconstruct the entire ancestral tree from the root.
+    /// </param>
     /// <param name="removeNulls">If <see langword="true"/>, automatically strips out fields with <see langword="null"/> values from the final structure; otherwise, preserves them. Defaults to <see langword="true"/>.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the extracted data.</returns>
-    public static OperationResult<T> ParseAndFilterJson<T>(string rawJson, List<string>? keys = null, bool removeNulls = true)
+    public static OperationResult<T> ParseAndFilterJson<T>(string rawJson, List<string>? keys = null, JsonExtractionLayout layout = JsonExtractionLayout.ExtractParent, bool removeNulls = true)
     {
         var result = new OperationResult<T>();
 
@@ -150,7 +186,7 @@ public static class JsonUtils
                 throw new ArgumentException("JSON string cannot be null or empty.", nameof(rawJson));
             }
 
-            var parseResult = InternalParseAndFilterJson(rawJson, keys, out var commonParentPath);
+            var parseResult = InternalParseAndFilterJson(rawJson, keys, layout, out var commonParentPath);
             if (!parseResult.MethodSuccess)
             {
                 throw parseResult.Exception!;
@@ -380,7 +416,7 @@ public static class JsonUtils
         }
     }
 
-    private static NullableOperationResult<object?> InternalParseAndFilterJson(string rawJSON, List<string>? keys, out string? commonParentPath)
+    private static NullableOperationResult<object?> InternalParseAndFilterJson(string rawJSON, List<string>? keys, JsonExtractionLayout layout, out string? commonParentPath)
     {
         var result = new NullableOperationResult<object?>();
         commonParentPath = null; // Initialize the out parameter immediately
@@ -392,6 +428,14 @@ public static class JsonUtils
 
         try
         {
+            var normalizeJson = NormalizeJsonKeys(rawJSON);
+            if (!normalizeJson.MethodSuccess)
+            {
+                throw normalizeJson.Exception;
+            }
+
+            rawJSON = normalizeJson.Result;
+
             using var doc = JsonDocument.Parse(rawJSON);
             var root = doc.RootElement;
 
@@ -402,120 +446,128 @@ public static class JsonUtils
                 return result.SetMethodSuccess(rootObject);
             }
 
-            // CASE A: Pure Single-Path Extraction
-            if (keys.Count == 1)
+
+            if (layout == JsonExtractionLayout.ExtractParent)
             {
-                var targetElement = GetValueByPath(doc.RootElement, keys[0]);
-
-                if (targetElement == null || targetElement.Value.ValueKind == JsonValueKind.Null)
+                // CASE A: Pure Single-Path Extraction
+                if (keys.Count == 1)
                 {
-                    throw new Exception($"Path '{keys[0]}' not found in the JSON structure.");
-                }
+                    var targetElement = GetValueByPath(doc.RootElement, keys[0]);
 
-                var parsedObject = ConvertJsonElementToNativeObject(targetElement.Value);
-                return result.SetMethodSuccess(parsedObject);
-            }
-
-            // 2. CASE B: Try to find a common parent path prefix pointing to a JSON Object
-            string[]? commonSegments = null;
-
-            foreach (var key in keys)
-            {
-                var segments = key.Split('.', StringSplitOptions.RemoveEmptyEntries);
-                if (commonSegments == null)
-                {
-                    // On the first pass, assume the path is the commonSegment
-                    commonSegments = segments.ToArray();
-                }
-                else
-                {
-                    // Narrow down to the intersection of segments
-                    int matchingCount = 0;
-                    for (int i = 0; i < Math.Min(commonSegments.Length, segments.Length - 1); i++)
+                    if (targetElement == null || targetElement.Value.ValueKind == JsonValueKind.Null)
                     {
-                        if (commonSegments[i] == segments[i]) matchingCount++;
-                        else break;
+                        throw new Exception($"Path '{keys[0]}' not found in the JSON structure.");
                     }
-                    commonSegments = commonSegments.Take(matchingCount).ToArray();
+
+                    var parsedObject = ConvertJsonElementToNativeObject(targetElement.Value);
+                    return result.SetMethodSuccess(parsedObject);
                 }
-            }
 
-            commonParentPath = string.Join(".", commonSegments ?? Array.Empty<string>());
+                // 2. CASE B: Try to find a common parent path prefix pointing to a JSON Object
+                string[]? commonSegments = null;
 
-            if (!string.IsNullOrEmpty(commonParentPath))
-            {
-                var parentElement = GetValueByPath(doc.RootElement, commonParentPath);
-
-                if (parentElement != null)
+                foreach (var key in keys)
                 {
-                    // 1: Common Parent is a JSON Object
-                    if (parentElement.Value.ValueKind == JsonValueKind.Object)
+                    var segments = key.Split('.', StringSplitOptions.RemoveEmptyEntries);
+                    if (commonSegments == null)
                     {
-                        var filteredDict = new Dictionary<string, object?>();
-
-                        foreach (var key in keys)
+                        // On the first pass, assume the path is the commonSegment
+                        commonSegments = segments.ToArray();
+                    }
+                    else
+                    {
+                        // Narrow down to the intersection of segments
+                        int matchingCount = 0;
+                        for (int i = 0; i < Math.Min(commonSegments.Length, segments.Length - 1); i++)
                         {
-                            var relativePath = key.Substring(commonParentPath.Length).TrimStart('.');
-
-                            if (string.IsNullOrWhiteSpace(relativePath))
-                            {
-                                var fullParentNative = ConvertJsonElementToNativeObject(parentElement.Value);
-                                if (fullParentNative is Dictionary<string, object?> baseDict)
-                                {
-                                    foreach (var kvp in baseDict)
-                                    {
-                                        filteredDict[kvp.Key] = kvp.Value;
-                                    }
-                                }
-                                continue;
-                            }
-
-                            var relativeSegments = relativePath.Split('.', StringSplitOptions.RemoveEmptyEntries);
-                            MergePathIntoDictionary(parentElement.Value, relativePath, relativeSegments, 0, filteredDict);
+                            if (commonSegments[i] == segments[i]) matchingCount++;
+                            else break;
                         }
-
-                        return result.SetMethodSuccess(filteredDict);
+                        commonSegments = commonSegments.Take(matchingCount).ToArray();
                     }
+                }
 
-                    // 2: Common Parent is a JSON Array
-                    if (parentElement.Value.ValueKind == JsonValueKind.Array)
+                commonParentPath = string.Join(".", commonSegments ?? Array.Empty<string>());
+
+                if (!string.IsNullOrEmpty(commonParentPath))
+                {
+                    var parentElement = GetValueByPath(doc.RootElement, commonParentPath);
+
+                    if (parentElement != null)
                     {
-                        var filteredList = new List<object?>();
-
-                        // Loop through every item inside the targeted array element
-                        foreach (var arrayItem in parentElement.Value.EnumerateArray())
+                        // 1: Common Parent is a JSON Object
+                        if (parentElement.Value.ValueKind == JsonValueKind.Object)
                         {
-                            var filteredItemDict = new Dictionary<string, object?>();
+                            var filteredDict = new Dictionary<string, object?>();
 
                             foreach (var key in keys)
                             {
                                 var relativePath = key.Substring(commonParentPath.Length).TrimStart('.');
 
-                                // If they just targeted the array itself with no child properties, grab the whole native item
                                 if (string.IsNullOrWhiteSpace(relativePath))
                                 {
-                                    filteredList.Add(ConvertJsonElementToNativeObject(arrayItem));
-                                    filteredItemDict = null; // Mark as handled so we don't double-add below
-                                    break;
+                                    var fullParentNative = ConvertJsonElementToNativeObject(parentElement.Value);
+                                    if (fullParentNative is Dictionary<string, object?> baseDict)
+                                    {
+                                        foreach (var kvp in baseDict)
+                                        {
+                                            filteredDict[kvp.Key] = kvp.Value;
+                                        }
+                                    }
+                                    continue;
                                 }
 
                                 var relativeSegments = relativePath.Split('.', StringSplitOptions.RemoveEmptyEntries);
-
-                                // If it's a wildcard array field expansion mapping (e.g. key was "data.activities.id" -> relative is "id")
-                                // Run our recursive builder locally on this specific item row!
-                                MergePathIntoDictionary(arrayItem, relativePath, relativeSegments, 0, filteredItemDict);
+                                MergePathIntoDictionary(parentElement.Value, relativePath, relativeSegments, 0, filteredDict);
                             }
 
-                            if (filteredItemDict != null)
-                            {
-                                filteredList.Add(filteredItemDict);
-                            }
+                            return result.SetMethodSuccess(filteredDict);
                         }
 
-                        return result.SetMethodSuccess(filteredList);
+                        // 2: Common Parent is a JSON Array
+                        if (parentElement.Value.ValueKind == JsonValueKind.Array)
+                        {
+                            var filteredList = new List<object?>();
+
+                            // Loop through every item inside the targeted array element
+                            foreach (var arrayItem in parentElement.Value.EnumerateArray())
+                            {
+                                var filteredItemDict = new Dictionary<string, object?>();
+
+                                foreach (var key in keys)
+                                {
+                                    var relativePath = key.Substring(commonParentPath.Length).TrimStart('.');
+
+                                    // If they just targeted the array itself with no child properties, grab the whole native item
+                                    if (string.IsNullOrWhiteSpace(relativePath))
+                                    {
+                                        filteredList.Add(ConvertJsonElementToNativeObject(arrayItem));
+                                        filteredItemDict = null; // Mark as handled so we don't double-add below
+                                        break;
+                                    }
+
+                                    var relativeSegments = relativePath.Split('.', StringSplitOptions.RemoveEmptyEntries);
+
+                                    // If it's a wildcard array field expansion mapping (e.g. key was "data.activities.id" -> relative is "id")
+                                    // Run our recursive builder locally on this specific item row!
+                                    MergePathIntoDictionary(arrayItem, relativePath, relativeSegments, 0, filteredItemDict);
+                                }
+
+                                if (filteredItemDict != null)
+                                {
+                                    filteredList.Add(filteredItemDict);
+                                }
+                            }
+
+                            return result.SetMethodSuccess(filteredList);
+                        }
                     }
                 }
             }
+
+            // Safety: If layout is PreserveRoot OR no common parent path intersected, 
+            // reset out parameter to null so the upstream wrapping dictionary knows to fallback safely.
+            commonParentPath = null;
 
             // CASE C: Multi-Path Structural Re-creation Fallback
             var extracted = new Dictionary<string, object?>();
@@ -752,4 +804,48 @@ public static class JsonUtils
         }
         return targetList;
     }
+
+    private static OperationResult<string> NormalizeJsonKeys(string rawJSON)
+    {
+        var result = new OperationResult<string>();
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(rawJSON))
+            {
+                return result.SetMethodSuccess(rawJSON);
+            }
+
+            // Regex explanation: Targets text wrapped in double quotes followed by a colon (JSON keys) and evaluates them to replace internal literal dots.
+            string normalizedJson = Regex.Replace(rawJSON, @"("".*?"")\s*:", match =>
+            {
+                var keyWithoutColon = match.Groups[1].Value;
+                if (keyWithoutColon.Contains('.'))
+                {
+                    // Replace internal dots inside the key string with an underscore
+                    return keyWithoutColon.Replace(".", "_") + ":";
+                }
+                return match.Value;
+            });
+
+            return result.SetMethodSuccess(normalizedJson);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
+    }
+}
+
+public enum JsonExtractionLayout
+{
+    /// <summary>
+    /// Returns a flat structure starting directly at the closest shared parent container.
+    /// </summary>
+    ExtractParent,
+
+    /// <summary>
+    /// Re-creates the entire nested tree layout from the absolute root of the document.
+    /// </summary>
+    PreserveRoot
 }
