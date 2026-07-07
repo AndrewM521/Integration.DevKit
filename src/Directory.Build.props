@@ -11,6 +11,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <PackageOutputPath>..\..\packages</PackageOutputPath>
+    <Copyright>Copyright © 2026 AndrewM5</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

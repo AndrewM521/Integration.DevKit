@@ -1250,10 +1250,6 @@ public class AppEntry
 
     private async Task TestCoreClasses()
     {
-        //TODO
-        //Both single and multi path need to return re-created json structure
-        //If the value is null do not remove
-
         OperationResult<string> json;
 
         //json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json1.txt");
