@@ -1320,7 +1320,12 @@ public class AppEntry
 
         //result = JsonUtils.GetDictionary(json.Result, "data.dictionary1", JsonExtractionLayout.PreserveRoot).Result; //Sub Dictionary
         //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.activities.0.id", "data.jobs.0.id" }).Result; //Sub Dictionary List Item Object
+        
+        result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.empty", "data.dictionary1" }).Result; //Dictionary List
+        //result = JsonUtils.GetDictionaryList(json.Result, "data.empty").Result; //Dictionary List
+        //result = JsonUtils.GetList<string>(json.Result, "data.empty").Result; //Dictionary List
 
+        //result = JsonUtils.ParseAndFilterJson<int>(json.Result, new List<string> { "data.empty", "data.dictionary1" }).Result; //Dictionary List
 
         //result = JsonUtils.GetDictionaryList(json.Result, new List<string> { "data.activities.id", "data.activities.name" }).Result; //Sub Dictionary List Same Parent
 

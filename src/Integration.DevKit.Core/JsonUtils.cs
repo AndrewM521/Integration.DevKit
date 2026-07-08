@@ -194,6 +194,28 @@ public static class JsonUtils
 
             var parsedObject = parseResult.Result;
 
+            // Target requested a type and matched a null
+            if (parsedObject == null)
+            {
+                // 1. If T is a List<>, return an empty list instance
+                if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(List<>))
+                {
+                    var emptyList = (T)Activator.CreateInstance(typeof(T))!;
+                    return result.SetMethodSuccess(emptyList);
+                }
+
+                // 2. If T is a Dictionary<string, object>, return an empty dictionary
+                if (typeof(T) == typeof(Dictionary<string, object>))
+                {
+                    var emptyDict = (T)(object)new Dictionary<string, object>();
+                    return result.SetMethodSuccess(emptyDict);
+                }
+
+                // 3. Fallback for primitive or regular types: return default(T)
+                // (e.g., null for string/nullable types, 0 for int, false for bool)
+                return result.SetMethodSuccess(default(T)!);
+            }
+
             // Target requested a single Dictionary and matched a Dictionary
             if (typeof(T) == typeof(Dictionary<string, object>) && parsedObject is Dictionary<string, object?> looseDict)
             {
@@ -456,7 +478,8 @@ public static class JsonUtils
 
                     if (targetElement == null || targetElement.Value.ValueKind == JsonValueKind.Null)
                     {
-                        throw new Exception($"Path '{keys[0]}' not found in the JSON structure.");
+                        // Return null successfully rather than throwing an exception
+                        return result.SetMethodSuccess(null);
                     }
 
                     var parsedObject = ConvertJsonElementToNativeObject(targetElement.Value);
