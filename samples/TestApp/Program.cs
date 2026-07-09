@@ -53,15 +53,15 @@ public class Program
         var builder = Host.CreateDefaultBuilder(args)
             .ConfigureServices((context, services) =>
             {
-                //services.AddCustomLogging(config);
-                //services.AddCustomLogFlusher(config);
-                //services.AddProcessLauncher();
-                //services.AddRESTApiMgmt(config);
-                //services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
-                //services.AddThreadLocks();
-                //services.AddThreadSafeItems();
-                //services.AddTaskMgmt(config);
-                //services.AddSQLMgmt(config);
+                services.AddCustomLogging(decryptedConfig);
+                services.AddCustomLogFlusher(decryptedConfig);
+                services.AddProcessLauncher();
+                services.AddRESTApiMgmt(decryptedConfig);
+                services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
+                services.AddThreadLocks();
+                services.AddThreadSafeItems();
+                services.AddTaskMgmt(decryptedConfig);
+                services.AddSQLMgmt(decryptedConfig);
 
                 // Register your app entry
                 services.AddSingleton<AppEntry>();
@@ -69,28 +69,28 @@ public class Program
 
         var app = builder.Build();
 
-        //Service_CustomLogger.Initialize(app.Services);
-        //Service_CustomLogFlusher.Initialize(app.Services);
-        //Service_ProcessLauncher.Initialize(app.Services);
-        //Service_RESTApiMgmt.Initialize(app.Services);
-        //Service_ThreadLocks.Initialize(app.Services);
-        //Service_ThreadSafeItems.Initialize(app.Services);
-        //Service_TaskMgmt.Initialize(app.Services);
-        //Service_SQLMgmt.Initialize(app.Services);
-        //Service_CredentialMgmt.InitializeFileSecretStore(app.Services);
+        Service_CustomLogger.Initialize(app.Services);
+        Service_CustomLogFlusher.Initialize(app.Services);
+        Service_ProcessLauncher.Initialize(app.Services);
+        Service_RESTApiMgmt.Initialize(app.Services);
+        Service_ThreadLocks.Initialize(app.Services);
+        Service_ThreadSafeItems.Initialize(app.Services);
+        Service_TaskMgmt.Initialize(app.Services);
+        Service_SQLMgmt.Initialize(app.Services);
+        Service_CredentialMgmt.InitializeFileSecretStore(app.Services);
 
         var entry = app.Services.GetRequiredService<AppEntry>();
         var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 
-        Service_CustomLogger.Initialize_OnDemand(decryptedConfig);
-        Service_CustomLogFlusher.Initialize_OnDemand(decryptedConfig);
-        Service_ProcessLauncher.Initialize_OnDemand();
-        Service_RESTApiMgmt.Initialize_OnDemand(decryptedConfig);
-        Service_ThreadLocks.Initialize_OnDemand();
-        Service_ThreadSafeItems.Initialize_OnDemand();
-        Service_TaskMgmt.Initialize_OnDemand(decryptedConfig, lifetime);
-        Service_SQLMgmt.Initialize_OnDemand(decryptedConfig);
-        Service_CredentialMgmt.InitializeFileSecretStore_OnDemand("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
+        //Service_CustomLogger.Initialize_OnDemand(decryptedConfig);
+        //Service_CustomLogFlusher.Initialize_OnDemand(decryptedConfig);
+        //Service_ProcessLauncher.Initialize_OnDemand();
+        //Service_RESTApiMgmt.Initialize_OnDemand(decryptedConfig);
+        //Service_ThreadLocks.Initialize_OnDemand();
+        //Service_ThreadSafeItems.Initialize_OnDemand();
+        //Service_TaskMgmt.Initialize_OnDemand(decryptedConfig, lifetime);
+        //Service_SQLMgmt.Initialize_OnDemand(decryptedConfig);
+        //Service_CredentialMgmt.InitializeFileSecretStore_OnDemand("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
 
         var client = Service_SQLMgmt.SQLManager.GetClient("TestClient");
 
@@ -103,6 +103,7 @@ public class AppEntry
 
     public async Task RunAsync(string[] args)
     {
+        //await TestCoreClasses();
         //TestCustomLogger();
         //await TestCustomLoggerFlusher();
         //await TestProcessLauncher();
@@ -112,13 +113,37 @@ public class AppEntry
         //await TestTaskManagement();
         //await TestTaskManagement_SyncManagedTask();
         //await TestTaskManagement_AsyncManagedTask();
+        await AdhocTesting();
 
-        await TestCoreClasses(); 
         //await TestApiManagementCredentials(true, false);
-
 
         Console.WriteLine("Press enter to exit");
         Console.ReadLine();
+    }
+
+    private async Task AdhocTesting()
+    {
+        var strategy_7AM_Settings = new TimeStrategySettings
+        {
+            SkipFirstIterationWait = true,
+            FastForwardToPresent = true,
+            CustomStartTime = new TimeSpan(7, 0, 0)
+        };
+        var strategy = new TimeStrategy_Interval(new TimeSpan(0,2,0) ,strategy_7AM_Settings);
+
+        var taskSettings = new ManagedTaskSettings
+        {
+            IterationStrategy = strategy,
+            MaxIterations = -1
+        };
+
+        var startTask = await Service_TaskMgmt.TaskManager.StartTask(new SimpleShortTask(), TaskExecutionMode.Asyncronous, taskSettings);
+        if (!startTask.MethodSuccess)
+        {
+            throw startTask.Exception;
+        }
+
+        await startTask.Result.RunningTask!;
     }
 
     private void TestCustomLogger()

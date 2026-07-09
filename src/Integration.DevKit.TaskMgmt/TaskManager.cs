@@ -273,7 +273,6 @@ public class TaskManager : ITaskManager
         {
             await _taskLimiter.WaitAsync();
 
-
             managedTaskRuntime.StartDTM = DateTime.UtcNow;
             managedTaskRuntime.State = ManagedTaskState.Running;
 
