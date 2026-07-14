@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Integration.DevKit.Core;
 using Integration.DevKit.CustomLogger.Contracts;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace Integration.DevKit.CustomLogger;
 
 /// <summary>
@@ -12,10 +14,9 @@ namespace Integration.DevKit.CustomLogger;
 /// </remarks>
 public static class Service_CustomLogger
 {
-    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private const string NoInit = "Service_CustomLogger has not been initialized.";
 
-    private static ILogRegistry? _logRegistry;
+    private static ILogFileRegistry? _logRegistry;
     private static ICustomLoggerManager? _loggerManager;
 
     /// <summary>
@@ -41,11 +42,30 @@ public static class Service_CustomLogger
         services.Configure<LoggerManagerSettings>(config.GetSection("Integration.DevKit:CustomLogger"));
 
         // Register the concrete class
-        services.AddSingleton<ICustomLoggerManager, CustomLoggerManager>();
+        services.TryAddSingleton<ICustomLoggerManager, CustomLoggerManager>();
 
-        services.AddSingleton<ILogRegistry, LogRegistry>();
+        services.TryAddSingleton<ILogFileRegistry, LogFileRegistry>();
 
         return services;
+    }
+
+    /// <summary>
+    /// Registers the custom logging infrastructure, including settings, the logger manager, and the log registry.
+    /// </summary>
+    /// <param name="configuration">The <see cref="IConfiguration"/> instance used to bind logging settings.</param>
+    /// <returns>The modified <see cref="IServiceCollection"/> for further chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="configuration"/> is null.</exception>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void AddCustomLogging_OnDemand(IConfiguration configuration)
+    {
+        if (configuration == null)
+        {
+            throw new ArgumentNullException(nameof(configuration));
+        }
+
+        OnDemand_Registry.Services.AddCustomLogging(configuration);
     }
 
     /// <summary>
@@ -54,7 +74,7 @@ public static class Service_CustomLogger
     /// <param name="sp">The <see cref="IServiceProvider"/> containing the registered logging services.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if <see cref="ILogRegistry"/> or <see cref="ICustomLoggerManager"/> are not registered in the DI container.
+    /// Thrown if <see cref="ILogFileRegistry"/> or <see cref="ICustomLoggerManager"/> are not registered in the DI container.
     /// </exception>
     public static void Initialize(IServiceProvider sp)
     {
@@ -63,10 +83,10 @@ public static class Service_CustomLogger
             throw new ArgumentNullException(nameof(sp));
         }
 
-        _logRegistry = sp.GetService<ILogRegistry>();
+        _logRegistry = sp.GetService<ILogFileRegistry>();
         if (_logRegistry == null)
         {
-            throw new InvalidOperationException($"{nameof(ILogRegistry)} is not registered, make sure to call AddCustomLogging() when configuring services.");
+            throw new InvalidOperationException($"{nameof(ILogFileRegistry)} is not registered, make sure to call AddCustomLogging() when configuring services.");
         }
 
         _loggerManager = sp.GetService<ICustomLoggerManager>();
@@ -75,37 +95,6 @@ public static class Service_CustomLogger
             throw new InvalidOperationException($"{nameof(ICustomLoggerManager)} is not registered, make sure to call AddCustomLogging() when configuring services.");
         }
     }
-
-    /// <summary>
-    /// Initializes the static <see cref="LoggerManager"/> and <see cref="LogRegistry"/>.
-    /// </summary>
-    /// <param name="configuration">The <see cref="IConfiguration"/> instance used to bind logging settings.</param>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void Initialize_OnDemand(IConfiguration configuration)
-    {
-        if (configuration == null)
-        {
-            throw new ArgumentNullException(nameof(configuration));
-        }
-
-        _internalServiceCollection.AddCustomLogging(configuration);
-
-        // Bind LoggerManagerSettings
-        _internalServiceCollection.Configure<LoggerManagerSettings>(configuration.GetSection("Integration.DevKit:CustomLogger"));
-
-        // Register the concrete class
-        _internalServiceCollection.AddSingleton<ICustomLoggerManager, CustomLoggerManager>();
-
-        _internalServiceCollection.AddSingleton<ILogRegistry, LogRegistry>();
-
-        var provider = _internalServiceCollection.BuildServiceProvider();
-
-        _loggerManager = provider.GetRequiredService<ICustomLoggerManager>();
-        _logRegistry = provider.GetRequiredService<ILogRegistry>();
-    }
-
 
     /// <summary>
     /// Gets the global instance of the <see cref="ICustomLoggerManager"/>.
@@ -126,11 +115,11 @@ public static class Service_CustomLogger
     }
 
     /// <summary>
-    /// Gets the global instance of the <see cref="ILogRegistry"/>.
+    /// Gets the global instance of the <see cref="ILogFileRegistry"/>.
     /// </summary>
     /// <value>The current log registry instance.</value>
     /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
-    public static ILogRegistry LogRegistry
+    public static ILogFileRegistry LogRegistry
     {
         get
         {

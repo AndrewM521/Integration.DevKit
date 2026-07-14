@@ -11,7 +11,7 @@ namespace Integration.DevKit.CustomLogger;
 public class CustomLogger : ICustomLogger
 {
     private readonly ICustomLoggerManager _loggerManager;
-    private readonly ILogRegistry _logRegistry;
+    private readonly ILogFileRegistry _logFileRegistry;
 
     private bool _isLoggerEnabled = true;
     private string _categoryName = string.Empty;
@@ -31,7 +31,7 @@ public class CustomLogger : ICustomLogger
     /// <param name="categoryName">The name of the category for this logger (e.g., the class name).</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="loggerManager"/> is null.</exception>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="logRegistry"/> is null.</exception>
-    internal CustomLogger(ICustomLoggerManager loggerManager, ILogRegistry logRegistry, string categoryName = "Unknown Category")
+    internal CustomLogger(ICustomLoggerManager loggerManager, ILogFileRegistry logRegistry, string categoryName = "Unknown Category")
     {
         if (loggerManager == null)
         {
@@ -44,7 +44,7 @@ public class CustomLogger : ICustomLogger
         }
 
         _loggerManager = loggerManager;
-        _logRegistry = logRegistry;
+        _logFileRegistry = logRegistry;
         _categoryName = categoryName;
     }
 
@@ -96,7 +96,10 @@ public class CustomLogger : ICustomLogger
 
         string formattedMsg = LogFormatter.Format(true, CategoryName, message, logLevel, exception);
 
-        _logRegistry.EnqueueToLogFileBuffer(formattedMsg);
+        if (logLevel >= _loggerManager.RuntimeSettings.FileOutputLogLevel)
+        {
+            _logFileRegistry.EnqueueToLogFileBuffer(formattedMsg);
+        }
 
         Debug.WriteLine(formattedMsg);
 

@@ -4,10 +4,10 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.CustomLogger.Contracts;
+using Integration.DevKit.Core;
 using Integration.DevKit.ProcessLauncher.Contracts;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Integration.DevKit.ProcessLauncher;
 
@@ -20,7 +20,6 @@ namespace Integration.DevKit.ProcessLauncher;
 /// </remarks>
 public static class Service_ProcessLauncher
 {
-    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private const string NoInit = "Service_ProcessLauncher has not been initialized.";
 
     private static IProcessManager? _processManager;
@@ -33,10 +32,6 @@ public static class Service_ProcessLauncher
     /// <exception cref="ArgumentNullException">
     /// Thrown if either <paramref name="services"/> is null.
     /// </exception>
-    /// <remarks>
-    /// This method registers <see cref="IProcessManager"/> as a singleton, ensuring a 
-    /// consistent state for managed processes across the application.
-    /// </remarks>
     public static IServiceCollection AddProcessLauncher(this IServiceCollection services)
     {
         if (services == null)
@@ -45,9 +40,23 @@ public static class Service_ProcessLauncher
         }
 
         // Register the concrete class
-        services.AddSingleton<IProcessManager, ProcessManager>();
+        services.TryAddSingleton<IProcessManager, ProcessManager>();
 
         return services;
+    }
+
+    /// <summary>
+    /// Adds the process launcher services to the specified <see cref="IServiceCollection"/>.
+    /// </summary>
+    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// </exception>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void AddProcessLauncher_OnDemand()
+    {
+        OnDemand_Registry.Services.AddProcessLauncher();
     }
 
     /// <summary>
@@ -70,22 +79,6 @@ public static class Service_ProcessLauncher
         {
             throw new InvalidOperationException($"{nameof(IProcessManager)} is not registered. Make sure you call AddProcessLauncher() when configuring services.");
         }
-    }
-
-
-    /// <summary>
-    /// Initializes the static <see cref="ProcessManager"/>.
-    /// </summary>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void Initialize_OnDemand()
-    {
-        _internalServiceCollection.AddProcessLauncher();
-
-        var provider = _internalServiceCollection.BuildServiceProvider();
-
-        _processManager = provider.GetRequiredService<IProcessManager>();
     }
 
     /// <summary>

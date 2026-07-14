@@ -60,41 +60,49 @@ public class Program
                 services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
                 services.AddThreadLocks();
                 services.AddThreadSafeItems();
-                services.AddTaskMgmt(decryptedConfig);
+                //services.AddTaskMgmt(decryptedConfig);
                 services.AddSQLMgmt(decryptedConfig);
 
                 // Register your app entry
                 services.AddSingleton<AppEntry>();
             });
 
+        //Service_CustomLogger.AddCustomLogging_OnDemand(decryptedConfig);
+        //Service_CustomLogFlusher.AddCustomLogFlusher_OnDemand(decryptedConfig);
+        //Service_ProcessLauncher.AddProcessLauncher_OnDemand();
+        //Service_RESTApiMgmt.AddRESTApiMgmt_OnDemand(decryptedConfig);
+        //Service_ThreadLocks.AddThreadLocks_OnDemand();
+        //Service_ThreadSafeItems.AddThreadSafeItems_OnDemand();
+        //Service_TaskMgmt.AddTaskMgmt_OnDemand(decryptedConfig);
+        //Service_SQLMgmt.AddSQLMgmt_OnDemand(decryptedConfig);
+        //Service_CredentialMgmt.AddFileSecretStore_OnDemand("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
+
         var app = builder.Build();
 
-        Service_CustomLogger.Initialize(app.Services);
-        Service_CustomLogFlusher.Initialize(app.Services);
-        Service_ProcessLauncher.Initialize(app.Services);
-        Service_RESTApiMgmt.Initialize(app.Services);
-        Service_ThreadLocks.Initialize(app.Services);
-        Service_ThreadSafeItems.Initialize(app.Services);
-        Service_TaskMgmt.Initialize(app.Services);
-        Service_SQLMgmt.Initialize(app.Services);
-        Service_CredentialMgmt.InitializeFileSecretStore(app.Services);
+        //var serviceProvider = app.Services;
+        var serviceProvider = OnDemand_Registry.GetServiceProvider(decryptedConfig);
 
-        var entry = app.Services.GetRequiredService<AppEntry>();
         var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 
-        //Service_CustomLogger.Initialize_OnDemand(decryptedConfig);
-        //Service_CustomLogFlusher.Initialize_OnDemand(decryptedConfig);
-        //Service_ProcessLauncher.Initialize_OnDemand();
-        //Service_RESTApiMgmt.Initialize_OnDemand(decryptedConfig);
-        //Service_ThreadLocks.Initialize_OnDemand();
-        //Service_ThreadSafeItems.Initialize_OnDemand();
-        //Service_TaskMgmt.Initialize_OnDemand(decryptedConfig, lifetime);
-        //Service_SQLMgmt.Initialize_OnDemand(decryptedConfig);
-        //Service_CredentialMgmt.InitializeFileSecretStore_OnDemand("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
+        Service_CustomLogger.Initialize(serviceProvider);
+        Service_CustomLogFlusher.Initialize(serviceProvider);
+        Service_ProcessLauncher.Initialize(serviceProvider);
+        Service_RESTApiMgmt.Initialize(serviceProvider);
+        Service_ThreadLocks.Initialize(serviceProvider);
+        Service_ThreadSafeItems.Initialize(serviceProvider);
+        Service_TaskMgmt.Initialize(serviceProvider);
+        Service_SQLMgmt.Initialize(serviceProvider);
+        Service_CredentialMgmt.InitializeFileSecretStore(serviceProvider);
 
-        var client = Service_SQLMgmt.SQLManager.GetClient("TestClient");
+        // 1. Fire up the background workers (LogFlusher, etc.)
+        await app.StartAsync();
 
+        // 2. Fetch and run your custom console logic (blocks until your work is done)
+        var entry = app.Services.GetRequiredService<AppEntry>();
         await entry.RunAsync(args);
+
+        // 3. Gracefully stop the background workers once your main work finishes
+        await app.StopAsync();
     }
 }
 
@@ -105,7 +113,7 @@ public class AppEntry
     {
         //await TestCoreClasses();
         //TestCustomLogger();
-        //await TestCustomLoggerFlusher();
+        await TestCustomLoggerFlusher();
         //await TestProcessLauncher();
         //await TestApiManagement();
         //TestCredentialManagement();
@@ -113,7 +121,7 @@ public class AppEntry
         //await TestTaskManagement();
         //await TestTaskManagement_SyncManagedTask();
         //await TestTaskManagement_AsyncManagedTask();
-        await AdhocTesting();
+        //await AdhocTesting();
 
         //await TestApiManagementCredentials(true, false);
 

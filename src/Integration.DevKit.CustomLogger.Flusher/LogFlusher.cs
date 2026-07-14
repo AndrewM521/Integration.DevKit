@@ -17,14 +17,14 @@ namespace Integration.DevKit.CustomLogger.Flusher;
 
 /// <summary>
 /// Concrete Implementation of <see cref="ILogFlusher"/> that periodically flushes buffered log messages from 
-/// <see cref="ILogRegistry"/> to a persistent file destination.
+/// <see cref="ILogFileRegistry"/> to a persistent file destination.
 /// </summary>
 public class LogFlusher : BackgroundService, ILogFlusher
 {
     /// <inheritdoc />
     public LogFlushServiceSettings RuntimeSettings { get; init; }
 
-    private readonly ILogRegistry _logRegistry;
+    private readonly ILogFileRegistry _logRegistry;
     private readonly ICustomLogger? _logger;
 
     private readonly bool _runningInContainer;
@@ -36,7 +36,7 @@ public class LogFlusher : BackgroundService, ILogFlusher
     /// <param name="loggerManager">The manager used to create an internal logger for this service.</param>
     /// <param name="logRegistry">The registry containing the message buffer to be flushed.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="settings"/> is null.</exception>
-    public LogFlusher(IOptions<LogFlushServiceSettings> settings, ICustomLoggerManager loggerManager, ILogRegistry logRegistry)
+    public LogFlusher(IOptions<LogFlushServiceSettings> settings, ICustomLoggerManager loggerManager, ILogFileRegistry logRegistry)
     {
         if (settings == null)
         {

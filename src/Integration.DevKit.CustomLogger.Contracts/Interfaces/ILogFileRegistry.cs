@@ -10,7 +10,7 @@ namespace Integration.DevKit.CustomLogger.Contracts;
 /// Defines a central registry that acts as a buffer for log messages, 
 /// facilitating the hand-off between log producers and the log flushing service.
 /// </summary>
-public interface ILogRegistry
+public interface ILogFileRegistry
 {
     /// <summary>
     /// Gets the total number of log messages currently residing in the registry.

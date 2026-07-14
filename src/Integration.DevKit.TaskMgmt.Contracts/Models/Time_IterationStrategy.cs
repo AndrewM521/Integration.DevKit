@@ -99,7 +99,7 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
             if (handle.CurrentIterationCount == 0 && RuntimeSettings.SkipFirstIterationWait)
             {
                 logger?.LogDebug($"Task '{handle.TaskKey}' skipping first runtime wait for <{runtimeStr}> due to strategy policy. ({nameof(RuntimeSettings.SkipFirstIterationWait)})");
-                LastTargetDTM = DateTime.Now;
+                LastTargetDTM = target;
 
                 return;
             }

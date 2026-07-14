@@ -4,9 +4,11 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using Integration.DevKit.Core;
 using Integration.DevKit.RESTApiMgmt.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Integration.DevKit.RESTApiMgmt;
 
@@ -19,7 +21,6 @@ namespace Integration.DevKit.RESTApiMgmt;
 /// </remarks>
 public static class Service_RESTApiMgmt
 {
-    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private const string NoInit = "Service_RESTApiMgmt has not been initialized.";
 
     private static IApiManager? _apiManager;
@@ -34,11 +35,29 @@ public static class Service_RESTApiMgmt
     {
         services.Configure<ApiManagerSettings>(configuration.GetSection("Integration.DevKit:ApiClientManagement"));
 
-        services.AddSingleton<IApiManager, ApiManager>();
+        services.TryAddSingleton<IApiManager, ApiManager>();
 
         services.AddHttpClient();
 
         return services;
+    }
+
+    /// <summary>
+    /// Adds the API management infrastructure to the service collection
+    /// </summary>
+    /// <param name="configuration">The application configuration used to bind <see cref="ApiManagerSettings"/>.</param>
+    /// <returns>The original <see cref="IServiceCollection"/> for chaining calls.</returns>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void AddRESTApiMgmt_OnDemand(IConfiguration configuration)
+    {
+        if (configuration == null)
+        {
+            throw new ArgumentNullException(nameof(configuration));
+        }
+
+        OnDemand_Registry.Services.AddRESTApiMgmt(configuration);
     }
 
     /// <summary>
@@ -61,26 +80,6 @@ public static class Service_RESTApiMgmt
         {
             throw new InvalidOperationException($"{nameof(IApiManager)} is not registered, make sure to call AddApiManagement() when configuring services.");
         }
-    }
-
-    /// <summary>
-    /// Initializes the static <see cref="ApiManager"/>.
-    /// </summary>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void Initialize_OnDemand(IConfiguration configuration)
-    {
-        if (configuration == null)
-        {
-            throw new ArgumentNullException(nameof(configuration));
-        }
-
-        _internalServiceCollection.AddRESTApiMgmt(configuration);
-
-        var provider = _internalServiceCollection.BuildServiceProvider();
-
-        _apiManager = provider.GetRequiredService<IApiManager>();
     }
 
     /// <summary>

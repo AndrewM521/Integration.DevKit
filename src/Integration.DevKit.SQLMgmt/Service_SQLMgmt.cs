@@ -4,9 +4,11 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using Integration.DevKit.Core;
 using Integration.DevKit.SQLMgmt.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Integration.DevKit.SQLMgmt;
 
@@ -19,7 +21,6 @@ namespace Integration.DevKit.SQLMgmt;
 /// </remarks>
 public static class Service_SQLMgmt
 {
-    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private const string NoInit = "Service_SQLMgmt has not been initialized.";
 
     private static ISQLManager? _sqlManager;
@@ -36,9 +37,27 @@ public static class Service_SQLMgmt
         services.Configure<SQLManagerSettings>(configuration.GetSection("Integration.DevKit:SQLManagement"));
 
         // Register the concrete class
-        services.AddSingleton<ISQLManager, SQLManager>();
+        services.TryAddSingleton<ISQLManager, SQLManager>();
 
         return services;
+    }
+
+    /// <summary>
+    /// Registers the <see cref="ISQLManager"/> and its concrete implementation into the service collection.
+    /// </summary>
+    /// <param name="configuration">The application configuration used to bind <see cref="SQLManagerSettings"/>.</param>
+    /// <returns>The original <see cref="IServiceCollection"/> instance to allow for fluent method chaining.</returns>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void AddSQLMgmt_OnDemand(IConfiguration configuration)
+    {
+        if (configuration == null)
+        {
+            throw new ArgumentNullException(nameof(configuration));
+        }
+
+        OnDemand_Registry.Services.AddSQLMgmt(configuration);
     }
 
     /// <summary>
@@ -61,27 +80,6 @@ public static class Service_SQLMgmt
         {
             throw new InvalidOperationException($"{nameof(ISQLManager)} is not registered. Make sure you call AddSqlDBManagement() when configuring services.");
         }
-    }
-
-    /// <summary>
-    /// Initializes the static <see cref="SQLManager"/>.
-    /// </summary>
-    /// <param name="configuration">The application configuration used to bind <see cref="SQLManagerSettings"/>.</param>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void Initialize_OnDemand(IConfiguration configuration)
-    {
-        if (configuration == null)
-        {
-            throw new ArgumentNullException(nameof(configuration));
-        }
-
-        _internalServiceCollection.AddSQLMgmt(configuration);
-
-        var provider = _internalServiceCollection.BuildServiceProvider();
-
-        _sqlManager = provider.GetRequiredService<ISQLManager>();
     }
 
     /// <summary>

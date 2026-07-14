@@ -4,9 +4,11 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using Integration.DevKit.Core;
 using Integration.DevKit.ThreadLocks.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Integration.DevKit.ThreadLocks;
 
@@ -20,7 +22,6 @@ namespace Integration.DevKit.ThreadLocks;
 /// </remarks>
 public static class Service_ThreadLocks
 {
-    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private const string NoInit = "Service_ThreadLocks has not been initialized.";
 
     private static IThreadLockManager? _threadLockManager;
@@ -41,9 +42,23 @@ public static class Service_ThreadLocks
         }
 
         // Optionally, also register ThreadLockManager if you want it auto-resolved
-        services.AddSingleton<IThreadLockManager, ThreadLockManager>();
+        services.TryAddSingleton<IThreadLockManager, ThreadLockManager>();
 
         return services;
+    }
+
+    /// <summary>
+    /// Registers the <see cref="IThreadLockManager"/> and its implementation as a singleton service.
+    /// </summary>
+    /// <returns>
+    /// The same <see cref="IServiceCollection"/> instance so that multiple calls can be chained.
+    /// </returns>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void AddThreadLocks_OnDemand()
+    {
+        OnDemand_Registry.Services.AddThreadLocks();
     }
 
     /// <summary>
@@ -66,21 +81,6 @@ public static class Service_ThreadLocks
         {
             throw new InvalidOperationException($"{nameof(IThreadLockManager)} is not registered. Make sure you call AddThreadLocks() when configuring services before initializing {nameof(Service_ThreadLocks)}.");
         }
-    }
-
-    /// <summary>
-    /// Initializes the static <see cref="ThreadLockManager"/>.
-    /// </summary>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void Initialize_OnDemand()
-    {
-        _internalServiceCollection.AddThreadLocks();
-
-        var provider = _internalServiceCollection.BuildServiceProvider();
-
-        _threadLockManager = provider.GetRequiredService<IThreadLockManager>();
     }
 
     /// <summary>

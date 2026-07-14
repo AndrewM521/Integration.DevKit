@@ -4,9 +4,11 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using Integration.DevKit.Core;
 using Integration.DevKit.TaskMgmt.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace Integration.DevKit.TaskMgmt;
@@ -17,7 +19,6 @@ namespace Integration.DevKit.TaskMgmt;
 /// </summary>
 public static class Service_TaskMgmt
 {
-    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private const string NoInit = "Service_TaskMgmt has not been initialized.";
 
     private static ITaskManager? _taskManager;
@@ -46,12 +47,31 @@ public static class Service_TaskMgmt
         services.Configure<TaskManagerSettings>(config.GetSection("Integration.DevKit:TaskManagement"));
 
         // Register Task Registry (holds snapshots/history of tasks)
-        services.AddSingleton<ITaskRegistry, TaskRegistry>();
+        services.TryAddSingleton<ITaskRegistry, TaskRegistry>();
 
         // Register TaskManager as singleton
-        services.AddSingleton<ITaskManager, TaskManager>();
+        services.TryAddSingleton<ITaskManager, TaskManager>();
 
         return services;
+    }
+
+    /// <summary>
+    /// Registers the core Task Management services, including the Task Manager, Registry, and Thread Lock Manager.
+    /// </summary>
+    /// <param name="configuration">The <see cref="IConfiguration"/> instance used to bind <see cref="TaskManagerSettings"/>.</param>
+    /// <returns>The original <see cref="IServiceCollection"/> for chaining calls.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="configuration"/> is null.</exception>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void AddTaskMgmt_OnDemand(IConfiguration configuration)
+    {
+        if (configuration == null)
+        {
+            throw new ArgumentNullException(nameof(configuration));
+        }
+
+        OnDemand_Registry.Services.AddTaskMgmt(configuration);
     }
 
     /// <summary>
@@ -80,29 +100,6 @@ public static class Service_TaskMgmt
         {
             throw new InvalidOperationException($"{nameof(ITaskManager)} is not registered. Make sure you call AddTaskManager() when configuring services.");
         }
-    }
-
-    /// <summary>
-    /// Initializes the static <see cref="TaskManager"/> and <see cref="TaskRegistry"/>.
-    /// </summary>
-    /// <param name="configuration">The application configuration used to bind <see cref="TaskManagerSettings"/>.</param>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void Initialize_OnDemand(IConfiguration configuration, IHostApplicationLifetime lifetime)
-    {
-        if (configuration == null)
-        {
-            throw new ArgumentNullException(nameof(configuration));
-        }
-
-        _internalServiceCollection.AddSingleton(lifetime);
-        _internalServiceCollection.AddTaskMgmt(configuration);
-
-        var provider = _internalServiceCollection.BuildServiceProvider();
-
-        _taskRegistry = provider.GetRequiredService<ITaskRegistry>();
-        _taskManager = provider.GetRequiredService<ITaskManager>();
     }
 
     /// <summary>

@@ -1,7 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+﻿using Integration.DevKit.Core;
 using Integration.DevKit.CustomLogger.Contracts;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace Integration.DevKit.CustomLogger.Flusher;
 
@@ -14,7 +17,6 @@ namespace Integration.DevKit.CustomLogger.Flusher;
 /// </remarks>
 public static class Service_CustomLogFlusher
 {
-    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
     private static ILogFlusher? _logFlushService;
 
     private const string NoInit = "Service_LogFlusher has not been initialized.";
@@ -41,22 +43,37 @@ public static class Service_CustomLogFlusher
         // Bind LogFlushServiceSettings
         services.Configure<LogFlushServiceSettings>(config.GetSection("Integration.DevKit:CustomLoggerFlusher"));
 
-        // Register the concrete class and inject ICustomLoggerManager
-        services.AddSingleton(sp =>
-        {
-            var settings = sp.GetRequiredService<IOptions<LogFlushServiceSettings>>();
-            var loggerManager = sp.GetRequiredService<ICustomLoggerManager>();
-            var logRegistry = sp.GetRequiredService<ILogRegistry>();
+        // Register the concrete implementation as a regular Singleton first.
+        // .NET will automatically infer and inject its constructor dependencies here.
+        services.TryAddSingleton<LogFlusher>();
 
-            return new LogFlusher(settings, loggerManager, logRegistry);
-        });
+        // Forward the Hosted Service to the concrete Singleton instance
+        services.TryAddTransient<IHostedService>(sp => sp.GetRequiredService<LogFlusher>());
 
-        services.AddSingleton<ILogFlusher>(sp => sp.GetRequiredService<LogFlusher>());
-
-        // Register the hosted service so it runs automatically
-        services.AddHostedService<LogFlusher>();
+        // Forward the Interface to the exact same concrete Singleton instance
+        services.TryAddSingleton<ILogFlusher>(sp => sp.GetRequiredService<LogFlusher>());
 
         return services;
+    }
+
+    /// <summary>
+    /// Registers the <see cref="LogFlusher"/> as a singleton and a hosted background service.
+    /// </summary>
+    /// <param name="configuration">The <see cref="IConfiguration"/> instance used to bind flusher settings.</param>
+    /// <returns>The same <see cref="IServiceCollection"/> instance for chaining calls.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="configuration"/> is null.</exception>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void AddCustomLogFlusher_OnDemand(IConfiguration configuration)
+    {
+        if (configuration == null)
+        {
+            throw new ArgumentNullException(nameof(configuration));
+        }
+
+        OnDemand_Registry.Services.AddCustomLogging(configuration);
+        OnDemand_Registry.Services.AddCustomLogFlusher(configuration);
     }
 
     /// <summary>
@@ -65,7 +82,7 @@ public static class Service_CustomLogFlusher
     /// <param name="sp">The <see cref="IServiceProvider"/> used to resolve logging and flushing services.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if the core Logging module is missing (requires <see cref="ICustomLoggerManager"/> and <see cref="ILogRegistry"/>) 
+    /// Thrown if the core Logging module is missing (requires <see cref="ICustomLoggerManager"/> and <see cref="ILogFileRegistry"/>) 
     /// or if the Flusher service itself has not been registered.
     /// </exception>
     public static void Initialize(IServiceProvider sp)
@@ -78,7 +95,7 @@ public static class Service_CustomLogFlusher
         try
         {
             _ = sp.GetRequiredService<ICustomLoggerManager>();
-            _ = sp.GetRequiredService<ILogRegistry>();
+            _ = sp.GetRequiredService<ILogFileRegistry>();
         }
         catch (Exception)
         {
@@ -90,28 +107,6 @@ public static class Service_CustomLogFlusher
         {
             throw new InvalidOperationException($"{nameof(ILogFlusher)} is not registered, make sure to call AddCustomLogFlusher() when configuring services.");
         }
-    }
-
-
-    /// <summary>
-    /// Initializes the static <see cref="Service_CustomLogger.LoggerManager"/>, <see cref="Service_CustomLogger.LogRegistry"/>, and <see cref="LogFlushService"/>.
-    /// </summary>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void Initialize_OnDemand(IConfiguration configuration)
-    {
-        if (configuration == null)
-        {
-            throw new ArgumentNullException(nameof(configuration));
-        }
-
-        _internalServiceCollection.AddCustomLogging(configuration);
-        _internalServiceCollection.AddCustomLogFlusher(configuration);
-
-        var provider = _internalServiceCollection.BuildServiceProvider();
-
-        _logFlushService = provider.GetRequiredService<ILogFlusher>();
     }
 
     /// <summary>

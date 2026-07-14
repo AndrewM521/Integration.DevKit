@@ -1,23 +1,24 @@
 ﻿using System.Collections.Concurrent;
 using Integration.DevKit.CustomLogger.Contracts;
+using Microsoft.Extensions.Logging;
 
 namespace Integration.DevKit.CustomLogger;
 
 
 /// <summary>
-/// Concrete Implementation of <see cref="ILogRegistry"/>
+/// Concrete Implementation of <see cref="ILogFileRegistry"/>
 /// </summary>
-internal class LogRegistry : ILogRegistry
+internal class LogFileRegistry : ILogFileRegistry
 {
     /// <inheritdoc />
-    public int Count => _logFileQueue.Count;
+    public int Count => _logFileRegistry.Count;
 
-    private ConcurrentQueue<string> _logFileQueue = new ConcurrentQueue<string>();
+    private ConcurrentQueue<string> _logFileRegistry = new ConcurrentQueue<string>();
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LogRegistry"/> class with a specified capacity.
+    /// Initializes a new instance of the <see cref="LogFileRegistry"/> class with a specified capacity.
     /// </summary>
-    public LogRegistry() {}
+    public LogFileRegistry() {}
 
     /// <inheritdoc />
     /// <remarks>
@@ -27,7 +28,7 @@ internal class LogRegistry : ILogRegistry
     {
         if (!string.IsNullOrWhiteSpace(message))
         {
-            _logFileQueue.Enqueue(message);
+            _logFileRegistry.Enqueue(message);
         }
     }
 
@@ -40,7 +41,7 @@ internal class LogRegistry : ILogRegistry
     {
         List<string> list = new List<string>();
 
-        while (_logFileQueue.TryDequeue(out var msg))
+        while (_logFileRegistry.TryDequeue(out var msg))
         {
             list.Add(msg);
         }

@@ -16,7 +16,7 @@ public class CustomLoggerManager : ICustomLoggerManager
 
     private readonly ConcurrentDictionary<string, CustomLogger> _loggers = new ConcurrentDictionary<string, CustomLogger>(StringComparer.OrdinalIgnoreCase);
     private readonly ICustomLogger? _logger;
-    private readonly ILogRegistry _logRegistry;
+    private readonly ILogFileRegistry _logRegistry;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CustomLoggerManager"/> class.
@@ -24,7 +24,7 @@ public class CustomLoggerManager : ICustomLoggerManager
     /// <param name="settings">The configuration settings wrapped in <see cref="IOptions{T}"/>.</param>
     /// <param name="logRegistry">The central registry where log messages will be buffered.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="settings"/> or <paramref name="logRegistry"/> is null.</exception>
-    public CustomLoggerManager(IOptions<LoggerManagerSettings> settings, ILogRegistry logRegistry) 
+    public CustomLoggerManager(IOptions<LoggerManagerSettings> settings, ILogFileRegistry logRegistry) 
     {
         if (settings == null)
         {

@@ -4,9 +4,11 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using Integration.DevKit.Core;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Integration.DevKit.CredentialMgmt;
 
@@ -19,8 +21,6 @@ namespace Integration.DevKit.CredentialMgmt;
 /// </remarks>
 public static class Service_CredentialMgmt
 {
-    private static readonly IServiceCollection _internalServiceCollection = new ServiceCollection();
-
     private const string NoInitSuffix = " has not been initialized.";
 
     private static FileSecretStore? _fileSecretStore;
@@ -33,23 +33,32 @@ public static class Service_CredentialMgmt
     /// <param name="secretsFolder">The directory path where the encrypted secret files will be stored.</param>
     /// <param name="keysFolder">The directory path where the Data Protection XML master keys will be persisted.</param>
     /// <returns>The modified <see cref="IServiceCollection"/> for fluent chaining.</returns>
-    /// <remarks>
-    /// <para>
-    /// This method configures the <see cref="IDataProtectionProvider"/> to persist cryptographic keys to the file system at 
-    /// the location specified by <paramref name="keysFolder"/>. 
-    /// </para>
-    /// </remarks>
     public static IServiceCollection AddFileSecretStore(this IServiceCollection services, string applicationName, string secretsFolder, string keysFolder)
     {
         services.AddDataProtection()
                 .SetApplicationName(applicationName)
                 .PersistKeysToFileSystem(new DirectoryInfo(keysFolder));
 
-        services.AddSingleton(sp =>
+        services.TryAddSingleton(sp =>
             new FileSecretStore(sp.GetRequiredService<IDataProtectionProvider>(), applicationName, secretsFolder)
         );
 
         return services;
+    }
+
+    /// <summary>
+    /// Configures ASP.NET Core Data Protection and registers <see cref="FileSecretStore"/> as a singleton service OnDemand.
+    /// </summary>
+    /// <param name="applicationName">The unique name of the application. This is used as the purpose string for Data Protection and the identity of the store.</param>
+    /// <param name="secretsFolder">The directory path where the encrypted secret files will be stored.</param>
+    /// <param name="keysFolder">The directory path where the Data Protection XML master keys will be persisted.</param>
+    /// <returns>The modified <see cref="IServiceCollection"/> for fluent chaining.</returns>
+    /// <remarks>
+    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
+    /// </remarks>
+    public static void AddFileSecretStore_OnDemand(string applicationName, string secretsFolder, string keysFolder)
+    {
+        OnDemand_Registry.Services.AddFileSecretStore(applicationName, secretsFolder, keysFolder);
     }
 
     /// <summary>
@@ -65,24 +74,6 @@ public static class Service_CredentialMgmt
         {
             throw new InvalidOperationException($"{typeof(FileSecretStore).Name} is not registered, make sure to call AddFileSecretStore() when configuring services.");
         }
-    }
-
-    /// <summary>
-    /// Initializes the static <see cref="FileSecretStore"/> instance. 
-    /// </summary>
-    /// <param name="applicationName">The unique name of the application. This is used as the purpose string for Data Protection and the identity of the store.</param>
-    /// <param name="secretsFolder">The directory path where the encrypted secret files will be stored.</param>
-    /// <param name="keysFolder">The directory path where the Data Protection XML master keys will be persisted.</param>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void InitializeFileSecretStore_OnDemand(string applicationName, string secretsFolder, string keysFolder)
-    {
-        _internalServiceCollection.AddFileSecretStore(applicationName, secretsFolder, keysFolder);
-
-        var provider = _internalServiceCollection.BuildServiceProvider();
-
-        _fileSecretStore = provider.GetRequiredService<FileSecretStore>();
     }
 
     /// <summary>
