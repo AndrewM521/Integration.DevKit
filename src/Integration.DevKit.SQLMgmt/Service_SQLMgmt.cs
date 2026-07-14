@@ -4,7 +4,6 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.Core;
 using Integration.DevKit.SQLMgmt.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,24 +39,6 @@ public static class Service_SQLMgmt
         services.TryAddSingleton<ISQLManager, SQLManager>();
 
         return services;
-    }
-
-    /// <summary>
-    /// Registers the <see cref="ISQLManager"/> and its concrete implementation into the service collection.
-    /// </summary>
-    /// <param name="configuration">The application configuration used to bind <see cref="SQLManagerSettings"/>.</param>
-    /// <returns>The original <see cref="IServiceCollection"/> instance to allow for fluent method chaining.</returns>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void AddSQLMgmt_OnDemand(IConfiguration configuration)
-    {
-        if (configuration == null)
-        {
-            throw new ArgumentNullException(nameof(configuration));
-        }
-
-        OnDemand_Registry.Services.AddSQLMgmt(configuration);
     }
 
     /// <summary>

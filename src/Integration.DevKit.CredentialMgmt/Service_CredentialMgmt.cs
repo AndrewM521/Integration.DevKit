@@ -4,9 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.Core;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -44,21 +42,6 @@ public static class Service_CredentialMgmt
         );
 
         return services;
-    }
-
-    /// <summary>
-    /// Configures ASP.NET Core Data Protection and registers <see cref="FileSecretStore"/> as a singleton service OnDemand.
-    /// </summary>
-    /// <param name="applicationName">The unique name of the application. This is used as the purpose string for Data Protection and the identity of the store.</param>
-    /// <param name="secretsFolder">The directory path where the encrypted secret files will be stored.</param>
-    /// <param name="keysFolder">The directory path where the Data Protection XML master keys will be persisted.</param>
-    /// <returns>The modified <see cref="IServiceCollection"/> for fluent chaining.</returns>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void AddFileSecretStore_OnDemand(string applicationName, string secretsFolder, string keysFolder)
-    {
-        OnDemand_Registry.Services.AddFileSecretStore(applicationName, secretsFolder, keysFolder);
     }
 
     /// <summary>

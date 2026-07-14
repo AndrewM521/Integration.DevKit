@@ -4,12 +4,10 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.Core;
 using Integration.DevKit.TaskMgmt.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 
 namespace Integration.DevKit.TaskMgmt;
 
@@ -53,25 +51,6 @@ public static class Service_TaskMgmt
         services.TryAddSingleton<ITaskManager, TaskManager>();
 
         return services;
-    }
-
-    /// <summary>
-    /// Registers the core Task Management services, including the Task Manager, Registry, and Thread Lock Manager.
-    /// </summary>
-    /// <param name="configuration">The <see cref="IConfiguration"/> instance used to bind <see cref="TaskManagerSettings"/>.</param>
-    /// <returns>The original <see cref="IServiceCollection"/> for chaining calls.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="configuration"/> is null.</exception>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void AddTaskMgmt_OnDemand(IConfiguration configuration)
-    {
-        if (configuration == null)
-        {
-            throw new ArgumentNullException(nameof(configuration));
-        }
-
-        OnDemand_Registry.Services.AddTaskMgmt(configuration);
     }
 
     /// <summary>

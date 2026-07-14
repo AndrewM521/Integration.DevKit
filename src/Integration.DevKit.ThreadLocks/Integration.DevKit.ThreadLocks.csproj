@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <Title>DevKit.ThreadLocks</Title>
     <RootNamespace>Integration.DevKit.ThreadLocks</RootNamespace>
-    <Version>1.0.1.0</Version>
+    <Version>1.0.1.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

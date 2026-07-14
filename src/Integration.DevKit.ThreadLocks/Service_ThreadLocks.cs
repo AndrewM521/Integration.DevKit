@@ -4,9 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.Core;
 using Integration.DevKit.ThreadLocks.Contracts;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -45,20 +43,6 @@ public static class Service_ThreadLocks
         services.TryAddSingleton<IThreadLockManager, ThreadLockManager>();
 
         return services;
-    }
-
-    /// <summary>
-    /// Registers the <see cref="IThreadLockManager"/> and its implementation as a singleton service.
-    /// </summary>
-    /// <returns>
-    /// The same <see cref="IServiceCollection"/> instance so that multiple calls can be chained.
-    /// </returns>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void AddThreadLocks_OnDemand()
-    {
-        OnDemand_Registry.Services.AddThreadLocks();
     }
 
     /// <summary>

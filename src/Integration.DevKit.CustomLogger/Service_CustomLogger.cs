@@ -1,5 +1,4 @@
-﻿using Integration.DevKit.Core;
-using Integration.DevKit.CustomLogger.Contracts;
+﻿using Integration.DevKit.CustomLogger.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -47,25 +46,6 @@ public static class Service_CustomLogger
         services.TryAddSingleton<ILogFileRegistry, LogFileRegistry>();
 
         return services;
-    }
-
-    /// <summary>
-    /// Registers the custom logging infrastructure, including settings, the logger manager, and the log registry.
-    /// </summary>
-    /// <param name="configuration">The <see cref="IConfiguration"/> instance used to bind logging settings.</param>
-    /// <returns>The modified <see cref="IServiceCollection"/> for further chaining.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="configuration"/> is null.</exception>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void AddCustomLogging_OnDemand(IConfiguration configuration)
-    {
-        if (configuration == null)
-        {
-            throw new ArgumentNullException(nameof(configuration));
-        }
-
-        OnDemand_Registry.Services.AddCustomLogging(configuration);
     }
 
     /// <summary>

@@ -4,7 +4,6 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.Core;
 using Integration.DevKit.ProcessLauncher.Contracts;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -43,20 +42,6 @@ public static class Service_ProcessLauncher
         services.TryAddSingleton<IProcessManager, ProcessManager>();
 
         return services;
-    }
-
-    /// <summary>
-    /// Adds the process launcher services to the specified <see cref="IServiceCollection"/>.
-    /// </summary>
-    /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
-    /// <exception cref="ArgumentNullException">
-    /// </exception>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void AddProcessLauncher_OnDemand()
-    {
-        OnDemand_Registry.Services.AddProcessLauncher();
     }
 
     /// <summary>

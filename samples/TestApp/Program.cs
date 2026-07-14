@@ -6,6 +6,7 @@
 
 using Integration.DevKit.Core;
 using Integration.DevKit.Core.Configuration;
+using Integration.DevKit.Core.OnDemand;
 using Integration.DevKit.CredentialMgmt;
 using Integration.DevKit.CustomLogger;
 using Integration.DevKit.CustomLogger.Flusher;
@@ -53,36 +54,39 @@ public class Program
         var builder = Host.CreateDefaultBuilder(args)
             .ConfigureServices((context, services) =>
             {
-                services.AddCustomLogging(decryptedConfig);
-                services.AddCustomLogFlusher(decryptedConfig);
-                services.AddProcessLauncher();
-                services.AddRESTApiMgmt(decryptedConfig);
-                services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
-                services.AddThreadLocks();
-                services.AddThreadSafeItems();
+                //services.AddCustomLogging(decryptedConfig);
+                //services.AddCustomLogFlusher(decryptedConfig);
+                //services.AddProcessLauncher();
+                //services.AddRESTApiMgmt(decryptedConfig);
+                //services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
+                //services.AddThreadLocks();
+                //services.AddThreadSafeItems();
                 //services.AddTaskMgmt(decryptedConfig);
-                services.AddSQLMgmt(decryptedConfig);
+                //services.AddSQLMgmt(decryptedConfig);
 
                 // Register your app entry
                 services.AddSingleton<AppEntry>();
             });
 
-        //Service_CustomLogger.AddCustomLogging_OnDemand(decryptedConfig);
-        //Service_CustomLogFlusher.AddCustomLogFlusher_OnDemand(decryptedConfig);
-        //Service_ProcessLauncher.AddProcessLauncher_OnDemand();
-        //Service_RESTApiMgmt.AddRESTApiMgmt_OnDemand(decryptedConfig);
-        //Service_ThreadLocks.AddThreadLocks_OnDemand();
-        //Service_ThreadSafeItems.AddThreadSafeItems_OnDemand();
-        //Service_TaskMgmt.AddTaskMgmt_OnDemand(decryptedConfig);
-        //Service_SQLMgmt.AddSQLMgmt_OnDemand(decryptedConfig);
-        //Service_CredentialMgmt.AddFileSecretStore_OnDemand("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
+        OnDemandHost.ConfigureServices(services =>
+        {
+            services.AddCustomLogging(decryptedConfig);
+            services.AddCustomLogFlusher(decryptedConfig);
+            services.AddProcessLauncher();
+            services.AddRESTApiMgmt(decryptedConfig);
+            services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
+            services.AddThreadLocks();
+            services.AddThreadSafeItems();
+            services.AddTaskMgmt(decryptedConfig);
+            services.AddSQLMgmt(decryptedConfig);
+        });
+
+        await OnDemandHost.StartAsync();
 
         var app = builder.Build();
-
+        
         //var serviceProvider = app.Services;
-        var serviceProvider = OnDemand_Registry.GetServiceProvider(decryptedConfig);
-
-        var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+        var serviceProvider = OnDemandHost.Services;
 
         Service_CustomLogger.Initialize(serviceProvider);
         Service_CustomLogFlusher.Initialize(serviceProvider);

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Integration.DevKit.Core;
+namespace Integration.DevKit.Core.OnDemand;
 
 /// <summary>
 /// Provides a centralized, lazily-initialized shared service container 
@@ -9,14 +9,14 @@ namespace Integration.DevKit.Core;
 /// </summary>
 public static class OnDemand_Registry
 {
-    private static readonly IServiceCollection _services = new ServiceCollection();
+    private static readonly IServiceCollection _serviceCollection = new ServiceCollection();
     private static IServiceProvider? _serviceProvider;
     private static readonly object _lock = new();
 
     /// <summary>
     /// Gets the shared service collection. Register on-demand dependencies here.
     /// </summary>
-    public static IServiceCollection Services => _services;
+    public static IServiceCollection ServiceCollection => _serviceCollection;
 
     /// <summary>
     /// Builds or retrieves the global on-demand service provider.
@@ -31,12 +31,12 @@ public static class OnDemand_Registry
             if (_serviceProvider == null || forceRebuild)
             {
                 // Optionally inject the configuration into the container if provided
-                if (configuration != null && !_services.Any(d => d.ServiceType == typeof(IConfiguration)))
+                if (configuration != null && !_serviceCollection.Any(d => d.ServiceType == typeof(IConfiguration)))
                 {
-                    _services.AddSingleton(configuration);
+                    _serviceCollection.AddSingleton(configuration);
                 }
 
-                _serviceProvider = _services.BuildServiceProvider();
+                _serviceProvider = _serviceCollection.BuildServiceProvider();
             }
         }
 

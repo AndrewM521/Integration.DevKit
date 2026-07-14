@@ -4,7 +4,6 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.Core;
 using Integration.DevKit.RESTApiMgmt.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,24 +39,6 @@ public static class Service_RESTApiMgmt
         services.AddHttpClient();
 
         return services;
-    }
-
-    /// <summary>
-    /// Adds the API management infrastructure to the service collection
-    /// </summary>
-    /// <param name="configuration">The application configuration used to bind <see cref="ApiManagerSettings"/>.</param>
-    /// <returns>The original <see cref="IServiceCollection"/> for chaining calls.</returns>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void AddRESTApiMgmt_OnDemand(IConfiguration configuration)
-    {
-        if (configuration == null)
-        {
-            throw new ArgumentNullException(nameof(configuration));
-        }
-
-        OnDemand_Registry.Services.AddRESTApiMgmt(configuration);
     }
 
     /// <summary>

@@ -4,10 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.Core;
-using Integration.DevKit.ThreadLocks;
 using Integration.DevKit.ThreadLocks.Contracts;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -45,21 +42,6 @@ public static class Service_ThreadSafeItems
         services.TryAddSingleton<ThreadSafeFileIO>();
 
         return services;
-    }
-
-    /// <summary>
-    /// Adds the <see cref="ThreadSafeFileIO"/> service to the service collection as a singleton.
-    /// </summary>
-    /// <returns>
-    /// The same <see cref="IServiceCollection"/> instance to support a fluent configuration syntax.
-    /// </returns>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void AddThreadSafeItems_OnDemand()
-    {
-        OnDemand_Registry.Services.AddThreadLocks();
-        OnDemand_Registry.Services.AddThreadSafeItems();
     }
 
     /// <summary>

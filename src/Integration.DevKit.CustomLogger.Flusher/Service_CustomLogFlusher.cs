@@ -1,10 +1,8 @@
-﻿using Integration.DevKit.Core;
-using Integration.DevKit.CustomLogger.Contracts;
+﻿using Integration.DevKit.CustomLogger.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 
 namespace Integration.DevKit.CustomLogger.Flusher;
 
@@ -54,26 +52,6 @@ public static class Service_CustomLogFlusher
         services.TryAddSingleton<ILogFlusher>(sp => sp.GetRequiredService<LogFlusher>());
 
         return services;
-    }
-
-    /// <summary>
-    /// Registers the <see cref="LogFlusher"/> as a singleton and a hosted background service.
-    /// </summary>
-    /// <param name="configuration">The <see cref="IConfiguration"/> instance used to bind flusher settings.</param>
-    /// <returns>The same <see cref="IServiceCollection"/> instance for chaining calls.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="configuration"/> is null.</exception>
-    /// <remarks>
-    /// This should only be used if your service provider is already built as this adds to an internal service collection. 
-    /// </remarks>
-    public static void AddCustomLogFlusher_OnDemand(IConfiguration configuration)
-    {
-        if (configuration == null)
-        {
-            throw new ArgumentNullException(nameof(configuration));
-        }
-
-        OnDemand_Registry.Services.AddCustomLogging(configuration);
-        OnDemand_Registry.Services.AddCustomLogFlusher(configuration);
     }
 
     /// <summary>
