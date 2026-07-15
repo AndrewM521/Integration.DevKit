@@ -13,9 +13,4 @@
     <ProjectReference Include="..\Integration.DevKit.Core\Integration.DevKit.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="Options\" />
-  </ItemGroup>
-
 </Project>
