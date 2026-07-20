@@ -19,13 +19,19 @@ namespace Integration.DevKit.RESTApiMgmt;
 /// </summary>
 public class ApiClient : IApiClient
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets or sets the display name for this API client instance.
+    /// </summary>
     public string ClientName { get; set; }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the runtime configuration used by this client.
+    /// </summary>
     public ApiClientSettings RuntimeSettings { get; private set; }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the metrics collector associated with this client.
+    /// </summary>
     public IApiClientMetrics ClientMetrics => _metrics;
 
     ApiClientSettings IApiClient.RuntimeSettings => throw new NotImplementedException();
@@ -96,10 +102,10 @@ public class ApiClient : IApiClient
 
     #region Asyncronous Methods
     /// <inheritdoc/>
-    public async Task<ApiOperationResult<string>> GetAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
+    public async Task<ApiOperationResult<string>> GetAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Get, () =>
-            ApiRequest.GetAsync(_httpClient, endpointUrl, requestHeaders));
+            ApiRequest.GetAsync(_httpClient, endpointUrl, httpContent, requestHeaders));
     }
 
     /// <inheritdoc/>
@@ -117,10 +123,10 @@ public class ApiClient : IApiClient
     }
 
     /// <inheritdoc/>
-    public async Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
+    public async Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Delete, () =>
-            ApiRequest.DeleteAsync(_httpClient, endpointUrl, requestHeaders));
+            ApiRequest.DeleteAsync(_httpClient, endpointUrl, httpContent, requestHeaders));
     }
 
     // A generic wrapper to handle the "Orchestration" (Metrics + Rate Limiting)
@@ -155,9 +161,9 @@ public class ApiClient : IApiClient
     #region Syncronous Methods
 
     /// <inheritdoc/>
-    public ApiOperationResult<string> Get(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
+    public ApiOperationResult<string> Get(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
-        return GetAsync(endpointUrl, requestHeaders).GetAwaiter().GetResult();
+        return GetAsync(endpointUrl, httpContent, requestHeaders).GetAwaiter().GetResult();
     }
 
     /// <inheritdoc/>
@@ -173,9 +179,9 @@ public class ApiClient : IApiClient
     }
 
     /// <inheritdoc/>
-    public ApiOperationResult<string> Delete(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
+    public ApiOperationResult<string> Delete(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
-        return DeleteAsync(endpointUrl, requestHeaders).GetAwaiter().GetResult();
+        return DeleteAsync(endpointUrl, httpContent, requestHeaders).GetAwaiter().GetResult();
     }
     #endregion
 

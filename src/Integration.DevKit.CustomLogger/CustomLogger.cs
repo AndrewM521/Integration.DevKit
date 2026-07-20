@@ -17,10 +17,14 @@ public class CustomLogger : ICustomLogger
     private string _categoryName = string.Empty;
     private bool _outputToConsole = false;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the logger category name used for emitted log messages.
+    /// </summary>
     public string CategoryName => _categoryName;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets a value indicating whether this logger is currently enabled.
+    /// </summary>
     public bool IsLoggerEnabled => _isLoggerEnabled;
 
     /// <summary>
@@ -135,11 +139,15 @@ public class CustomLogger : ICustomLogger
 }
 
 /// <summary>
-/// A no-op implementation of <see cref="IDisposable"/> used to satisfy the <see cref="ILogger.BeginScope"/> contract.
+/// Represents a no-op scope used when logical operation scoping is not supported.
 /// </summary>
 internal sealed class NullScope : IDisposable
 {
     public static readonly NullScope Instance = new NullScope();
+
+    /// <summary>
+    /// Initializes a no-op scope used when logical operation scoping is not supported.
+    /// </summary>
     private NullScope() { }
     public void Dispose() { }
 }

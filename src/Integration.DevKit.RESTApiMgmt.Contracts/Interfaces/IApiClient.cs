@@ -36,9 +36,10 @@ public interface IApiClient : IAsyncDisposable
     /// Sends an asynchronous GET request to the specified endpoint.
     /// </summary>
     /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">Optional <see cref="HttpContent"/> request content sent to the server.</param>
     /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
     /// <returns>A task representing the result as an <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
-    public Task<ApiOperationResult<string>> GetAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null);
+    public Task<ApiOperationResult<string>> GetAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null);
 
     /// <summary>
     /// Sends an asynchronous POST request with an optional specified body to the specified endpoint.
@@ -62,9 +63,10 @@ public interface IApiClient : IAsyncDisposable
     /// Sends an asynchronous DELETE request to the specified endpoint.
     /// </summary>
     /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">Optional <see cref="HttpContent"/> request content sent to the server.</param>
     /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
     /// <returns>A task representing the result as an <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
-    public Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null);
+    public Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null);
     #endregion
 
     #region Synchronous HTTP Methods
@@ -72,9 +74,10 @@ public interface IApiClient : IAsyncDisposable
     /// Sends a synchronous GET request to the specified endpoint.
     /// </summary>
     /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">Optional <see cref="HttpContent"/> request content sent to the server.</param>
     /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
     /// <returns>An <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
-    public ApiOperationResult<string> Get(string endpointUrl, Dictionary<string, string>? requestHeaders = null);
+    public ApiOperationResult<string> Get(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null);
 
     /// <summary>
     /// Sends a synchronous POST request with an optional specified body to the specified endpoint.
@@ -98,9 +101,10 @@ public interface IApiClient : IAsyncDisposable
     /// Sends a synchronous DELETE request to the specified endpoint.
     /// </summary>
     /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">Optional <see cref="HttpContent"/> request content sent to the server.</param>
     /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
     /// <returns>An <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
-    public ApiOperationResult<string> Delete(string endpointUrl, Dictionary<string, string>? requestHeaders = null);
+    public ApiOperationResult<string> Delete(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null);
     #endregion
 
     #region Credentials

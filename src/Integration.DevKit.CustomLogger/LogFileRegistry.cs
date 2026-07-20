@@ -10,7 +10,9 @@ namespace Integration.DevKit.CustomLogger;
 /// </summary>
 internal class LogFileRegistry : ILogFileRegistry
 {
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the number of pending log messages currently buffered in the registry.
+    /// </summary>
     public int Count => _logFileRegistry.Count;
 
     private ConcurrentQueue<string> _logFileRegistry = new ConcurrentQueue<string>();

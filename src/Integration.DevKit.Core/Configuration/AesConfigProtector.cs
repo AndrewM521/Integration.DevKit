@@ -12,6 +12,9 @@ public sealed class AesConfigProtector : IConfigProtector
     private readonly byte[] _key;
     private readonly byte[] _iv;
 
+    /// <summary>
+    /// Gets the identifier for the encryption algorithm implemented by this protector.
+    /// </summary>
     public string Name => "AES256";
 
     /// <summary>

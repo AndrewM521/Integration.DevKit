@@ -29,7 +29,7 @@ internal sealed class ThreadLockInfo_Async : IDisposable
     public int RefCount = 0;
 
     /// <summary>
-    /// The timestamp of the last time this lock was accessed or updated.
+    /// Gets the timestamp of the last time this lock was accessed or updated.
     /// </summary>
     public DateTime LastAccessTime = DateTime.MinValue;
 

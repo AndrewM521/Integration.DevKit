@@ -22,7 +22,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace TestApp;
@@ -54,34 +53,34 @@ public class Program
         var builder = Host.CreateDefaultBuilder(args)
             .ConfigureServices((context, services) =>
             {
-                //services.AddCustomLogging(decryptedConfig);
-                //services.AddCustomLogFlusher(decryptedConfig);
-                //services.AddProcessLauncher();
-                //services.AddRESTApiMgmt(decryptedConfig);
-                //services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
-                //services.AddThreadLocks();
-                //services.AddThreadSafeItems();
-                //services.AddTaskMgmt(decryptedConfig);
-                //services.AddSQLMgmt(decryptedConfig);
+                services.AddCustomLogging(decryptedConfig);
+                services.AddCustomLogFlusher(decryptedConfig);
+                services.AddProcessLauncher();
+                services.AddRESTApiMgmt(decryptedConfig);
+                services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
+                services.AddThreadLocks();
+                services.AddThreadSafeItems();
+                services.AddTaskMgmt(decryptedConfig);
+                services.AddSQLMgmt(decryptedConfig);
 
                 // Register your app entry
                 services.AddSingleton<AppEntry>();
             });
 
-        OnDemandHost.ConfigureServices(services =>
-        {
-            services.AddCustomLogging(decryptedConfig);
-            services.AddCustomLogFlusher(decryptedConfig);
-            services.AddProcessLauncher();
-            services.AddRESTApiMgmt(decryptedConfig);
-            services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
-            services.AddThreadLocks();
-            services.AddThreadSafeItems();
-            services.AddTaskMgmt(decryptedConfig);
-            services.AddSQLMgmt(decryptedConfig);
-        });
+        //OnDemandHost.ConfigureServices(services =>
+        //{
+        //    services.AddCustomLogging(decryptedConfig);
+        //    services.AddCustomLogFlusher(decryptedConfig);
+        //    services.AddProcessLauncher();
+        //    services.AddRESTApiMgmt(decryptedConfig);
+        //    services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
+        //    services.AddThreadLocks();
+        //    services.AddThreadSafeItems();
+        //    services.AddTaskMgmt(decryptedConfig);
+        //    services.AddSQLMgmt(decryptedConfig);
+        //});
 
-        await OnDemandHost.StartAsync();
+        //await OnDemandHost.StartAsync();
 
         var app = builder.Build();
         

@@ -17,28 +17,44 @@ namespace Integration.DevKit.TaskMgmt;
 /// </remarks>
 public sealed class ManagedTaskIterationHandle : IManagedTaskIterationHandle
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the sequence number for this iteration.
+    /// </summary>
     public int IterationNumber => _taskIterationRuntime.IterationNumber;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the current state of the iteration.
+    /// </summary>
     public ManagedTaskState State => _taskIterationRuntime.State;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the UTC start time for this iteration.
+    /// </summary>
     public DateTime StartDTM => _taskIterationRuntime.StartDTM;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the UTC end time for this iteration, if it has completed.
+    /// </summary>
     public DateTime EndDTM => _taskIterationRuntime.EndDTM;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the cancellation token associated with this iteration.
+    /// </summary>
     public CancellationToken CancelationToken => _taskIterationRuntime.Token;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the total runtime of this iteration.
+    /// </summary>
     public TimeSpan Runtime => _taskIterationRuntime.Runtime;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets a value indicating whether this iteration is currently running.
+    /// </summary>
     public bool IsRunning => _taskIterationRuntime.IsRunning;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the parent task handle that owns this iteration.
+    /// </summary>
     public IManagedTaskHandle TaskHandle => _taskIterationRuntime.TaskHandle;
 
     private readonly ManagedTaskIterationRuntime _taskIterationRuntime;
