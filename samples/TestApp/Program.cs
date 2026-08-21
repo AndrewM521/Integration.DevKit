@@ -84,8 +84,8 @@ public class Program
 
         var app = builder.Build();
         
-        //var serviceProvider = app.Services;
-        var serviceProvider = OnDemandHost.Services;
+        var serviceProvider = app.Services;
+        //var serviceProvider = OnDemandHost.Services;
 
         Service_CustomLogger.Initialize(serviceProvider);
         Service_CustomLogFlusher.Initialize(serviceProvider);
@@ -114,9 +114,9 @@ public class AppEntry
 
     public async Task RunAsync(string[] args)
     {
-        //await TestCoreClasses();
+        await TestCoreClasses();
         //TestCustomLogger();
-        await TestCustomLoggerFlusher();
+        //await TestCustomLoggerFlusher();
         //await TestProcessLauncher();
         //await TestApiManagement();
         //TestCredentialManagement();
@@ -1300,7 +1300,13 @@ public class AppEntry
         //    throw json.Exception;
         //}
 
-        json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json3.txt");
+        //json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json3.txt");
+        //if (!json.MethodSuccess)
+        //{
+        //    throw json.Exception;
+        //}
+
+        json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json4.txt");
         if (!json.MethodSuccess)
         {
             throw json.Exception;
@@ -1356,14 +1362,16 @@ public class AppEntry
 
         //result = JsonUtils.GetDictionary(json.Result, "data.dictionary1", JsonExtractionLayout.PreserveRoot).Result; //Sub Dictionary
         //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.activities.0.id", "data.jobs.0.id" }).Result; //Sub Dictionary List Item Object
-        
-        result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.empty", "data.dictionary1" }).Result; //Dictionary List
+
+        //result = JsonUtils.GetDictionary(json.Result, new List<string> { "data.empty", "data.dictionary1" }).Result; //Dictionary List
         //result = JsonUtils.GetDictionaryList(json.Result, "data.empty").Result; //Dictionary List
         //result = JsonUtils.GetList<string>(json.Result, "data.empty").Result; //Dictionary List
 
         //result = JsonUtils.ParseAndFilterJson<int>(json.Result, new List<string> { "data.empty", "data.dictionary1" }).Result; //Dictionary List
 
         //result = JsonUtils.GetDictionaryList(json.Result, new List<string> { "data.activities.id", "data.activities.name" }).Result; //Sub Dictionary List Same Parent
+
+        result = JsonUtils.GetDictionaryList(json.Result, "data.comments").Result;
 
         string jsonResult = JsonUtils.SerializeObjectToJson(result).Result;
 
