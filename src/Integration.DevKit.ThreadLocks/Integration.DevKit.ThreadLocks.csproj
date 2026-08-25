@@ -7,6 +7,8 @@
     <Title>DevKit.ThreadLocks</Title>
     <RootNamespace>Integration.DevKit.ThreadLocks</RootNamespace>
     <Version>1.0.1.1</Version>
+    <PackageId>Integration.DevKit.ThreadLocks</PackageId>
+    <PackageProjectUrl>https://www.nuget.org/packages/Integration.DevKit.ThreadLocks</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

@@ -13,25 +13,39 @@ namespace Integration.DevKit.TaskMgmt;
 /// </summary>
 public sealed class ManagedTaskHandle : IManagedTaskHandle
 {
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the unique key used to identify the managed task.
+    /// </summary>
     public string TaskKey => _managedTaskRuntime.UserTask.TaskKey;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the current execution state of the managed task.
+    /// </summary>
     public ManagedTaskState State => _managedTaskRuntime.State;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the task that is currently executing the managed task lifecycle, if any.
+    /// </summary>
     public Task? RunningTask => _managedTaskRuntime.LifecycleTask;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the number of iterations completed or executed for this task so far.
+    /// </summary>
     public int CurrentIterationCount => _managedTaskRuntime.IterationCount;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the UTC start time for the managed task.
+    /// </summary>
     public DateTime StartDTM => _managedTaskRuntime.StartDTM;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the UTC end time for the managed task, if it has completed.
+    /// </summary>
     public DateTime EndDTM => _managedTaskRuntime.EndDTM;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the total runtime of the managed task.
+    /// </summary>
     public TimeSpan Runtime => _managedTaskRuntime.Runtime;
 
     private readonly ManagedTaskRuntime _managedTaskRuntime;

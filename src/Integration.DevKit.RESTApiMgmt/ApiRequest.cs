@@ -14,13 +14,19 @@ public static class ApiRequest
     /// </summary>
     /// <param name="client">The <see cref="HttpClient"/> instance to use for the request.</param>
     /// <param name="endpointUrl">The relative or absolute URL of the API endpoint.</param>
+    /// <param name="content">Optional HTTP body content sent to the server.</param>
     /// <param name="headers">Optional dictionary of HTTP headers to include in the request.</param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> GetAsync(HttpClient client, string endpointUrl, Dictionary<string, string>? headers = null)
+    public static async Task<ApiOperationResult<string>> GetAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null)
     {
         var finalUri = ResolveUri(client, endpointUrl);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, finalUri);
+
+        if (content != null)
+        {
+            request.Content = content;
+        }
 
         AddHeadersToRequest(request, headers);
         
@@ -32,15 +38,20 @@ public static class ApiRequest
     /// </summary>
     /// <param name="client">The <see cref="HttpClient"/> instance to use for the request.</param>
     /// <param name="endpointUrl">The relative or absolute URL of the API endpoint.</param>
-    /// <param name="content">The HTTP request content sent to the server.</param>
+    /// <param name="content">Optional HTTP body content sent to the server.</param>
     /// <param name="headers">Optional dictionary of HTTP headers to include in the request.</param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
     public static async Task<ApiOperationResult<string>> PostAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null)
     {
         var finalUri = ResolveUri(client, endpointUrl);
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, finalUri) { Content = content };
-        
+        using var request = new HttpRequestMessage(HttpMethod.Post, finalUri);
+
+        if (content != null)
+        {
+            request.Content = content;
+        }
+
         AddHeadersToRequest(request, headers);
         
         return await SendRequestAsync(client, request);
@@ -70,14 +81,20 @@ public static class ApiRequest
     /// </summary>
     /// <param name="client">The <see cref="HttpClient"/> instance to use for the request.</param>
     /// <param name="endpointUrl">The relative or absolute URL of the API endpoint.</param>
+    /// <param name="content">Optional HTTP body content sent to the server.</param>
     /// <param name="headers">Optional dictionary of HTTP headers to include in the request.</param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> DeleteAsync(HttpClient client, string endpointUrl, Dictionary<string, string>? headers = null)
+    public static async Task<ApiOperationResult<string>> DeleteAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null)
     {
         var finalUri = ResolveUri(client, endpointUrl);
 
         using var request = new HttpRequestMessage(HttpMethod.Delete, finalUri);
-        
+
+        if (content != null)
+        {
+            request.Content = content;
+        }
+
         AddHeadersToRequest(request, headers);
         
         return await SendRequestAsync(client, request);

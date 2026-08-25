@@ -19,19 +19,24 @@ namespace Integration.DevKit.RESTApiMgmt;
 /// </summary>
 public class ApiClient : IApiClient
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets or sets the display name for this API client instance.
+    /// </summary>
     public string ClientName { get; set; }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the runtime configuration used by this client.
+    /// </summary>
     public ApiClientSettings RuntimeSettings { get; private set; }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the metrics collector associated with this client.
+    /// </summary>
     public IApiClientMetrics ClientMetrics => _metrics;
 
-    ApiClientSettings IApiClient.RuntimeSettings => throw new NotImplementedException();
-
     private readonly HttpClient _httpClient;
-    private readonly SemaphoreSlim _rateLimiter;
+    private readonly IApiManager _apiManager;
+    private SemaphoreSlim _rateLimiter = null!;
     private readonly ApiClientMetrics _metrics;
     private readonly ICustomLogger? _logger;
 
@@ -53,53 +58,78 @@ public class ApiClient : IApiClient
 
         _secretStoreFileName = $"ApiClient({ClientName})";
         _logger = logger;
+        _apiManager = apiManager;
 
         RuntimeSettings = clientSettings;
-
-        if (RuntimeSettings.MaxConcurrentRequests < 0)
-        {
-            RuntimeSettings.MaxConcurrentRequests = int.MaxValue;
-        }
-
-        if (RuntimeSettings.HttpTimeout_Seconds != null)
-        {
-            if (RuntimeSettings.HttpTimeout_Seconds < 0)
-            {
-                RuntimeSettings.HttpTimeout_Seconds = 0;
-            }
-        }
-        else
-        {
-            RuntimeSettings.HttpTimeout_Seconds = apiManager.RuntimeSettings.Default_HttpTimeout_Seconds;
-        }
-
         _httpClient = httpClient;
-        _httpClient.BaseAddress = new Uri(RuntimeSettings.BaseUrl);
-
-        if (RuntimeSettings.HttpTimeout_Seconds != 0)
-        {
-            _httpClient.Timeout = TimeSpan.FromSeconds((double)RuntimeSettings.HttpTimeout_Seconds);
-        }
-        else
-        {
-            _httpClient.Timeout = Timeout.InfiniteTimeSpan;
-        }
-
-        foreach (var header in RuntimeSettings.DefaultHeaders)
-        {
-            AddDefaultHeader(header.Key, header.Value);
-        }
-
-        _rateLimiter = new SemaphoreSlim(RuntimeSettings.MaxConcurrentRequests);
         _metrics = new ApiClientMetrics();
+
+        Initialize();
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Re-derives everything this client caches from <see cref="RuntimeSettings"/> at construction time
+    /// (the <see cref="HttpClient"/>'s base address, timeout, and default headers, plus the concurrent-request
+    /// rate limiter). Call this after mutating <see cref="RuntimeSettings"/> in place so the change takes effect.
+    /// </remarks>
+    public NullOperationResult Initialize()
+    {
+        var result = new NullOperationResult();
+
+        try
+        {
+            if (RuntimeSettings.MaxConcurrentRequests < 0)
+            {
+                RuntimeSettings.MaxConcurrentRequests = int.MaxValue;
+            }
+
+            if (RuntimeSettings.HttpTimeout_Seconds != null)
+            {
+                if (RuntimeSettings.HttpTimeout_Seconds < 0)
+                {
+                    RuntimeSettings.HttpTimeout_Seconds = 0;
+                }
+            }
+            else
+            {
+                RuntimeSettings.HttpTimeout_Seconds = _apiManager.RuntimeSettings.Default_HttpTimeout_Seconds;
+            }
+
+            _httpClient.BaseAddress = new Uri(RuntimeSettings.BaseUrl);
+
+            if (RuntimeSettings.HttpTimeout_Seconds != 0)
+            {
+                _httpClient.Timeout = TimeSpan.FromSeconds((double)RuntimeSettings.HttpTimeout_Seconds);
+            }
+            else
+            {
+                _httpClient.Timeout = Timeout.InfiniteTimeSpan;
+            }
+
+            foreach (var header in RuntimeSettings.DefaultHeaders)
+            {
+                AddDefaultHeader(header.Key, header.Value);
+            }
+
+            var oldRateLimiter = _rateLimiter;
+            _rateLimiter = new SemaphoreSlim(RuntimeSettings.MaxConcurrentRequests);
+            oldRateLimiter?.Dispose();
+
+            return result.SetMethodSuccess();
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
     }
 
     #region Asyncronous Methods
     /// <inheritdoc/>
-    public async Task<ApiOperationResult<string>> GetAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
+    public async Task<ApiOperationResult<string>> GetAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Get, () =>
-            ApiRequest.GetAsync(_httpClient, endpointUrl, requestHeaders));
+            ApiRequest.GetAsync(_httpClient, endpointUrl, httpContent, requestHeaders));
     }
 
     /// <inheritdoc/>
@@ -117,10 +147,10 @@ public class ApiClient : IApiClient
     }
 
     /// <inheritdoc/>
-    public async Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
+    public async Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Delete, () =>
-            ApiRequest.DeleteAsync(_httpClient, endpointUrl, requestHeaders));
+            ApiRequest.DeleteAsync(_httpClient, endpointUrl, httpContent, requestHeaders));
     }
 
     // A generic wrapper to handle the "Orchestration" (Metrics + Rate Limiting)
@@ -155,9 +185,9 @@ public class ApiClient : IApiClient
     #region Syncronous Methods
 
     /// <inheritdoc/>
-    public ApiOperationResult<string> Get(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
+    public ApiOperationResult<string> Get(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
-        return GetAsync(endpointUrl, requestHeaders).GetAwaiter().GetResult();
+        return GetAsync(endpointUrl, httpContent, requestHeaders).GetAwaiter().GetResult();
     }
 
     /// <inheritdoc/>
@@ -173,9 +203,9 @@ public class ApiClient : IApiClient
     }
 
     /// <inheritdoc/>
-    public ApiOperationResult<string> Delete(string endpointUrl, Dictionary<string, string>? requestHeaders = null)
+    public ApiOperationResult<string> Delete(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
-        return DeleteAsync(endpointUrl, requestHeaders).GetAwaiter().GetResult();
+        return DeleteAsync(endpointUrl, httpContent, requestHeaders).GetAwaiter().GetResult();
     }
     #endregion
 

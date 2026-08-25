@@ -7,6 +7,8 @@
     <Title>DevKit.ThreadSafeItems</Title>
     <RootNamespace>Integration.DevKit.ThreadSafeItems</RootNamespace>
     <Version>1.0.1.1</Version>
+    <PackageId>Integration.DevKit.ThreadSafeItems</PackageId>
+    <PackageProjectUrl>https://www.nuget.org/packages/Integration.DevKit.ThreadSafeItems</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

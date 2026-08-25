@@ -4,6 +4,9 @@ namespace Integration.DevKit.Core;
 
 public sealed class Base64ConfigProtector : IConfigProtector
 {
+    /// <summary>
+    /// Gets the identifier for the base-64 encoding strategy implemented by this protector.
+    /// </summary>
     public string Name => "BASE64";
 
     public string Encrypt(string plainText)

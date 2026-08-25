@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace Integration.DevKit.Core;
@@ -827,35 +828,73 @@ public static class JsonUtils
         }
         return targetList;
     }
-
     private static OperationResult<string> NormalizeJsonKeys(string rawJSON)
     {
-        var result = new OperationResult<string>();
-
+        OperationResult<string> operationResult = new OperationResult<string>();
         try
         {
             if (string.IsNullOrWhiteSpace(rawJSON))
             {
-                return result.SetMethodSuccess(rawJSON);
+                return operationResult.SetMethodSuccess(rawJSON);
             }
 
-            // Regex explanation: Targets text wrapped in double quotes followed by a colon (JSON keys) and evaluates them to replace internal literal dots.
-            string normalizedJson = Regex.Replace(rawJSON, @"("".*?"")\s*:", match =>
-            {
-                var keyWithoutColon = match.Groups[1].Value;
-                if (keyWithoutColon.Contains('.'))
-                {
-                    // Replace internal dots inside the key string with an underscore
-                    return keyWithoutColon.Replace(".", "_") + ":";
-                }
-                return match.Value;
-            });
+            JsonNode? root = JsonNode.Parse(rawJSON, nodeOptions: null,
+                documentOptions: new JsonDocumentOptions { AllowTrailingCommas = true });
 
-            return result.SetMethodSuccess(normalizedJson);
+            JsonNode? normalized = NormalizeNode(root);
+
+            string methodSuccess = normalized?.ToJsonString(new JsonSerializerOptions
+            {
+                WriteIndented = false
+            }) ?? rawJSON;
+
+            return operationResult.SetMethodSuccess(methodSuccess);
         }
         catch (Exception ex)
         {
-            return result.SetMethodFailure(ex);
+            return operationResult.SetMethodFailure(ex);
+        }
+    }
+
+    private static JsonNode? NormalizeNode(JsonNode? node)
+    {
+        switch (node)
+        {
+            case JsonObject obj:
+                {
+                    // Build a new object so we control key order + renamed keys
+                    var newObj = new JsonObject();
+                    foreach (var kvp in obj)
+                    {
+                        string key = kvp.Key;
+                        string newKey = key.Contains('.') ? key.Replace(".", "_") : key;
+
+                        // Detach child from old parent before reassigning (JsonNode allows only one parent)
+                        JsonNode? child = kvp.Value;
+                        if (child != null)
+                        {
+                            // Clone via re-parse of ToJsonString to safely detach, or use child.GetValueKind()
+                            child = child.DeepClone();
+                        }
+
+                        JsonNode? normalizedChild = NormalizeNode(child);
+                        newObj[newKey] = normalizedChild;
+                    }
+                    return newObj;
+                }
+            case JsonArray arr:
+                {
+                    var newArr = new JsonArray();
+                    foreach (var item in arr)
+                    {
+                        JsonNode? cloned = item?.DeepClone();
+                        newArr.Add(NormalizeNode(cloned));
+                    }
+                    return newArr;
+                }
+            default:
+                // JsonValue (string/number/bool/null) — leave untouched
+                return node;
         }
     }
 }

@@ -1,121 +1,162 @@
-# Integration DevKit
-A modular, high-performance .NET Core library packed with general-use utilities for everyday challenges. Designed for flexibility, this devkit allows you to use modules independently or together to streamline your development workflow.
+# Integration.DevKit
 
-## Architecture: Module / Contract System
-To keep your applications lightweight, this DevKit implements an Module/Contract separation pattern.
+Integration.DevKit is a .NET 8 SDK made up of small, independently-referenceable modules for the things most integration-style applications end up building anyway: protected configuration, structured logging, REST API access, SQL access, background task management, thread coordination, external process management, and file-based secret storage.
 
-- Contracts: Contains interfaces, DTOs, and lightweight models. Import this if you only need to define dependencies or implement custom providers.
+Every module follows the same three conventions, which makes the SDK predictable once you've learned one part of it:
 
-- Module: Contains the actual concrete implementation and logic. Import this only where you need the heavy lifting done.
+1. **Result objects instead of exceptions for expected failures.** Public methods return `OperationResult<T>` (or `NullOperationResult`, `NullableOperationResult<T>`, `ApiOperationResult<T>`) rather than throwing — check `MethodSuccess` before trusting `Result`. See [Core → Result types](core.md#result-types).
+2. **Register, build, initialize.** Each module has an `Add<Module>(...)` extension method called during `ConfigureServices`, and a static `Service_<Module>.Initialize(IServiceProvider)` call made once after the host is built. A few modules have an ordering dependency on another (documented per-module below); most don't.
+3. **Named clients/managers where it makes sense.** REST clients, SQL clients, and locks are all looked up by string name/key through a manager rather than constructed directly.
 
-This decoupled design minimizes dependencies and prevents assembly bloat in microservices or client applications.
+## Modules
 
-# Module Features
-Each module can be used completely independently. Below is a breakdown of what each module provides:
+| Module | What it's for | NuGet |
+| --- | --- | --- |
+| [Core](core.md) | Result types, configuration protection, file/directory/JSON/dictionary utilities, on-demand hosting. Depended on by every other module. | [Integration.DevKit.Core](https://www.nuget.org/packages/Integration.DevKit.Core) |
+| [Custom Logging](logging.md) | An `ILogger`-compatible logger with console, debug, and buffered file output, plus a background flush service. | [Integration.DevKit.CustomLogger](https://www.nuget.org/packages/Integration.DevKit.CustomLogger) &middot; [.Flusher](https://www.nuget.org/packages/Integration.DevKit.CustomLogger.Flusher) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.CustomLogger.Contracts) |
+| [REST API Management](rest-api.md) | Named `HttpClient`-backed clients with typed results, metrics, and optional secret-store-backed credentials. | [Integration.DevKit.RESTApiMgmt](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt.Contracts) |
+| [SQL Management](sql-management.md) | Named SQL clients, connection testing, command/data-reader helpers. | [Integration.DevKit.SQLMgmt](https://www.nuget.org/packages/Integration.DevKit.SQLMgmt) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.SQLMgmt.Contracts) |
+| [Thread Locks &amp; Thread-Safe File I/O](thread-locks.md) | Named sync/async locks; thread-safe file I/O built on top of them. | [Integration.DevKit.ThreadLocks](https://www.nuget.org/packages/Integration.DevKit.ThreadLocks) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.ThreadLocks.Contracts) &middot; [ThreadSafeItems](https://www.nuget.org/packages/Integration.DevKit.ThreadSafeItems) |
+| [Task Management](task-management.md) | Recurring/long-running background work with retry policies, iteration timing strategies, and run history. | [Integration.DevKit.TaskMgmt](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt.Contracts) |
+| [Process Launcher](process-launcher.md) | Starting and supervising external processes with output capture and cancellation. | [Integration.DevKit.ProcessLauncher](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher.Contracts) |
+| [Credential Management](credential-management.md) | File-based secret storage encrypted at rest, pluggable into the REST and SQL clients. | [Integration.DevKit.CredentialMgmt](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt.Contracts) |
 
-Module | Explanation
------- | -----------
-Core | Common extension methods, shared utilities, and object helper utilities
-CredentialMgmt | Runtime encryption/decryption of connection secrets. </br> Integrates with: </br> - Files 
-CustomLogger | Custom ILogger instances managed concurrently by category name. Automatically routes filtered, formatted logs to a buffered storage registry, debug output, or the console.
-ProcessLauncher | Spawns and manages OS-level subprocesses in a non-blocking background monitoring loop with built-in timeout handling. Tracks execution via a concurrent key-mapped manager and captures real-time asynchronous stream data (STDOUT/STDERR).
-RESTApiMgmt | Orchestrates HTTP requests with automatic rate-limiting, custom media-type formatting, and request performance metrics. Integrates with: CredentialMgmt for secure endpoint credentials, and manages concurrent clients by name.
+All packages are published under the [AndrewM5 NuGet profile](https://www.nuget.org/profiles/AndrewM5).
 
+## Requirements
 
-SQLMgmt
-Provides asynchronous and synchronous execution wrappers for commands and data readers. Integrates with: CredentialMgmt for secure connection string storage, and manages concurrent clients by name.
+- .NET 8 SDK or later
+- A host application using `Microsoft.Extensions.Hosting` (or [`OnDemandHost`](core.md#on-demand-hosting) if you don't already have one)
 
+## Installation
 
+Reference the projects you need directly, or consume the published NuGet packages:
 
-SQLManager
-Thread-Safe Client Management: A collection of SQLClient instances using a ConcurrentDictionary, automatically provisioning defaults if an unconfigured client is requested.
-Asynchronous Resource Cleanup: Iterates over all active SQLClients and triggers their individual Dispose() routines.
-Global Settings Diagnostics: Scans and logs all public instance configuration properties of the manager, cascade-logging individual client configurations when nested client dictionaries are encountered.
+```bash
+dotnet add reference src/Integration.DevKit.Core/Integration.DevKit.Core.csproj
+dotnet add reference src/Integration.DevKit.CustomLogger/Integration.DevKit.CustomLogger.csproj
+dotnet add reference src/Integration.DevKit.RESTApiMgmt/Integration.DevKit.RESTApiMgmt.csproj
+dotnet add reference src/Integration.DevKit.TaskMgmt/Integration.DevKit.TaskMgmt.csproj
+dotnet add reference src/Integration.DevKit.SQLMgmt/Integration.DevKit.SQLMgmt.csproj
+```
 
-SQLClient
-Secret-Store Secured Credentials: Encrypts/Decrypts connection strings, allowing secret store items to be priority over local appsetting values.
+Every module besides Core is independent of the others at compile time — take only what you need. `ThreadSafeItems` is the one exception, since it depends on `ThreadLocks` directly.
 
-Encapsulated Data Reader: Wraps SqlDataReader logic into a managed, asynchronous callback framework so consumer methods can read results without needing to manage data stream lifecycles.
-Command Interception Framework: Provides customizable callback hooks (Func<SqlCommand, Task>) allowing developers to programmatically configure parameter collections, query structures, or precise command timeouts safely before transmission.
+## Quick start
 
+```csharp
+using Integration.DevKit.CredentialMgmt;
+using Integration.DevKit.CustomLogger;
+using Integration.DevKit.CustomLogger.Flusher;
+using Integration.DevKit.ProcessLauncher;
+using Integration.DevKit.RESTApiMgmt;
+using Integration.DevKit.SQLMgmt;
+using Integration.DevKit.TaskMgmt;
+using Integration.DevKit.ThreadLocks;
+using Integration.DevKit.ThreadSafeItems;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
-Garbage Collection Optimization: Calls an explicit post-execution memory optimization macro (GCManager.CallGC_Collect) upon the completion of commands to aggressively free transient buffers and high-volume text payloads.
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: false)
+    .Build();
 
+var builder = Host.CreateDefaultBuilder(args)
+    .ConfigureServices((context, services) =>
+    {
+        // Modules with an ordering dependency are commented; everything else can be in any order.
+        services.AddCustomLogging(configuration);
+        services.AddCustomLogFlusher(configuration);   // requires AddCustomLogging first
+        services.AddThreadLocks();
+        services.AddThreadSafeItems();                 // requires AddThreadLocks first
+        services.AddRESTApiMgmt(configuration);
+        services.AddSQLMgmt(configuration);
+        services.AddTaskMgmt(configuration);
+        services.AddProcessLauncher();
+        services.AddFileSecretStore("MyApp", @"C:\MyApp\Secrets", @"C:\MyApp\Keys");
+    });
 
+var app = builder.Build();
 
-TaskMgmt
-Orchestrates the synchronous or parallel execution of developer-defined ManagedTask abstractions. Controls task lifecycles with strict concurrency limiters (SemaphoreSlim), hooks into host lifetime events for graceful shutdown, and handles complex multi-iteration execution policies—including custom timeout watchdogs, automated exception retries, and sequential or overlapping/parallel iteration strategies.
-Task Manager
-Task Lifecycle Initialization: Instantiates and validates tasks, configures execution runtimes, and triggers their continuous execution loop synchronously or asynchronously based on configuration.
-Task Execution Loop: Regulates continuous task loops, enforces global concurrency caps using a semaphore, and handles sequential versus parallel iteration behavior.
-Task Iteration Processing: Handles individual execution cycles of a task by implementing watchdog timeouts, error trapping, tracking states, and managing configured retry or early-termination policies.
-Targeted Task Cancellation: Signals an individual running task to cancel using its specific string key.
-Global Task Cancellation: Iterates through all currently tracked tasks to trigger a cancellation across the entire system.
-Active Task Auditing: Exposes a collection of all string keys associated with tasks that are currently active in the manager.
-Batch Task Awaiting: Exposes a utility method to asynchronously wait for an external list of tasks to finish executing.
-Configuration Diagnostics: Uses reflection to iterate through and dynamically log all public instance properties of the active runtime settings for debugging purposes.
-Graceful Shutdown: Automatically registers a callback with IHostApplicationLifetime to cancel and clean up all active managed tasks when the application host stops.
-Task Status Verification: Queries the active task collection to determine if a specific task key is currently in a running or starting state.
+// Same ordering rules apply to Initialize as to the Add* calls above.
+Service_CustomLogger.Initialize(app.Services);
+Service_CustomLogFlusher.Initialize(app.Services);
+Service_ThreadLocks.Initialize(app.Services);
+Service_ThreadSafeItems.Initialize(app.Services);
+Service_RESTApiMgmt.Initialize(app.Services);
+Service_SQLMgmt.Initialize(app.Services);
+Service_TaskMgmt.Initialize(app.Services);
+Service_ProcessLauncher.Initialize(app.Services);
+Service_CredentialMgmt.InitializeFileSecretStore(app.Services);
 
-ManagedTask
-Identity Generation and Enforcement: Requires a unique friendly name upon construction and pairs it with a unique Guid to establish a distinct lookup identity across the system.
-Abstract Work Definition: Exposes an abstract method template that subclasses must implement to execute custom asynchronous logic during a task cycle.
-Resource Cleanup Lifecycle: Implements the standard IDisposable pattern so derived task instances can safely release unmanaged resources like files, locks, or tokens upon completion.
+await app.RunAsync();
+```
 
-IManagedTaskIterationHandle
-Parent Task Correlation: References the parent task handle to maintain context regarding which higher-level routine owns the running iteration.
-Iteration Sequence Tracking: Exposes a unique numerical counter to identify the exact execution cycle number for the current task session.
-Start Telemetry Capture: Holds the exact UTC timestamp marking when the specific iteration cycle transitioned into a running state.
-Linked Token Cancellation: Exposes a unified cancellation token that fires if either the parent task is globally aborted or this specific iteration is canceled.
-Live Duration Tracking: Computes the active elapsed duration of the current execution cycle dynamically in real time.
-Execution Status Evaluation: Provides a simple flag to verify if the managed thread loop is actively processing this specific iteration.
-Targeted Cycle Cancellation: Triggers a direct abort of the active execution cycle without interrupting the overarching parent task routine.
+Only register and initialize the modules you actually use — this example includes all of them for illustration.
 
-Thread Locks
-Provides a centralized manager to coordinate named synchronous and asynchronous execution bottlenecks. Employs Monitor and SemaphoreSlim alongside reference tracking for automatic memory cleanup.
-Lock Acquisition (Async/Sync): Requests a thread lock for a given string key.
-Lock Release (Async/Sync): Exits a thread lock for a given string key.
+## Configuration
 
-ThreadSafeItems
-A suite of extension methods and helper utilities that leverage ThreadLocks. Currently features thread-safe file I/O operations (Read/Write) by resolving distinct file paths as distinct transaction lock keys.
-ThreadSafeFileIO
-String Writing (Async/Sync): Writes or appends a single text string to a specified file enforcing thread locks.
-Line Writing (Async/Sync): Writes or appends an array of strings to a file enforcing thread locks.
-Line Reading (Async/Sync): Reads all lines of a file into a string array using a thread lock before accessing the file.
-Text Reading (Async/Sync): Reads all content of a file as a single string using a thread lock before accessing the file.
+Most modules bind their settings from a section under `Integration.DevKit` in your `IConfiguration` (typically `appsettings.json`); a couple take plain parameters instead. See each module's page for the full settings shape.
 
+| Module | Config section | Notes |
+| --- | --- | --- |
+| Custom Logging | `Integration.DevKit:CustomLogger` | |
+| Custom Logging (flusher) | `Integration.DevKit:CustomLoggerFlusher` | |
+| REST API Management | `Integration.DevKit:ApiClientManagement` | |
+| SQL Management | `Integration.DevKit:SQLManagement` | |
+| Task Management | `Integration.DevKit:TaskManagement` | |
+| Thread Locks | — | No settings; `AddThreadLocks()` takes no configuration. |
+| Thread-Safe File I/O | — | No settings. |
+| Process Launcher | — | No settings; every process is configured per-call. |
+| Credential Management | — | Takes `applicationName`/`secretsFolder`/`keysFolder` directly as arguments to `AddFileSecretStore`. |
 
-
-
-
-
-
-# Quick Start: Adding to Your Project
-To integrate the DevKit into your solution, install the required packages via NuGet. You can install each modules engine or just the contracts depending on your project architecture.
-
-## Configuration & Dependency Injection
-The DevKit relies on Dependency Injection (DI) and appsettings.json configurations to initialize its modules. You don't need to manually pass connection strings or configuration objects in your code; the engines map directly to your configuration sections.
-
-1. Appsettings.json
-Add the configuration block required by the modules you are using:
-
-JSON
+```json
 {
   "Integration.DevKit": {
-    "ModuleName": {
-      "ModuleOptions"
+    "CustomLogger": {
+      "OutputLogLevel": "Information"
+    },
+    "ApiClientManagement": {
+      "Default_HttpTimeout_Seconds": 30
+    },
+    "TaskManagement": {
+      "MaxConcurrentTasks": 100
     }
   }
 }
-
-2. Register Services via DI
-Inject the modules into your IServiceCollection. The moduels read from the appsettings:
-
-C#
-var host = Host.CreateDefaultBuilder().Build(); //Any object with IServiceProvider is viable here
-
-host.Services.AddCustomLogging(config);
-
-Service_CustomLogger.Initialize(host.Services);
-
 ```
+
+Values can be encrypted at rest inside the JSON file itself using [configuration protection](core.md#configuration-protection), or you can plug REST/SQL clients into the [file-based secret store](credential-management.md) for credentials specifically.
+
+## Error handling
+
+Across every module, prefer checking the result object over wrapping calls in `try`/`catch`:
+
+```csharp
+var result = await someOperation();
+if (!result.MethodSuccess)
+{
+    logger.LogError(result.Exception, "Operation failed");
+    return;
+}
+
+Use(result.Result);
+```
+
+See [Core → Result types](core.md#result-types) for the full set of variants and when each is used.
+
+## Best Practices
+
+- Check `MethodSuccess` before reading `Result` — don't assume a sensible default on failure unless a method's docs say otherwise.
+- Follow the register → build → initialize order for every module, respecting the ordering dependencies noted above and on each module's page.
+- Keep secrets out of `appsettings.json` in plain text — use [Credential Management](credential-management.md) or, at minimum, [configuration protection](core.md#configuration-protection).
+- Use the SDK's logger consistently for diagnostics rather than `Console.WriteLine` in production code paths.
+
+## FAQ
+
+**Can I use only one module?**
+Yes — every module besides Core (and `ThreadSafeItems`, which needs `ThreadLocks`) is independent. Reference and register only what you need.
+
+**Is this SDK production-ready?**
+It provides reusable abstractions and service wiring, but validate configuration against your own runtime requirements before depending on any single module in production.
