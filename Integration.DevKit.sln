@@ -52,6 +52,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D056A9C0-B94
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		docs\core.md = docs\core.md
+		docs\credential-management.md = docs\credential-management.md
+		docs\logging.md = docs\logging.md
+		docs\process-launcher.md = docs\process-launcher.md
+		docs\README.md = docs\README.md
+		docs\rest-api.md = docs\rest-api.md
+		docs\sql-management.md = docs\sql-management.md
+		docs\task-management.md = docs\task-management.md
+		docs\thread-locks.md = docs\thread-locks.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -137,6 +148,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D056A9C0-B94A-4ACA-87FB-3B25DDDC4F14} = {8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}
+		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {32CFCE47-8C5C-4E17-B597-FE7AFF0AA062}
