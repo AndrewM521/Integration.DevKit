@@ -15,6 +15,14 @@ public interface ITaskManager
     public TaskManagerSettings RuntimeSettings { get; }
 
     /// <summary>
+    /// Re-derives everything this manager caches from <see cref="RuntimeSettings"/> (currently the
+    /// concurrent-task rate limiter). Call this after mutating <see cref="RuntimeSettings"/> in place
+    /// so the change takes effect.
+    /// </summary>
+    /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
+    public NullOperationResult Initialize();
+
+    /// <summary>
     /// Initiates a task and tracks it within the manager.
     /// </summary>
     /// <param name="managedTask">The task implementation to be executed.</param>

@@ -7,6 +7,8 @@
     <Title>DevKit.CustomLogger.Flusher</Title>
     <RootNamespace>Integration.DevKit.CustomLogger.Flusher</RootNamespace>
     <Version>1.0.1.2</Version>
+    <PackageId>Integration.DevKit.CustomLogger.Flusher</PackageId>
+    <PackageProjectUrl>https://www.nuget.org/packages/Integration.DevKit.CustomLogger.Flusher</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

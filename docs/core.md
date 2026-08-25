@@ -19,6 +19,8 @@
 dotnet add reference src/Integration.DevKit.Core/Integration.DevKit.Core.csproj
 ```
 
+Or from NuGet: [Integration.DevKit.Core](https://www.nuget.org/packages/Integration.DevKit.Core)
+
 Every other DevKit project already references Core transitively, so you rarely need to add it explicitly unless you're consuming Core's utilities on their own.
 
 ---

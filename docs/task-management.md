@@ -15,6 +15,8 @@
 dotnet add reference src/Integration.DevKit.TaskMgmt/Integration.DevKit.TaskMgmt.csproj
 ```
 
+Or from NuGet: [Integration.DevKit.TaskMgmt](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt)
+
 ## Getting started
 
 ### 1. Define a task by subclassing `ManagedTask`
@@ -155,6 +157,8 @@ public interface ITaskManager
 {
     TaskManagerSettings RuntimeSettings { get; }
 
+    NullOperationResult Initialize();
+
     Task<OperationResult<IManagedTaskHandle>> StartTask(ManagedTask managedTask, TaskExecutionMode executionMode,
         ManagedTaskSettings settings, CancellationToken cancellationToken = default);
 
@@ -168,6 +172,17 @@ public interface ITaskManager
 ```
 
 `StartTask` fails (as a failed `OperationResult`, not a thrown exception) if a task with the same `TaskKey` (`"{TaskName}_{TaskId}"`) is already running. `TaskExecutionMode` is `Asyncronous` or `Syncronous` (exact spelling as shipped) — `Asyncronous` returns a handle you can `await handle.RunningTask` on independently, while `Syncronous` runs the task to completion as part of the `StartTask` call itself.
+
+### Re-initializing after mutating `RuntimeSettings`
+
+`RuntimeSettings` is mutable in place, but `TaskManager` sizes its internal concurrent-task semaphore from `MaxConcurrentTasks` once, at construction. Changing `MaxConcurrentTasks` (or the two registry-count settings) on the `RuntimeSettings` object has no effect until you call `Initialize()`, which re-normalizes the settings and rebuilds the semaphore:
+
+```csharp
+Service_TaskMgmt.TaskManager.RuntimeSettings.MaxConcurrentTasks = 10;
+Service_TaskMgmt.TaskManager.Initialize();
+```
+
+Tasks already waiting on the old semaphore when `Initialize()` runs will see it disposed out from under them — prefer calling this during a quiet period rather than under active load.
 
 ### `IManagedTaskHandle`
 

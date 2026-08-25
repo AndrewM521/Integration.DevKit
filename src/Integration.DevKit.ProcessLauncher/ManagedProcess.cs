@@ -48,7 +48,7 @@ public class ManagedProcess : IManagedProcess
         _logger = logger;
 
         ProcessKey = config.ProcessKey;
-        _timeout = TimeSpan.FromSeconds(config.TimeoutSeconds);
+        _timeout = config.TimeoutSeconds <= 0 ? null : TimeSpan.FromSeconds(config.TimeoutSeconds);
 
         _startInfo = new ProcessStartInfo
         {

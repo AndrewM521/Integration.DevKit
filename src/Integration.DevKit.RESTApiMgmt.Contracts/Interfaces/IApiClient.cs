@@ -31,6 +31,14 @@ public interface IApiClient : IAsyncDisposable
     /// </summary>
     public string ClientName { get; }
 
+    /// <summary>
+    /// Re-derives everything this client caches from <see cref="RuntimeSettings"/> (the underlying
+    /// <see cref="HttpClient"/>'s base address, timeout, and default headers, plus the concurrent-request
+    /// rate limiter). Call this after mutating <see cref="RuntimeSettings"/> in place so the change takes effect.
+    /// </summary>
+    /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
+    public NullOperationResult Initialize();
+
     #region Asynchronous HTTP Methods
     /// <summary>
     /// Sends an asynchronous GET request to the specified endpoint.

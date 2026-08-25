@@ -20,7 +20,7 @@ public class TaskManager : ITaskManager
     private readonly ConcurrentDictionary<string, ManagedTaskRuntime> _tasks = new ConcurrentDictionary<string, ManagedTaskRuntime>();
     private readonly IHostApplicationLifetime _appLifetime;
     private readonly ICustomLogger? _logger;
-    private readonly SemaphoreSlim _taskLimiter;
+    private SemaphoreSlim _taskLimiter = null!;
     private readonly TaskRegistryRuntime _taskRegistryRuntime;
 
     /// <summary>
@@ -68,22 +68,46 @@ public class TaskManager : ITaskManager
 
         RuntimeSettings = settings.Value.Clone();
 
-        if (RuntimeSettings.MaxConcurrentTasks < 0)
-        {
-            RuntimeSettings.MaxConcurrentTasks = int.MaxValue;
-        }
+        Initialize();
+    }
 
-        if (RuntimeSettings.MaxTaskRegistryCount < 0)
-        {
-            RuntimeSettings.MaxTaskRegistryCount = int.MaxValue;
-        }
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Re-derives everything this manager caches from <see cref="RuntimeSettings"/> at construction time
+    /// (currently the concurrent-task rate limiter). Call this after mutating <see cref="RuntimeSettings"/>
+    /// in place so the change takes effect.
+    /// </remarks>
+    public NullOperationResult Initialize()
+    {
+        var result = new NullOperationResult();
 
-        if (RuntimeSettings.MaxTaskIterationRegistryCount < 0)
+        try
         {
-            RuntimeSettings.MaxTaskIterationRegistryCount = int.MaxValue;
-        }
+            if (RuntimeSettings.MaxConcurrentTasks < 0)
+            {
+                RuntimeSettings.MaxConcurrentTasks = int.MaxValue;
+            }
 
-        _taskLimiter = new SemaphoreSlim(RuntimeSettings.MaxConcurrentTasks);   
+            if (RuntimeSettings.MaxTaskRegistryCount < 0)
+            {
+                RuntimeSettings.MaxTaskRegistryCount = int.MaxValue;
+            }
+
+            if (RuntimeSettings.MaxTaskIterationRegistryCount < 0)
+            {
+                RuntimeSettings.MaxTaskIterationRegistryCount = int.MaxValue;
+            }
+
+            var oldTaskLimiter = _taskLimiter;
+            _taskLimiter = new SemaphoreSlim(RuntimeSettings.MaxConcurrentTasks);
+            oldTaskLimiter?.Dispose();
+
+            return result.SetMethodSuccess();
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
     }
 
     /// <inheritdoc/>

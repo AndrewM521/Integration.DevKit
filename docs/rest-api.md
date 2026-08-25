@@ -14,6 +14,8 @@
 dotnet add reference src/Integration.DevKit.RESTApiMgmt/Integration.DevKit.RESTApiMgmt.csproj
 ```
 
+Or from NuGet: [Integration.DevKit.RESTApiMgmt](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt)
+
 ## Getting started
 
 ```csharp
@@ -82,9 +84,11 @@ All named clients share a single `IHttpClientFactory`-managed connection pool in
 ```csharp
 public interface IApiClient : IAsyncDisposable
 {
-    ApiClientSettings RuntimeSettings { get; }   // see the known issue below before relying on this
+    ApiClientSettings RuntimeSettings { get; }
     IApiClientMetrics ClientMetrics { get; }
     string ClientName { get; }
+
+    NullOperationResult Initialize();
 
     Task<ApiOperationResult<string>> GetAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null);
     Task<ApiOperationResult<string>> PostAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null);
@@ -98,6 +102,19 @@ public interface IApiClient : IAsyncDisposable
     void LogRuntimeSettings(bool calledFromManager = false);
 }
 ```
+
+### Re-initializing after mutating `RuntimeSettings`
+
+`ApiClient` caches several things derived from `RuntimeSettings` at construction time: the underlying `HttpClient`'s base address, timeout, and default headers, plus a `SemaphoreSlim` sized from `MaxConcurrentRequests`. Mutating `RuntimeSettings` in place (e.g. `client.RuntimeSettings.BaseUrl = "..."`) has no effect until you call `Initialize()`, which re-derives all of it:
+
+```csharp
+var client = Service_RESTApiMgmt.ApiManager.GetClient("my-client");
+client.RuntimeSettings.BaseUrl = "https://api2.example.com/";
+client.RuntimeSettings.MaxConcurrentRequests = 20;
+client.Initialize();
+```
+
+Requests already waiting on the old rate limiter when `Initialize()` runs will see it disposed out from under them — prefer calling this during a quiet period rather than under active load.
 
 `GetAsync` and `DeleteAsync` both accept an optional `HttpContent` body — this sets an actual `HttpContent` on the underlying `HttpRequestMessage` for a GET/DELETE request. That's non-standard HTTP usage (most servers ignore a GET body, and some client stacks strip it), so only rely on it against an API you know supports it.
 
@@ -152,33 +169,6 @@ public interface IApiManager
 
 `GetClient` caches and reuses one `IApiClient` per name (case-insensitive) — calling it twice with the same name returns the same instance. If `clientName` isn't found in the configured `Clients` dictionary, it logs a warning and hands back a client built from default `ApiClientSettings` rather than throwing, so a typo in a client name fails silently at the HTTP layer (wrong base URL) rather than at `GetClient` — double-check the name against your configuration if requests are going to the wrong host.
 
-## Known issue: `RuntimeSettings` throws through the `IApiClient` interface
-
-`ApiClient` (`src/Integration.DevKit.RESTApiMgmt/ApiClient.cs`) declares two versions of the `RuntimeSettings` property: a normal public one that works, and an **explicit interface implementation that always throws `NotImplementedException`**:
-
-```csharp
-// ApiClient.cs — line ~30
-public ApiClientSettings RuntimeSettings { get; private set; }
-
-// ApiClient.cs — line ~37
-ApiClientSettings IApiClient.RuntimeSettings => throw new NotImplementedException();
-```
-
-In C#, when a member is accessed through the *interface* type, the explicit implementation wins. Since `IApiManager.GetClient(...)` returns `IApiClient` (not the concrete `ApiClient` class), the natural call chain:
-
-```csharp
-Service_RESTApiMgmt.ApiManager.GetClient("my-client").RuntimeSettings   // throws NotImplementedException
-```
-
-**throws at runtime.** This has not been fixed in the source as of this writing. If you need to read a client's settings, cast to the concrete type first:
-
-```csharp
-var client = (ApiClient)Service_RESTApiMgmt.ApiManager.GetClient("my-client");
-var settings = client.RuntimeSettings;   // works — this resolves to the public property, not the interface one
-```
-
-Avoid calling `.RuntimeSettings` on anything typed as `IApiClient` until this is addressed upstream.
-
 ## API Reference
 
 ### `Service_RESTApiMgmt` (static)
@@ -223,7 +213,6 @@ if (!result.MethodSuccess)
 ## Best Practices
 
 - Use one named client per logical downstream API rather than one client per call — this keeps connection pooling, headers, and metrics scoped sensibly.
-- Don't call `.RuntimeSettings` on an `IApiClient`-typed reference (see the known issue above).
 - Set an explicit `HttpTimeout_Seconds` per client rather than relying on the manager-wide default, especially for calls with different latency expectations.
 - Treat GET/DELETE bodies as an advanced feature — confirm the target API actually reads them before depending on it.
 - Inspect `ClientMetrics` in health checks or diagnostics endpoints rather than adding your own request counters.

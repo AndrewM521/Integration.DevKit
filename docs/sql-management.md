@@ -14,6 +14,8 @@
 dotnet add reference src/Integration.DevKit.SQLMgmt/Integration.DevKit.SQLMgmt.csproj
 ```
 
+Or from NuGet: [Integration.DevKit.SQLMgmt](https://www.nuget.org/packages/Integration.DevKit.SQLMgmt)
+
 ## Getting started
 
 ```csharp

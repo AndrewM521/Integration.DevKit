@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 namespace Integration.DevKit.CustomLogger;
 
 /// <summary>
@@ -42,6 +43,11 @@ public static class Service_CustomLogger
 
         // Register the concrete class
         services.TryAddSingleton<ICustomLoggerManager, CustomLoggerManager>();
+
+        // LogFileRegistry enforces LogFlushServiceSettings.MaxBufferCount as a hard cap on its own, so this
+        // must resolve to defaults even if AddCustomLogFlusher() (which normally binds it from config) is
+        // never called.
+        services.AddOptions<LogFlushServiceSettings>();
 
         services.TryAddSingleton<ILogFileRegistry, LogFileRegistry>();
 

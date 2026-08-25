@@ -13,6 +13,8 @@
 dotnet add reference src/Integration.DevKit.CredentialMgmt/Integration.DevKit.CredentialMgmt.csproj
 ```
 
+Or from NuGet: [Integration.DevKit.CredentialMgmt](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt)
+
 ## Getting started
 
 ```csharp

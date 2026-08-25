@@ -16,6 +16,8 @@ dotnet add reference src/Integration.DevKit.ThreadLocks/Integration.DevKit.Threa
 dotnet add reference src/Integration.DevKit.ThreadSafeItems/Integration.DevKit.ThreadSafeItems.csproj
 ```
 
+Or from NuGet: [Integration.DevKit.ThreadLocks](https://www.nuget.org/packages/Integration.DevKit.ThreadLocks) &middot; [Integration.DevKit.ThreadSafeItems](https://www.nuget.org/packages/Integration.DevKit.ThreadSafeItems)
+
 `ThreadSafeItems` depends on `ThreadLocks` — register and initialize `ThreadLocks` first (see below).
 
 ---

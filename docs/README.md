@@ -10,16 +10,18 @@ Every module follows the same three conventions, which makes the SDK predictable
 
 ## Modules
 
-| Module | What it's for |
-| --- | --- |
-| [Core](core.md) | Result types, configuration protection, file/directory/JSON/dictionary utilities, on-demand hosting. Depended on by every other module. |
-| [Custom Logging](logging.md) | An `ILogger`-compatible logger with console, debug, and buffered file output, plus a background flush service. |
-| [REST API Management](rest-api.md) | Named `HttpClient`-backed clients with typed results, metrics, and optional secret-store-backed credentials. |
-| [SQL Management](sql-management.md) | Named SQL clients, connection testing, command/data-reader helpers. |
-| [Thread Locks &amp; Thread-Safe File I/O](thread-locks.md) | Named sync/async locks; thread-safe file I/O built on top of them. |
-| [Task Management](task-management.md) | Recurring/long-running background work with retry policies, iteration timing strategies, and run history. |
-| [Process Launcher](process-launcher.md) | Starting and supervising external processes with output capture and cancellation. |
-| [Credential Management](credential-management.md) | File-based secret storage encrypted at rest, pluggable into the REST and SQL clients. |
+| Module | What it's for | NuGet |
+| --- | --- | --- |
+| [Core](core.md) | Result types, configuration protection, file/directory/JSON/dictionary utilities, on-demand hosting. Depended on by every other module. | [Integration.DevKit.Core](https://www.nuget.org/packages/Integration.DevKit.Core) |
+| [Custom Logging](logging.md) | An `ILogger`-compatible logger with console, debug, and buffered file output, plus a background flush service. | [Integration.DevKit.CustomLogger](https://www.nuget.org/packages/Integration.DevKit.CustomLogger) &middot; [.Flusher](https://www.nuget.org/packages/Integration.DevKit.CustomLogger.Flusher) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.CustomLogger.Contracts) |
+| [REST API Management](rest-api.md) | Named `HttpClient`-backed clients with typed results, metrics, and optional secret-store-backed credentials. | [Integration.DevKit.RESTApiMgmt](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt.Contracts) |
+| [SQL Management](sql-management.md) | Named SQL clients, connection testing, command/data-reader helpers. | [Integration.DevKit.SQLMgmt](https://www.nuget.org/packages/Integration.DevKit.SQLMgmt) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.SQLMgmt.Contracts) |
+| [Thread Locks &amp; Thread-Safe File I/O](thread-locks.md) | Named sync/async locks; thread-safe file I/O built on top of them. | [Integration.DevKit.ThreadLocks](https://www.nuget.org/packages/Integration.DevKit.ThreadLocks) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.ThreadLocks.Contracts) &middot; [ThreadSafeItems](https://www.nuget.org/packages/Integration.DevKit.ThreadSafeItems) |
+| [Task Management](task-management.md) | Recurring/long-running background work with retry policies, iteration timing strategies, and run history. | [Integration.DevKit.TaskMgmt](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt.Contracts) |
+| [Process Launcher](process-launcher.md) | Starting and supervising external processes with output capture and cancellation. | [Integration.DevKit.ProcessLauncher](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher.Contracts) |
+| [Credential Management](credential-management.md) | File-based secret storage encrypted at rest, pluggable into the REST and SQL clients. | [Integration.DevKit.CredentialMgmt](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt.Contracts) |
+
+All packages are published under the [AndrewM5 NuGet profile](https://www.nuget.org/profiles/AndrewM5).
 
 ## Requirements
 
@@ -144,14 +146,6 @@ Use(result.Result);
 
 See [Core → Result types](core.md#result-types) for the full set of variants and when each is used.
 
-## Known issues
-
-A few real, verified issues are called out in detail on their respective module pages rather than buried here — worth reading before you depend on the affected behavior:
-
-- **REST API Management** — `IApiClient.RuntimeSettings` throws `NotImplementedException` when accessed through the interface type (i.e. straight off `GetClient(...)`). See [REST API Management → Known issue](rest-api.md#known-issue-runtimesettings-throws-through-the-iapiclient-interface).
-- **Process Launcher** — the documented "no timeout" default (`TimeoutSeconds = -1` or `0`) is not actually honored by the current implementation and can throw from a background task. See [Process Launcher](process-launcher.md#managedprocessconfig).
-- **Custom Logging** — depending on `CreateLogFile`/`AllowCreateFileInContainer`, buffered messages can either accumulate unbounded in memory or be silently dropped. See [Custom Logging → Configuration](logging.md#configuration).
-
 ## Best Practices
 
 - Check `MethodSuccess` before reading `Result` — don't assume a sensible default on failure unless a method's docs say otherwise.
@@ -165,4 +159,4 @@ A few real, verified issues are called out in detail on their respective module 
 Yes — every module besides Core (and `ThreadSafeItems`, which needs `ThreadLocks`) is independent. Reference and register only what you need.
 
 **Is this SDK production-ready?**
-It provides reusable abstractions and service wiring, but validate configuration and the [known issues](#known-issues) above against your own runtime requirements before depending on any single module in production.
+It provides reusable abstractions and service wiring, but validate configuration against your own runtime requirements before depending on any single module in production.

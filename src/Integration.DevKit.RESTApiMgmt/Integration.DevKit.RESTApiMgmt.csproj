@@ -7,6 +7,8 @@
     <Title>DevKit.RESTApiMgmt</Title>
     <RootNamespace>Integration.DevKit.RESTApiMgmt</RootNamespace>
     <Version>1.0.1.2</Version>
+    <PackageId>Integration.DevKit.RESTApiMgmt</PackageId>
+    <PackageProjectUrl>https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

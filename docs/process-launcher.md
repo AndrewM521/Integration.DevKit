@@ -19,6 +19,8 @@
 dotnet add reference src/Integration.DevKit.ProcessLauncher/Integration.DevKit.ProcessLauncher.csproj
 ```
 
+Or from NuGet: [Integration.DevKit.ProcessLauncher](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher)
+
 ## Getting started
 
 ```csharp
@@ -36,7 +38,7 @@ var config = new ManagedProcessConfig
     Command = "cmd.exe",
     Arguments = "/c ping 127.0.0.1 -n 4",
     ShowWindow = true,
-    TimeoutSeconds = 10,   // see the warning below before omitting this
+    TimeoutSeconds = 10,   // 0 or negative (including the -1 default) means no timeout
     WorkingDirectory = Environment.CurrentDirectory
 };
 
@@ -70,11 +72,9 @@ public class ManagedProcessConfig : IManagedProcessConfig
 | `ProcessKey` | Must be unique among currently-running processes tracked by the same `ProcessManager` — starting a second process with a key already in use fails. |
 | `ShowWindow` | Also controls whether stdout/stderr are captured — see the warning below. |
 | `WorkingDirectory` | Defaults to the current directory **at the moment this config instance is constructed**, not re-evaluated later. |
-| `TimeoutSeconds` | See the warning below — the documented "0 or -1 means no timeout" behavior is not actually implemented as of this writing. |
+| `TimeoutSeconds` | `0` or a negative value (including the `-1` default) means no timeout; a positive value is the wall-clock limit in seconds before the process is force-killed. |
 | `EnableProcessLogging` | **Currently has no effect** — see below. |
 | `AutoRestartOnFailure` | **Currently has no effect** — there is no auto-restart logic implemented anywhere in this module. Don't rely on it. |
-
-> **Known issue — the default `TimeoutSeconds` is unsafe.** The XML documentation on `IManagedProcessConfig.TimeoutSeconds` states that `0` or `-1` means "no timeout," and `ManagedProcessConfig` defaults to `-1` for exactly that reason. In the current implementation, however, the timeout value is passed straight to `TimeSpan.FromSeconds(...)` and then into a `CancellationTokenSource(TimeSpan)` with no special-casing of `0` or `-1`. `.NET`'s `CancellationTokenSource(TimeSpan)` only treats a `TotalMilliseconds` of exactly `-1` as "infinite" — `TimeSpan.FromSeconds(-1)` is `-1000ms`, which is a different, invalid value and throws `ArgumentOutOfRangeException` from inside a background monitoring task (where it would surface as an unobserved task exception, not a catchable `OperationResult` failure). A configured `TimeoutSeconds = 0` doesn't mean "no timeout" either — it produces a zero timeout, which fires almost immediately and force-kills the process right after it starts. **Until this is fixed upstream, always set an explicit, generous `TimeoutSeconds` rather than relying on the documented default.**
 
 > **stdout/stderr capture is tied to `ShowWindow`, not `EnableProcessLogging`.** Output is only captured when `ShowWindow == false` (internally this maps to `RedirectStandardOutput`/`RedirectStandardError` on the underlying `ProcessStartInfo`). If `ShowWindow == true`, `GetOutput()`/`GetError()` will always return empty strings, regardless of `EnableProcessLogging`. If you need to capture output, set `ShowWindow = false`.
 
@@ -137,11 +137,11 @@ public ProcessManager(ICustomLoggerManager? loggerManager = null);
 
 ## Error Handling
 
-Every public method on `IProcessManager`/`IManagedProcess` returns an `OperationResult<T>`/`NullOperationResult` for expected failure modes (missing process, duplicate key, empty command) rather than throwing. Given the timeout issue above, also be prepared for an **unobserved task exception** the first time a process is started without an explicit `TimeoutSeconds` — consider hooking `TaskScheduler.UnobservedTaskException` while this remains unfixed, or simply always pass an explicit timeout.
+Every public method on `IProcessManager`/`IManagedProcess` returns an `OperationResult<T>`/`NullOperationResult` for expected failure modes (missing process, duplicate key, empty command) rather than throwing.
 
 ## Best Practices
 
-- Always set an explicit `TimeoutSeconds` — don't rely on the `-1` default (see the known issue above).
+- Set an explicit `TimeoutSeconds` for anything that shouldn't be allowed to run forever — the `-1` default means no timeout.
 - Set `ShowWindow = false` whenever you need to read `GetOutput()`/`GetError()`.
 - Call `IsRunning(processKey)` before `CancelProcess(processKey)` if the process might have already exited on its own.
 - Don't configure `AutoRestartOnFailure` expecting restart behavior — it's not implemented yet.

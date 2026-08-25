@@ -15,6 +15,8 @@ dotnet add reference src/Integration.DevKit.CustomLogger/Integration.DevKit.Cust
 dotnet add reference src/Integration.DevKit.CustomLogger.Flusher/Integration.DevKit.CustomLogger.Flusher.csproj
 ```
 
+Or from NuGet: [Integration.DevKit.CustomLogger](https://www.nuget.org/packages/Integration.DevKit.CustomLogger) &middot; [Integration.DevKit.CustomLogger.Flusher](https://www.nuget.org/packages/Integration.DevKit.CustomLogger.Flusher)
+
 The flusher project depends on the logger project; you can take the logger without the flusher if you don't need buffered file output, but not the reverse.
 
 ## Getting started
@@ -81,11 +83,11 @@ logger.LogInformation("Application started");
 | --- | --- | --- |
 | `CreateLogFile` | `false` | Master switch for writing the buffer to disk at all. |
 | `AllowCreateFileInContainer` | `false` | When running inside a container (detected via `DOTNET_RUNNING_IN_CONTAINER=true`), file writes are additionally gated by this flag. |
-| `MaxBufferCount` | `50` | Flush is triggered once the in-memory queue reaches this many messages. |
+| `MaxBufferCount` | `50` | Flush is triggered once the in-memory queue reaches this many messages. Also enforced as a hard cap on the buffer itself (see below) — values `<= 0` fall back to the default of `50` rather than disabling the cap. |
 | `FlushIntervalSeconds` | `30` | Flush is also triggered once this much time has elapsed since the last flush, regardless of buffer size. |
 | `LogFilePath` | `""` | Destination file. Writes always **append** — there is no log rotation or size cap, so plan your own rotation/cleanup if `LogFilePath` is long-lived. |
 
-> **Buffer-retention gotcha.** If `CreateLogFile` is `false`, the flusher never drains the in-memory queue — messages simply accumulate for as long as the process runs, which can grow unbounded under sustained logging. If you're running in a container and `AllowCreateFileInContainer` is `false` while `CreateLogFile` is `true`, the opposite happens: the queue **is** drained on each flush tick but the messages are silently discarded (never written anywhere). If you need guaranteed console/debug-only logging with a bounded process, prefer `CreateLogFile = true` with a real `LogFilePath`.
+> **The buffer is bounded, not guaranteed to reach disk.** `ILogFileRegistry` (the in-memory queue backing file output) enforces `MaxBufferCount` as a hard cap independently of the flusher — once full, it drops the oldest buffered message to make room for each new one, regardless of whether anything is currently draining it. This means the buffer itself can never grow unbounded, even with `CreateLogFile = false` or the Flusher module never registered at all. It does **not** mean every message is guaranteed to reach disk: with `CreateLogFile = false`, or in a container with `AllowCreateFileInContainer = false` while `CreateLogFile = true`, buffered messages are still dropped without ever being written anywhere — they're just dropped in bounded, oldest-first amounts instead of accumulating forever. If you need every message to reach disk, set `CreateLogFile = true` with a real `LogFilePath` (and `AllowCreateFileInContainer = true` if running in a container), and set `MaxBufferCount` high enough that the flush interval reliably drains the buffer before it fills.
 
 ## Getting a logger
 
@@ -180,5 +182,5 @@ Logging calls themselves do not throw under normal use. `Initialize` on either s
 - Call `AddCustomLogging` before `AddCustomLogFlusher`, and `Service_CustomLogger.Initialize` before `Service_CustomLogFlusher.Initialize`.
 - Set `FileOutputLogLevel` deliberately — it's easy to assume `OutputLogLevel` alone controls what reaches the log file.
 - If you enable `CreateLogFile`, make sure `LogFilePath` points somewhere with rotation/retention handled externally, since the flusher only ever appends.
-- Avoid leaving `CreateLogFile = false` in a long-running, high-log-volume process — the buffer has no upper bound beyond the in-memory queue itself.
+- If you rely on the file sink for anything you can't afford to lose, size `MaxBufferCount` and `FlushIntervalSeconds` so the flusher reliably drains the buffer before it fills — the buffer is bounded, so a sustained burst that outpaces flushing drops the oldest messages rather than growing without limit.
 - Use console output for local development only; leave it disabled in production to avoid unnecessary I/O.
