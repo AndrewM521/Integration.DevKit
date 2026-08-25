@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <Title>DevKit.ProcessLauncher.Contracts</Title>
     <RootNamespace>Integration.DevKit.ProcessLauncher.Contracts</RootNamespace>
-    <Version>1.0.1.0</Version>
+    <Version>1.0.1.1</Version>
     <PackageId>Integration.DevKit.ProcessLauncher.Contracts</PackageId>
     <PackageProjectUrl>https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher.Contracts</PackageProjectUrl>
   </PropertyGroup>

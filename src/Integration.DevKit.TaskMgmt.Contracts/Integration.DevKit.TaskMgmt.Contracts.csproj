@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <Title>DevKit.TaskMgmt.Contracts</Title>
     <RootNamespace>Integration.DevKit.TaskMgmt.Contracts</RootNamespace>
-    <Version>1.0.1.1</Version>
+    <Version>1.0.1.2</Version>
     <PackageId>Integration.DevKit.TaskMgmt.Contracts</PackageId>
     <PackageProjectUrl>https://www.nuget.org/packages/Integration.DevKit.TaskMgmt.Contracts</PackageProjectUrl>
   </PropertyGroup>
