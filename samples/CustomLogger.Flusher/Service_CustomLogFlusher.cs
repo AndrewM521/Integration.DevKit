@@ -1,10 +1,9 @@
-﻿using Integration.DevKit.CustomLogger.Contracts;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
-namespace Integration.DevKit.CustomLogger.Flusher;
+namespace CustomLogger.Flusher;
 
 /// <summary>
 /// Provides a static entry point to access the Logger Flusher module 
@@ -15,7 +14,7 @@ namespace Integration.DevKit.CustomLogger.Flusher;
 /// </remarks>
 public static class Service_CustomLogFlusher
 {
-    private static ILogFlusher? _logFlushService;
+    private static LogFlusher? _logFlushService;
 
     private const string NoInit = "Service_LogFlusher has not been initialized.";
 
@@ -39,7 +38,7 @@ public static class Service_CustomLogFlusher
         }
 
         // Bind LogFlushServiceSettings
-        services.Configure<LogFlushServiceSettings>(config.GetSection("Integration.DevKit:CustomLoggerFlusher"));
+        services.Configure<LogFlushServiceSettings>(config.GetSection("CustomLoggerFlusher"));
 
         // Register the concrete implementation as a regular Singleton first.
         // .NET will automatically infer and inject its constructor dependencies here.
@@ -47,9 +46,6 @@ public static class Service_CustomLogFlusher
 
         // Forward the Hosted Service to the concrete Singleton instance
         services.TryAddTransient<IHostedService>(sp => sp.GetRequiredService<LogFlusher>());
-
-        // Forward the Interface to the exact same concrete Singleton instance
-        services.TryAddSingleton<ILogFlusher>(sp => sp.GetRequiredService<LogFlusher>());
 
         return services;
     }
@@ -72,18 +68,18 @@ public static class Service_CustomLogFlusher
 
         try
         {
-            _ = sp.GetRequiredService<ICustomLoggerManager>();
-            _ = sp.GetRequiredService<ILogFileRegistry>();
+            _ = sp.GetRequiredService<CustomLoggerManager>();
+            _ = sp.GetRequiredService<LogFileRegistry>();
         }
         catch (Exception)
         {
             throw new InvalidOperationException($"{nameof(Service_CustomLogFlusher)} requires the Logging module. Call AddCustomLogging() before AddCustomLogFlusher()");
         }
 
-        _logFlushService = sp.GetService<ILogFlusher>();
+        _logFlushService = sp.GetService<LogFlusher>();
         if (_logFlushService == null)
         {
-            throw new InvalidOperationException($"{nameof(ILogFlusher)} is not registered, make sure to call AddCustomLogFlusher() when configuring services.");
+            throw new InvalidOperationException($"{nameof(LogFlusher)} is not registered, make sure to call AddCustomLogFlusher() when configuring services.");
         }
     }
 
@@ -92,7 +88,7 @@ public static class Service_CustomLogFlusher
     /// </summary>
     /// <value>The current log flusher instance.</value>
     /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
-    public static ILogFlusher LogFlushService
+    public static LogFlusher LogFlushService
     {
         get
         {

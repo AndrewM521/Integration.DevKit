@@ -1,9 +1,8 @@
-﻿using Integration.DevKit.CustomLogger.Contracts;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
-namespace Integration.DevKit.CustomLogger;
+
+namespace CustomLogger;
 
 /// <summary>
 /// Provides a static entry point to access the Logging module. 
@@ -16,8 +15,8 @@ public static class Service_CustomLogger
 {
     private const string NoInit = "Service_CustomLogger has not been initialized.";
 
-    private static ILogFileRegistry? _logRegistry;
-    private static ICustomLoggerManager? _loggerManager;
+    private static LogFileRegistry? _logRegistry;
+    private static CustomLoggerManager? _loggerManager;
 
     /// <summary>
     /// Registers the custom logging infrastructure, including settings, the logger manager, and the log registry.
@@ -39,17 +38,17 @@ public static class Service_CustomLogger
         }
 
         // Bind LoggerManagerSettings
-        services.Configure<LoggerManagerSettings>(config.GetSection("Integration.DevKit:CustomLogger"));
+        services.Configure<LoggerManagerSettings>(config.GetSection("CustomLogger"));
 
         // Register the concrete class
-        services.TryAddSingleton<ICustomLoggerManager, CustomLoggerManager>();
+        services.TryAddSingleton<CustomLoggerManager>();
 
         // LogFileRegistry enforces LogFlushServiceSettings.MaxBufferCount as a hard cap on its own, so this
         // must resolve to defaults even if AddCustomLogFlusher() (which normally binds it from config) is
         // never called.
         services.AddOptions<LogFlushServiceSettings>();
 
-        services.TryAddSingleton<ILogFileRegistry, LogFileRegistry>();
+        services.TryAddSingleton<LogFileRegistry>();
 
         return services;
     }
@@ -69,16 +68,16 @@ public static class Service_CustomLogger
             throw new ArgumentNullException(nameof(sp));
         }
 
-        _logRegistry = sp.GetService<ILogFileRegistry>();
+        _logRegistry = sp.GetService<LogFileRegistry>();
         if (_logRegistry == null)
         {
-            throw new InvalidOperationException($"{nameof(ILogFileRegistry)} is not registered, make sure to call AddCustomLogging() when configuring services.");
+            throw new InvalidOperationException($"{nameof(LogFileRegistry)} is not registered, make sure to call AddCustomLogging() when configuring services.");
         }
 
-        _loggerManager = sp.GetService<ICustomLoggerManager>();
+        _loggerManager = sp.GetService<CustomLoggerManager>();
         if (_loggerManager == null)
         {
-            throw new InvalidOperationException($"{nameof(ICustomLoggerManager)} is not registered, make sure to call AddCustomLogging() when configuring services.");
+            throw new InvalidOperationException($"{nameof(CustomLoggerManager)} is not registered, make sure to call AddCustomLogging() when configuring services.");
         }
     }
 
@@ -87,7 +86,7 @@ public static class Service_CustomLogger
     /// </summary>
     /// <value>The current logger manager instance.</value>
     /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
-    public static ICustomLoggerManager LoggerManager
+    public static CustomLoggerManager LoggerManager
     {
         get
         {
@@ -105,7 +104,7 @@ public static class Service_CustomLogger
     /// </summary>
     /// <value>The current log registry instance.</value>
     /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
-    public static ILogFileRegistry LogRegistry
+    public static LogFileRegistry LogRegistry
     {
         get
         {

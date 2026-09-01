@@ -4,12 +4,13 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using CustomLogger;
+using CustomLogger.Flusher;
 using Integration.DevKit.Core;
 using Integration.DevKit.Core.Configuration;
 using Integration.DevKit.Core.OnDemand;
 using Integration.DevKit.CredentialMgmt;
-using Integration.DevKit.CustomLogger;
-using Integration.DevKit.CustomLogger.Flusher;
+using Integration.DevKit.CredentialMgmt.Contracts;
 using Integration.DevKit.ProcessLauncher;
 using Integration.DevKit.RESTApiMgmt;
 using Integration.DevKit.RESTApiMgmt.Contracts;
@@ -22,6 +23,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using System.Diagnostics;
 
 namespace TestApp;
@@ -50,11 +52,27 @@ public class Program
         ).Build();
         var decryptedConfig = configBuilder.DecryptJsonOnBuild(cryptoContract, new List<IConfigProtector> { base64Protector, aesProtector }).Build();
 
+        // Bring-your-own-logger test: Serilog in place of the bundled CustomLogger.
+        // DevKit modules only depend on the standard ILogger/ILoggerFactory abstractions,
+        // so UseSerilog() below is all that's needed to make every DI-constructed module log through Serilog.
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Console()
+            .WriteTo.File("C:\\NAS\\Home Drive\\Projects\\Junk\\.Keep\\serilog-log.txt", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
+
         var builder = Host.CreateDefaultBuilder(args)
+            .UseSerilog()
             .ConfigureServices((context, services) =>
             {
-                services.AddCustomLogging(decryptedConfig);
-                services.AddCustomLogFlusher(decryptedConfig);
+                //services.AddCustomLogging(decryptedConfig);
+                //services.AddCustomLogFlusher(decryptedConfig);
+
+                //// DevKit modules now only depend on the standard ILogger/ILoggerFactory abstractions.
+                //// Registering CustomLoggerProvider here is how the bundled CustomLogger plugs into that
+                //// pipeline - any other ILogger-based logger (Serilog, NLog, etc.) would wire up the same way.
+                //services.AddSingleton<ILoggerProvider, CustomLoggerProvider>();
+
                 services.AddProcessLauncher();
                 services.AddRESTApiMgmt(decryptedConfig);
                 services.AddFileSecretStore("TestApp", "C:\\Users\\andre\\Projects\\Junk\\Secrets", "C:\\Users\\andre\\Projects\\Junk\\Keys");
@@ -87,8 +105,8 @@ public class Program
         var serviceProvider = app.Services;
         //var serviceProvider = OnDemandHost.Services;
 
-        Service_CustomLogger.Initialize(serviceProvider);
-        Service_CustomLogFlusher.Initialize(serviceProvider);
+        //Service_CustomLogger.Initialize(serviceProvider);
+        //Service_CustomLogFlusher.Initialize(serviceProvider);
         Service_ProcessLauncher.Initialize(serviceProvider);
         Service_RESTApiMgmt.Initialize(serviceProvider);
         Service_ThreadLocks.Initialize(serviceProvider);
@@ -97,15 +115,22 @@ public class Program
         Service_SQLMgmt.Initialize(serviceProvider);
         Service_CredentialMgmt.InitializeFileSecretStore(serviceProvider);
 
-        // 1. Fire up the background workers (LogFlusher, etc.)
-        await app.StartAsync();
+        try
+        {
+            // 1. Fire up the background workers (LogFlusher, etc.)
+            await app.StartAsync();
 
-        // 2. Fetch and run your custom console logic (blocks until your work is done)
-        var entry = app.Services.GetRequiredService<AppEntry>();
-        await entry.RunAsync(args);
+            // 2. Fetch and run your custom console logic (blocks until your work is done)
+            var entry = app.Services.GetRequiredService<AppEntry>();
+            await entry.RunAsync(args);
 
-        // 3. Gracefully stop the background workers once your main work finishes
-        await app.StopAsync();
+            // 3. Gracefully stop the background workers once your main work finishes
+            await app.StopAsync();
+        }
+        finally
+        {
+            Log.CloseAndFlush();
+        }
     }
 }
 
@@ -114,12 +139,13 @@ public class AppEntry
 
     public async Task RunAsync(string[] args)
     {
-        await TestCoreClasses();
+        //await TestCoreClasses();
         //TestCustomLogger();
         //await TestCustomLoggerFlusher();
         //await TestProcessLauncher();
         //await TestApiManagement();
         //TestCredentialManagement();
+        TestCredentialManagementComposition();
         //await TestThreadSafeItems();
         //await TestTaskManagement();
         //await TestTaskManagement_SyncManagedTask();
@@ -472,6 +498,80 @@ public class AppEntry
         {
             Console.WriteLine($"Delete failed: {deleteResult.Exception}");
         }
+    }
+    private void TestCredentialManagementComposition()
+    {
+        Console.WriteLine("----|----|Credential Management - Composition|----|----");
+
+        // Stand-in for env vars / User Secrets: any IConfiguration is a valid secret source.
+        var inMemoryConfig = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Api:ApiKey"] = "config-sourced-value"
+            })
+            .Build();
+
+        var configReader = new ConfigurationSecretReader(inMemoryConfig);
+
+        // 1. ConfigurationSecretReader on its own.
+        var configResult = configReader.GetKey("Api", "ApiKey");
+        Console.WriteLine(configResult.MethodSuccess
+            ? $"ConfigurationSecretReader found: {configResult.Result}"
+            : $"ConfigurationSecretReader failed: {configResult.Exception.Message}");
+
+        var missingResult = configReader.GetKey("Api", "DoesNotExist");
+        Console.WriteLine(missingResult.MethodSuccess
+            ? "Unexpected success reading a missing key"
+            : $"Expected failure reading missing key: {missingResult.Exception.GetType().Name}");
+
+        // 2. CompositeSecretReader: tries configReader first, falls back to the FileSecretStore.
+        var fileStore = Service_CredentialMgmt.FileSecretStore;
+        fileStore.SetKey("Composite", "DbPassword", "file-sourced-value");
+
+        var composite = new CompositeSecretReader(new ISecretReader[] { configReader, fileStore });
+
+        var compositeFallback = composite.GetKey("Composite", "DbPassword");
+        Console.WriteLine(compositeFallback.MethodSuccess
+            ? $"CompositeSecretReader fell through to FileSecretStore: {compositeFallback.Result}"
+            : $"CompositeSecretReader failed: {compositeFallback.Exception.Message}");
+
+        var compositeFirstMatch = composite.GetKey("Api", "ApiKey");
+        Console.WriteLine(compositeFirstMatch.MethodSuccess
+            ? $"CompositeSecretReader resolved from ConfigurationSecretReader first: {compositeFirstMatch.Result}"
+            : $"CompositeSecretReader failed: {compositeFirstMatch.Exception.Message}");
+
+        // 3. ImportFrom: seed the encrypted FileSecretStore from the config reader, once.
+        var importResult = fileStore.ImportFrom(configReader, "Api", "ApiKey");
+        Console.WriteLine(importResult.MethodSuccess
+            ? "ImportFrom succeeded — ApiKey now lives in the encrypted FileSecretStore"
+            : $"ImportFrom failed: {importResult.Exception.Message}");
+
+        var verifyImport = fileStore.GetKey("Api", "ApiKey");
+        Console.WriteLine(verifyImport.MethodSuccess
+            ? $"FileSecretStore now has imported value: {verifyImport.Result}"
+            : $"Verify import failed: {verifyImport.Exception.Message}");
+
+        // Cleanup so re-running this demo is idempotent.
+        fileStore.DeleteKey("Composite", "DbPassword");
+        fileStore.DeleteKey("Api", "ApiKey");
+
+        // 4. AddCredentialMgmt: config-driven registration, in a throwaway service collection.
+        var credentialMgmtConfig = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Integration.DevKit:CredentialManagement:Provider"] = "File",
+                ["Integration.DevKit:CredentialManagement:File:ApplicationName"] = "TestApp-ConfigDriven",
+                ["Integration.DevKit:CredentialManagement:File:SecretsFolder"] = "C:\\Users\\andre\\Projects\\Junk\\Secrets",
+                ["Integration.DevKit:CredentialManagement:File:KeysFolder"] = "C:\\Users\\andre\\Projects\\Junk\\Keys"
+            })
+            .Build();
+
+        var standaloneServices = new ServiceCollection();
+        standaloneServices.AddCredentialMgmt(credentialMgmtConfig);
+        using var standaloneProvider = standaloneServices.BuildServiceProvider();
+
+        var configDrivenStore = standaloneProvider.GetRequiredService<FileSecretStore>();
+        Console.WriteLine($"AddCredentialMgmt registered a FileSecretStore named '{configDrivenStore.StoreName}'");
     }
     private async Task TestThreadSafeItems()
     {

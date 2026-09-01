@@ -1,12 +1,6 @@
-﻿/*
- * Copyright (c) 2026 AndrewM5
- * Licensed under the MIT License.
- * See LICENSE file in the project root for full license information.
- */
+﻿using Microsoft.Extensions.Logging;
 
-using Microsoft.Extensions.Logging;
-
-namespace Integration.DevKit.CustomLogger;
+namespace CustomLogger;
 
 /// <summary>
 /// Utility method for normalizing and formatting log messages into a standardized string representation.

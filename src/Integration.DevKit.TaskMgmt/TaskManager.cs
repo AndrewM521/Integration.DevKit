@@ -4,7 +4,6 @@ using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
 using Integration.DevKit.TaskMgmt.Contracts;
-using Integration.DevKit.CustomLogger.Contracts;
 using Integration.DevKit.Core;
 
 namespace Integration.DevKit.TaskMgmt;
@@ -19,7 +18,7 @@ public class TaskManager : ITaskManager
 
     private readonly ConcurrentDictionary<string, ManagedTaskRuntime> _tasks = new ConcurrentDictionary<string, ManagedTaskRuntime>();
     private readonly IHostApplicationLifetime _appLifetime;
-    private readonly ICustomLogger? _logger;
+    private readonly ILogger? _logger;
     private SemaphoreSlim _taskLimiter = null!;
     private readonly TaskRegistryRuntime _taskRegistryRuntime;
 
@@ -29,7 +28,7 @@ public class TaskManager : ITaskManager
     /// <see cref="IHostApplicationLifetime"/> to ensure graceful shutdown of all managed tasks.
     /// </summary>
     /// <param name="appLifetime">The application lifetime for monitoring host shutdown events.</param>
-    /// <param name="loggerManager">The manager used to resolve the internal logger.</param>
+    /// <param name="loggerFactory">The factory used to resolve the internal logger.</param>
     /// <param name="taskRegistry">The registry used for persisting and tracking task states.</param>
     /// <param name="settings">The configuration settings for task management and limits.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="appLifetime"/> or <paramref name="taskRegistry"/> is null.</exception>
@@ -37,7 +36,7 @@ public class TaskManager : ITaskManager
         IHostApplicationLifetime appLifetime,
         ITaskRegistry taskRegistry,
         IOptions<TaskManagerSettings> settings,
-        ICustomLoggerManager? loggerManager = null)
+        ILoggerFactory? loggerFactory = null)
     {
         if (appLifetime == null)
         {
@@ -63,7 +62,7 @@ public class TaskManager : ITaskManager
             }
         });
 
-        _logger = loggerManager?.GetLogger("TaskManager");
+        _logger = loggerFactory?.CreateLogger("TaskManager");
         _taskRegistryRuntime = new TaskRegistryRuntime(this, taskRegistry);
 
         RuntimeSettings = settings.Value.Clone();

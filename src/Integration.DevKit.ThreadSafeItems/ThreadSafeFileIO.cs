@@ -5,7 +5,6 @@
  */
 
 using Integration.DevKit.Core;
-using Integration.DevKit.CustomLogger.Contracts;
 using Integration.DevKit.ThreadLocks.Contracts;
 using Microsoft.Extensions.Logging;
 using System.Text;
@@ -19,15 +18,15 @@ namespace Integration.DevKit.ThreadSafeItems;
 public class ThreadSafeFileIO
 {
     private IThreadLockManager _threadLockManager;
-    private ICustomLogger? _logger;
+    private ILogger? _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ThreadSafeFileIO"/> class.
     /// </summary>
     /// <param name="threadLockManager">The manager used to handle synchronization locks.</param>
-    /// <param name="loggerManager">The manager used to resolve the internal logger.</param>
+    /// <param name="loggerFactory">The factory used to resolve the internal logger.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="threadLockManager"/>.</exception>
-    public ThreadSafeFileIO(IThreadLockManager threadLockManager, ICustomLoggerManager? loggerManager = null)
+    public ThreadSafeFileIO(IThreadLockManager threadLockManager, ILoggerFactory? loggerFactory = null)
     {
         if (threadLockManager == null)
         {
@@ -35,7 +34,7 @@ public class ThreadSafeFileIO
         }
 
         _threadLockManager = threadLockManager;
-        _logger = loggerManager?.GetLogger("ThreadSafeFileIO");
+        _logger = loggerFactory?.CreateLogger("ThreadSafeFileIO");
     }
 
     #region Async Methods

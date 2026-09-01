@@ -12,7 +12,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Integration.DevKit.CustomLogger.Contracts\Integration.DevKit.CustomLogger.Contracts.csproj" />
-  
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
   </ItemGroup>
 </Project>

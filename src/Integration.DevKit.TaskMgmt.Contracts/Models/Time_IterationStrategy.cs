@@ -1,5 +1,4 @@
-﻿using Integration.DevKit.CustomLogger.Contracts;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace Integration.DevKit.TaskMgmt.Contracts;
 
@@ -48,7 +47,7 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
     /// <item><description><b>Waiting:</b> Performs a "Smart Wait" using tiered polling to reach the target with high precision.</description></item>
     /// </list>
     /// </remarks>
-    public override async Task WaitForReadyAsync(IManagedTaskHandle handle, CancellationToken cancellationToken, ICustomLogger? logger = null)
+    public override async Task WaitForReadyAsync(IManagedTaskHandle handle, CancellationToken cancellationToken, ILogger? logger = null)
     {
         // Initial State Resolution
         var target = GetNextTargetDTM(handle.CurrentIterationCount);

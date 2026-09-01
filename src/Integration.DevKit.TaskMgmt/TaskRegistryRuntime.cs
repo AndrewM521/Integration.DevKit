@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using Integration.DevKit.TaskMgmt.Contracts;
-using Integration.DevKit.CustomLogger.Contracts;
 using Integration.DevKit.Core;
 
 namespace Integration.DevKit.TaskMgmt;
@@ -18,7 +17,7 @@ internal class TaskRegistryRuntime
 {
     private readonly ITaskRegistry _taskRegistry;
     private readonly ITaskManager _taskManager;
-    private readonly ICustomLogger? _logger;
+    private readonly ILogger? _logger;
 
     /// <summary>
     /// Tracks the order in which tasks were added to the registry to facilitate 
@@ -31,13 +30,13 @@ internal class TaskRegistryRuntime
     /// </summary>
     /// <param name="taskManager">The manager providing global runtime settings and limits.</param>
     /// <param name="taskRegistry">The underlying storage for task snapshots.</param>
-    /// <param name="loggerManager">Optional logger manager to provide contextual logging.</param>
-    public TaskRegistryRuntime(ITaskManager taskManager, ITaskRegistry taskRegistry, ICustomLoggerManager? loggerManager = null)
+    /// <param name="loggerFactory">Optional logger factory to provide contextual logging.</param>
+    public TaskRegistryRuntime(ITaskManager taskManager, ITaskRegistry taskRegistry, ILoggerFactory? loggerFactory = null)
     {
         _taskRegistry = taskRegistry;
         _taskManager = taskManager;
 
-        _logger = loggerManager?.GetLogger("Managed Task Registry");
+        _logger = loggerFactory?.CreateLogger("Managed Task Registry");
     }
 
     /// <summary>

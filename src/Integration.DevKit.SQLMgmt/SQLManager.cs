@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
 using Integration.DevKit.SQLMgmt.Contracts;
-using Integration.DevKit.CustomLogger.Contracts;
 
 namespace Integration.DevKit.SQLMgmt;
 
@@ -17,15 +16,15 @@ public class SQLManager : ISQLManager
     public SQLManagerSettings RuntimeSettings { get; set; }
 
     private readonly ConcurrentDictionary<string, ISQLClient> _clients = new ConcurrentDictionary<string, ISQLClient>(StringComparer.OrdinalIgnoreCase);
-    private readonly ICustomLogger? _logger;
+    private readonly ILogger? _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SQLManager"/> class.
     /// </summary>
     /// <param name="settings">The injected options containing initial SQL configurations.</param>
-    /// <param name="loggerManager">An optional logger manager to provide diagnostic logging.</param>
+    /// <param name="loggerFactory">An optional logger factory to provide diagnostic logging.</param>
     /// <exception cref="ArgumentNullException">Thrown when the <paramref name="settings"/> argument is <see langword="null"/>.</exception>
-    public SQLManager(IOptions<SQLManagerSettings> settings, ICustomLoggerManager? loggerManager = null)
+    public SQLManager(IOptions<SQLManagerSettings> settings, ILoggerFactory? loggerFactory = null)
     {
         if (settings == null)
         {
@@ -34,7 +33,7 @@ public class SQLManager : ISQLManager
 
         RuntimeSettings = settings.Value.Clone();
 
-        _logger = loggerManager?.GetLogger("SqlDBManager");
+        _logger = loggerFactory?.CreateLogger("SqlDBManager");
     }
 
     /// <inheritdoc/>

@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Text;
 using Integration.DevKit.ProcessLauncher.Contracts;
-using Integration.DevKit.CustomLogger.Contracts;
 using Integration.DevKit.Core;
 
 namespace Integration.DevKit.ProcessLauncher;
@@ -13,7 +12,7 @@ namespace Integration.DevKit.ProcessLauncher;
 
 public class ManagedProcess : IManagedProcess
 {
-    private readonly ICustomLogger? _logger;
+    private readonly ILogger? _logger;
 
     internal readonly ProcessStartInfo _startInfo;
     internal readonly StringBuilder _stdout = new StringBuilder();
@@ -43,7 +42,7 @@ public class ManagedProcess : IManagedProcess
     /// </summary>
     /// <param name="config">The configuration defining how the process should be launched.</param>
     /// <param name="logger">An optional logger for internal event tracking.</param>
-    internal ManagedProcess(IManagedProcessConfig config, ICustomLogger? logger = null)
+    internal ManagedProcess(IManagedProcessConfig config, ILogger? logger = null)
     {
         _logger = logger;
 

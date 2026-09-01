@@ -1,6 +1,6 @@
 # Custom Logging
 
-`Integration.DevKit.CustomLogger` and `Integration.DevKit.CustomLogger.Flusher` implement a lightweight `Microsoft.Extensions.Logging`-compatible logger with three independent output sinks — an always-on debug sink, an optional console sink, and an optional buffered file sink — plus a background service that periodically flushes the file buffer to disk.
+DevKit core modules only depend on `Microsoft.Extensions.Logging.Abstractions` (`ILogger`/`ILoggerFactory`) — bring whatever `ILogger`-based logger you already use (Serilog, NLog, `Microsoft.Extensions.Logging`'s built-in console/debug providers, or none at all).
 
 ## Requirements
 
@@ -44,6 +44,19 @@ logger.LogInformation("Application started");
 ```
 
 **Ordering matters.** `Service_CustomLogFlusher.Initialize` explicitly checks that the logging module's services are already registered and throws `InvalidOperationException` if `AddCustomLogging` wasn't called first. Register both, build the provider, then initialize both, in that order.
+
+## Bring your own logger
+
+DevKit modules (`ProcessManager`, `ApiManager`, `SQLManager`, `TaskManager`, `ThreadSafeFileIO`, etc.) take an optional `ILoggerFactory?`/`ILogger?` constructor parameter. When they're constructed through DI, any `ILoggerFactory` registered in the container is used automatically — you don't need to pass anything module-by-module. The standard way to get one registered is the framework's own `services.AddLogging(...)`, with your provider of choice added via `AddProvider`/`AddConsole`/`AddSerilog`/etc.
+
+To use the bundled `CustomLogger` this way, register `CustomLoggerProvider` (an `ILoggerProvider` adapter over `ICustomLoggerManager`) alongside the usual `AddCustomLogging` call:
+
+```csharp
+services.AddCustomLogging(configuration);
+services.AddSingleton<ILoggerProvider, CustomLoggerProvider>();
+```
+
+Because `Host.CreateDefaultBuilder` already wires up `ILoggerFactory` from every registered `ILoggerProvider`, every DI-constructed DevKit module now logs through `CustomLogger` with no further wiring. This is exactly the pattern used by `samples/TestApp/Program.cs`, and it's the same pattern any other `ILogger`-based logger (Serilog, NLog, etc.) would use in place of `CustomLoggerProvider`.
 
 ## Configuration
 
@@ -172,6 +185,18 @@ public LoggerManagerSettings RuntimeSettings { get; }
 public ICustomLogger GetLogger(string categoryName);
 public void LogRuntimeSettings();   // logs every RuntimeSettings property at Debug level, for diagnostics
 ```
+
+### `CustomLoggerProvider`
+
+```csharp
+public sealed class CustomLoggerProvider : ILoggerProvider
+{
+    public CustomLoggerProvider(ICustomLoggerManager manager);
+    public ILogger CreateLogger(string categoryName);
+}
+```
+
+Adapts an `ICustomLoggerManager` to the standard `ILoggerProvider` contract. Register it with `services.AddSingleton<ILoggerProvider, CustomLoggerProvider>()` after `AddCustomLogging` to make `CustomLogger` available through any DI-resolved `ILoggerFactory` — see [Bring your own logger](#bring-your-own-logger).
 
 ## Error handling
 

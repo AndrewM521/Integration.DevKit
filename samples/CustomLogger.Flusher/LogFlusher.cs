@@ -11,21 +11,22 @@ using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
-using Integration.DevKit.CustomLogger.Contracts;
 
-namespace Integration.DevKit.CustomLogger.Flusher;
+namespace CustomLogger.Flusher;
 
 /// <summary>
-/// Concrete Implementation of <see cref="ILogFlusher"/> that periodically flushes buffered log messages from 
-/// <see cref="ILogFileRegistry"/> to a persistent file destination.
+/// Defines a service responsible for managing the flushing of log buffers 
+/// to their respective persistent storage or destinations.
 /// </summary>
-public class LogFlusher : BackgroundService, ILogFlusher
+public class LogFlusher : BackgroundService
 {
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the current operational settings for the log flushing service.
+    /// </summary>
     public LogFlushServiceSettings RuntimeSettings { get; init; }
 
-    private readonly ILogFileRegistry _logRegistry;
-    private readonly ICustomLogger? _logger;
+    private readonly LogFileRegistry _logRegistry;
+    private readonly CustomLogger? _logger;
 
     private readonly bool _runningInContainer;
 
@@ -36,7 +37,7 @@ public class LogFlusher : BackgroundService, ILogFlusher
     /// <param name="loggerManager">The manager used to create an internal logger for this service.</param>
     /// <param name="logRegistry">The registry containing the message buffer to be flushed.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="settings"/> is null.</exception>
-    public LogFlusher(IOptions<LogFlushServiceSettings> settings, ICustomLoggerManager loggerManager, ILogFileRegistry logRegistry)
+    public LogFlusher(IOptions<LogFlushServiceSettings> settings, CustomLoggerManager loggerManager, LogFileRegistry logRegistry)
     {
         if (settings == null)
         {
@@ -129,7 +130,10 @@ public class LogFlusher : BackgroundService, ILogFlusher
         }
     }
 
-    /// <inheritdoc />
+
+    /// <summary>
+    /// Logging method to output current <see cref="LogFlushServiceSettings"/> to the logs.
+    /// </summary>
     public void LogRuntimeSettings()
     {
         _logger?.LogDebug($"--- Log Flush Service Settings ---");

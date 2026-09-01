@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Integration.DevKit.ProcessLauncher.Contracts;
-using Integration.DevKit.CustomLogger.Contracts;
 using Integration.DevKit.Core;
 
 namespace Integration.DevKit.ProcessLauncher;
@@ -16,15 +15,15 @@ public class ProcessManager : IProcessManager
 {
     private readonly ConcurrentDictionary<string, ManagedProcess> _processes = new ConcurrentDictionary<string, ManagedProcess>();
 
-    private readonly ICustomLogger? _logger;
+    private readonly ILogger? _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ProcessManager"/> class.
     /// </summary>
-    /// <param name="loggerManager">An optional logger manager to provide contextual logging for the launcher.</param>
-    public ProcessManager (ICustomLoggerManager? loggerManager = null)
+    /// <param name="loggerFactory">An optional logger factory to provide contextual logging for the launcher.</param>
+    public ProcessManager (ILoggerFactory? loggerFactory = null)
     {
-        _logger = loggerManager?.GetLogger("ProcessLauncherManager");
+        _logger = loggerFactory?.CreateLogger("ProcessLauncherManager");
     }
 
     /// <inheritdoc/>

@@ -4,7 +4,9 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using Integration.DevKit.CredentialMgmt.Contracts;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -40,6 +42,36 @@ public static class Service_CredentialMgmt
         services.TryAddSingleton(sp =>
             new FileSecretStore(sp.GetRequiredService<IDataProtectionProvider>(), applicationName, secretsFolder)
         );
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the credential management backend selected by configuration.
+    /// </summary>
+    /// <remarks>
+    /// Reads the <c>Integration.DevKit:CredentialManagement</c> section (see <see cref="CredentialManagementSettings"/>)
+    /// and registers the corresponding backend, matching the config-driven registration convention used by the
+    /// other DevKit modules (e.g. <c>AddSQLMgmt</c>). Currently only the <c>"File"</c> provider is supported,
+    /// which delegates to <see cref="AddFileSecretStore"/> using the bound <see cref="FileSecretStoreSettings"/>.
+    /// </remarks>
+    /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+    /// <param name="configuration">The application configuration used to bind <see cref="CredentialManagementSettings"/>.</param>
+    /// <returns>The modified <see cref="IServiceCollection"/> for fluent chaining.</returns>
+    /// <exception cref="NotSupportedException">Thrown if <see cref="CredentialManagementSettings.Provider"/> names an unsupported backend.</exception>
+    public static IServiceCollection AddCredentialMgmt(this IServiceCollection services, IConfiguration configuration)
+    {
+        var settings = new CredentialManagementSettings();
+        configuration.GetSection("Integration.DevKit:CredentialManagement").Bind(settings);
+
+        switch (settings.Provider)
+        {
+            case "File":
+                services.AddFileSecretStore(settings.File.ApplicationName, settings.File.SecretsFolder, settings.File.KeysFolder);
+                break;
+            default:
+                throw new NotSupportedException($"CredentialManagement provider '{settings.Provider}' is not supported.");
+        }
 
         return services;
     }

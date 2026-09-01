@@ -11,7 +11,6 @@ using System.Reflection;
 using Integration.DevKit.Core;
 using Integration.DevKit.CredentialMgmt.Contracts;
 using Integration.DevKit.SQLMgmt.Contracts;
-using Integration.DevKit.CustomLogger.Contracts;
 
 namespace Integration.DevKit.SQLMgmt;
 
@@ -26,7 +25,7 @@ public class SQLClient : ISQLClient
     /// <inheritdoc/>
     public string ClientName { get; set; }
 
-    private readonly ICustomLogger? _logger;
+    private readonly ILogger? _logger;
 
     private const string NoSecretStore = "SecretStore has not been set. Call SetSecretStore()";
     private const string ConnectionStringKey = "ConnectionString";
@@ -43,7 +42,7 @@ public class SQLClient : ISQLClient
     /// <param name="clientName">The unique name identifying this specific client instance.</param>
     /// <param name="settings">The configuration and connectivity settings.</param>
     /// <param name="logger">An optional logger instance for diagnostic reporting.</param>
-    internal SQLClient(string clientName, SQLClientSettings settings, ICustomLogger? logger = null)
+    internal SQLClient(string clientName, SQLClientSettings settings, ILogger? logger = null)
     {
         ClientName = clientName;
 

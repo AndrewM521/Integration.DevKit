@@ -10,16 +10,20 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.8" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.8" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Integration.DevKit.CredentialMgmt\Integration.DevKit.CredentialMgmt.csproj" />
-    <ProjectReference Include="..\..\src\Integration.DevKit.CustomLogger.Flusher\Integration.DevKit.CustomLogger.Flusher.csproj" />
     <ProjectReference Include="..\..\src\Integration.DevKit.ProcessLauncher\Integration.DevKit.ProcessLauncher.csproj" />
     <ProjectReference Include="..\..\src\Integration.DevKit.RESTApiMgmt\Integration.DevKit.RESTApiMgmt.csproj" />
     <ProjectReference Include="..\..\src\Integration.DevKit.SQLMgmt\Integration.DevKit.SQLMgmt.csproj" />
     <ProjectReference Include="..\..\src\Integration.DevKit.TaskMgmt\Integration.DevKit.TaskMgmt.csproj" />
     <ProjectReference Include="..\..\src\Integration.DevKit.ThreadSafeItems\Integration.DevKit.ThreadSafeItems.csproj" />
+    <ProjectReference Include="..\CustomLogger.Flusher\CustomLogger.Flusher.csproj" />
+    <ProjectReference Include="..\CustomLogger\CustomLogger.csproj" />
   </ItemGroup>
 
   <ItemGroup>

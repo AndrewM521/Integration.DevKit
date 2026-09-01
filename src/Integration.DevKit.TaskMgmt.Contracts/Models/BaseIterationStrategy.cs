@@ -1,4 +1,4 @@
-﻿using Integration.DevKit.CustomLogger.Contracts;
+﻿using Microsoft.Extensions.Logging;
 
 namespace Integration.DevKit.TaskMgmt.Contracts;
 
@@ -13,7 +13,7 @@ public class BaseIterationStrategy : IIterationStrategy
     /// It does not block or await any external triggers, effectively allowing the 
     /// execution engine to start the next task iteration immediately.
     /// </remarks>
-    public virtual Task WaitForReadyAsync(IManagedTaskHandle handle, CancellationToken cancellationToken, ICustomLogger? logger = null)
+    public virtual Task WaitForReadyAsync(IManagedTaskHandle handle, CancellationToken cancellationToken, ILogger? logger = null)
     {
         return Task.CompletedTask;
     }

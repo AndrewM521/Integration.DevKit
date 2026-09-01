@@ -1,21 +1,20 @@
 ﻿using System.Collections.Concurrent;
-using Integration.DevKit.CustomLogger.Contracts;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Integration.DevKit.CustomLogger;
-
+namespace CustomLogger;
 
 /// <summary>
-/// Concrete Implementation of <see cref="ILogFileRegistry"/>
+/// Defines a central registry that acts as a buffer for log messages, 
+/// facilitating the hand-off between log producers and the log flushing service.
 /// </summary>
-internal class LogFileRegistry : ILogFileRegistry
+public class LogFileRegistry
 {
     private const int DefaultMaxBufferCount = 50;
 
     /// <summary>
-    /// Gets the number of pending log messages currently buffered in the registry.
+    /// Gets the total number of log messages currently residing in the registry.
     /// </summary>
+    /// <value>An <see cref="int"/> representing the count of pending log entries.</value>
     public int Count => _logFileRegistry.Count;
 
     private readonly ConcurrentQueue<string> _logFileRegistry = new ConcurrentQueue<string>();
@@ -34,7 +33,13 @@ internal class LogFileRegistry : ILogFileRegistry
         _maxBufferCount = flushSettings.Value.MaxBufferCount > 0 ? flushSettings.Value.MaxBufferCount : DefaultMaxBufferCount;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Adds a new log message to the internal buffer destined for file output.
+    /// </summary>
+    /// <param name="message">The formatted log entry to be stored.</param>
+    /// <remarks>
+    /// This method is the primary entry point for log producers.
+    /// </remarks>
     /// <remarks>
     /// This implementation ignores null or whitespace strings to ensure log integrity. If the buffer is at
     /// capacity (<see cref="LogFlushServiceSettings.MaxBufferCount"/>), the oldest buffered message is dropped
@@ -57,7 +62,17 @@ internal class LogFileRegistry : ILogFileRegistry
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Retrieves and removes all currently buffered log messages for file output.
+    /// </summary>
+    /// <returns>
+    /// An array of <see cref="string"/> containing all log messages that were in the buffer. 
+    /// If the buffer is empty, returns an empty array.
+    /// </returns>
+    /// <remarks>
+    /// This is typically called by an <see cref="ILogFlusher"/> to clear the buffer 
+    /// and commit entries to persistent storage.
+    /// </remarks>
     /// <remarks>
     /// This method performs a destructive read, draining the internal queue entirely. 
     /// Messages are returned in the order they were enqueued (FIFO).

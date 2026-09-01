@@ -7,7 +7,6 @@
 using Integration.DevKit.Core;
 using Integration.DevKit.CredentialMgmt.Contracts;
 using Integration.DevKit.RESTApiMgmt.Contracts;
-using Integration.DevKit.CustomLogger.Contracts;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text;
@@ -38,7 +37,7 @@ public class ApiClient : IApiClient
     private readonly IApiManager _apiManager;
     private SemaphoreSlim _rateLimiter = null!;
     private readonly ApiClientMetrics _metrics;
-    private readonly ICustomLogger? _logger;
+    private readonly ILogger? _logger;
 
     private const string NoSecretStore = "SecretStore has not been set. Call SetSecretStore()";
     private readonly string _secretStoreFileName;
@@ -52,7 +51,7 @@ public class ApiClient : IApiClient
     /// <param name="clientSettings">The specific configuration for this client.</param>
     /// <param name="httpClient">The underlying <see cref="HttpClient"/> instance to use for requests.</param>
     /// <param name="logger">Optional logger for debugging and runtime info.</param>
-    internal ApiClient(IApiManager apiManager, string clientName, ApiClientSettings clientSettings, HttpClient httpClient, ICustomLogger? logger = null)
+    internal ApiClient(IApiManager apiManager, string clientName, ApiClientSettings clientSettings, HttpClient httpClient, ILogger? logger = null)
     {
         ClientName = clientName;
 

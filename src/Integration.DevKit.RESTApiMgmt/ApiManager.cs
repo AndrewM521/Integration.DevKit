@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
-using Integration.DevKit.CustomLogger.Contracts;
 using Integration.DevKit.RESTApiMgmt.Contracts;
 
 namespace Integration.DevKit.RESTApiMgmt;
@@ -24,16 +23,16 @@ public class ApiManager : IApiManager
     private readonly ConcurrentDictionary<string, IApiClient> _clients = new ConcurrentDictionary<string, IApiClient>(StringComparer.OrdinalIgnoreCase);
     
     private readonly IHttpClientFactory _httpFactory;
-    private readonly ICustomLogger? _logger;
+    private readonly ILogger? _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ApiManager"/> class.
     /// </summary>
     /// <param name="settings">The initial configuration settings injected via the Options pattern.</param>
     /// <param name="httpFactory">The factory used to create underlying <see cref="HttpClient"/> instances.</param>
-    /// <param name="loggerManager">Optional manager to resolve the "ApiManager" logger.</param>
+    /// <param name="loggerFactory">Optional factory to resolve the "ApiManager" logger.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="settings"/> is null.</exception>
-    public ApiManager(IOptions<ApiManagerSettings> settings, IHttpClientFactory httpFactory, ICustomLoggerManager? loggerManager = null)
+    public ApiManager(IOptions<ApiManagerSettings> settings, IHttpClientFactory httpFactory, ILoggerFactory? loggerFactory = null)
     {
         if (settings == null)
         {
@@ -49,7 +48,7 @@ public class ApiManager : IApiManager
 
         _httpFactory = httpFactory;
 
-        _logger = loggerManager?.GetLogger("ApiManager");
+        _logger = loggerFactory?.CreateLogger("ApiManager");
     }
 
     /// <inheritdoc/>

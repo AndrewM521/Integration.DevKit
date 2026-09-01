@@ -1,6 +1,6 @@
 # Credential Management
 
-`Integration.DevKit.CredentialMgmt` provides `ISecretStore`, a small key/value secret-storage abstraction, plus one concrete implementation — `FileSecretStore` — that persists secrets to disk, encrypted at rest using ASP.NET Core's Data Protection stack. It's the store that [REST API Management](rest-api.md#credentials) and [SQL Management](sql-management.md#credentials) can optionally plug into via `SetSecretStore`.
+`Integration.DevKit.CredentialMgmt` doesn't try to replace every place a secret might live — env vars, ASP.NET Core User Secrets, a cloud vault, or its own encrypted file store. Instead it standardizes the *contract* other DevKit modules talk to (`ISecretReader`/`ISecretStore`), ships one concrete read/write implementation (`FileSecretStore`, encrypted at rest via ASP.NET Core's Data Protection stack), and gives you composition helpers (`ConfigurationSecretReader`, `CompositeSecretReader`, `ImportFrom`) so you can layer in whatever other sources a project needs without writing provider-specific glue. It's the store that [REST API Management](rest-api.md#credentials) and [SQL Management](sql-management.md#credentials) can optionally plug into via `SetSecretStore`.
 
 ## Requirements
 
@@ -39,24 +39,30 @@ if (apiKey.MethodSuccess)
 }
 ```
 
-This module has **no config-section binding** — `AddFileSecretStore` takes its parameters directly as arguments rather than reading an `IConfiguration` section, and there's no ordering dependency on any other DevKit module (unlike, say, `ThreadSafeItems` needing `ThreadLocks`).
+`AddFileSecretStore` takes its parameters directly as arguments rather than reading an `IConfiguration` section, and there's no ordering dependency on any other DevKit module (unlike, say, `ThreadSafeItems` needing `ThreadLocks`). If you'd rather select the backend from configuration — e.g. so dev/prod can differ without a code change — use `AddCredentialMgmt(configuration)` instead; see [Config-driven registration](#config-driven-registration) below.
 
-## `ISecretStore`
+## `ISecretReader` and `ISecretStore`
 
 ```csharp
 namespace Integration.DevKit.CredentialMgmt.Contracts;
 
-public interface ISecretStore
+public interface ISecretReader
 {
     string StoreName { get; }
-    NullOperationResult SetKey(string fileName, string key, string value);
     OperationResult<string> GetKey(string fileName, string key);
+}
+
+public interface ISecretStore : ISecretReader
+{
+    NullOperationResult SetKey(string fileName, string key, string value);
     NullOperationResult DeleteKey(string fileName, string key);
     NullOperationResult DeleteSecret(string fileName);
 }
 ```
 
-Think of `fileName` as a **container name** — a logical grouping of related secrets (e.g. `"Api"`, `"Database"`) — and `key` as the individual secret's name within that container. The interface contract requires implementations to encrypt data at rest and restrict access to the underlying storage; `FileSecretStore` is the one shipped implementation that satisfies this.
+`ISecretReader` is the minimal, read-only contract — it's what env vars, `IConfiguration`, and read-only cloud-vault views can implement in a handful of lines, without taking on write support they can't (or shouldn't) provide. `ISecretStore` extends it with the write operations, for backends — like `FileSecretStore` — that actually own their storage.
+
+Think of `fileName` as a **container name** — a logical grouping of related secrets (e.g. `"Api"`, `"Database"`) — and `key` as the individual secret's name within that container. `ISecretStore` implementations must encrypt data at rest and restrict access to the underlying storage; `FileSecretStore` is the one shipped implementation that satisfies this. `ISecretReader` carries no such guarantee itself — a config-backed reader is only as safe as the configuration source behind it (e.g. User Secrets are not encrypted at rest).
 
 ## `FileSecretStore`
 
@@ -91,6 +97,71 @@ You don't normally construct this directly — `AddFileSecretStore` registers an
 
 > **Known quirk:** internally, the Data Protection "purpose" string used to create the protector is hardcoded to the literal `"FileSecretStore"` rather than your `applicationName` — `applicationName` only affects the Data Protection application discriminator (`SetApplicationName`), not the protector purpose itself. This doesn't weaken security, but it means the purpose string is the same across every application using this module rather than being application-specific.
 
+## Composing multiple sources
+
+### `ConfigurationSecretReader`
+
+A thin, read-only wrapper over `IConfiguration`. Because ASP.NET Core User Secrets, environment variables, and command-line arguments are all just `IConfiguration` providers, this one class makes all of them valid secret sources — there's no separate "User Secrets adapter" to write.
+
+```csharp
+var reader = new ConfigurationSecretReader(configuration);
+var apiKey = reader.GetKey("Api", "ApiKey"); // looks up configuration["Api:ApiKey"]
+```
+
+`GetKey` reads `{fileName}:{key}` as a hierarchical configuration path. This matches both nested JSON (`"Api": { "ApiKey": "..." }`) and an environment variable named `Api__ApiKey`, since `IConfiguration` normalizes double underscores to colons for its environment variable provider.
+
+### `CompositeSecretReader`
+
+Tries a prioritized list of `ISecretReader`s in order and returns the first successful result — the same layering model `IConfiguration` itself uses.
+
+```csharp
+var reader = new CompositeSecretReader(new ISecretReader[]
+{
+    new ConfigurationSecretReader(configuration), // e.g. env var / CI secret / User Secrets
+    Service_CredentialMgmt.FileSecretStore,       // fall back to the encrypted store
+});
+
+var apiKey = reader.GetKey("Api", "ApiKey");
+```
+
+The order is entirely the consuming project's decision — DevKit only supplies the composition logic, not an opinion about which source should win.
+
+### `ImportFrom`
+
+Seeds an `ISecretStore` from any `ISecretReader`, in one call — the same code path regardless of where the plaintext originally came from:
+
+```csharp
+Service_CredentialMgmt.FileSecretStore.ImportFrom(
+    new ConfigurationSecretReader(configuration), "Api", "ApiKey");
+```
+
+This is the recommended way to bootstrap the encrypted `FileSecretStore` from User Secrets (locally) or environment variables/CI secrets (in automated environments) without hand-rolling a one-off import script per source — the plaintext value only ever exists in memory for the duration of this call.
+
+## Config-driven registration
+
+`AddCredentialMgmt(configuration)` selects and registers a backend from an `Integration.DevKit:CredentialManagement` configuration section, matching the binding convention used by [`AddSQLMgmt`](sql-management.md) and [`AddRESTApiMgmt`](rest-api.md):
+
+```json
+"Integration.DevKit": {
+  "CredentialManagement": {
+    "Provider": "File",
+    "File": {
+      "ApplicationName": "MyApp",
+      "SecretsFolder": "C:\\MyApp\\Secrets",
+      "KeysFolder": "C:\\MyApp\\Keys"
+    }
+  }
+}
+```
+
+```csharp
+services.AddCredentialMgmt(configuration);
+// ... build the host ...
+Service_CredentialMgmt.InitializeFileSecretStore(app.Services);
+```
+
+`Provider` currently only supports `"File"` (delegating to `AddFileSecretStore` under the hood using the bound `File` settings); an unsupported value throws `NotSupportedException` at registration time. This is additive — the existing raw-parameter `AddFileSecretStore(applicationName, secretsFolder, keysFolder)` overload is unchanged and still works standalone.
+
 ## Wiring into `ApiClient` / `SQLClient`
 
 Both [`IApiClient`](rest-api.md) and [`ISQLClient`](sql-management.md) accept a secret store via `SetSecretStore(ISecretStore secretStore)`, after which they'll read/write their own credentials through it instead of the plain-text values in configuration:
@@ -112,13 +183,36 @@ Each client stores its credentials under its own container name, derived interna
 
 ```csharp
 public static IServiceCollection AddFileSecretStore(this IServiceCollection services, string applicationName, string secretsFolder, string keysFolder);
+public static IServiceCollection AddCredentialMgmt(this IServiceCollection services, IConfiguration configuration);
 public static void InitializeFileSecretStore(IServiceProvider sp);
 public static FileSecretStore FileSecretStore { get; }   // throws InvalidOperationException before Initialize
 ```
 
+### `ConfigurationSecretReader` / `CompositeSecretReader`
+
+```csharp
+public class ConfigurationSecretReader : ISecretReader
+{
+    public ConfigurationSecretReader(IConfiguration configuration, string storeName = "ConfigurationSecretReader");
+    public OperationResult<string> GetKey(string fileName, string key);
+}
+
+public class CompositeSecretReader : ISecretReader
+{
+    public CompositeSecretReader(IReadOnlyList<ISecretReader> readers, string storeName = "CompositeSecretReader");
+    public OperationResult<string> GetKey(string fileName, string key);
+}
+```
+
+### `SecretStoreExtensions`
+
+```csharp
+public static NullOperationResult ImportFrom(this ISecretStore target, ISecretReader source, string fileName, string key);
+```
+
 ## Error Handling
 
-Every `ISecretStore` method returns `NullOperationResult`/`OperationResult<string>` rather than throwing — check `MethodSuccess` before trusting `Result`. `GetKey` on a missing key returns a failed result wrapping a `KeyNotFoundException` rather than throwing directly.
+Every `ISecretReader`/`ISecretStore` method returns `OperationResult<string>`/`NullOperationResult` rather than throwing — check `MethodSuccess` before trusting `Result`. `GetKey` on a missing key returns a failed result wrapping a `KeyNotFoundException` rather than throwing directly; `CompositeSecretReader` does the same once every configured reader has failed.
 
 ## Best Practices
 

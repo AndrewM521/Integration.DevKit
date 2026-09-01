@@ -1,30 +1,29 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using Integration.DevKit.CustomLogger.Contracts;
 
-namespace Integration.DevKit.CustomLogger;
+namespace CustomLogger;
 
 /// <summary>
-/// A custom implementation of <see cref="ILogger"/> and <see cref="ICustomLogger"/> that 
-/// routes log messages to a central registry, the debug output, and optionally the console.
+/// A custom implementation of <see cref="ILogger"/> that routes log messages to a central registry, the debug output, and optionally the console.
 /// </summary>
-public class CustomLogger : ICustomLogger
+public class CustomLogger : ILogger
 {
-    private readonly ICustomLoggerManager _loggerManager;
-    private readonly ILogFileRegistry _logFileRegistry;
+    private readonly CustomLoggerManager _loggerManager;
+    private readonly LogFileRegistry _logFileRegistry;
 
     private bool _isLoggerEnabled = true;
     private string _categoryName = string.Empty;
     private bool _outputToConsole = false;
 
     /// <summary>
-    /// Gets the logger category name used for emitted log messages.
+    /// Gets the category name associated with this logger instance.
     /// </summary>
     public string CategoryName => _categoryName;
 
     /// <summary>
-    /// Gets a value indicating whether this logger is currently enabled.
+    /// Gets a value indicating whether the logger is currently enabled.
     /// </summary>
+    /// <value><see langword="true"/> if the logger is enabled; otherwise, <see langword="false"/>.</value>
     public bool IsLoggerEnabled => _isLoggerEnabled;
 
     /// <summary>
@@ -35,7 +34,7 @@ public class CustomLogger : ICustomLogger
     /// <param name="categoryName">The name of the category for this logger (e.g., the class name).</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="loggerManager"/> is null.</exception>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="logRegistry"/> is null.</exception>
-    internal CustomLogger(ICustomLoggerManager loggerManager, ILogFileRegistry logRegistry, string categoryName = "Unknown Category")
+    internal CustomLogger(CustomLoggerManager loggerManager, LogFileRegistry logRegistry, string categoryName = "Unknown Category")
     {
         if (loggerManager == null)
         {
@@ -113,25 +112,36 @@ public class CustomLogger : ICustomLogger
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Activates the logger, allowing log messages to be processed.
+    /// </summary>
     public void EnableLogger()
     {
         _isLoggerEnabled = true;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Deactivates the logger, preventing further log messages from being processed.
+    /// </summary>
+    /// <remarks>
+    /// When disabled, calls to <see cref="ILogger.Log"/> should return immediately without processing.
+    /// </remarks>
     public void DisableLogger()
     {
         _isLoggerEnabled = false;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Enables the routing of log output to the console.
+    /// </summary>
     public void EnableConsoleOutput()
     {
         _outputToConsole = true;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Disables the routing of log output to the console.
+    /// </summary>
     public void DisableConsoleOutput()
     {
         _outputToConsole = false;
