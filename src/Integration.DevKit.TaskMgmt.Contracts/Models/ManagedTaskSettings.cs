@@ -109,7 +109,7 @@ public class ManagedTaskSettings
     public int MaxConcurrentParallelTasks { get; set; } = 2;
 
     /// <summary>
-    /// Gets the maximum amount of time the task is allowed to run before being automatically canceled.
+    /// Gets or sets the maximum amount of time the task is allowed to run before being automatically canceled.
     /// </summary>
     /// <value>
     /// A <see cref="TimeSpan"/> representing the timeout limit. If <see langword="null"/>, 
@@ -133,7 +133,8 @@ public class ManagedTaskSettings
             StopIteratingOnException = StopIteratingOnException,
             MaxConcurrentParallelTasks = MaxConcurrentParallelTasks,
             AllowParallelIterationExecution = AllowParallelIterationExecution,
-            IterationExecutionMode = IterationExecutionMode
+            IterationExecutionMode = IterationExecutionMode,
+            Timeout = Timeout
         };
     }
 }

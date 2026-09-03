@@ -1,5 +1,8 @@
 ﻿using Integration.DevKit.Core;
+using Integration.DevKit.Core.Logging;
 using Integration.DevKit.ThreadLocks.Contracts;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 
 namespace Integration.DevKit.ThreadLocks;
@@ -9,8 +12,24 @@ namespace Integration.DevKit.ThreadLocks;
 /// </summary>
 public class ThreadLockManager : IThreadLockManager
 {
+    /// <inheritdoc/>
+    public ThreadLockSettings RuntimeSettings { get; set; }
+
     private readonly ConcurrentDictionary<string, ThreadLockInfo_Sync> _syncLocks = new ConcurrentDictionary<string, ThreadLockInfo_Sync>();
     private readonly ConcurrentDictionary<string, ThreadLockInfo_Async> _asyncLocks = new ConcurrentDictionary<string, ThreadLockInfo_Async>();
+    private readonly ILogger? _logger;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ThreadLockManager"/> class.
+    /// </summary>
+    /// <param name="settings">The initial configuration settings injected via the Options pattern.</param>
+    /// <param name="loggerFactory">An optional logger factory to provide diagnostic logging.</param>
+    public ThreadLockManager(IOptions<ThreadLockSettings>? settings = null, ILoggerFactory? loggerFactory = null)
+    {
+        RuntimeSettings = settings?.Value.Clone() ?? new ThreadLockSettings();
+
+        _logger = loggerFactory?.CreateConditionalLogger("ThreadLockManager", () => RuntimeSettings.EnableLogging);
+    }
 
     #region Syncronous Methods
     /// <inheritdoc />
@@ -46,10 +65,16 @@ public class ThreadLockManager : IThreadLockManager
                     {
                         // We failed to get the lock (timeout)
                         Interlocked.Decrement(ref lockInfo.RefCount);
+
+                        _logger?.LogWarning($"Timed out waiting for sync lock '{key}' after {timeoutMilliseconds}ms.");
+
                         return result.SetMethodFailure(new TimeoutException($"Lock timeout for: {key}"));
                     }
 
                     lockInfo.UpdateLastAccessTime();
+
+                    _logger?.LogDebug($"Acquired sync lock '{key}'.");
+
                     return result.SetMethodSuccess();
                 }
                 else
@@ -104,6 +129,8 @@ public class ThreadLockManager : IThreadLockManager
 
                 lockInfo.UpdateLastAccessTime();
 
+                _logger?.LogDebug($"Released sync lock '{key}'.");
+
                 if (Interlocked.Decrement(ref lockInfo.RefCount) <= 0)
                 {
                     _syncLocks.TryRemove(new KeyValuePair<string, ThreadLockInfo_Sync>(key, lockInfo));
@@ -148,11 +175,16 @@ public class ThreadLockManager : IThreadLockManager
                 if (!entered)
                 {
                     Interlocked.Decrement(ref lockInfo.RefCount);
+
+                    _logger?.LogWarning($"Timed out waiting for async lock '{key}' after {timeoutMilliseconds}ms.");
+
                     throw new TimeoutException("Timeout while waiting for async lock");
                 }
             }
 
             lockInfo.UpdateLastAccessTime();
+
+            _logger?.LogDebug($"Acquired async lock '{key}'.");
 
             return result.SetMethodSuccess();
         }
@@ -187,6 +219,8 @@ public class ThreadLockManager : IThreadLockManager
                 }
 
                 lockInfo.UpdateLastAccessTime();
+
+                _logger?.LogDebug($"Released async lock '{key}'.");
 
                 if (Interlocked.Decrement(ref lockInfo.RefCount) <= 0)
                 {

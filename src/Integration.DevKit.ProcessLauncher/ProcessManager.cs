@@ -1,9 +1,11 @@
 ﻿
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Integration.DevKit.ProcessLauncher.Contracts;
 using Integration.DevKit.Core;
+using Integration.DevKit.Core.Logging;
 
 namespace Integration.DevKit.ProcessLauncher;
 
@@ -13,6 +15,9 @@ namespace Integration.DevKit.ProcessLauncher;
 /// </summary>
 public class ProcessManager : IProcessManager
 {
+    /// <inheritdoc/>
+    public ProcessLauncherSettings RuntimeSettings { get; set; }
+
     private readonly ConcurrentDictionary<string, ManagedProcess> _processes = new ConcurrentDictionary<string, ManagedProcess>();
 
     private readonly ILogger? _logger;
@@ -20,16 +25,19 @@ public class ProcessManager : IProcessManager
     /// <summary>
     /// Initializes a new instance of the <see cref="ProcessManager"/> class.
     /// </summary>
+    /// <param name="settings">The initial configuration settings injected via the Options pattern.</param>
     /// <param name="loggerFactory">An optional logger factory to provide contextual logging for the launcher.</param>
-    public ProcessManager (ILoggerFactory? loggerFactory = null)
+    public ProcessManager(IOptions<ProcessLauncherSettings> settings, ILoggerFactory? loggerFactory = null)
     {
-        _logger = loggerFactory?.CreateLogger("ProcessLauncherManager");
+        RuntimeSettings = settings?.Value.Clone() ?? new ProcessLauncherSettings();
+
+        _logger = loggerFactory?.CreateConditionalLogger("ProcessLauncherManager", () => RuntimeSettings.EnableLogging);
     }
 
     /// <inheritdoc/>
     /// <remarks>
-    /// This method validates the command path and ensures the <paramref name="config.ProcessKey"/> 
-    /// is not already in use before instantiating a <see cref="ManagedProcess"/>. 
+    /// This method validates the command path and ensures <paramref name="config"/>'s <c>ProcessKey</c>
+    /// is not already in use before instantiating a <see cref="ManagedProcess"/>.
     /// If the startup fails, the exception is caught and returned within the <see cref="OperationResult{T}"/>.
     /// </remarks>
     public OperationResult<IManagedProcess> StartProcess(IManagedProcessConfig config)
@@ -70,10 +78,11 @@ public class ProcessManager : IProcessManager
 
     /// <inheritdoc/>
     /// <remarks>
-    /// Attempts to remove the process from the internal tracking dictionary. If found, 
-    /// the process's own Cancel method is invoked. 
+    /// Attempts to remove the process from the internal tracking dictionary. If found,
+    /// the process's own Cancel method is invoked. If <paramref name="processKey"/> is not found, a
+    /// failed <see cref="NullOperationResult"/> wrapping a <see cref="KeyNotFoundException"/> is
+    /// returned (the exception is not thrown to the caller).
     /// </remarks>
-    /// <exception cref="KeyNotFoundException">Returned inside the result if the key does not exist.</exception>
     public NullOperationResult CancelProcess(string processKey, bool forceKill = false)
     {
         var result = new NullOperationResult();

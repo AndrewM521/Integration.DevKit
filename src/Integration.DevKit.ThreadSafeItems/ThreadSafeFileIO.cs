@@ -5,18 +5,27 @@
  */
 
 using Integration.DevKit.Core;
+using Integration.DevKit.Core.Logging;
 using Integration.DevKit.ThreadLocks.Contracts;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Text;
 
 namespace Integration.DevKit.ThreadSafeItems;
 
 /// <summary>
-/// Provides thread-safe file I/O operations by utilizing <see cref="IThreadLockManager"/> 
+/// Provides thread-safe file I/O operations by utilizing <see cref="IThreadLockManager"/>
 /// to synchronize access based on file paths.
 /// </summary>
 public class ThreadSafeFileIO
 {
+    /// <summary>
+    /// Gets or sets the current runtime settings for this instance, initialized from the bound
+    /// <see cref="ThreadSafeItemsSettings"/>. Mutate this in place (e.g. <c>RuntimeSettings.EnableLogging = false</c>)
+    /// to change behavior, including logging, at runtime.
+    /// </summary>
+    public ThreadSafeItemsSettings RuntimeSettings { get; set; }
+
     private IThreadLockManager _threadLockManager;
     private ILogger? _logger;
 
@@ -24,9 +33,10 @@ public class ThreadSafeFileIO
     /// Initializes a new instance of the <see cref="ThreadSafeFileIO"/> class.
     /// </summary>
     /// <param name="threadLockManager">The manager used to handle synchronization locks.</param>
+    /// <param name="settings">The initial configuration settings injected via the Options pattern.</param>
     /// <param name="loggerFactory">The factory used to resolve the internal logger.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="threadLockManager"/>.</exception>
-    public ThreadSafeFileIO(IThreadLockManager threadLockManager, ILoggerFactory? loggerFactory = null)
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="threadLockManager"/> is <see langword="null"/>.</exception>
+    public ThreadSafeFileIO(IThreadLockManager threadLockManager, IOptions<ThreadSafeItemsSettings>? settings = null, ILoggerFactory? loggerFactory = null)
     {
         if (threadLockManager == null)
         {
@@ -34,7 +44,8 @@ public class ThreadSafeFileIO
         }
 
         _threadLockManager = threadLockManager;
-        _logger = loggerFactory?.CreateLogger("ThreadSafeFileIO");
+        RuntimeSettings = settings?.Value.Clone() ?? new ThreadSafeItemsSettings();
+        _logger = loggerFactory?.CreateConditionalLogger("ThreadSafeFileIO", () => RuntimeSettings.EnableLogging);
     }
 
     #region Async Methods

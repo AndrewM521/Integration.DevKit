@@ -39,6 +39,7 @@ var pingResult = await sqlClient.TestSqlConnectionAsync();
 {
   "Integration.DevKit": {
     "SQLManagement": {
+      "EnableLogging": true,
       "Clients": {
         "my-client": {
           "ConnectionString": "Server=...;Database=...;",
@@ -56,6 +57,8 @@ var pingResult = await sqlClient.TestSqlConnectionAsync();
 | `UseSingleConnection` | `false` | `false`: a new `SqlConnection` is opened and disposed per call. `true`: one persistent connection is reused and serialized behind an internal semaphore — useful for providers with expensive connection setup, but means all calls on that client queue behind each other. |
 
 `SQLManager.GetClient(clientName)` caches one `ISQLClient` per name (case-insensitive). If the name isn't found in `Clients`, it logs a warning and falls back to a client with empty default settings — it does **not** throw, despite the interface's XML documentation suggesting it validates the name. Double-check the client name if connections are failing unexpectedly.
+
+`EnableLogging` (default `true`) is checked fresh on every log call rather than only at startup — flip it at runtime via `sqlManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging (including every `ISQLClient` it hands out) without detaching the `ILoggerFactory` you registered for the rest of the app.
 
 ## `ISQLClient`
 

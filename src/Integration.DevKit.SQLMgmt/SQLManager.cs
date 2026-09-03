@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
+using Integration.DevKit.Core.Logging;
 using Integration.DevKit.SQLMgmt.Contracts;
 
 namespace Integration.DevKit.SQLMgmt;
@@ -33,7 +34,7 @@ public class SQLManager : ISQLManager
 
         RuntimeSettings = settings.Value.Clone();
 
-        _logger = loggerFactory?.CreateLogger("SqlDBManager");
+        _logger = loggerFactory?.CreateConditionalLogger("SqlDBManager", () => RuntimeSettings.EnableLogging);
     }
 
     /// <inheritdoc/>
@@ -51,7 +52,7 @@ public class SQLManager : ISQLManager
             clientSettings = new SQLClientSettings();
         }
 
-        return _clients.GetOrAdd(clientName, _ => { return new SQLClient(clientName, clientSettings); });
+        return _clients.GetOrAdd(clientName, _ => { return new SQLClient(clientName, clientSettings, _logger); });
     }
 
     /// <inheritdoc/>

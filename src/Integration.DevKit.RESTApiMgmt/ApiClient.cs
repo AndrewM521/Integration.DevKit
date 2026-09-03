@@ -42,6 +42,7 @@ public class ApiClient : IApiClient
     private const string NoSecretStore = "SecretStore has not been set. Call SetSecretStore()";
     private readonly string _secretStoreFileName;
     private ISecretStore? _secretStore;
+    private IAuthStrategy? _authStrategy;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ApiClient"/> class.
@@ -128,28 +129,28 @@ public class ApiClient : IApiClient
     public async Task<ApiOperationResult<string>> GetAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Get, () =>
-            ApiRequest.GetAsync(_httpClient, endpointUrl, httpContent, requestHeaders));
+            ApiRequest.GetAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy));
     }
 
     /// <inheritdoc/>
     public async Task<ApiOperationResult<string>> PutAsync(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Put, () =>
-            ApiRequest.PutAsync(_httpClient, endpointUrl, httpContent, requestHeaders));
+            ApiRequest.PutAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy));
     }
 
     /// <inheritdoc/>
     public async Task<ApiOperationResult<string>> PostAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Post, () =>
-            ApiRequest.PostAsync(_httpClient, endpointUrl, httpContent, requestHeaders));
+            ApiRequest.PostAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy));
     }
 
     /// <inheritdoc/>
     public async Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Delete, () =>
-            ApiRequest.DeleteAsync(_httpClient, endpointUrl, httpContent, requestHeaders));
+            ApiRequest.DeleteAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy));
     }
 
     // A generic wrapper to handle the "Orchestration" (Metrics + Rate Limiting)
@@ -423,6 +424,12 @@ public class ApiClient : IApiClient
         {
             return result.SetMethodFailure(ex);
         }
+    }
+
+    /// <inheritdoc/>
+    public void SetAuthStrategy(IAuthStrategy? authStrategy)
+    {
+        _authStrategy = authStrategy;
     }
 
     /// <summary>

@@ -14,6 +14,13 @@ namespace Integration.DevKit.ProcessLauncher.Contracts;
 public interface IProcessManager
 {
     /// <summary>
+    /// Gets or sets the current runtime settings for this manager, initialized from the bound
+    /// <see cref="ProcessLauncherSettings"/>. Mutate this in place (e.g. <c>RuntimeSettings.EnableLogging = false</c>)
+    /// to change behavior, including logging, at runtime.
+    /// </summary>
+    public ProcessLauncherSettings RuntimeSettings { get; set; }
+
+    /// <summary>
     /// Initializes and starts a new process based on the provided configuration.
     /// </summary>
     /// <param name="config">The configuration settings for the process, including command, arguments, and monitoring rules.</param>

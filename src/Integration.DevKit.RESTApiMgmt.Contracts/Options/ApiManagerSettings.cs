@@ -30,14 +30,23 @@ public class ApiManagerSettings
     public ConcurrentDictionary<string, ApiClientSettings> Clients { get; set; } = new ConcurrentDictionary<string, ApiClientSettings>();
 
     /// <summary>
-    /// Creates a new instance of <see cref="ApiManagerSettings"/> with a deep copy of the <see cref="Clients"/> collection.
+    /// Gets or sets whether this module logs through the logger factory supplied at registration.
+    /// Defaults to <see langword="true"/>. Can be flipped at runtime via <see cref="IApiManager.RuntimeSettings"/>
+    /// to silence/resume this module's logging without removing the app's logger.
+    /// </summary>
+    public bool EnableLogging { get; set; } = true;
+
+    /// <summary>
+    /// Creates a new instance of <see cref="ApiManagerSettings"/> with a deep copy of the <see cref="Clients"/>
+    /// collection, preserving <see cref="Default_HttpTimeout_Seconds"/> and <see cref="EnableLogging"/>.
     /// </summary>
     /// <returns>A new <see cref="ApiManagerSettings"/> instance containing a copy of the current client definitions.</returns>
     public ApiManagerSettings Clone()
     {
         return new ApiManagerSettings {
             Default_HttpTimeout_Seconds = this.Default_HttpTimeout_Seconds,
-            Clients = new ConcurrentDictionary<string, ApiClientSettings>(this.Clients)
+            Clients = new ConcurrentDictionary<string, ApiClientSettings>(this.Clients),
+            EnableLogging = this.EnableLogging
         };
     }
 }

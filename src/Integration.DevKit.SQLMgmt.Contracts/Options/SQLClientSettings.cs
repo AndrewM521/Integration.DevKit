@@ -7,7 +7,7 @@
 namespace Integration.DevKit.SQLMgmt.Contracts;
 
 /// <summary>
-/// Represents the configuration and connection settings for a specific <c>ISqlDBClient</c>,
+/// Represents the configuration and connection settings for a specific <see cref="ISQLClient"/>,
 /// utilizing a full connection string for database connectivity and defining connection behavior.
 /// </summary>
 public class SQLClientSettings

@@ -26,7 +26,7 @@ Or from NuGet: [Integration.DevKit.ProcessLauncher](https://www.nuget.org/packag
 ```csharp
 using Integration.DevKit.ProcessLauncher;
 
-services.AddProcessLauncher();
+services.AddProcessLauncher(configuration);
 // ... build the host ...
 Service_ProcessLauncher.Initialize(app.Services);
 
@@ -49,7 +49,19 @@ if (started.MethodSuccess)
 }
 ```
 
-`AddProcessLauncher()` takes no configuration section — there's nothing to bind from `appsettings.json`; every process is configured per-call via `ManagedProcessConfig`. There's also no ordering dependency on any other DevKit module: logging is used if `ICustomLoggerManager` happens to be registered, but it's optional.
+`AddProcessLauncher(configuration)` binds the `Integration.DevKit:ProcessLauncher` section, whose only setting is `EnableLogging` (default `true`) — every process is still configured per-call via `ManagedProcessConfig`. There's no ordering dependency on any other DevKit module: logging goes through the standard `ILoggerFactory`/`ILogger` abstractions and is optional.
+
+```json
+{
+  "Integration.DevKit": {
+    "ProcessLauncher": {
+      "EnableLogging": true
+    }
+  }
+}
+```
+
+`EnableLogging` is checked fresh on every log call, so it can be flipped at runtime via `processManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging without detaching the `ILoggerFactory` you registered for the rest of the app.
 
 ## `ManagedProcessConfig`
 
@@ -124,7 +136,7 @@ if (!cancelResult.MethodSuccess)
 ### `Service_ProcessLauncher` (static)
 
 ```csharp
-public static IServiceCollection AddProcessLauncher(this IServiceCollection services);
+public static IServiceCollection AddProcessLauncher(this IServiceCollection services, IConfiguration config);
 public static void Initialize(IServiceProvider sp);
 public static IProcessManager ProcessManager { get; }   // throws InvalidOperationException before Initialize
 ```
@@ -132,7 +144,9 @@ public static IProcessManager ProcessManager { get; }   // throws InvalidOperati
 ### `ProcessManager` (constructible directly, unlike most other DevKit implementation classes)
 
 ```csharp
-public ProcessManager(ICustomLoggerManager? loggerManager = null);
+public ProcessManager(IOptions<ProcessLauncherSettings> settings, ILoggerFactory? loggerFactory = null);
+
+public ProcessLauncherSettings RuntimeSettings { get; set; }   // mutate in place to change EnableLogging at runtime
 ```
 
 ## Error Handling

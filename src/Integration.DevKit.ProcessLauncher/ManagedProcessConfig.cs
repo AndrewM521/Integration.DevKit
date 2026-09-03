@@ -60,7 +60,7 @@ public class ManagedProcessConfig : IManagedProcessConfig
 
     /// <inheritdoc />
     /// <value>
-    /// Enables automatic restart logic. Defaults to <see langword="false"/>.
+    /// Reserved for future use; currently has no effect on process behavior. Defaults to <see langword="false"/>.
     /// </value>
     public bool AutoRestartOnFailure { get; set; } = false;
 }

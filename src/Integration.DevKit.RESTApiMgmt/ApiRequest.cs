@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
 using Integration.DevKit.Core;
+using Integration.DevKit.RESTApiMgmt.Contracts;
 
 namespace Integration.DevKit.RESTApiMgmt;
 
@@ -16,8 +17,9 @@ public static class ApiRequest
     /// <param name="endpointUrl">The relative or absolute URL of the API endpoint.</param>
     /// <param name="content">Optional HTTP body content sent to the server.</param>
     /// <param name="headers">Optional dictionary of HTTP headers to include in the request.</param>
+    /// <param name="authStrategy">Optional <see cref="IAuthStrategy"/> applied to the request before it is sent.</param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> GetAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null)
+    public static async Task<ApiOperationResult<string>> GetAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null)
     {
         var finalUri = ResolveUri(client, endpointUrl);
 
@@ -29,7 +31,13 @@ public static class ApiRequest
         }
 
         AddHeadersToRequest(request, headers);
-        
+
+        var applyAuthResult = await ApplyAuthAsync(request, authStrategy);
+        if (applyAuthResult != null)
+        {
+            return applyAuthResult;
+        }
+
         return await SendRequestAsync(client, request);
     }
 
@@ -40,8 +48,9 @@ public static class ApiRequest
     /// <param name="endpointUrl">The relative or absolute URL of the API endpoint.</param>
     /// <param name="content">Optional HTTP body content sent to the server.</param>
     /// <param name="headers">Optional dictionary of HTTP headers to include in the request.</param>
+    /// <param name="authStrategy">Optional <see cref="IAuthStrategy"/> applied to the request before it is sent.</param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> PostAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null)
+    public static async Task<ApiOperationResult<string>> PostAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null)
     {
         var finalUri = ResolveUri(client, endpointUrl);
 
@@ -53,7 +62,13 @@ public static class ApiRequest
         }
 
         AddHeadersToRequest(request, headers);
-        
+
+        var applyAuthResult = await ApplyAuthAsync(request, authStrategy);
+        if (applyAuthResult != null)
+        {
+            return applyAuthResult;
+        }
+
         return await SendRequestAsync(client, request);
     }
 
@@ -64,15 +79,22 @@ public static class ApiRequest
     /// <param name="endpointUrl">The relative or absolute URL of the API endpoint.</param>
     /// <param name="content">The HTTP request content sent to the server.</param>
     /// <param name="headers">Optional dictionary of HTTP headers to include in the request.</param>
+    /// <param name="authStrategy">Optional <see cref="IAuthStrategy"/> applied to the request before it is sent.</param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> PutAsync(HttpClient client, string endpointUrl, HttpContent content, Dictionary<string, string>? headers = null)
+    public static async Task<ApiOperationResult<string>> PutAsync(HttpClient client, string endpointUrl, HttpContent content, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null)
     {
         var finalUri = ResolveUri(client, endpointUrl);
 
         using var request = new HttpRequestMessage(HttpMethod.Put, finalUri) { Content = content };
-        
+
         AddHeadersToRequest(request, headers);
-        
+
+        var applyAuthResult = await ApplyAuthAsync(request, authStrategy);
+        if (applyAuthResult != null)
+        {
+            return applyAuthResult;
+        }
+
         return await SendRequestAsync(client, request);
     }
 
@@ -83,8 +105,9 @@ public static class ApiRequest
     /// <param name="endpointUrl">The relative or absolute URL of the API endpoint.</param>
     /// <param name="content">Optional HTTP body content sent to the server.</param>
     /// <param name="headers">Optional dictionary of HTTP headers to include in the request.</param>
+    /// <param name="authStrategy">Optional <see cref="IAuthStrategy"/> applied to the request before it is sent.</param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> DeleteAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null)
+    public static async Task<ApiOperationResult<string>> DeleteAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null)
     {
         var finalUri = ResolveUri(client, endpointUrl);
 
@@ -96,7 +119,13 @@ public static class ApiRequest
         }
 
         AddHeadersToRequest(request, headers);
-        
+
+        var applyAuthResult = await ApplyAuthAsync(request, authStrategy);
+        if (applyAuthResult != null)
+        {
+            return applyAuthResult;
+        }
+
         return await SendRequestAsync(client, request);
     }
 
@@ -172,6 +201,30 @@ public static class ApiRequest
         }
             
         return new Uri(endpointUrl, UriKind.RelativeOrAbsolute);
+    }
+
+    /// <summary>
+    /// Applies the given <see cref="IAuthStrategy"/> (if any) to the request.
+    /// </summary>
+    /// <returns>
+    /// <see langword="null"/> if there was no strategy or it applied successfully; otherwise a failed
+    /// <see cref="ApiOperationResult{T}"/> the caller should return immediately without sending the request.
+    /// </returns>
+    private static async Task<ApiOperationResult<string>?> ApplyAuthAsync(HttpRequestMessage request, IAuthStrategy? authStrategy)
+    {
+        if (authStrategy == null)
+        {
+            return null;
+        }
+
+        var applyResult = await authStrategy.ApplyAsync(request);
+        if (!applyResult.MethodSuccess)
+        {
+            return new ApiOperationResult<string>()
+                .SetApiFailure(HttpStatusCode.Unauthorized, applyResult.Exception, null, "Auth strategy failed to apply credentials");
+        }
+
+        return null;
     }
 
     /// <summary>

@@ -5,6 +5,7 @@
  */
 
 using Integration.DevKit.ThreadLocks.Contracts;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -28,16 +29,24 @@ public static class Service_ThreadLocks
     /// Registers the <see cref="IThreadLockManager"/> and its implementation as a singleton service.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
+    /// <param name="config">The application configuration used to bind <see cref="ThreadLockSettings"/>.</param>
     /// <returns>
     /// The same <see cref="IServiceCollection"/> instance so that multiple calls can be chained.
     /// </returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> is <see langword="null"/>.</exception>
-    public static IServiceCollection AddThreadLocks(this IServiceCollection services)
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> or <paramref name="config"/> is <see langword="null"/>.</exception>
+    public static IServiceCollection AddThreadLocks(this IServiceCollection services, IConfiguration config)
     {
         if (services == null)
         {
             throw new ArgumentNullException(nameof(services));
         }
+
+        if (config == null)
+        {
+            throw new ArgumentNullException(nameof(config));
+        }
+
+        services.Configure<ThreadLockSettings>(config.GetSection("Integration.DevKit:ThreadLocks"));
 
         // Optionally, also register ThreadLockManager if you want it auto-resolved
         services.TryAddSingleton<IThreadLockManager, ThreadLockManager>();

@@ -5,6 +5,7 @@
  */
 
 using Integration.DevKit.ThreadLocks.Contracts;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -28,16 +29,24 @@ public static class Service_ThreadSafeItems
     /// Adds the <see cref="ThreadSafeFileIO"/> service to the service collection as a singleton.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add the service to.</param>
+    /// <param name="config">The application configuration used to bind <see cref="ThreadSafeItemsSettings"/>.</param>
     /// <returns>
     /// The same <see cref="IServiceCollection"/> instance to support a fluent configuration syntax.
     /// </returns>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> is <see langword="null"/>.</exception>
-    public static IServiceCollection AddThreadSafeItems(this IServiceCollection services)
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> or <paramref name="config"/> is <see langword="null"/>.</exception>
+    public static IServiceCollection AddThreadSafeItems(this IServiceCollection services, IConfiguration config)
     {
         if (services == null)
         {
             throw new ArgumentNullException(nameof(services));
         }
+
+        if (config == null)
+        {
+            throw new ArgumentNullException(nameof(config));
+        }
+
+        services.Configure<ThreadSafeItemsSettings>(config.GetSection("Integration.DevKit:ThreadSafeItems"));
 
         services.TryAddSingleton<ThreadSafeFileIO>();
 

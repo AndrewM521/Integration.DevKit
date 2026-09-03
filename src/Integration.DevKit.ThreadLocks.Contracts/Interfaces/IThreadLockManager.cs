@@ -15,6 +15,13 @@ namespace Integration.DevKit.ThreadLocks.Contracts;
 public interface IThreadLockManager
 {
     /// <summary>
+    /// Gets or sets the current runtime settings for this manager, initialized from the bound
+    /// <see cref="ThreadLockSettings"/>. Mutate this in place (e.g. <c>RuntimeSettings.EnableLogging = false</c>)
+    /// to change behavior, including logging, at runtime.
+    /// </summary>
+    public ThreadLockSettings RuntimeSettings { get; set; }
+
+    /// <summary>
     /// Attempts to acquire a synchronous lock associated with the specified <paramref name="key"/>.
     /// </summary>
     /// <param name="key">The unique string identifier for the lock.</param>
@@ -33,11 +40,10 @@ public interface IThreadLockManager
     /// </summary>
     /// <param name="key">The unique identifier for the lock to release.</param>
     /// <returns>
-    /// A <see cref="NullOperationResult"/> indicating whether the release was successful.
+    /// A <see cref="NullOperationResult"/> indicating whether the release was successful. If the
+    /// current thread does not own the lock for the specified key, a failed result wrapping a
+    /// <see cref="System.Threading.SynchronizationLockException"/> is returned rather than thrown.
     /// </returns>
-    /// <exception cref="System.Threading.SynchronizationLockException">
-    /// Thrown if the current thread does not own the lock for the specified key.
-    /// </exception>
     public NullOperationResult TryExitSyncLock(string key);
 
     /// <summary>

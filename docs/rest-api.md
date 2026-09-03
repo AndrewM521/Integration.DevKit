@@ -52,6 +52,7 @@ else
   "Integration.DevKit": {
     "ApiClientManagement": {
       "Default_HttpTimeout_Seconds": 30,
+      "EnableLogging": true,
       "Clients": {
         "my-client": {
           "BaseUrl": "https://api.example.com/",
@@ -66,6 +67,8 @@ else
   }
 }
 ```
+
+`EnableLogging` (default `true`) is checked fresh on every log call rather than only at startup — flip it at runtime via `apiManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging (including every `ApiClient` it hands out) without detaching the `ILoggerFactory` you registered for the rest of the app.
 
 ### `ApiClientSettings` (per named client)
 
@@ -100,6 +103,8 @@ public interface IApiClient : IAsyncDisposable
     OperationResult<HttpContent> CreateHttpContent(RESTApiMediaTypes mediaType, string data, Encoding? encoding = null);
     NullOperationResult AddDefaultHeader(string key, string value);
     void LogRuntimeSettings(bool calledFromManager = false);
+
+    void SetAuthStrategy(IAuthStrategy? authStrategy);
 }
 ```
 
@@ -137,6 +142,45 @@ NullOperationResult DeleteAllCredentials();
 ```
 
 If a secret store is attached via `SetSecretStore`, it takes priority over the plain `Username`/`Password` values configured on `ApiClientSettings`. See [Credential Management](credential-management.md) for the store implementation.
+
+### OAuth2 authentication
+
+For downstream APIs that require an OAuth2 bearer token rather than Basic credentials, attach an `IAuthStrategy`:
+
+```csharp
+public interface IAuthStrategy
+{
+    Task<NullOperationResult> ApplyAsync(HttpRequestMessage request);
+}
+```
+
+`SetAuthStrategy` is independent of `SetSecretStore` — a client can use either, both, or neither. When set, the strategy runs on every outgoing request (`GetAsync`/`PostAsync`/`PutAsync`/`DeleteAsync`, sync or async) just before it's sent, and any failure it returns short-circuits the call as a failed `ApiOperationResult<string>` (HTTP 401) rather than hitting the network.
+
+`OAuth2ClientCredentialsAuthStrategy` is the shipped implementation, covering the client-credentials grant plus refresh-token renewal — the fit for backend, service-to-service calls (there is no authorization-code/PKCE browser flow in this module; `IApiClient` isn't used for interactive user login). It sources the `client_secret` from an [`ISecretReader`](credential-management.md#isecretreader-and-isecretstore) on every token refresh, so it composes directly with the credential management module from [Credential Management](credential-management.md) — e.g. an environment variable via `ConfigurationSecretReader`, falling back to the encrypted `FileSecretStore` via `CompositeSecretReader`:
+
+```csharp
+var secretReader = new CompositeSecretReader(new ISecretReader[]
+{
+    new ConfigurationSecretReader(configuration),   // e.g. env var / CI secret
+    Service_CredentialMgmt.FileSecretStore,         // fall back to the encrypted store
+});
+
+var authStrategy = new OAuth2ClientCredentialsAuthStrategy(
+    tokenHttpClient: httpClientFactory.CreateClient("OAuth2TokenClient"),
+    tokenEndpoint: "https://idp.example.com/oauth2/token",
+    clientId: "my-client-id",
+    credentialContainer: "MyApi-OAuth",             // fileName passed to secretReader (and refreshTokenStore)
+    secretReader: secretReader,                      // "client_secret" is read from this container
+    refreshTokenStore: Service_CredentialMgmt.FileSecretStore, // optional — persists refresh_token across restarts
+    scope: "orders.read orders.write");
+
+var client = Service_RESTApiMgmt.ApiManager.GetClient("my-client");
+client.SetAuthStrategy(authStrategy);
+
+var result = await client.GetAsync("orders");
+```
+
+The access token is cached in memory and reused until 60 seconds before its `expires_in`, at which point the next request triggers a refresh (guarded so concurrent requests don't all refresh at once). If the authorization server returned a `refresh_token` and a `refreshTokenStore` was supplied, refreshes use the `refresh_token` grant instead of re-running `client_credentials`; the refreshed token is written back to the same store so it survives an application restart.
 
 ## Client metrics
 
@@ -190,6 +234,29 @@ public string? DisplaySummary { get; }
 ```
 
 Every REST call in this module returns `ApiOperationResult<string>` — there is no built-in JSON-deserializing overload. Deserialize `Result`/`ResponseBody` yourself (e.g. with `JsonUtils` from Core, or `System.Text.Json` directly).
+
+### `IAuthStrategy` / `OAuth2ClientCredentialsAuthStrategy`
+
+```csharp
+public interface IAuthStrategy
+{
+    Task<NullOperationResult> ApplyAsync(HttpRequestMessage request);
+}
+
+public class OAuth2ClientCredentialsAuthStrategy : IAuthStrategy
+{
+    public OAuth2ClientCredentialsAuthStrategy(
+        HttpClient tokenHttpClient,
+        string tokenEndpoint,
+        string clientId,
+        string credentialContainer,
+        ISecretReader secretReader,
+        ISecretStore? refreshTokenStore = null,
+        string? scope = null);
+
+    public Task<NullOperationResult> ApplyAsync(HttpRequestMessage request);
+}
+```
 
 ## Error handling
 

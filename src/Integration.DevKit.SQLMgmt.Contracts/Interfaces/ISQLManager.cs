@@ -17,8 +17,8 @@ public interface ISQLManager : IAsyncDisposable
     /// to orchestrate database clients.
     /// </summary>
     /// <value>
-    /// An instance of <see cref="SQLManagerSettings"/> containing shared configurations 
-    /// such as retry policies, global timeouts, or connection defaults.
+    /// An instance of <see cref="SQLManagerSettings"/> containing the configured SQL clients and the
+    /// module's logging toggle.
     /// </value>
     public SQLManagerSettings RuntimeSettings { get; set; }
 
@@ -27,9 +27,10 @@ public interface ISQLManager : IAsyncDisposable
     /// </summary>
     /// <param name="clientName">The unique identifier or key of the client to retrieve.</param>
     /// <returns>
-    /// An instance of <see cref="ISQLClient"/> configured for the specified name.
+    /// An instance of <see cref="ISQLClient"/> configured for the specified name. If
+    /// <paramref name="clientName"/> is not found in <see cref="RuntimeSettings"/>, a warning is
+    /// logged and a client backed by default settings is returned instead — this method does not throw.
     /// </returns>
-    /// <exception cref="ArgumentException">Thrown if <paramref name="clientName"/> is null or empty.</exception>
     public ISQLClient GetClient(string clientName);
 
     /// <summary>

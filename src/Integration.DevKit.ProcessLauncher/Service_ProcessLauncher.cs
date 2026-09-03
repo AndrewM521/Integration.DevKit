@@ -5,6 +5,7 @@
  */
 
 using Integration.DevKit.ProcessLauncher.Contracts;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -27,16 +28,24 @@ public static class Service_ProcessLauncher
     /// Adds the process launcher services to the specified <see cref="IServiceCollection"/>.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add services to.</param>
+    /// <param name="config">The application configuration used to bind <see cref="ProcessLauncherSettings"/>.</param>
     /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if either <paramref name="services"/> is null.
+    /// Thrown if either <paramref name="services"/> or <paramref name="config"/> is null.
     /// </exception>
-    public static IServiceCollection AddProcessLauncher(this IServiceCollection services)
+    public static IServiceCollection AddProcessLauncher(this IServiceCollection services, IConfiguration config)
     {
         if (services == null)
         {
             throw new ArgumentNullException(nameof(services));
         }
+
+        if (config == null)
+        {
+            throw new ArgumentNullException(nameof(config));
+        }
+
+        services.Configure<ProcessLauncherSettings>(config.GetSection("Integration.DevKit:ProcessLauncher"));
 
         // Register the concrete class
         services.TryAddSingleton<IProcessManager, ProcessManager>();

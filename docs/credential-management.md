@@ -17,13 +17,23 @@ Or from NuGet: [Integration.DevKit.CredentialMgmt](https://www.nuget.org/package
 
 ## Getting started
 
+Registration is config-driven — `AddCredentialMgmt` reads the `Integration.DevKit:CredentialManagement` section and selects a backend by its `Provider` name (the built-in `"File"` provider, or a custom one — see [Config-driven registration](#config-driven-registration) below):
+
 ```csharp
 using Integration.DevKit.CredentialMgmt;
+using Microsoft.Extensions.Configuration;
 
-services.AddFileSecretStore(
-    applicationName: "MyApp",
-    secretsFolder: @"C:\MyApp\Secrets",
-    keysFolder: @"C:\MyApp\Keys");
+var configuration = new ConfigurationBuilder()
+    .AddInMemoryCollection(new Dictionary<string, string?>
+    {
+        ["Integration.DevKit:CredentialManagement:Provider"] = "File",
+        ["Integration.DevKit:CredentialManagement:Options:ApplicationName"] = "MyApp",
+        ["Integration.DevKit:CredentialManagement:Options:SecretsFolder"] = @"C:\MyApp\Secrets",
+        ["Integration.DevKit:CredentialManagement:Options:KeysFolder"] = @"C:\MyApp\Keys",
+    })
+    .Build();
+
+services.AddCredentialMgmt(configuration);
 
 // ... build the host ...
 Service_CredentialMgmt.InitializeFileSecretStore(app.Services);
@@ -39,7 +49,7 @@ if (apiKey.MethodSuccess)
 }
 ```
 
-`AddFileSecretStore` takes its parameters directly as arguments rather than reading an `IConfiguration` section, and there's no ordering dependency on any other DevKit module (unlike, say, `ThreadSafeItems` needing `ThreadLocks`). If you'd rather select the backend from configuration — e.g. so dev/prod can differ without a code change — use `AddCredentialMgmt(configuration)` instead; see [Config-driven registration](#config-driven-registration) below.
+The `"File"` provider's `Options` are typically loaded from `appsettings.json` rather than built in-memory like above — see the full JSON shape in [Config-driven registration](#config-driven-registration). Registering the `"File"` provider also registers `ThreadLocks` for you automatically (`FileSecretStore` needs an `IThreadLockManager` to serialize concurrent access to the same container's file) — you don't need to call `AddThreadLocks()` yourself unless you're also using that module directly.
 
 ## `ISecretReader` and `ISecretStore`
 
@@ -71,7 +81,15 @@ namespace Integration.DevKit.CredentialMgmt;
 
 public class FileSecretStore : SecretStoreBase
 {
-    public FileSecretStore(IDataProtectionProvider provider, string applicationName, string secretsDir);
+    public FileSecretStore(
+        IDataProtectionProvider provider,
+        string applicationName,
+        string secretsDir,
+        IThreadLockManager threadLockManager,
+        ILoggerFactory? loggerFactory = null,
+        bool enableLogging = true);
+
+    public bool EnableLogging { get; set; }   // mutate at runtime to silence/resume this store's logging
 
     public override NullOperationResult SetKey(string fileName, string key, string value);
     public override OperationResult<string> GetKey(string fileName, string key);
@@ -80,7 +98,7 @@ public class FileSecretStore : SecretStoreBase
 }
 ```
 
-You don't normally construct this directly — `AddFileSecretStore` registers and wires it up for you. If you do need to, note that its base class `SecretStoreBase` has a `protected` constructor and `protected` `Encrypt`/`Decrypt` helpers, so `FileSecretStore` is the only way to use this module today (there is currently no other concrete `ISecretStore` implementation shipped).
+You don't normally construct this directly — `AddCredentialMgmt` registers and wires it up for you. If you do need to, note that its base class `SecretStoreBase` has a `protected` constructor and `protected` `Encrypt`/`Decrypt` helpers, so `FileSecretStore` is the only way to use this module today (there is currently no other concrete `ISecretStore` implementation shipped).
 
 ### How secrets are stored
 
@@ -93,7 +111,7 @@ You don't normally construct this directly — `AddFileSecretStore` registers an
 
 ### Where the encryption keys live
 
-`AddFileSecretStore` configures ASP.NET Core Data Protection to persist its key ring to `keysFolder` as XML files (`PersistKeysToFileSystem`). This is what actually encrypts/decrypts your secrets — protect `keysFolder` with the same care as the secrets themselves (file-system permissions, backup/rotation policy), since anyone with read access to the key ring plus the `.secret` files can decrypt them. Data Protection does not encrypt the key ring itself unless you additionally configure a key-ring protector (e.g. Windows DPAPI or a certificate) — this module doesn't configure one, so treat `keysFolder` as sensitive, access-controlled storage.
+`AddCredentialMgmt`'s `"File"` provider configures ASP.NET Core Data Protection to persist its key ring to `keysFolder` as XML files (`PersistKeysToFileSystem`). This is what actually encrypts/decrypts your secrets — protect `keysFolder` with the same care as the secrets themselves (file-system permissions, backup/rotation policy), since anyone with read access to the key ring plus the `.secret` files can decrypt them. Data Protection does not encrypt the key ring itself unless you additionally configure a key-ring protector (e.g. Windows DPAPI or a certificate) — this module doesn't configure one, so treat `keysFolder` as sensitive, access-controlled storage.
 
 > **Known quirk:** internally, the Data Protection "purpose" string used to create the protector is hardcoded to the literal `"FileSecretStore"` rather than your `applicationName` — `applicationName` only affects the Data Protection application discriminator (`SetApplicationName`), not the protector purpose itself. This doesn't weaken security, but it means the purpose string is the same across every application using this module rather than being application-specific.
 
@@ -139,28 +157,27 @@ This is the recommended way to bootstrap the encrypted `FileSecretStore` from Us
 
 ## Config-driven registration
 
-`AddCredentialMgmt(configuration)` selects and registers a backend from an `Integration.DevKit:CredentialManagement` configuration section, matching the binding convention used by [`AddSQLMgmt`](sql-management.md) and [`AddRESTApiMgmt`](rest-api.md):
+`AddCredentialMgmt(configuration)` selects and registers a backend from an `Integration.DevKit:CredentialManagement` configuration section, matching the binding convention used by [`AddSQLMgmt`](sql-management.md) and [`AddRESTApiMgmt`](rest-api.md) — this is the same call shown in [Getting started](#getting-started), typically loaded from `appsettings.json` instead of built in-memory:
 
 ```json
-"Integration.DevKit": {
-  "CredentialManagement": {
-    "Provider": "File",
-    "File": {
-      "ApplicationName": "MyApp",
-      "SecretsFolder": "C:\\MyApp\\Secrets",
-      "KeysFolder": "C:\\MyApp\\Keys"
+{
+  "Integration.DevKit": {
+    "CredentialManagement": {
+      "Provider": "File",
+      "EnableLogging": true,
+      "Options": {
+        "ApplicationName": "MyApp",
+        "SecretsFolder": "C:\\MyApp\\Secrets",
+        "KeysFolder": "C:\\MyApp\\Keys"
+      }
     }
   }
 }
 ```
 
-```csharp
-services.AddCredentialMgmt(configuration);
-// ... build the host ...
-Service_CredentialMgmt.InitializeFileSecretStore(app.Services);
-```
+`EnableLogging` (default `true`) is checked fresh on every log call rather than only at startup — flip it at runtime via `Service_CredentialMgmt.FileSecretStore.EnableLogging = false;` to silence this module's logging without detaching the `ILoggerFactory` you registered for the rest of the app.
 
-`Provider` currently only supports `"File"` (delegating to `AddFileSecretStore` under the hood using the bound `File` settings); an unsupported value throws `NotSupportedException` at registration time. This is additive — the existing raw-parameter `AddFileSecretStore(applicationName, secretsFolder, keysFolder)` overload is unchanged and still works standalone.
+`Provider` currently only supports `"File"` out of the box, delegating to the built-in `"File"` provider registration under the hood using the bound `Options` values (`ApplicationName`, `SecretsFolder`, `KeysFolder`) — an unsupported value throws `NotSupportedException` at registration time. Register a custom provider (e.g. a cloud secrets vault) via `Service_CredentialMgmt.RegisterProvider` before calling `AddCredentialMgmt`, and it becomes selectable the same way by name.
 
 ## Wiring into `ApiClient` / `SQLClient`
 
@@ -182,8 +199,8 @@ Each client stores its credentials under its own container name, derived interna
 ### `Service_CredentialMgmt` (static)
 
 ```csharp
-public static IServiceCollection AddFileSecretStore(this IServiceCollection services, string applicationName, string secretsFolder, string keysFolder);
 public static IServiceCollection AddCredentialMgmt(this IServiceCollection services, IConfiguration configuration);
+public static void RegisterProvider(string providerName, Action<IServiceCollection, Dictionary<string, object>, bool, IConfiguration> register);
 public static void InitializeFileSecretStore(IServiceProvider sp);
 public static FileSecretStore FileSecretStore { get; }   // throws InvalidOperationException before Initialize
 ```

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
+using Integration.DevKit.Core.Logging;
 using Integration.DevKit.RESTApiMgmt.Contracts;
 
 namespace Integration.DevKit.RESTApiMgmt;
@@ -30,7 +31,11 @@ public class ApiManager : IApiManager
     /// </summary>
     /// <param name="settings">The initial configuration settings injected via the Options pattern.</param>
     /// <param name="httpFactory">The factory used to create underlying <see cref="HttpClient"/> instances.</param>
-    /// <param name="loggerFactory">Optional factory to resolve the "ApiManager" logger.</param>
+    /// <param name="loggerFactory">
+    /// Optional factory to resolve the "ApiManager" logger. The resulting logger dynamically honors
+    /// <see cref="ApiManagerSettings.EnableLogging"/> on <see cref="RuntimeSettings"/> on every call, so
+    /// logging can be toggled at runtime without reconstructing the manager.
+    /// </param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="settings"/> is null.</exception>
     public ApiManager(IOptions<ApiManagerSettings> settings, IHttpClientFactory httpFactory, ILoggerFactory? loggerFactory = null)
     {
@@ -48,7 +53,7 @@ public class ApiManager : IApiManager
 
         _httpFactory = httpFactory;
 
-        _logger = loggerFactory?.CreateLogger("ApiManager");
+        _logger = loggerFactory?.CreateConditionalLogger("ApiManager", () => RuntimeSettings.EnableLogging);
     }
 
     /// <inheritdoc/>

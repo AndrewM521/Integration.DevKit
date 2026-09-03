@@ -25,6 +25,13 @@ public class SQLManagerSettings
     public ConcurrentDictionary<string, SQLClientSettings> Clients { get; set; } = new ConcurrentDictionary<string, SQLClientSettings>();
 
     /// <summary>
+    /// Gets or sets whether this module logs through the logger factory supplied at registration.
+    /// Defaults to <see langword="true"/>. Can be flipped at runtime via the manager's
+    /// <c>RuntimeSettings</c> to silence/resume this module's logging without removing the app's logger.
+    /// </summary>
+    public bool EnableLogging { get; set; } = true;
+
+    /// <summary>
     /// Creates a deep copy of the current settings
     /// </summary>
     /// <returns>A new <see cref="SQLManagerSettings"/> instance independent of the original.</returns>
@@ -32,7 +39,8 @@ public class SQLManagerSettings
     {
         return new SQLManagerSettings
         {
-            Clients = new ConcurrentDictionary<string, SQLClientSettings> (this.Clients)
+            Clients = new ConcurrentDictionary<string, SQLClientSettings> (this.Clients),
+            EnableLogging = this.EnableLogging
         };
     }
 }

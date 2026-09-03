@@ -84,7 +84,8 @@ await handle.RunningTask!;   // await the whole task's lifetime (Asyncronous mod
     "TaskManagement": {
       "MaxConcurrentTasks": 2147483647,
       "MaxTaskRegistryCount": 2000,
-      "MaxTaskIterationRegistryCount": 100
+      "MaxTaskIterationRegistryCount": 100,
+      "EnableLogging": true
     }
   }
 }
@@ -95,6 +96,7 @@ await handle.RunningTask!;   // await the whole task's lifetime (Asyncronous mod
 | `MaxConcurrentTasks` | `int.MaxValue` | Upper bound on tasks running at once across the manager. |
 | `MaxTaskRegistryCount` | `2000` | How many completed task snapshots the registry retains before evicting the oldest (FIFO). |
 | `MaxTaskIterationRegistryCount` | `100` | How many iteration snapshots are retained per task before older ones are evicted. |
+| `EnableLogging` | `true` | Checked fresh on every log call — flip it at runtime via `taskManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging without detaching the `ILoggerFactory` you registered for the rest of the app. |
 
 Per-task behavior (retries, iteration limits, timing) is configured separately per call via `ManagedTaskSettings`, described next.
 

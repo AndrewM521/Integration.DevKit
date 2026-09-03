@@ -16,34 +16,25 @@ namespace Integration.DevKit.CredentialMgmt.Contracts;
 public class CredentialManagementSettings
 {
     /// <summary>
-    /// Gets or sets which backend to register. Currently only "File" is supported.
+    /// Gets or sets which backend to register — the built-in "File" provider, or any custom provider name
+    /// registered via <c>Service_CredentialMgmt.RegisterProvider</c>.
     /// </summary>
     public string Provider { get; set; } = "File";
 
     /// <summary>
-    /// Gets or sets the settings for the file-based backend, used when <see cref="Provider"/> is "File".
+    /// Flat, provider-specific settings for whichever provider <see cref="Provider"/> selects, bound from the
+    /// <c>"Integration.DevKit:CredentialManagement:Options"</c> configuration section. Each provider defines
+    /// and documents its own expected keys — this library places no constraints on what a provider stores here,
+    /// which is what lets a custom provider be added without any change to this settings class.
     /// </summary>
-    public FileSecretStoreSettings File { get; set; } = new FileSecretStoreSettings();
-}
-
-/// <summary>
-/// Configuration for the file-based secret store backend.
-/// </summary>
-public class FileSecretStoreSettings
-{
-    /// <summary>
-    /// The unique name of the application. Used as the Data Protection purpose string and the
-    /// identity of the store.
-    /// </summary>
-    public string ApplicationName { get; set; } = string.Empty;
+    /// <remarks>Keys are matched case-insensitively.</remarks>
+    public Dictionary<string, object> Options { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// The directory path where encrypted secret files are stored.
+    /// Gets or sets whether this module logs through the logger factory supplied at registration.
+    /// Defaults to <see langword="true"/>. Can be flipped at runtime via the resolved store's own
+    /// <c>EnableLogging</c> property to silence/resume this module's logging without removing the
+    /// app's logger.
     /// </summary>
-    public string SecretsFolder { get; set; } = string.Empty;
-
-    /// <summary>
-    /// The directory path where the Data Protection XML master keys are persisted.
-    /// </summary>
-    public string KeysFolder { get; set; } = string.Empty;
+    public bool EnableLogging { get; set; } = true;
 }

@@ -6,13 +6,17 @@
     <Nullable>enable</Nullable>
     <Title>DevKit.TaskMgmt</Title>
     <RootNamespace>Integration.DevKit.TaskMgmt</RootNamespace>
-    <Version>1.0.1.3</Version>
+    <Version>1.2.0.0-preview</Version>
     <PackageId>Integration.DevKit.TaskMgmt</PackageId>
     <PackageProjectUrl>https://www.nuget.org/packages/Integration.DevKit.TaskMgmt</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Integration.DevKit.TaskMgmt.Contracts\Integration.DevKit.TaskMgmt.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Integration.DevKit.TaskMgmt.Tests" />
   </ItemGroup>
 
 </Project>

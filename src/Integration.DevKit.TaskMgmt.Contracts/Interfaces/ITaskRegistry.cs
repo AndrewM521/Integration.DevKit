@@ -26,7 +26,6 @@ public interface ITaskRegistry
     /// </summary>
     /// <param name="snapshot">The task snapshot containing the current state and metadata to store.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating whether the upsert operation was successful.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="snapshot"/> is null.</exception>
     public NullOperationResult Upsert(IManagedTaskSnapshot snapshot);
 
     /// <summary>

@@ -11,7 +11,7 @@ public interface ITaskManager
     /// <summary>
     /// Gets the current active configuration and limits for the task manager.
     /// </summary>
-    /// <value>A <see cref="TaskManagerSettings"/> instance containing concurrency limits and timeout values.</value>
+    /// <value>A <see cref="TaskManagerSettings"/> instance containing concurrency limits and registry capacity settings.</value>
     public TaskManagerSettings RuntimeSettings { get; }
 
     /// <summary>

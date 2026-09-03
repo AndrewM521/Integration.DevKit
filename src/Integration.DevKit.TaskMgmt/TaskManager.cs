@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using Integration.DevKit.TaskMgmt.Contracts;
 using Integration.DevKit.Core;
+using Integration.DevKit.Core.Logging;
 
 namespace Integration.DevKit.TaskMgmt;
 
@@ -62,7 +63,7 @@ public class TaskManager : ITaskManager
             }
         });
 
-        _logger = loggerFactory?.CreateLogger("TaskManager");
+        _logger = loggerFactory?.CreateConditionalLogger("TaskManager", () => RuntimeSettings.EnableLogging);
         _taskRegistryRuntime = new TaskRegistryRuntime(this, taskRegistry);
 
         RuntimeSettings = settings.Value.Clone();

@@ -154,6 +154,13 @@ public interface IApiClient : IAsyncDisposable
     /// </summary>
     /// <returns>A <see cref="NullOperationResult"/> indicating completion status.</returns>
     public NullOperationResult DeleteAllCredentials();
+
+    /// <summary>
+    /// Injects an <see cref="IAuthStrategy"/> that is applied to every outgoing request
+    /// (e.g. an OAuth2 bearer token), independently of any Basic-style credentials.
+    /// </summary>
+    /// <param name="authStrategy">The strategy to apply, or <see langword="null"/> to stop applying one.</param>
+    public void SetAuthStrategy(IAuthStrategy? authStrategy);
     #endregion
 
     #region Helper Methods

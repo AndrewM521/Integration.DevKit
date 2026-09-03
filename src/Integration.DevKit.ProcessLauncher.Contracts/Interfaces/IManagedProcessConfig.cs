@@ -67,15 +67,8 @@ public interface IManagedProcessConfig
     public bool EnableProcessLogging { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the manager should attempt to restart the process automatically if it exits unexpectedly.
+    /// Reserved for future use; currently has no effect on process behavior — there is no auto-restart
+    /// logic implemented anywhere in this module. Don't rely on it.
     /// </summary>
-    /// <value>
-    /// <see langword="true"/> to enable auto-recovery; <see langword="false"/> to let the 
-    /// process remain terminated.
-    /// </value>
-    /// <remarks>
-    /// An "unexpected exit" is usually defined as a non-zero exit code or a crash before 
-    /// the <see cref="TimeoutSeconds"/> is reached.
-    /// </remarks>
     public bool AutoRestartOnFailure { get; }
 }

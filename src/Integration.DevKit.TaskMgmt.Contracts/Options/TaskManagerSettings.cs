@@ -22,11 +22,6 @@ public class TaskManagerSettings
 
     /// <summary>
     /// Gets or sets the maximum number of task records allowed in the <see cref="ITaskRegistry"/>.
-    /// The default value is 2000.
-    /// </summary>
-    /// 
-    /// <summary>
-    /// Gets or sets the maximum number of task records allowed in the <see cref="ITaskRegistry"/>.
     /// </summary>
     /// <remarks>
     /// This limit controls how many <see cref="IManagedTaskSnapshot"/> objects are 
@@ -47,16 +42,24 @@ public class TaskManagerSettings
     public int MaxTaskIterationRegistryCount { get; set; } = 100;
 
     /// <summary>
+    /// Gets or sets whether this module logs through the logger factory supplied at registration.
+    /// Defaults to <see langword="true"/>. Can be flipped at runtime via the manager's
+    /// <c>RuntimeSettings</c> to silence/resume this module's logging without removing the app's logger.
+    /// </summary>
+    public bool EnableLogging { get; set; } = true;
+
+    /// <summary>
     /// Creates a member-wise deep copy of the current <see cref="TaskManagerSettings"/> instance.
     /// </summary>
     /// <returns>A new <see cref="TaskManagerSettings"/> object with identical property values.</returns>
     public TaskManagerSettings Clone()
     {
-        return new TaskManagerSettings 
-        { 
+        return new TaskManagerSettings
+        {
             MaxConcurrentTasks = this.MaxConcurrentTasks,
             MaxTaskRegistryCount = this.MaxTaskRegistryCount,
-            MaxTaskIterationRegistryCount = this.MaxTaskIterationRegistryCount
+            MaxTaskIterationRegistryCount = this.MaxTaskIterationRegistryCount,
+            EnableLogging = this.EnableLogging
         };
     }
 }

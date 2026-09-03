@@ -22,8 +22,6 @@
     <ProjectReference Include="..\..\src\Integration.DevKit.SQLMgmt\Integration.DevKit.SQLMgmt.csproj" />
     <ProjectReference Include="..\..\src\Integration.DevKit.TaskMgmt\Integration.DevKit.TaskMgmt.csproj" />
     <ProjectReference Include="..\..\src\Integration.DevKit.ThreadSafeItems\Integration.DevKit.ThreadSafeItems.csproj" />
-    <ProjectReference Include="..\CustomLogger.Flusher\CustomLogger.Flusher.csproj" />
-    <ProjectReference Include="..\CustomLogger\CustomLogger.csproj" />
   </ItemGroup>
 
   <ItemGroup>

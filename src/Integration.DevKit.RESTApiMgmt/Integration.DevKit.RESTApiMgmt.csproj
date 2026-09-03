@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <Title>DevKit.RESTApiMgmt</Title>
     <RootNamespace>Integration.DevKit.RESTApiMgmt</RootNamespace>
-    <Version>1.0.1.3</Version>
+    <Version>1.2.0.0-preview</Version>
     <PackageId>Integration.DevKit.RESTApiMgmt</PackageId>
     <PackageProjectUrl>https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt</PackageProjectUrl>
   </PropertyGroup>
@@ -17,6 +17,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Integration.DevKit.RESTApiMgmt.Contracts\Integration.DevKit.RESTApiMgmt.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Integration.DevKit.RESTApiMgmt.Tests" />
   </ItemGroup>
 
 </Project>

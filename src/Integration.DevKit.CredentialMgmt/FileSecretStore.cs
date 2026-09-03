@@ -5,22 +5,40 @@
  */
 
 using Integration.DevKit.Core;
+using Integration.DevKit.Core.Logging;
+using Integration.DevKit.ThreadLocks.Contracts;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace Integration.DevKit.CredentialMgmt;
 
 /// <summary>
-/// A file-based implementation of <see cref="SecretStoreBase"/> that persists encrypted JSON 
+/// A file-based implementation of <see cref="SecretStoreBase"/> that persists encrypted JSON
 /// dictionaries to the local file system.
 /// </summary>
 /// <remarks>
 /// This store organizes secrets into ".secret" files. Each file contains a dictionary of keys and values,
 /// all of which are encrypted as a single block using the underlying <see cref="SecretStoreBase.Encrypt(string)"/> logic.
+/// <para/>
+/// Every public method locks around its full read-modify-write sequence via <see cref="IThreadLockManager"/>,
+/// keyed per container (<c>fileName</c>). Without this, two concurrent calls against the same container could
+/// both read the same starting state and one would silently overwrite the other's change on save.
 /// </remarks>
 public class FileSecretStore : SecretStoreBase
 {
+    private const int LockTimeoutMs = 5000;
+
     private readonly string _secretsDir;
+    private readonly IThreadLockManager _threadLockManager;
+    private readonly ILogger? _logger;
+
+    /// <summary>
+    /// Gets or sets whether this store logs through the logger factory supplied at construction.
+    /// Defaults to <see langword="true"/>. Can be flipped at runtime to silence/resume this store's
+    /// logging without removing the app's logger.
+    /// </summary>
+    public bool EnableLogging { get; set; } = true;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FileSecretStore"/> class.
@@ -28,9 +46,26 @@ public class FileSecretStore : SecretStoreBase
     /// <param name="provider">The <see cref="IDataProtectionProvider"/> used for cryptographic operations.</param>
     /// <param name="applicationName">The name of the application, used to identify the store and isolate its data.</param>
     /// <param name="secretsDir">The root directory path where the encrypted secret files will be saved.</param>
-    public FileSecretStore(IDataProtectionProvider provider, string applicationName, string secretsDir) : base(provider, "FileSecretStore", applicationName)
+    /// <param name="threadLockManager">
+    /// Used to serialize concurrent access to the same container's underlying file across all of
+    /// <see cref="SetKey"/>/<see cref="GetKey"/>/<see cref="DeleteKey"/>/<see cref="DeleteSecret"/>.
+    /// </param>
+    /// <param name="loggerFactory">Optional factory to resolve the "FileSecretStore" logger.</param>
+    /// <param name="enableLogging">The initial value of <see cref="EnableLogging"/>.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="threadLockManager"/> is null.</exception>
+    public FileSecretStore(
+        IDataProtectionProvider provider,
+        string applicationName,
+        string secretsDir,
+        IThreadLockManager threadLockManager,
+        ILoggerFactory? loggerFactory = null,
+        bool enableLogging = true) : base(provider, "FileSecretStore", applicationName)
     {
         _secretsDir = secretsDir;
+        _threadLockManager = threadLockManager ?? throw new ArgumentNullException(nameof(threadLockManager));
+
+        EnableLogging = enableLogging;
+        _logger = loggerFactory?.CreateConditionalLogger("FileSecretStore", () => EnableLogging);
     }
 
     /// <inheritdoc />
@@ -42,10 +77,19 @@ public class FileSecretStore : SecretStoreBase
     public override NullOperationResult SetKey(string fileName, string key, string value)
     {
         var result = new NullOperationResult();
+        var lockKey = $"{StoreName}:{fileName}";
+
+        var enterLock = _threadLockManager.TryEnterSyncLock(lockKey, LockTimeoutMs);
+        if (!enterLock.MethodSuccess)
+        {
+            _logger?.LogWarning($"Timed out waiting for lock '{lockKey}' while setting key '{key}'.");
+
+            return result.SetMethodFailure(enterLock.Exception);
+        }
 
         try
         {
-            var getPath = GetFilePath(fileName);  
+            var getPath = GetFilePath(fileName);
             if (!getPath.MethodSuccess)
             {
                 throw getPath.Exception;
@@ -82,19 +126,38 @@ public class FileSecretStore : SecretStoreBase
                 throw moveFile.Exception;
             }
 
+            _logger?.LogDebug($"Set key '{key}' in secret '{fileName}'.");
+
             return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
+            _logger?.LogError(ex, $"Failed to set key '{key}' in secret '{fileName}'.");
+
             return result.SetMethodFailure(ex);
+        }
+        finally
+        {
+            _threadLockManager.TryExitSyncLock(lockKey);
         }
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Thrown if the specified <paramref name="key"/> does not exist within the file.</exception>
+    /// <remarks>
+    /// If the specified <paramref name="key"/> does not exist within the file, a failed
+    /// <see cref="OperationResult{T}"/> wrapping a <see cref="KeyNotFoundException"/> is returned
+    /// rather than thrown.
+    /// </remarks>
     public override OperationResult<string> GetKey(string fileName, string key)
     {
         var result = new OperationResult<string>();
+        var lockKey = $"{StoreName}:{fileName}";
+
+        var enterLock = _threadLockManager.TryEnterSyncLock(lockKey, LockTimeoutMs);
+        if (!enterLock.MethodSuccess)
+        {
+            return result.SetMethodFailure(enterLock.Exception);
+        }
 
         try
         {
@@ -121,7 +184,13 @@ public class FileSecretStore : SecretStoreBase
         }
         catch (Exception ex)
         {
+            _logger?.LogError(ex, $"Failed to get key '{key}' from secret '{fileName}'.");
+
             return result.SetMethodFailure(ex);
+        }
+        finally
+        {
+            _threadLockManager.TryExitSyncLock(lockKey);
         }
     }
 
@@ -133,6 +202,13 @@ public class FileSecretStore : SecretStoreBase
     public override NullOperationResult DeleteKey(string fileName, string key)
     {
         var result = new NullOperationResult();
+        var lockKey = $"{StoreName}:{fileName}";
+
+        var enterLock = _threadLockManager.TryEnterSyncLock(lockKey, LockTimeoutMs);
+        if (!enterLock.MethodSuccess)
+        {
+            return result.SetMethodFailure(enterLock.Exception);
+        }
 
         try
         {
@@ -192,12 +268,23 @@ public class FileSecretStore : SecretStoreBase
         {
             return result.SetMethodFailure(ex);
         }
+        finally
+        {
+            _threadLockManager.TryExitSyncLock(lockKey);
+        }
     }
 
     /// <inheritdoc />
     public override NullOperationResult DeleteSecret(string fileName)
     {
         var result = new NullOperationResult();
+        var lockKey = $"{StoreName}:{fileName}";
+
+        var enterLock = _threadLockManager.TryEnterSyncLock(lockKey, LockTimeoutMs);
+        if (!enterLock.MethodSuccess)
+        {
+            return result.SetMethodFailure(enterLock.Exception);
+        }
 
         try
         {
@@ -221,6 +308,10 @@ public class FileSecretStore : SecretStoreBase
         catch (Exception ex)
         {
             return result.SetMethodFailure(ex);
+        }
+        finally
+        {
+            _threadLockManager.TryExitSyncLock(lockKey);
         }
     }
 

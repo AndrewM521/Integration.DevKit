@@ -31,12 +31,14 @@ Or from NuGet: [Integration.DevKit.ThreadLocks](https://www.nuget.org/packages/I
 ```csharp
 using Integration.DevKit.ThreadLocks;
 
-services.AddThreadLocks();   // no configuration section — there is no options class for this module
+services.AddThreadLocks(configuration);   // binds the Integration.DevKit:ThreadLocks section
 // ... build the host ...
 Service_ThreadLocks.Initialize(app.Services);
 
 var lockManager = Service_ThreadLocks.ThreadLockManager;
 ```
+
+The only setting is `EnableLogging` (default `true`), checked fresh on every log call — flip it at runtime via `lockManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging without detaching the `ILoggerFactory` you registered for the rest of the app.
 
 ### `IThreadLockManager`
 
@@ -90,8 +92,8 @@ The async variant follows the same pattern with `await TryEnterAsyncLock(...)` /
 ```csharp
 using Integration.DevKit.ThreadSafeItems;
 
-services.AddThreadLocks();        // required first
-services.AddThreadSafeItems();
+services.AddThreadLocks(configuration);        // required first
+services.AddThreadSafeItems(configuration);    // binds the Integration.DevKit:ThreadSafeItems section
 // ... build the host ...
 Service_ThreadLocks.Initialize(app.Services);       // required first
 Service_ThreadSafeItems.Initialize(app.Services);
@@ -105,7 +107,9 @@ await fileIO.WriteToFileAsync(path, "some content");
 ### `ThreadSafeFileIO`
 
 ```csharp
-public ThreadSafeFileIO(IThreadLockManager threadLockManager, ICustomLoggerManager? loggerManager = null);
+public ThreadSafeFileIO(IThreadLockManager threadLockManager, IOptions<ThreadSafeItemsSettings>? settings = null, ILoggerFactory? loggerFactory = null);
+
+public ThreadSafeItemsSettings RuntimeSettings { get; set; }   // mutate in place to change EnableLogging at runtime
 
 Task<NullOperationResult> WriteToFileAsync(string path, string content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000);
 Task<NullOperationResult> WriteToFileAsync(string path, string[] content, ...);
@@ -122,7 +126,7 @@ Every method acquires an async lock keyed by the **file path itself** before del
 ### `Service_ThreadLocks` (static)
 
 ```csharp
-public static IServiceCollection AddThreadLocks(this IServiceCollection services);
+public static IServiceCollection AddThreadLocks(this IServiceCollection services, IConfiguration config);
 public static void Initialize(IServiceProvider sp);
 public static IThreadLockManager ThreadLockManager { get; }   // throws InvalidOperationException before Initialize
 ```
@@ -130,7 +134,7 @@ public static IThreadLockManager ThreadLockManager { get; }   // throws InvalidO
 ### `Service_ThreadSafeItems` (static)
 
 ```csharp
-public static IServiceCollection AddThreadSafeItems(this IServiceCollection services);
+public static IServiceCollection AddThreadSafeItems(this IServiceCollection services, IConfiguration config);
 public static void Initialize(IServiceProvider sp);   // throws if AddThreadLocks wasn't called first
 public static ThreadSafeFileIO ThreadSafeFileIOClass { get; }   // throws InvalidOperationException before Initialize
 ```
