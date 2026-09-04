@@ -6,7 +6,8 @@
 
 using Integration.DevKit.Core;
 using Integration.DevKit.Core.Logging;
-using Integration.DevKit.ThreadLocks.Contracts;
+using Integration.DevKit.ThreadLocks;
+using Integration.DevKit.ThreadSafeItems.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text;
@@ -14,7 +15,7 @@ using System.Text;
 namespace Integration.DevKit.ThreadSafeItems;
 
 /// <summary>
-/// Provides thread-safe file I/O operations by utilizing <see cref="IThreadLockManager"/>
+/// Provides thread-safe file I/O operations by utilizing <see cref="ThreadLockManager"/>
 /// to synchronize access based on file paths.
 /// </summary>
 public class ThreadSafeFileIO
@@ -26,7 +27,7 @@ public class ThreadSafeFileIO
     /// </summary>
     public ThreadSafeItemsSettings RuntimeSettings { get; set; }
 
-    private IThreadLockManager _threadLockManager;
+    private ThreadLockManager _threadLockManager;
     private ILogger? _logger;
 
     /// <summary>
@@ -36,7 +37,7 @@ public class ThreadSafeFileIO
     /// <param name="settings">The initial configuration settings injected via the Options pattern.</param>
     /// <param name="loggerFactory">The factory used to resolve the internal logger.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="threadLockManager"/> is <see langword="null"/>.</exception>
-    public ThreadSafeFileIO(IThreadLockManager threadLockManager, IOptions<ThreadSafeItemsSettings>? settings = null, ILoggerFactory? loggerFactory = null)
+    public ThreadSafeFileIO(ThreadLockManager threadLockManager, IOptions<ThreadSafeItemsSettings>? settings = null, ILoggerFactory? loggerFactory = null)
     {
         if (threadLockManager == null)
         {

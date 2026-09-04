@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using Integration.DevKit.TaskMgmt.Contracts;
 using Integration.DevKit.Core;
+using Integration.DevKit.TaskMgmt.Settings;
 
 namespace Integration.DevKit.TaskMgmt;
 
@@ -15,8 +15,8 @@ namespace Integration.DevKit.TaskMgmt;
 /// </remarks>
 internal class TaskRegistryRuntime
 {
-    private readonly ITaskRegistry _taskRegistry;
-    private readonly ITaskManager _taskManager;
+    private readonly TaskRegistry _taskRegistry;
+    private readonly TaskManager _taskManager;
     private readonly ILogger? _logger;
 
     /// <summary>
@@ -31,7 +31,7 @@ internal class TaskRegistryRuntime
     /// <param name="taskManager">The manager providing global runtime settings and limits.</param>
     /// <param name="taskRegistry">The underlying storage for task snapshots.</param>
     /// <param name="loggerFactory">Optional logger factory to provide contextual logging.</param>
-    public TaskRegistryRuntime(ITaskManager taskManager, ITaskRegistry taskRegistry, ILoggerFactory? loggerFactory = null)
+    public TaskRegistryRuntime(TaskManager taskManager, TaskRegistry taskRegistry, ILoggerFactory? loggerFactory = null)
     {
         _taskRegistry = taskRegistry;
         _taskManager = taskManager;
@@ -57,12 +57,12 @@ internal class TaskRegistryRuntime
             bool isNewTask = !_taskRegistry.Snapshots.ContainsKey(taskKey);
 
             // 1. Get or Create the Main Task Snapshot
-            if (!_taskRegistry.Snapshots.TryGetValue(taskKey, out IManagedTaskSnapshot? existingSnapshot) || existingSnapshot == null)
+            if (!_taskRegistry.Snapshots.TryGetValue(taskKey, out ManagedTaskSnapshot? existingSnapshot) || existingSnapshot == null)
             {
                 existingSnapshot = new ManagedTaskSnapshot(taskKey, managedTaskRuntime.RuntimeSettings.Clone());
             }
 
-            var snapshot = (ManagedTaskSnapshot)existingSnapshot;
+            var snapshot = existingSnapshot;
 
             // 2. Update Global Task State
             snapshot.State = managedTaskRuntime.State;

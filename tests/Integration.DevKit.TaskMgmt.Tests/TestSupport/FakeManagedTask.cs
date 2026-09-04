@@ -1,4 +1,5 @@
-using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.TaskMgmt.Abstractions;
+using Integration.DevKit.TaskMgmt.Models;
 
 namespace Integration.DevKit.TaskMgmt.Tests.TestSupport;
 
@@ -9,13 +10,13 @@ namespace Integration.DevKit.TaskMgmt.Tests.TestSupport;
 internal sealed class FakeManagedTask : ManagedTask
 {
     public int RunCount;
-    public Func<IManagedTaskIterationHandle, Task>? Work { get; set; }
+    public Func<ManagedTaskIterationHandle, Task>? Work { get; set; }
 
     public FakeManagedTask(string taskName) : base(taskName)
     {
     }
 
-    public override async Task DoTaskWork(IManagedTaskIterationHandle iterationHandle)
+    public override async Task DoTaskWork(ManagedTaskIterationHandle iterationHandle)
     {
         Interlocked.Increment(ref RunCount);
 

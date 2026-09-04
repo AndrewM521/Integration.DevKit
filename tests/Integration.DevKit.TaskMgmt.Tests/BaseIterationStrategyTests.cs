@@ -1,4 +1,5 @@
-using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.TaskMgmt.Abstractions;
+using Integration.DevKit.TaskMgmt.Interfaces;
 using Moq;
 
 namespace Integration.DevKit.TaskMgmt.Tests;

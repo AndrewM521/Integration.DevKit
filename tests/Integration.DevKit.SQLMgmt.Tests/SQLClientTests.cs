@@ -1,6 +1,6 @@
 using Integration.DevKit.Core;
 using Integration.DevKit.CredentialMgmt.Contracts;
-using Integration.DevKit.SQLMgmt.Contracts;
+using Integration.DevKit.SQLMgmt.Settings;
 using Moq;
 
 namespace Integration.DevKit.SQLMgmt.Tests;

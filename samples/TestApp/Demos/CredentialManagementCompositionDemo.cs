@@ -6,6 +6,7 @@
 
 using Integration.DevKit.CredentialMgmt;
 using Integration.DevKit.CredentialMgmt.Contracts;
+using Integration.DevKit.CredentialMgmt.Implementations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

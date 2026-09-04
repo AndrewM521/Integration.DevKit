@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Integration.DevKit.ThreadLocks.Contracts\Integration.DevKit.ThreadLocks.Contracts.csproj" />
+    <ProjectReference Include="..\Integration.DevKit.Core\Integration.DevKit.Core.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
-using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.TaskMgmt.Models;
+using Integration.DevKit.TaskMgmt.Settings;
 
 namespace Integration.DevKit.TaskMgmt.Tests;
 

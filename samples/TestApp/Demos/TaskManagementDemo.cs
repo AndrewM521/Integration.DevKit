@@ -6,7 +6,8 @@
 
 using Integration.DevKit.Core;
 using Integration.DevKit.TaskMgmt;
-using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.TaskMgmt.Interfaces;
+using Integration.DevKit.TaskMgmt.Models;
 
 namespace TestApp.Demos;
 

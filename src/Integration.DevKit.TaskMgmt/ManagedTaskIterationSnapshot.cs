@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.TaskMgmt.Interfaces;
 
 namespace Integration.DevKit.TaskMgmt;
 

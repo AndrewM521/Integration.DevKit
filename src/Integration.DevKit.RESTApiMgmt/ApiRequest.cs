@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
 using Integration.DevKit.Core;
-using Integration.DevKit.RESTApiMgmt.Contracts;
+using Integration.DevKit.RESTApiMgmt.Interfaces;
 
 namespace Integration.DevKit.RESTApiMgmt;
 

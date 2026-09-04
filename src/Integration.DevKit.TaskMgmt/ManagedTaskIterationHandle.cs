@@ -4,18 +4,21 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.TaskMgmt.Interfaces;
 
 namespace Integration.DevKit.TaskMgmt;
 
 /// <summary>
-/// Concrete Implementation of <see cref="IManagedTaskIterationHandle"/> providing a public-facing handle for monitoring and controlling a specific iteration of a managed task.
+/// Provides access to the context and telemetry of a specific task iteration during its execution,
+/// as a public-facing handle for monitoring and controlling that iteration.
 /// </summary>
 /// <remarks>
-/// This handle allows access to iteration-specific metadata, such as the current <see cref="IterationNumber"/> 
+/// Unlike a snapshot, a handle provides a "live" link to the iteration, allowing for
+/// real-time monitoring of runtime and the ability to trigger iteration-specific cancellation.
+/// This handle allows access to iteration-specific metadata, such as the current <see cref="IterationNumber"/>
 /// and the <see cref="CancellationToken"/> associated with this specific execution cycle.
 /// </remarks>
-public sealed class ManagedTaskIterationHandle : IManagedTaskIterationHandle
+public sealed class ManagedTaskIterationHandle
 {
     /// <summary>
     /// Gets the sequence number for this iteration.
@@ -68,6 +71,12 @@ public sealed class ManagedTaskIterationHandle : IManagedTaskIterationHandle
         _taskIterationRuntime = runtime;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Requests cancellation for this specific iteration only.
+    /// </summary>
+    /// <remarks>
+    /// Calling this method triggers the <see cref="CancelationToken"/>, allowing the current iteration
+    /// to exit gracefully without necessarily terminating the entire parent task.
+    /// </remarks>
     public void Cancel() => _taskIterationRuntime.Cancel();
 }

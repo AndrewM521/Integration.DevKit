@@ -21,7 +21,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Integration.DevKit.RESTApiMgmt\Integration.DevKit.RESTApiMgmt.csproj" />
-    <ProjectReference Include="..\..\src\Integration.DevKit.RESTApiMgmt.Contracts\Integration.DevKit.RESTApiMgmt.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Integration.DevKit.Core\Integration.DevKit.Core.csproj" />
     <ProjectReference Include="..\..\src\Integration.DevKit.CredentialMgmt.Contracts\Integration.DevKit.CredentialMgmt.Contracts.csproj" />
   </ItemGroup>

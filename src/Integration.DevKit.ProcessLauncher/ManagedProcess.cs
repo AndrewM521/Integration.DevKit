@@ -1,16 +1,16 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text;
-using Integration.DevKit.ProcessLauncher.Contracts;
 using Integration.DevKit.Core;
 
 namespace Integration.DevKit.ProcessLauncher;
 
 /// <summary>
-/// Concrete Implementation of <see cref="IManagedProcess"/>
+/// Managed process wrapper, providing mechanisms to start,
+/// monitor, and terminate an external system process.
 /// </summary>
 
-public class ManagedProcess : IManagedProcess
+public class ManagedProcess : IAsyncDisposable
 {
     private readonly ILogger? _logger;
 
@@ -20,21 +20,30 @@ public class ManagedProcess : IManagedProcess
     internal readonly TimeSpan? _timeout;
     internal readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets a unique identifier associated with this managed process instance.
+    /// </summary>
+    /// <value>A string used to track or look up the process within a manager or collection.</value>
     public string ProcessKey { get; }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the underlying <see cref="System.Diagnostics.Process"/> instance.
+    /// </summary>
     /// <value>The underlying <see cref="Process"/>; remains available until the instance is disposed.</value>
     public Process? Process { get; internal set; }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the task responsible for monitoring the process lifecycle.
+    /// </summary>
     /// <remarks>
-    /// This task runs for the duration of the process lifetime. It completes when the process 
+    /// This task runs for the duration of the process lifetime. It completes when the process
     /// exits naturally, times out, or is explicitly cancelled.
     /// </remarks>
     public Task? MonitorTask { get; internal set; }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the timestamp of when the process was officially started.
+    /// </summary>
     public DateTime StartTime { get; internal set; }
 
     /// <summary>
@@ -42,7 +51,7 @@ public class ManagedProcess : IManagedProcess
     /// </summary>
     /// <param name="config">The configuration defining how the process should be launched.</param>
     /// <param name="logger">An optional logger for internal event tracking.</param>
-    internal ManagedProcess(IManagedProcessConfig config, ILogger? logger = null)
+    internal ManagedProcess(ManagedProcessConfig config, ILogger? logger = null)
     {
         _logger = logger;
 
@@ -70,10 +79,19 @@ public class ManagedProcess : IManagedProcess
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Cancels the running process.
+    /// </summary>
+    /// <param name="forceKill">
+    /// If <see langword="true"/>, the process is terminated immediately via <see cref="Process.Kill()"/>;
+    /// otherwise, a graceful shutdown is attempted (e.g., sending a close signal to the main window).
+    /// </param>
+    /// <returns>
+    /// A <see cref="NullOperationResult"/> indicating the outcome of the cancellation request.
+    /// </returns>
     /// <remarks>
-    /// When <paramref name="forceKill"/> is <see langword="false"/>, the method attempts 
-    /// <see cref="Process.CloseMainWindow"/> and waits up to 3 seconds. If the process does 
+    /// When <paramref name="forceKill"/> is <see langword="false"/>, the method attempts
+    /// <see cref="Process.CloseMainWindow"/> and waits up to 3 seconds. If the process does
     /// not exit within that window, a recursive <see cref="Process.Kill(bool)"/> is performed.
     /// </remarks>
     public NullOperationResult Cancel(bool forceKill = false)
@@ -125,7 +143,9 @@ public class ManagedProcess : IManagedProcess
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Captures and returns the standard output (STDOUT) produced by the process.
+    /// </summary>
     /// <returns>An <see cref="OperationResult{String}"/> containing the full contents of the STDOUT buffer.</returns>
     public OperationResult<string> GetOutput()
     {
@@ -141,9 +161,11 @@ public class ManagedProcess : IManagedProcess
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Captures and returns the standard error (STDERR) produced by the process.
+    /// </summary>
     /// <returns>An <see cref="OperationResult{String}"/> containing the full contents of the STDERR buffer.</returns>
-    public OperationResult<string> GetError() 
+    public OperationResult<string> GetError()
     {
         var result = new OperationResult<string>();
 

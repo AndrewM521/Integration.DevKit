@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.SQLMgmt.Contracts;
+using Integration.DevKit.SQLMgmt.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -22,10 +22,10 @@ public static class Service_SQLMgmt
 {
     private const string NoInit = "Service_SQLMgmt has not been initialized.";
 
-    private static ISQLManager? _sqlManager;
+    private static SQLManager? _sqlManager;
 
     /// <summary>
-    /// Registers the <see cref="ISQLManager"/> and its concrete implementation into the service collection.
+    /// Registers the <see cref="SQLManager"/> and its concrete implementation into the service collection.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add the services to.</param>
     /// <param name="configuration">The application configuration used to bind <see cref="SQLManagerSettings"/>.</param>
@@ -36,7 +36,7 @@ public static class Service_SQLMgmt
         services.Configure<SQLManagerSettings>(configuration.GetSection("Integration.DevKit:SQLManagement"));
 
         // Register the concrete class
-        services.TryAddSingleton<ISQLManager, SQLManager>();
+        services.TryAddSingleton<SQLManager>();
 
         return services;
     }
@@ -47,7 +47,7 @@ public static class Service_SQLMgmt
     /// <param name="sp">The service provider containing the registered SQL management services.</param>
     /// <exception cref="ArgumentNullException">Thrown if the provided <paramref name="sp"/> is <see langword="null"/>.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if <see cref="ISQLManager"/> is not registered in the service collection.
+    /// Thrown if <see cref="SQLManager"/> is not registered in the service collection.
     /// </exception>
     public static void Initialize(IServiceProvider sp)
     {
@@ -56,23 +56,23 @@ public static class Service_SQLMgmt
             throw new ArgumentNullException(nameof(sp));
         }
 
-        _sqlManager = sp.GetService<ISQLManager>();
+        _sqlManager = sp.GetService<SQLManager>();
         if (_sqlManager == null)
         {
-            throw new InvalidOperationException($"{nameof(ISQLManager)} is not registered. Make sure you call AddSqlDBManagement() when configuring services.");
+            throw new InvalidOperationException($"{nameof(SQLManager)} is not registered. Make sure you call AddSqlDBManagement() when configuring services.");
         }
     }
 
     /// <summary>
-    /// Gets the singleton instance of the <see cref="ISQLManager"/> for the current process.
+    /// Gets the singleton instance of the <see cref="SQLManager"/> for the current process.
     /// </summary>
     /// <value>
-    /// The global <see cref="ISQLManager"/> instance used to orchestrate database clients.
+    /// The global <see cref="SQLManager"/> instance used to orchestrate database clients.
     /// </value>
     /// <exception cref="InvalidOperationException">
     /// Thrown if the host has not been initialized via <see cref="Initialize"/>.
     /// </exception>
-    public static ISQLManager SQLManager
+    public static SQLManager SQLManager
     {
         get
         {

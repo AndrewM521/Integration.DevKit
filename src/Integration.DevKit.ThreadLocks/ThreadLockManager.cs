@@ -1,6 +1,6 @@
 ﻿using Integration.DevKit.Core;
 using Integration.DevKit.Core.Logging;
-using Integration.DevKit.ThreadLocks.Contracts;
+using Integration.DevKit.ThreadLocks.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
@@ -8,11 +8,16 @@ using System.Collections.Concurrent;
 namespace Integration.DevKit.ThreadLocks;
 
 /// <summary>
-/// Concrete Implementation of <see cref="IThreadLockManager"/>
+/// Thread synchronization manager that handles named locks.
+/// Supports both synchronous and asynchronous locking mechanisms using unique keys.
 /// </summary>
-public class ThreadLockManager : IThreadLockManager
+public class ThreadLockManager
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets or sets the current runtime settings for this manager, initialized from the bound
+    /// <see cref="ThreadLockSettings"/>. Mutate this in place (e.g. <c>RuntimeSettings.EnableLogging = false</c>)
+    /// to change behavior, including logging, at runtime.
+    /// </summary>
     public ThreadLockSettings RuntimeSettings { get; set; }
 
     private readonly ConcurrentDictionary<string, ThreadLockInfo_Sync> _syncLocks = new ConcurrentDictionary<string, ThreadLockInfo_Sync>();
@@ -32,9 +37,20 @@ public class ThreadLockManager : IThreadLockManager
     }
 
     #region Syncronous Methods
-    /// <inheritdoc />
+    /// <summary>
+    /// Attempts to acquire a synchronous lock associated with the specified <paramref name="key"/>.
+    /// </summary>
+    /// <param name="key">The unique string identifier for the lock.</param>
+    /// <param name="timeoutMilliseconds">
+    /// The number of milliseconds to wait for the lock.
+    /// Use -1 to wait indefinitely or 0 to test the lock and return immediately.
+    /// </param>
+    /// <returns>
+    /// A <see cref="NullOperationResult"/> representing the outcome.
+    /// Success indicates the lock was acquired; Failure indicates a timeout or error.
+    /// </returns>
     /// <remarks>
-    /// Uses <see cref="Monitor"/> for the locking mechanism. Increments the reference count 
+    /// Uses <see cref="Monitor"/> for the locking mechanism. Increments the reference count
     /// before attempting to enter to prevent premature cleanup.
     /// </remarks>
     public NullOperationResult TryEnterSyncLock(string key, int timeoutMilliseconds = -1)
@@ -105,9 +121,17 @@ public class ThreadLockManager : IThreadLockManager
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Releases the synchronous lock associated with the specified <paramref name="key"/>.
+    /// </summary>
+    /// <param name="key">The unique identifier for the lock to release.</param>
+    /// <returns>
+    /// A <see cref="NullOperationResult"/> indicating whether the release was successful. If the
+    /// current thread does not own the lock for the specified key, a failed result wrapping a
+    /// <see cref="System.Threading.SynchronizationLockException"/> is returned rather than thrown.
+    /// </returns>
     /// <remarks>
-    /// Decrements the reference count. If the count reaches zero, the key is removed 
+    /// Decrements the reference count. If the count reaches zero, the key is removed
     /// from the internal dictionary to free memory.
     /// </remarks>
     public NullOperationResult TryExitSyncLock(string key)
@@ -147,9 +171,20 @@ public class ThreadLockManager : IThreadLockManager
     #endregion
 
     #region Asyncronous Methods
-    /// <inheritdoc />
+    /// <summary>
+    /// Asynchronously attempts to acquire a lock associated with the specified <paramref name="key"/>.
+    /// </summary>
+    /// <param name="key">The unique identifier for the lock.</param>
+    /// <param name="timeoutMilliseconds">
+    /// The number of milliseconds to wait for the lock.
+    /// Use -1 to wait indefinitely.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains a
+    /// <see cref="NullOperationResult"/> indicating whether the lock was successfully acquired.
+    /// </returns>
     /// <remarks>
-    /// Uses <see cref="SemaphoreSlim"/> to provide non-blocking waits. Increments the reference 
+    /// Uses <see cref="SemaphoreSlim"/> to provide non-blocking waits. Increments the reference
     /// count before the awaitable operation.
     /// </remarks>
     public async Task<NullOperationResult> TryEnterAsyncLock(string key, int timeoutMilliseconds = -1)
@@ -194,9 +229,15 @@ public class ThreadLockManager : IThreadLockManager
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Releases the asynchronous lock associated with the specified <paramref name="key"/>.
+    /// </summary>
+    /// <param name="key">The unique identifier for the lock to release.</param>
+    /// <returns>
+    /// A <see cref="NullOperationResult"/> indicating whether the release was successful.
+    /// </returns>
     /// <remarks>
-    /// Releases the semaphore and decrements the reference count. If the count reaches zero, 
+    /// Releases the semaphore and decrements the reference count. If the count reaches zero,
     /// the semaphore is disposed and removed from the dictionary.
     /// </remarks>
     public NullOperationResult TryExitAsyncLock(string key)

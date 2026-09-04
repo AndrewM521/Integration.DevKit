@@ -3,20 +3,28 @@ using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
 using Integration.DevKit.Core.Logging;
-using Integration.DevKit.SQLMgmt.Contracts;
+using Integration.DevKit.SQLMgmt.Settings;
 
 namespace Integration.DevKit.SQLMgmt;
 
 /// <summary>
-/// Concrete Implementation of <see cref="ISQLManager"/>
+/// Manager responsible for the lifecycle, orchestration, and retrieval
+/// of <see cref="SQLClient"/> instances.
 /// </summary>
 
-public class SQLManager : ISQLManager
+public class SQLManager : IAsyncDisposable
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets or sets the global configuration settings used by the manager
+    /// to orchestrate database clients.
+    /// </summary>
+    /// <value>
+    /// An instance of <see cref="SQLManagerSettings"/> containing the configured SQL clients and the
+    /// module's logging toggle.
+    /// </value>
     public SQLManagerSettings RuntimeSettings { get; set; }
 
-    private readonly ConcurrentDictionary<string, ISQLClient> _clients = new ConcurrentDictionary<string, ISQLClient>(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, SQLClient> _clients = new ConcurrentDictionary<string, SQLClient>(StringComparer.OrdinalIgnoreCase);
     private readonly ILogger? _logger;
 
     /// <summary>
@@ -37,13 +45,21 @@ public class SQLManager : ISQLManager
         _logger = loggerFactory?.CreateConditionalLogger("SqlDBManager", () => RuntimeSettings.EnableLogging);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Retrieves a specific SQL database client by its unique name.
+    /// </summary>
+    /// <param name="clientName">The unique identifier or key of the client to retrieve.</param>
+    /// <returns>
+    /// An instance of <see cref="SQLClient"/> configured for the specified name. If
+    /// <paramref name="clientName"/> is not found in <see cref="RuntimeSettings"/>, a warning is
+    /// logged and a client backed by default settings is returned instead — this method does not throw.
+    /// </returns>
     /// <remarks>
-    /// This method uses a thread-safe factory approach. If the specified <paramref name="clientName"/> 
-    /// is not found in <see cref="RuntimeSettings"/>, a warning is logged and a client is 
+    /// This method uses a thread-safe factory approach. If the specified <paramref name="clientName"/>
+    /// is not found in <see cref="RuntimeSettings"/>, a warning is logged and a client is
     /// generated using an empty <see cref="SQLClientSettings"/> instance.
     /// </remarks>
-    public ISQLClient GetClient(string clientName)
+    public SQLClient GetClient(string clientName)
     {
         if (!RuntimeSettings.Clients.TryGetValue(clientName, out var clientSettings))
         {
@@ -55,7 +71,9 @@ public class SQLManager : ISQLManager
         return _clients.GetOrAdd(clientName, _ => { return new SQLClient(clientName, clientSettings, _logger); });
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Logging method to output current <see cref="SQLManagerSettings"/> to the logs.
+    /// </summary>
     public void LogRuntimeSettings()
     {
         _logger?.LogDebug($"--- SqlDB Manager Settings ---");
@@ -86,7 +104,7 @@ public class SQLManager : ISQLManager
     }
 
     /// <summary>
-    /// Asynchronously disposes of all managed <see cref="ISQLClient"/> instances.
+    /// Asynchronously disposes of all managed <see cref="SQLClient"/> instances.
     /// </summary>
     /// <returns>A <see cref="ValueTask"/> representing the completion of the disposal.</returns>
     public ValueTask DisposeAsync()

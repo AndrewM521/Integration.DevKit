@@ -23,7 +23,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Integration.DevKit.TaskMgmt\Integration.DevKit.TaskMgmt.csproj" />
-    <ProjectReference Include="..\..\src\Integration.DevKit.TaskMgmt.Contracts\Integration.DevKit.TaskMgmt.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Integration.DevKit.Core\Integration.DevKit.Core.csproj" />
   </ItemGroup>
 

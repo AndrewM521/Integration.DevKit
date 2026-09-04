@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.RESTApiMgmt.Contracts;
+using Integration.DevKit.RESTApiMgmt.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -22,7 +22,7 @@ public static class Service_RESTApiMgmt
 {
     private const string NoInit = "Service_RESTApiMgmt has not been initialized.";
 
-    private static IApiManager? _apiManager;
+    private static ApiManager? _apiManager;
 
     /// <summary>
     /// Adds the API management infrastructure to the service collection
@@ -34,7 +34,7 @@ public static class Service_RESTApiMgmt
     {
         services.Configure<ApiManagerSettings>(configuration.GetSection("Integration.DevKit:ApiClientManagement"));
 
-        services.TryAddSingleton<IApiManager, ApiManager>();
+        services.TryAddSingleton<ApiManager>();
 
         services.AddHttpClient();
 
@@ -47,7 +47,7 @@ public static class Service_RESTApiMgmt
     /// <param name="sp">The <see cref="IServiceProvider"/> containing the registered API management services.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if <see cref="IApiManager"/> has not been registered in the service collection.
+    /// Thrown if <see cref="ApiManager"/> has not been registered in the service collection.
     /// </exception>
     public static void Initialize(IServiceProvider sp)
     {
@@ -56,21 +56,21 @@ public static class Service_RESTApiMgmt
             throw new ArgumentNullException(nameof(sp));
         }
 
-        _apiManager = sp.GetService<IApiManager>();
+        _apiManager = sp.GetService<ApiManager>();
         if (_apiManager == null)
         {
-            throw new InvalidOperationException($"{nameof(IApiManager)} is not registered, make sure to call AddApiManagement() when configuring services.");
+            throw new InvalidOperationException($"{nameof(ApiManager)} is not registered, make sure to call AddApiManagement() when configuring services.");
         }
     }
 
     /// <summary>
-    /// Gets the globally accessible instance of the <see cref="IApiManager"/>.
+    /// Gets the globally accessible instance of the <see cref="ApiManager"/>.
     /// </summary>
     /// <value> The initialized <see cref="IApiManager"/> instance. </value>
     /// <exception cref="InvalidOperationException">
     /// Thrown if <see cref="Initialize"/> was not called prior to accessing this property.
     /// </exception>
-    public static IApiManager ApiManager
+    public static ApiManager ApiManager
     {
         get
         {

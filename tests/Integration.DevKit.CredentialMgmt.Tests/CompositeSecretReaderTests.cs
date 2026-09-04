@@ -1,4 +1,5 @@
 using Integration.DevKit.CredentialMgmt.Contracts;
+using Integration.DevKit.CredentialMgmt.Implementations;
 using Integration.DevKit.CredentialMgmt.Tests.TestSupport;
 using Moq;
 

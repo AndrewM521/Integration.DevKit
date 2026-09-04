@@ -5,12 +5,11 @@
  */
 
 using Integration.DevKit.ProcessLauncher;
-using Integration.DevKit.ProcessLauncher.Contracts;
 
 namespace TestApp.Demos;
 
 /// <summary>
-/// Demonstrates <see cref="IProcessManager"/> starting, waiting on, and canceling managed OS processes.
+/// Demonstrates <see cref="ProcessManager"/> starting, waiting on, and canceling managed OS processes.
 /// </summary>
 public class ProcessLauncherDemo : IDemo
 {

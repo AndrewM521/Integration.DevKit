@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Integration.DevKit.SQLMgmt\Integration.DevKit.SQLMgmt.csproj" />
-    <ProjectReference Include="..\..\src\Integration.DevKit.SQLMgmt.Contracts\Integration.DevKit.SQLMgmt.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Integration.DevKit.CredentialMgmt.Contracts\Integration.DevKit.CredentialMgmt.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Integration.DevKit.Core\Integration.DevKit.Core.csproj" />
   </ItemGroup>

@@ -1,4 +1,5 @@
-using Integration.DevKit.ThreadLocks.Contracts;
+using Integration.DevKit.CredentialMgmt.Implementations;
+using Integration.DevKit.ThreadLocks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -53,7 +54,7 @@ public class Service_CredentialMgmtTests : IDisposable
     }
 
     [Fact]
-    public void AddCredentialMgmt_BuiltInFileProvider_AlsoRegistersIThreadLockManager()
+    public void AddCredentialMgmt_BuiltInFileProvider_AlsoRegistersThreadLockManager()
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -69,7 +70,7 @@ public class Service_CredentialMgmtTests : IDisposable
         services.AddCredentialMgmt(config);
         var provider = services.BuildServiceProvider();
 
-        Assert.NotNull(provider.GetService<IThreadLockManager>());
+        Assert.NotNull(provider.GetService<ThreadLockManager>());
     }
 
     [Fact]

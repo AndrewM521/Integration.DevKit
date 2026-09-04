@@ -1,4 +1,5 @@
-using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.TaskMgmt.Models;
+using Integration.DevKit.TaskMgmt.Settings;
 using Integration.DevKit.TaskMgmt.Tests.TestSupport;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -154,7 +155,7 @@ public class TaskManagerTests
         var task1 = new FakeManagedTask("cancel-all-1");
         var task2 = new FakeManagedTask("cancel-all-2");
 
-        Func<IManagedTaskIterationHandle, Task> longRunningWork = async handle =>
+        Func<ManagedTaskIterationHandle, Task> longRunningWork = async handle =>
         {
             try { await Task.Delay(Timeout.Infinite, handle.CancelationToken); }
             catch (OperationCanceledException) { }

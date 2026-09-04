@@ -1,5 +1,6 @@
+using Integration.DevKit.CredentialMgmt.Implementations;
 using Integration.DevKit.ThreadLocks;
-using Integration.DevKit.ThreadLocks.Contracts;
+using Integration.DevKit.ThreadLocks.Settings;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,7 +10,7 @@ public class FileSecretStoreTests : IDisposable
 {
     private readonly string _tempDir;
     private readonly IDataProtectionProvider _provider;
-    private readonly IThreadLockManager _threadLockManager = new ThreadLockManager();
+    private readonly ThreadLockManager _threadLockManager = new ThreadLockManager();
 
     public FileSecretStoreTests()
     {

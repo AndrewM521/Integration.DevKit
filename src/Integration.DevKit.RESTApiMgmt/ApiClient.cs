@@ -5,8 +5,8 @@
  */
 
 using Integration.DevKit.Core;
-using Integration.DevKit.CredentialMgmt.Contracts;
-using Integration.DevKit.RESTApiMgmt.Contracts;
+using Integration.DevKit.RESTApiMgmt.Interfaces;
+using Integration.DevKit.RESTApiMgmt.Settings;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text;
@@ -14,9 +14,10 @@ using System.Text;
 namespace Integration.DevKit.RESTApiMgmt;
 
 /// <summary>
-/// Concrete Implementation of <see cref="IApiClient"/>
+/// Specialized HTTP client capable of performing RESTful operations,
+/// managing credentials, and tracking client-side metrics.
 /// </summary>
-public class ApiClient : IApiClient
+public class ApiClient : IAsyncDisposable
 {
     /// <summary>
     /// Gets or sets the display name for this API client instance.
@@ -31,17 +32,14 @@ public class ApiClient : IApiClient
     /// <summary>
     /// Gets the metrics collector associated with this client.
     /// </summary>
-    public IApiClientMetrics ClientMetrics => _metrics;
+    public ApiClientMetrics ClientMetrics => _metrics;
 
     private readonly HttpClient _httpClient;
-    private readonly IApiManager _apiManager;
+    private readonly ApiManager _apiManager;
     private SemaphoreSlim _rateLimiter = null!;
     private readonly ApiClientMetrics _metrics;
     private readonly ILogger? _logger;
 
-    private const string NoSecretStore = "SecretStore has not been set. Call SetSecretStore()";
-    private readonly string _secretStoreFileName;
-    private ISecretStore? _secretStore;
     private IAuthStrategy? _authStrategy;
 
     /// <summary>
@@ -52,11 +50,10 @@ public class ApiClient : IApiClient
     /// <param name="clientSettings">The specific configuration for this client.</param>
     /// <param name="httpClient">The underlying <see cref="HttpClient"/> instance to use for requests.</param>
     /// <param name="logger">Optional logger for debugging and runtime info.</param>
-    internal ApiClient(IApiManager apiManager, string clientName, ApiClientSettings clientSettings, HttpClient httpClient, ILogger? logger = null)
+    internal ApiClient(ApiManager apiManager, string clientName, ApiClientSettings clientSettings, HttpClient httpClient, ILogger? logger = null)
     {
         ClientName = clientName;
 
-        _secretStoreFileName = $"ApiClient({ClientName})";
         _logger = logger;
         _apiManager = apiManager;
 
@@ -67,7 +64,12 @@ public class ApiClient : IApiClient
         Initialize();
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Re-derives everything this client caches from <see cref="RuntimeSettings"/> (the underlying
+    /// <see cref="HttpClient"/>'s base address, timeout, and default headers, plus the concurrent-request
+    /// rate limiter). Call this after mutating <see cref="RuntimeSettings"/> in place so the change takes effect.
+    /// </summary>
+    /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
     /// <remarks>
     /// Re-derives everything this client caches from <see cref="RuntimeSettings"/> at construction time
     /// (the <see cref="HttpClient"/>'s base address, timeout, and default headers, plus the concurrent-request
@@ -125,28 +127,52 @@ public class ApiClient : IApiClient
     }
 
     #region Asyncronous Methods
-    /// <inheritdoc/>
+    /// <summary>
+    /// Sends an asynchronous GET request to the specified endpoint.
+    /// </summary>
+    /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">Optional <see cref="HttpContent"/> request content sent to the server.</param>
+    /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
+    /// <returns>A task representing the result as an <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
     public async Task<ApiOperationResult<string>> GetAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Get, () =>
             ApiRequest.GetAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy));
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Sends an asynchronous PUT request to the specified endpoint.
+    /// </summary>
+    /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">The <see cref="HttpContent"/> request content sent to the server.</param>
+    /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
+    /// <returns>A task representing the result as an <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
     public async Task<ApiOperationResult<string>> PutAsync(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Put, () =>
             ApiRequest.PutAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy));
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Sends an asynchronous POST request with an optional specified body to the specified endpoint.
+    /// </summary>
+    /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">Optional <see cref="HttpContent"/> request content sent to the server.</param>
+    /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
+    /// <returns>A task representing the result as an <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
     public async Task<ApiOperationResult<string>> PostAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Post, () =>
             ApiRequest.PostAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy));
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Sends an asynchronous DELETE request to the specified endpoint.
+    /// </summary>
+    /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">Optional <see cref="HttpContent"/> request content sent to the server.</param>
+    /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
+    /// <returns>A task representing the result as an <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
     public async Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Delete, () =>
@@ -184,33 +210,72 @@ public class ApiClient : IApiClient
 
     #region Syncronous Methods
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Sends a synchronous GET request to the specified endpoint.
+    /// </summary>
+    /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">Optional <see cref="HttpContent"/> request content sent to the server.</param>
+    /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
+    /// <returns>An <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
     public ApiOperationResult<string> Get(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return GetAsync(endpointUrl, httpContent, requestHeaders).GetAwaiter().GetResult();
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Sends a synchronous PUT request to the specified endpoint.
+    /// </summary>
+    /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">The <see cref="HttpContent"/> request content sent to the server.</param>
+    /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
+    /// <returns>An <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
     public ApiOperationResult<string> Put(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
     {
         return PutAsync(endpointUrl, httpContent, requestHeaders).GetAwaiter().GetResult();
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Sends a synchronous POST request with an optional specified body to the specified endpoint.
+    /// </summary>
+    /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">Optional <see cref="HttpContent"/> request content sent to the server.</param>
+    /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
+    /// <returns>An <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
     public ApiOperationResult<string> Post(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return PostAsync(endpointUrl, httpContent, requestHeaders).GetAwaiter().GetResult();
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Sends a synchronous DELETE request to the specified endpoint.
+    /// </summary>
+    /// <param name="endpointUrl">The relative or absolute URL of the resource.</param>
+    /// <param name="httpContent">Optional <see cref="HttpContent"/> request content sent to the server.</param>
+    /// <param name="requestHeaders">Optional dictionary of HTTP headers to include in the request.</param>
+    /// <returns>An <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
     public ApiOperationResult<string> Delete(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return DeleteAsync(endpointUrl, httpContent, requestHeaders).GetAwaiter().GetResult();
     }
     #endregion
 
-    #region Helper Methods
-    /// <inheritdoc/>
+    /// <summary>
+    /// Injects an <see cref="IAuthStrategy"/> that is applied to every outgoing request
+    /// (e.g. an OAuth2 bearer token), independently of any Basic-style credentials.
+    /// </summary>
+    /// <param name="authStrategy">The strategy to apply, or <see langword="null"/> to stop applying one.</param>
+    public void SetAuthStrategy(IAuthStrategy? authStrategy)
+    {
+        _authStrategy = authStrategy;
+    }
+
+    /// <summary>
+    /// Formats data into an <see cref="HttpContent"/> object suitable for request bodies.
+    /// </summary>
+    /// <param name="mediaType">The intended <see cref="RESTApiMediaTypes"/>.</param>
+    /// <param name="data">The raw string data to be converted.</param>
+    /// <param name="encoding">The text <see cref="Encoding"/> to use. Defaults to UTF-8 if null.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the formatted <see cref="HttpContent"/>.</returns>
     public OperationResult<HttpContent> CreateHttpContent(RESTApiMediaTypes mediaType, string data, Encoding? encoding = null)
     {
         var result = new OperationResult<HttpContent>();
@@ -238,7 +303,12 @@ public class ApiClient : IApiClient
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Adds a default header to the client that will be applied to all subsequent requests.
+    /// </summary>
+    /// <param name="key">The header name.</param>
+    /// <param name="value">The header value.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating success.</returns>
     public NullOperationResult AddDefaultHeader(string key, string value)
     {
         var result = new NullOperationResult();
@@ -333,137 +403,11 @@ public class ApiClient : IApiClient
 
         return HttpMetricNames.Other;
     }
-    #endregion
-
-    #region Credentials
-    /// <inheritdoc/>
-    public void SetSecretStore(ISecretStore secretStore)
-    {
-        _secretStore = secretStore;
-    }
-
-    /// <inheritdoc/>
-    public NullOperationResult SetCredentials(string username, string password)
-    {
-        var result = new NullOperationResult();
-
-        try
-        {
-            if (_secretStore == null)
-            {
-                throw new ArgumentNullException(NoSecretStore);
-            }
-
-            var setUsernameKey = _secretStore.SetKey(_secretStoreFileName, "username", username);
-            if (!setUsernameKey.MethodSuccess)
-            {
-                throw setUsernameKey.Exception;
-            }
-
-            var setPasswordKey = _secretStore.SetKey(_secretStoreFileName, "password", password);
-            if (!setPasswordKey.MethodSuccess)
-            {
-                throw setPasswordKey.Exception;
-            }
-
-            return result.SetMethodSuccess();
-        }
-        catch (Exception ex)
-        {
-            return result.SetMethodFailure(ex);
-        }
-    }
-
-    /// <inheritdoc/>
-    public OperationResult<string> GetUsername()
-    {
-        return GetCredentials("username", RuntimeSettings.Username);
-    }
-
-    /// <inheritdoc/>
-    public OperationResult<string> GetPassword()
-    {
-        return GetCredentials("password", RuntimeSettings.Password);
-    }
-
-    /// <inheritdoc/>
-    public NullOperationResult DeleteCredential(string key)
-    {
-        var result = new NullOperationResult();
-
-        try
-        {
-            if (_secretStore == null)
-            {
-                throw new ArgumentNullException(NoSecretStore);
-            }
-
-            return _secretStore.DeleteKey(_secretStoreFileName, key);
-        }
-        catch (Exception ex)
-        {
-            return result.SetMethodFailure(ex);
-        }
-    }
-
-    /// <inheritdoc/>
-    public NullOperationResult DeleteAllCredentials()
-    {
-        var result = new NullOperationResult();
-
-        try
-        {
-            if (_secretStore == null)
-            {
-                throw new ArgumentNullException(NoSecretStore);
-            }
-
-            return _secretStore.DeleteSecret(_secretStoreFileName);
-        }
-        catch (Exception ex)
-        {
-            return result.SetMethodFailure(ex);
-        }
-    }
-
-    /// <inheritdoc/>
-    public void SetAuthStrategy(IAuthStrategy? authStrategy)
-    {
-        _authStrategy = authStrategy;
-    }
 
     /// <summary>
-    /// Internal helper to retrieve a credential from the secret store, falling back to runtime settings if the store is not set.
+    /// Logging method to output current <see cref="ApiClientSettings"/> to the logs.
     /// </summary>
-    private OperationResult<string> GetCredentials(string key, string defaultStr)
-    {
-        var result = new OperationResult<string>();
-
-        try
-        {
-            if (_secretStore != null)
-            {
-                var getKey = _secretStore.GetKey(_secretStoreFileName, key);
-                if (!getKey.MethodSuccess)
-                {
-                    throw getKey.Exception;
-                }
-
-                return result.SetMethodSuccess(getKey.Result);
-            }
-            else
-            {
-                return result.SetMethodSuccess(defaultStr);
-            }
-        }
-        catch (Exception ex)
-        {
-            return result.SetMethodFailure(ex);
-        }
-    }
-    #endregion
-
-    /// <inheritdoc/>
+    /// <param name="calledFromManager">Indicates if the call originated from a management orchestrator.</param>
     public void LogRuntimeSettings(bool calledFromManager = false)
     {
         string indent;

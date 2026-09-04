@@ -10,19 +10,25 @@ using System.Data;
 using System.Reflection;
 using Integration.DevKit.Core;
 using Integration.DevKit.CredentialMgmt.Contracts;
-using Integration.DevKit.SQLMgmt.Contracts;
+using Integration.DevKit.SQLMgmt.Settings;
 
 namespace Integration.DevKit.SQLMgmt;
 
 /// <summary>
-/// Concrete Implementation of <see cref="ISQLClient"/>
+/// SQL Database Client capable of executing commands,
+/// managing credentials, and testing connectivity both synchronously and asynchronously.
 /// </summary>
-public class SQLClient : ISQLClient
+public class SQLClient : IDisposable
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets or sets the configuration settings used by the client at runtime.
+    /// </summary>
     public SQLClientSettings RuntimeSettings { get; set; }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets or sets the unique name or identifier for this client instance.
+    /// </summary>
+    /// <value>A string representing the name of the client, used for logging or identification.</value>
     public string ClientName { get; set; }
 
     private readonly ILogger? _logger;
@@ -52,14 +58,21 @@ public class SQLClient : ISQLClient
         RuntimeSettings = settings;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Injects a secret store implementation to be used for secure credential retrieval.
+    /// </summary>
+    /// <param name="secretStore">The implementation of <see cref="ISecretStore"/> to use.</param>
     public void SetSecretStore(ISecretStore secretStore)
     {
         _secretStore = secretStore;
     }
 
     #region Asyncronous Methods
-    /// <inheritdoc/>
+    /// <summary>
+    /// Asynchronously tests the connection to the SQL server using the current <see cref="RuntimeSettings"/>.
+    /// </summary>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> indicating success and containing a boolean result where <see langword="true"/> means the connection is valid.</returns>
     public async Task<OperationResult<bool>> TestSqlConnectionAsync(CancellationToken cancellationToken = default)
     {
         var result = new OperationResult<bool>();
@@ -116,8 +129,16 @@ public class SQLClient : ISQLClient
         }
     }
 
-    /// <inheritdoc/>
-    public async Task<NullOperationResult> RunCustomCommandAsync(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand, 
+    /// <summary>
+    /// Asynchronously executes a Custom SQL statement, providing direct access to the <see cref="SqlCommand"/> for custom processing.
+    /// </summary>
+    /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
+    /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
+    /// <param name="processCommand">An asynchronous function to process the <see cref="SqlCommand"/> before or during execution.</param>
+    /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating the success or failure of the operation.</returns>
+    public async Task<NullOperationResult> RunCustomCommandAsync(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand,
             int commandTimeoutSeconds = 30, CancellationToken cancellationToken = default)
     {
         var result = new NullOperationResult();
@@ -178,8 +199,16 @@ public class SQLClient : ISQLClient
         }
     }
 
-    /// <inheritdoc/>
-    public async Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType, 
+    /// <summary>
+    /// Asynchronously executes a Non-Query SQL statement and returns the number of rows affected.
+    /// </summary>
+    /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
+    /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted (e.g., Text or StoredProcedure).</param>
+    /// <param name="configureParameters">An optional action to populate the <see cref="SqlParameterCollection"/> before execution.</param>
+    /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the number of rows affected.</returns>
+    public async Task<OperationResult<int>> RunNonQueryCommandAsync(string sqlStatement, CommandType commandType,
         Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30, CancellationToken cancellationToken = default)
     {
         var result = new OperationResult<int>();
@@ -242,8 +271,17 @@ public class SQLClient : ISQLClient
         }
     }
 
-    /// <inheritdoc/>
-    public async Task<NullOperationResult> RunDataReaderAsync(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader, 
+    /// <summary>
+    /// Asynchronously executes a query and provides a <see cref="SqlDataReader"/> to a callback for processing results.
+    /// </summary>
+    /// <param name="sqlStatement">The SQL query to execute.</param>
+    /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
+    /// <param name="processReader">An asynchronous function to handle the data reading logic using the provided <see cref="SqlDataReader"/>.</param>
+    /// <param name="configureParameters">An optional action to populate the <see cref="SqlParameterCollection"/>.</param>
+    /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating the success or failure of the operation.</returns>
+    public async Task<NullOperationResult> RunDataReaderAsync(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader,
         Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30, CancellationToken cancellationToken = default)
     {
         var result = new NullOperationResult();
@@ -314,28 +352,53 @@ public class SQLClient : ISQLClient
     #endregion
 
     #region Syncronous Methods
-    /// <inheritdoc/>
+    /// <summary>
+    /// Synchronously tests the connection to the SQL server.
+    /// </summary>
+    /// <returns>An <see cref="OperationResult{T}"/> containing a boolean indicating if the connection was successful.</returns>
     public OperationResult<bool> TestSqlConnection()
     {
         return TestSqlConnectionAsync().GetAwaiter().GetResult();
     }
 
-    /// <inheritdoc/>
-    public NullOperationResult RunCustomCommand(string sqlStatement, CommandType commandType, 
+    /// <summary>
+    /// Synchronously executes a custom SQL statement, providing direct access to the <see cref="SqlCommand"/> via a callback.
+    /// </summary>
+    /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
+    /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
+    /// <param name="processCommand">An asynchronous function (invoked synchronously) to process the <see cref="SqlCommand"/>.</param>
+    /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
+    public NullOperationResult RunCustomCommand(string sqlStatement, CommandType commandType,
         Func<SqlCommand, Task> processCommand, int commandTimeoutSeconds = 30)
     {
         return RunCustomCommandAsync(sqlStatement, commandType, command => processCommand(command)).GetAwaiter().GetResult();
     }
 
-    /// <inheritdoc/>
-    public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType, 
+    /// <summary>
+    /// Synchronously executes a Non-Query SQL statement and returns the number of rows affected.
+    /// </summary>
+    /// <param name="sqlStatement">The SQL text or stored procedure name to execute.</param>
+    /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
+    /// <param name="configureParameters">An optional action to populate the <see cref="SqlParameterCollection"/>.</param>
+    /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the number of rows affected.</returns>
+    public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType,
         Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30)
     {
         return RunNonQueryCommandAsync(sqlStatement, commandType, configureParameters).GetAwaiter().GetResult();
     }
 
-    /// <inheritdoc/>
-    public NullOperationResult RunDataReader(string sql, CommandType commandType, Func<SqlDataReader, Task> processReader, 
+    /// <summary>
+    /// Synchronously executes a query and provides a <see cref="SqlDataReader"/> to a callback for processing.
+    /// </summary>
+    /// <param name="sqlStatement">The SQL query to execute.</param>
+    /// <param name="commandType">Specifies how the <paramref name="sqlStatement"/> is interpreted.</param>
+    /// <param name="processReader">An asynchronous function (invoked synchronously) to handle the data reading logic.</param>
+    /// <param name="configureParameters">An optional action to populate the <see cref="SqlParameterCollection"/>.</param>
+    /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
+    public NullOperationResult RunDataReader(string sql, CommandType commandType, Func<SqlDataReader, Task> processReader,
         Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30)
     {
         return RunDataReaderAsync(sql, commandType, 
@@ -344,7 +407,11 @@ public class SQLClient : ISQLClient
     #endregion
 
     #region Credentials
-    /// <inheritdoc/>
+    /// <summary>
+    /// Manually sets the connection string for the client.
+    /// </summary>
+    /// <param name="connectionString">The full SQL connection string.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating if the connection string was successfully applied.</returns>
     public NullOperationResult SetSecretStoreCredentials(string connectionString)
     {
         var result = new NullOperationResult();
@@ -370,7 +437,11 @@ public class SQLClient : ISQLClient
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Deletes a specific credential from the store based on the provided key.
+    /// </summary>
+    /// <param name="key">The key identifying the credential to remove.</param>
+    /// <returns>A <see cref="NullOperationResult"/> indicating the result of the deletion.</returns>
     public NullOperationResult DeleteCredential(string key)
     {
         var result = new NullOperationResult();
@@ -390,7 +461,10 @@ public class SQLClient : ISQLClient
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Removes all stored credentials associated with this client instance.
+    /// </summary>
+    /// <returns>A <see cref="NullOperationResult"/> indicating the result of the deletion.</returns>
     public NullOperationResult DeleteAllCredentials()
     {
         var result = new NullOperationResult();
@@ -519,7 +593,10 @@ public class SQLClient : ISQLClient
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Logging method to output current <see cref="SQLClientSettings"/> to the logs.
+    /// </summary>
+    /// <param name="calledFromManager">Indicates if the call originated from a management orchestrator.</param>
     public void LogRuntimeSettings(bool calledFromManager = false)
     {
         string indent;

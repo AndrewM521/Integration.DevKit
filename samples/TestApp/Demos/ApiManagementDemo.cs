@@ -6,12 +6,11 @@
 
 using Integration.DevKit.Core;
 using Integration.DevKit.RESTApiMgmt;
-using Integration.DevKit.RESTApiMgmt.Contracts;
 
 namespace TestApp.Demos;
 
 /// <summary>
-/// Full CRUD smoke test against a configured <see cref="IApiClient"/>, plus a failure-path request
+/// Full CRUD smoke test against a configured <see cref="ApiClient"/>, plus a failure-path request
 /// and a metrics dump.
 /// </summary>
 public class ApiManagementDemo : IDemo

@@ -16,7 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Integration.DevKit.RESTApiMgmt.Contracts\Integration.DevKit.RESTApiMgmt.Contracts.csproj" />
+    <ProjectReference Include="..\Integration.DevKit.Core\Integration.DevKit.Core.csproj" />
+    <ProjectReference Include="..\Integration.DevKit.CredentialMgmt.Contracts\Integration.DevKit.CredentialMgmt.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

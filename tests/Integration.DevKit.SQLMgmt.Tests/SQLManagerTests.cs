@@ -1,4 +1,4 @@
-using Integration.DevKit.SQLMgmt.Contracts;
+using Integration.DevKit.SQLMgmt.Settings;
 using Microsoft.Extensions.Options;
 
 namespace Integration.DevKit.SQLMgmt.Tests;

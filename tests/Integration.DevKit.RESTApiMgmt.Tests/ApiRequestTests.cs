@@ -1,6 +1,6 @@
 using System.Net;
 using Integration.DevKit.Core;
-using Integration.DevKit.RESTApiMgmt.Contracts;
+using Integration.DevKit.RESTApiMgmt.Interfaces;
 using Integration.DevKit.RESTApiMgmt.Tests.TestSupport;
 using Moq;
 

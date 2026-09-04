@@ -4,7 +4,8 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.ThreadLocks.Contracts;
+using Integration.DevKit.ThreadLocks;
+using Integration.DevKit.ThreadSafeItems.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -60,7 +61,7 @@ public static class Service_ThreadSafeItems
     /// <param name="sp">The <see cref="IServiceProvider"/> used to resolve dependencies.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is <see langword="null"/>.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if <see cref="IThreadLockManager"/> or <see cref="ThreadSafeFileIO"/> are not 
+    /// Thrown if <see cref="ThreadLockManager"/> or <see cref="ThreadSafeFileIO"/> are not 
     /// correctly registered in the service collection.
     /// </exception>
     public static void Initialize(IServiceProvider sp)
@@ -72,7 +73,7 @@ public static class Service_ThreadSafeItems
 
         try
         {
-            _ = sp.GetRequiredService<IThreadLockManager>();
+            _ = sp.GetRequiredService<ThreadLockManager>();
         }
         catch (Exception)
         {

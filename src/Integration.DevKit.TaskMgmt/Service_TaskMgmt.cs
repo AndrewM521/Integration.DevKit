@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.TaskMgmt.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -19,8 +19,8 @@ public static class Service_TaskMgmt
 {
     private const string NoInit = "Service_TaskMgmt has not been initialized.";
 
-    private static ITaskManager? _taskManager;
-    private static ITaskRegistry? _taskRegistry;
+    private static TaskManager? _taskManager;
+    private static TaskRegistry? _taskRegistry;
 
     /// <summary>
     /// Registers the core Task Management services, including the Task Manager, Registry, and Thread Lock Manager.
@@ -45,10 +45,10 @@ public static class Service_TaskMgmt
         services.Configure<TaskManagerSettings>(config.GetSection("Integration.DevKit:TaskManagement"));
 
         // Register Task Registry (holds snapshots/history of tasks)
-        services.TryAddSingleton<ITaskRegistry, TaskRegistry>();
+        services.TryAddSingleton<TaskRegistry>();
 
         // Register TaskManager as singleton
-        services.TryAddSingleton<ITaskManager, TaskManager>();
+        services.TryAddSingleton<TaskManager>();
 
         return services;
     }
@@ -59,7 +59,7 @@ public static class Service_TaskMgmt
     /// <param name="sp">The <see cref="IServiceProvider"/> used to resolve required services.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if <see cref="ITaskRegistry"/> or <see cref="ITaskManager"/> are not registered in the service collection.
+    /// Thrown if <see cref="TaskRegistry"/> or <see cref="TaskManager"/> are not registered in the service collection.
     /// </exception>
     public static void Initialize(IServiceProvider sp)
     {
@@ -68,24 +68,24 @@ public static class Service_TaskMgmt
             throw new ArgumentNullException(nameof(sp));
         }
 
-        _taskRegistry = sp.GetService<ITaskRegistry>();
+        _taskRegistry = sp.GetService<TaskRegistry>();
         if (_taskRegistry == null)
         {
-            throw new InvalidOperationException($"{nameof(ITaskRegistry)} is not registered. Make sure you call AddTaskManager() when configuring services.");
+            throw new InvalidOperationException($"{nameof(TaskRegistry)} is not registered. Make sure you call AddTaskManager() when configuring services.");
         }
 
-        _taskManager = sp.GetService<ITaskManager>();
+        _taskManager = sp.GetService<TaskManager>();
         if (_taskManager == null)
         {
-            throw new InvalidOperationException($"{nameof(ITaskManager)} is not registered. Make sure you call AddTaskManager() when configuring services.");
+            throw new InvalidOperationException($"{nameof(TaskManager)} is not registered. Make sure you call AddTaskManager() when configuring services.");
         }
     }
 
     /// <summary>
-    /// Gets the global <see cref="ITaskManager"/> instance.
+    /// Gets the global <see cref="TaskManager"/> instance.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
-    public static ITaskManager TaskManager
+    public static TaskManager TaskManager
     {
         get
         {
@@ -99,10 +99,10 @@ public static class Service_TaskMgmt
     }
 
     /// <summary>
-    /// Gets the global <see cref="ITaskRegistry"/> instance.
+    /// Gets the global <see cref="TaskRegistry"/> instance.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
-    public static ITaskRegistry TaskRegistry
+    public static TaskRegistry TaskRegistry
     {
         get
         {

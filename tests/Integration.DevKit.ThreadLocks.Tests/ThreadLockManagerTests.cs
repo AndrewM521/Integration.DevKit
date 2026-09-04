@@ -1,5 +1,5 @@
 using Integration.DevKit.Core;
-using Integration.DevKit.ThreadLocks.Contracts;
+using Integration.DevKit.ThreadLocks.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

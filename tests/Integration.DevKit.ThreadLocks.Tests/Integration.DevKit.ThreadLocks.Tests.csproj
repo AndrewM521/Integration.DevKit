@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Integration.DevKit.ThreadLocks\Integration.DevKit.ThreadLocks.csproj" />
-    <ProjectReference Include="..\..\src\Integration.DevKit.ThreadLocks.Contracts\Integration.DevKit.ThreadLocks.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

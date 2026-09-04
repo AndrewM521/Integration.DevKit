@@ -9,19 +9,25 @@ using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Reflection;
 using Integration.DevKit.Core.Logging;
-using Integration.DevKit.RESTApiMgmt.Contracts;
+using Integration.DevKit.RESTApiMgmt.Settings;
 
 namespace Integration.DevKit.RESTApiMgmt;
 
 /// <summary>
-/// Concrete Implementation of <see cref="IApiManager"/>
+/// Defines a contract for a manager responsible for orchestrating multiple <see cref="ApiClient"/> instances
+/// and maintaining global API management configurations.
 /// </summary>
-public class ApiManager : IApiManager
+public class ApiManager : IAsyncDisposable
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets or sets the global configuration settings for the API manager.
+    /// </summary>
+    /// <value>
+    /// An instance of <see cref="ApiManagerSettings"/> containing the current runtime configuration.
+    /// </value>
     public ApiManagerSettings RuntimeSettings { get; set; }
 
-    private readonly ConcurrentDictionary<string, IApiClient> _clients = new ConcurrentDictionary<string, IApiClient>(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, ApiClient> _clients = new ConcurrentDictionary<string, ApiClient>(StringComparer.OrdinalIgnoreCase);
     
     private readonly IHttpClientFactory _httpFactory;
     private readonly ILogger? _logger;
@@ -56,12 +62,19 @@ public class ApiManager : IApiManager
         _logger = loggerFactory?.CreateConditionalLogger("ApiManager", () => RuntimeSettings.EnableLogging);
     }
 
-    /// <inheritdoc/>
+
+    /// <summary>
+    /// Retrieves a specific API client by its registered name.
+    /// </summary>
+    /// <param name="clientName">The unique name identifying the desired <see cref="ApiClient"/>.</param>
+    /// <returns>
+    /// An instance of <see cref="ApiClient"/> associated with the provided <paramref name="clientName"/>.
+    /// </returns>
     /// <remarks>
     /// If the requested <paramref name="clientName"/> is not found in the <see cref="ApiManagerSettings.Clients"/>, 
     /// the manager provides a new <see cref="ApiClient"/> using default settings.
     /// </remarks>
-    public IApiClient GetClient(string clientName)
+    public ApiClient GetClient(string clientName)
     {
         if (!RuntimeSettings.Clients.TryGetValue(clientName, out var clientSettings))
         {
@@ -84,7 +97,9 @@ public class ApiManager : IApiManager
         });
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Logging method to output current <see cref="ApiManagerSettings"/> to the logs.
+    /// </summary>
     public void LogRuntimeSettings()
     {
         _logger?.LogDebug($"--- Api Manager Settings ---");
@@ -124,4 +139,55 @@ public class ApiManager : IApiManager
             await client.DisposeAsync();
         }
     }
+}
+
+/// <summary>
+/// Defines the specific HTTP methods tracked within the reporting system.
+/// </summary>
+public enum HttpMetricNames
+{
+    /// <summary> Represents an HTTP GET operation. </summary>
+    Get,
+    /// <summary> Represents an HTTP POST operation. </summary>
+    Post,
+    /// <summary> Represents an HTTP PUT operation. </summary>
+    Put,
+    /// <summary> Represents an HTTP DELETE operation. </summary>
+    Delete,
+    /// <summary> Represents an HTTP PATCH operation. </summary>
+    Patch,
+    /// <summary> Represents an HTTP HEAD operation. </summary>
+    Head,
+    /// <summary> Represents an HTTP OPTIONS operation. </summary>
+    Options,
+    /// <summary> Represents any other non-standard or untracked HTTP operation. </summary>
+    Other
+}
+
+
+/// <summary>
+/// Specifies the media types (MIME types) used for REST API requests and responses.
+/// </summary>
+public enum RESTApiMediaTypes
+{
+    /// <summary>
+    /// Represents "application/json". The standard format for modern RESTful APIs.
+    /// </summary>
+    Json,
+
+    /// <summary>
+    /// Represents "application/xml". Used for legacy systems or SOAP-based services.
+    /// </summary>
+    Xml,
+
+    /// <summary>
+    /// Represents "text/plain". Used for simple, unformatted text data.
+    /// </summary>
+    PlainText,
+
+    /// <summary>
+    /// Represents "application/x-www-form-urlencoded".
+    /// Commonly used for simple form submissions and OAuth2 token requests.
+    /// </summary>
+    WWW_UrlEncoded
 }

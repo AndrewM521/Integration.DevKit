@@ -1,3 +1,4 @@
+using Integration.DevKit.CredentialMgmt.Implementations;
 using Microsoft.Extensions.Configuration;
 
 namespace Integration.DevKit.CredentialMgmt.Tests;

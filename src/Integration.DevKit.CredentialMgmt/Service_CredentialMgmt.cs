@@ -5,8 +5,9 @@
  */
 
 using Integration.DevKit.CredentialMgmt.Contracts;
+using Integration.DevKit.CredentialMgmt.Implementations;
+using Integration.DevKit.CredentialMgmt.Settings;
 using Integration.DevKit.ThreadLocks;
-using Integration.DevKit.ThreadLocks.Contracts;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,7 +52,7 @@ public static class Service_CredentialMgmt
             var secretsFolder = options.GetRequiredOption<string>("SecretsFolder", "File");
             var keysFolder = options.GetRequiredOption<string>("KeysFolder", "File");
 
-            // FileSecretStore needs an IThreadLockManager to serialize concurrent access to the same
+            // FileSecretStore needs an ThreadLockManager to serialize concurrent access to the same
             // container's file. TryAddSingleton means this is a no-op if the app already called
             // AddThreadLocks() itself.
             services.AddThreadLocks(configuration);
@@ -65,7 +66,7 @@ public static class Service_CredentialMgmt
                     sp.GetRequiredService<IDataProtectionProvider>(),
                     applicationName,
                     secretsFolder,
-                    sp.GetRequiredService<IThreadLockManager>(),
+                    sp.GetRequiredService<ThreadLockManager>(),
                     sp.GetService<ILoggerFactory>(),
                     enableLogging)
             );
@@ -93,7 +94,7 @@ public static class Service_CredentialMgmt
     /// <see cref="IConfiguration"/>, in case the provider needs to read configuration sections of its own
     /// (e.g. to register another DevKit module as a dependency).
     /// Should register whatever the provider's <see cref="ISecretStore"/> or <see cref="ISecretReader"/>
-    /// implementation needs (its own dependencies, and itself) — see <see cref="CredentialManagementOptionsExtensions.GetRequiredOption{T}"/>
+    /// implementation needs (its own dependencies, and itself) — see <see cref="CredentialMgmtUtils.GetRequiredOption{T}"/>
     /// for reading typed values out of the options dictionary with a clear error on a missing/mistyped option.
     /// </param>
     /// <exception cref="ArgumentException">Thrown if <paramref name="providerName"/> is null or whitespace.</exception>

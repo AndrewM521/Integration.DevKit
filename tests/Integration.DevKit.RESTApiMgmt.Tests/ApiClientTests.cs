@@ -1,7 +1,8 @@
 using System.Net;
 using Integration.DevKit.Core;
 using Integration.DevKit.CredentialMgmt.Contracts;
-using Integration.DevKit.RESTApiMgmt.Contracts;
+using Integration.DevKit.RESTApiMgmt.Interfaces;
+using Integration.DevKit.RESTApiMgmt.Settings;
 using Integration.DevKit.RESTApiMgmt.Tests.TestSupport;
 using Moq;
 
@@ -9,20 +10,20 @@ namespace Integration.DevKit.RESTApiMgmt.Tests;
 
 public class ApiClientTests
 {
-    private static Mock<IApiManager> CreateApiManagerMock(int defaultTimeoutSeconds = 30)
+    private static Mock<ApiManager> CreateApiManagerMock(int defaultTimeoutSeconds = 30)
     {
-        var manager = new Mock<IApiManager>();
+        var manager = new Mock<ApiManager>();
         manager.SetupGet(m => m.RuntimeSettings).Returns(new ApiManagerSettings { Default_HttpTimeout_Seconds = defaultTimeoutSeconds });
         return manager;
     }
 
-    private static (ApiClient client, FakeHttpMessageHandler handler, Mock<IApiManager> manager) CreateClient(ApiClientSettings? settings = null)
+    private static (ApiClient client, FakeHttpMessageHandler handler, Mock<ApiManager> manager) CreateClient(ApiClientSettings? settings = null)
     {
         var (client, handler, httpClient, manager) = CreateClientWithHttpClient(settings);
         return (client, handler, manager);
     }
 
-    private static (ApiClient client, FakeHttpMessageHandler handler, HttpClient httpClient, Mock<IApiManager> manager) CreateClientWithHttpClient(ApiClientSettings? settings = null)
+    private static (ApiClient client, FakeHttpMessageHandler handler, HttpClient httpClient, Mock<ApiManager> manager) CreateClientWithHttpClient(ApiClientSettings? settings = null)
     {
         var handler = new FakeHttpMessageHandler();
         var httpClient = new HttpClient(handler);
@@ -184,81 +185,6 @@ public class ApiClientTests
         var header = httpClient.DefaultRequestHeaders.GetValues("X-Test").ToList();
         Assert.Single(header);
         Assert.Equal("second", header[0]);
-    }
-
-    [Fact]
-    public void SetCredentials_WithoutSecretStore_ReturnsFailure()
-    {
-        var (client, _, _) = CreateClient();
-
-        var result = client.SetCredentials("user", "pass");
-
-        Assert.False(result.MethodSuccess);
-        Assert.Contains("SecretStore has not been set", result.Exception.Message);
-    }
-
-    [Fact]
-    public void SetCredentials_WithSecretStore_DelegatesToStore()
-    {
-        var (client, _, _) = CreateClient();
-        var store = new Mock<ISecretStore>();
-        store.Setup(s => s.SetKey(It.IsAny<string>(), "username", "user")).Returns(new NullOperationResult().SetMethodSuccess());
-        store.Setup(s => s.SetKey(It.IsAny<string>(), "password", "pass")).Returns(new NullOperationResult().SetMethodSuccess());
-
-        client.SetSecretStore(store.Object);
-        var result = client.SetCredentials("user", "pass");
-
-        Assert.True(result.MethodSuccess);
-        store.Verify(s => s.SetKey(It.IsAny<string>(), "username", "user"), Times.Once);
-        store.Verify(s => s.SetKey(It.IsAny<string>(), "password", "pass"), Times.Once);
-    }
-
-    [Fact]
-    public void GetUsername_WithoutSecretStore_FallsBackToRuntimeSettings()
-    {
-        var settings = new ApiClientSettings { BaseUrl = "https://example.com/", Username = "configured-user" };
-        var (client, _, _) = CreateClient(settings);
-
-        var result = client.GetUsername();
-
-        Assert.True(result.MethodSuccess);
-        Assert.Equal("configured-user", result.Result);
-    }
-
-    [Fact]
-    public void GetPassword_WithoutSecretStore_FallsBackToRuntimeSettings()
-    {
-        var settings = new ApiClientSettings { BaseUrl = "https://example.com/", Password = "configured-pass" };
-        var (client, _, _) = CreateClient(settings);
-
-        var result = client.GetPassword();
-
-        Assert.True(result.MethodSuccess);
-        Assert.Equal("configured-pass", result.Result);
-    }
-
-    [Fact]
-    public void DeleteCredential_WithoutSecretStore_ReturnsFailure()
-    {
-        var (client, _, _) = CreateClient();
-
-        var result = client.DeleteCredential("username");
-
-        Assert.False(result.MethodSuccess);
-    }
-
-    [Fact]
-    public void DeleteAllCredentials_WithSecretStore_DelegatesToStore()
-    {
-        var (client, _, _) = CreateClient();
-        var store = new Mock<ISecretStore>();
-        store.Setup(s => s.DeleteSecret(It.IsAny<string>())).Returns(new NullOperationResult().SetMethodSuccess());
-
-        client.SetSecretStore(store.Object);
-        var result = client.DeleteAllCredentials();
-
-        Assert.True(result.MethodSuccess);
-        store.Verify(s => s.DeleteSecret(It.IsAny<string>()), Times.Once);
     }
 
     [Fact]

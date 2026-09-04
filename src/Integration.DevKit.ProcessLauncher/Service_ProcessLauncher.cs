@@ -4,7 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.ProcessLauncher.Contracts;
+using Integration.DevKit.ProcessLauncher.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -22,7 +22,7 @@ public static class Service_ProcessLauncher
 {
     private const string NoInit = "Service_ProcessLauncher has not been initialized.";
 
-    private static IProcessManager? _processManager;
+    private static ProcessManager? _processManager;
 
     /// <summary>
     /// Adds the process launcher services to the specified <see cref="IServiceCollection"/>.
@@ -48,7 +48,7 @@ public static class Service_ProcessLauncher
         services.Configure<ProcessLauncherSettings>(config.GetSection("Integration.DevKit:ProcessLauncher"));
 
         // Register the concrete class
-        services.TryAddSingleton<IProcessManager, ProcessManager>();
+        services.TryAddSingleton<ProcessManager>();
 
         return services;
     }
@@ -56,10 +56,10 @@ public static class Service_ProcessLauncher
     /// <summary>
     /// Initializes the static <see cref="ProcessManager"/>.
     /// </summary>
-    /// <param name="sp">The <see cref="IServiceProvider"/> used to resolve <see cref="IProcessManager"/>.</param>
+    /// <param name="sp">The <see cref="IServiceProvider"/> used to resolve <see cref="ProcessManager"/>.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is null.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if <see cref="IProcessManager"/> is not registered in the service collection.
+    /// Thrown if <see cref="ProcessManager"/> is not registered in the service collection.
     /// </exception>
     public static void Initialize(IServiceProvider sp)
     {
@@ -68,19 +68,19 @@ public static class Service_ProcessLauncher
             throw new ArgumentNullException(nameof(sp));
         }
 
-        _processManager = sp.GetService<IProcessManager>();
+        _processManager = sp.GetService<ProcessManager>();
         if (_processManager == null)
         {
-            throw new InvalidOperationException($"{nameof(IProcessManager)} is not registered. Make sure you call AddProcessLauncher() when configuring services.");
+            throw new InvalidOperationException($"{nameof(ProcessManager)} is not registered. Make sure you call AddProcessLauncher() when configuring services.");
         }
     }
 
     /// <summary>
-    /// Gets the global instance of the <see cref="IProcessManager"/>.
+    /// Gets the global instance of the <see cref="ProcessManager"/>.
     /// </summary>
-    /// <value>The initialized <see cref="IProcessManager"/>.</value>
+    /// <value>The initialized <see cref="ProcessManager"/>.</value>
     /// <exception cref="InvalidOperationException">Thrown if accessed before <see cref="Initialize"/> is called.</exception>
-    public static IProcessManager ProcessManager
+    public static ProcessManager ProcessManager
     {
         get
         {

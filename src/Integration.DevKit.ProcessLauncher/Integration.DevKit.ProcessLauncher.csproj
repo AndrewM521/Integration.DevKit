@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Integration.DevKit.ProcessLauncher.Contracts\Integration.DevKit.ProcessLauncher.Contracts.csproj" />
+    <ProjectReference Include="..\Integration.DevKit.Core\Integration.DevKit.Core.csproj" />
   </ItemGroup>
 
 </Project>

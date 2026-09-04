@@ -4,17 +4,18 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using Integration.DevKit.RESTApiMgmt.Contracts;
-
 namespace Integration.DevKit.RESTApiMgmt;
 
 /// <summary>
-/// Implementation of <see cref="IApiClientMetrics"/> that tracks HTTP request statistics 
+/// Read-only snapshot of HTTP request metrics and execution statistics
+/// for an <see cref="ApiClient"/> instance. Tracks HTTP request statistics
 /// using internal increment methods.
 /// </summary>
-public class ApiClientMetrics : IApiClientMetrics
+public class ApiClientMetrics
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the total number of HTTP requests attempted by the client.
+    /// </summary>
     public int TotalRequests
     {
         get
@@ -23,7 +24,9 @@ public class ApiClientMetrics : IApiClientMetrics
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the cumulative count of requests that resulted in a successful operation.
+    /// </summary>
     public int SuccessCount
     {
         get
@@ -32,22 +35,35 @@ public class ApiClientMetrics : IApiClientMetrics
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the cumulative count of requests that resulted in a failure or error.
+    /// </summary>
     public int FailureCount { get; private set; } = 0;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the total count of HTTP GET requests performed.
+    /// </summary>
     public int GetCount { get; private set; } = 0;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the total count of HTTP POST requests performed.
+    /// </summary>
     public int PostCount { get; private set; } = 0;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the total count of HTTP PUT requests performed.
+    /// </summary>
     public int PutCount { get; private set; } = 0;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the total count of HTTP DELETE requests performed.
+    /// </summary>
     public int DeleteCount { get; private set; } = 0;
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Gets the total count of requests using methods not explicitly tracked by individual properties
+    /// (e.g., PATCH, HEAD, or custom verbs).
+    /// </summary>
     public int OtherCount { get; private set; } = 0;
 
     /// <summary>

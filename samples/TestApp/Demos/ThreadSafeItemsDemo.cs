@@ -235,7 +235,7 @@ public class ThreadSafeItemsDemo : IDemo
         else
         {
             Console.WriteLine("HYBRID COLLISION: Some writes were lost or an exception occurred.");
-            // If this fails, it means your IThreadLockManager uses different
+            // If this fails, it means your ThreadLockManager uses different
             // locks for Sync vs Async internally.
         }
     }

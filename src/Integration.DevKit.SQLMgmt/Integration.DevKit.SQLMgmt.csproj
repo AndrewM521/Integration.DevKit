@@ -12,7 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Integration.DevKit.SQLMgmt.Contracts\Integration.DevKit.SQLMgmt.Contracts.csproj" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Integration.DevKit.Core\Integration.DevKit.Core.csproj" />
+    <ProjectReference Include="..\Integration.DevKit.CredentialMgmt.Contracts\Integration.DevKit.CredentialMgmt.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
