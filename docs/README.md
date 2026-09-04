@@ -13,14 +13,16 @@ Every module follows the same three conventions, which makes the SDK predictable
 | Module | What it's for | NuGet |
 | --- | --- | --- |
 | [Core](core.md) | Result types, configuration protection, file/directory/JSON/dictionary utilities, on-demand hosting. Depended on by every other module. | [Integration.DevKit.Core](https://www.nuget.org/packages/Integration.DevKit.Core) |
-| [REST API Management](rest-api.md) | Named `HttpClient`-backed clients with typed results, metrics, and optional secret-store-backed credentials. | [Integration.DevKit.RESTApiMgmt](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt.Contracts) |
-| [SQL Management](sql-management.md) | Named SQL clients, connection testing, command/data-reader helpers. | [Integration.DevKit.SQLMgmt](https://www.nuget.org/packages/Integration.DevKit.SQLMgmt) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.SQLMgmt.Contracts) |
-| [Thread Locks &amp; Thread-Safe File I/O](thread-locks.md) | Named sync/async locks; thread-safe file I/O built on top of them. | [Integration.DevKit.ThreadLocks](https://www.nuget.org/packages/Integration.DevKit.ThreadLocks) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.ThreadLocks.Contracts) &middot; [ThreadSafeItems](https://www.nuget.org/packages/Integration.DevKit.ThreadSafeItems) |
-| [Task Management](task-management.md) | Recurring/long-running background work with retry policies, iteration timing strategies, and run history. | [Integration.DevKit.TaskMgmt](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt.Contracts) |
-| [Process Launcher](process-launcher.md) | Starting and supervising external processes with output capture and cancellation. | [Integration.DevKit.ProcessLauncher](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher.Contracts) |
+| [REST API Management](rest-api.md) | Named `HttpClient`-backed clients with typed results, metrics, and optional secret-store-backed credentials. | [Integration.DevKit.RESTApiMgmt](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt) |
+| [SQL Management](sql-management.md) | Named SQL clients, connection testing, command/data-reader helpers. | [Integration.DevKit.SQLMgmt](https://www.nuget.org/packages/Integration.DevKit.SQLMgmt) |
+| [Thread Locks &amp; Thread-Safe File I/O](thread-locks.md) | Named sync/async locks; thread-safe file I/O built on top of them. | [Integration.DevKit.ThreadLocks](https://www.nuget.org/packages/Integration.DevKit.ThreadLocks) &middot; [ThreadSafeItems](https://www.nuget.org/packages/Integration.DevKit.ThreadSafeItems) |
+| [Task Management](task-management.md) | Recurring/long-running background work with retry policies, iteration timing strategies, and run history. | [Integration.DevKit.TaskMgmt](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt) |
+| [Process Launcher](process-launcher.md) | Starting and supervising external processes with output capture and cancellation. | [Integration.DevKit.ProcessLauncher](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher) |
 | [Credential Management](credential-management.md) | File-based secret storage encrypted at rest, pluggable into the REST and SQL clients. | [Integration.DevKit.CredentialMgmt](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt.Contracts) |
 
 All packages are published under the [AndrewM5 NuGet profile](https://www.nuget.org/profiles/AndrewM5).
+
+Most modules ship their interfaces and settings types as part of the main package itself, organized into `Interfaces/`, `Abstractions/`, `Implementations/`, and `Settings/` folders/namespaces. `CredentialMgmt` is the one exception that still ships a separate `.Contracts` package for its interfaces. See [Extending DevKit modules](extending-modules.md) for what each folder means and how to plug in your own implementation.
 
 ## Requirements
 
@@ -38,7 +40,7 @@ dotnet add reference src/Integration.DevKit.TaskMgmt/Integration.DevKit.TaskMgmt
 dotnet add reference src/Integration.DevKit.SQLMgmt/Integration.DevKit.SQLMgmt.csproj
 ```
 
-Every module besides Core is independent of the others at compile time — take only what you need. `ThreadSafeItems` and `CredentialMgmt` are the two exceptions: `ThreadSafeItems` depends on `ThreadLocks` directly, and `CredentialMgmt` depends on `ThreadLocks` too (its `"File"` provider needs `IThreadLockManager` to serialize concurrent access to the same secrets file).
+Every module besides Core is independent of the others at compile time — take only what you need. `ThreadSafeItems` and `CredentialMgmt` are the two exceptions: `ThreadSafeItems` depends on `ThreadLocks` directly, and `CredentialMgmt` depends on `ThreadLocks` too (its `"File"` provider needs `ThreadLockManager` to serialize concurrent access to the same secrets file).
 
 ## Quick start
 

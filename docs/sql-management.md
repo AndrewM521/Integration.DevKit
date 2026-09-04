@@ -56,14 +56,16 @@ var pingResult = await sqlClient.TestSqlConnectionAsync();
 | `ConnectionString` | `""` | Ignored if a secret store is attached (see below) — the store takes priority. |
 | `UseSingleConnection` | `false` | `false`: a new `SqlConnection` is opened and disposed per call. `true`: one persistent connection is reused and serialized behind an internal semaphore — useful for providers with expensive connection setup, but means all calls on that client queue behind each other. |
 
-`SQLManager.GetClient(clientName)` caches one `ISQLClient` per name (case-insensitive). If the name isn't found in `Clients`, it logs a warning and falls back to a client with empty default settings — it does **not** throw, despite the interface's XML documentation suggesting it validates the name. Double-check the client name if connections are failing unexpectedly.
+`SQLManager.GetClient(clientName)` caches one `SQLClient` per name (case-insensitive). If the name isn't found in `Clients`, it logs a warning and falls back to a client with empty default settings — it does **not** throw, despite its XML documentation suggesting it validates the name. Double-check the client name if connections are failing unexpectedly.
 
-`EnableLogging` (default `true`) is checked fresh on every log call rather than only at startup — flip it at runtime via `sqlManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging (including every `ISQLClient` it hands out) without detaching the `ILoggerFactory` you registered for the rest of the app.
+`EnableLogging` (default `true`) is checked fresh on every log call rather than only at startup — flip it at runtime via `sqlManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging (including every `SQLClient` it hands out) without detaching the `ILoggerFactory` you registered for the rest of the app.
 
-## `ISQLClient`
+## `SQLClient`
+
+This module has no pluggable extension point, so there's no `Interfaces/`/`Abstractions/`/`Implementations/` split — `SQLManager` and `SQLClient` are plain classes directly under `Integration.DevKit.SQLMgmt` (settings live in `Integration.DevKit.SQLMgmt.Settings`).
 
 ```csharp
-public interface ISQLClient : IDisposable
+public class SQLClient : IDisposable
 {
     SQLClientSettings RuntimeSettings { get; set; }
     string ClientName { get; set; }
@@ -153,7 +155,7 @@ As with `ApiClient`, attaching a secret store overrides the plain `ConnectionStr
 ```csharp
 public static IServiceCollection AddSQLMgmt(this IServiceCollection services, IConfiguration configuration);
 public static void Initialize(IServiceProvider sp);
-public static ISQLManager SQLManager { get; }   // throws InvalidOperationException before Initialize
+public static SQLManager SQLManager { get; }   // throws InvalidOperationException before Initialize
 ```
 
 ## Error Handling

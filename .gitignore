@@ -3,6 +3,11 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Custom project files
+Integration.DevKit.sln.licenseheader
+extensibility.settings.VisualStudio.json
+.vscode
+
 # User-specific files
 *.rsuser
 *.suo

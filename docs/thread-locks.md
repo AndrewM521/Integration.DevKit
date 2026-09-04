@@ -40,10 +40,12 @@ var lockManager = Service_ThreadLocks.ThreadLockManager;
 
 The only setting is `EnableLogging` (default `true`), checked fresh on every log call — flip it at runtime via `lockManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging without detaching the `ILoggerFactory` you registered for the rest of the app.
 
-### `IThreadLockManager`
+### `ThreadLockManager`
+
+`ThreadLockManager` lives directly under `Integration.DevKit.ThreadLocks` — this module has no pluggable extension point, so there's no separate `Interfaces/`/`Abstractions/`/`Implementations/` split, just the one concrete class.
 
 ```csharp
-public interface IThreadLockManager
+public class ThreadLockManager
 {
     NullOperationResult TryEnterSyncLock(string key, int timeoutMilliseconds = -1);
     NullOperationResult TryExitSyncLock(string key);
@@ -102,12 +104,12 @@ var fileIO = Service_ThreadSafeItems.ThreadSafeFileIOClass;   // note the exact 
 await fileIO.WriteToFileAsync(path, "some content");
 ```
 
-`Service_ThreadSafeItems.Initialize` explicitly checks that `IThreadLockManager` is resolvable and throws `InvalidOperationException` telling you to call `AddThreadLocks()` first if it isn't — the ordering above isn't optional. The static accessor is named **`ThreadSafeFileIOClass`**, not `ThreadSafeFileIO` (the class itself is `ThreadSafeFileIO`; only the static property has the `Class` suffix) — easy to mistype from memory.
+`Service_ThreadSafeItems.Initialize` explicitly checks that `ThreadLockManager` is resolvable and throws `InvalidOperationException` telling you to call `AddThreadLocks()` first if it isn't — the ordering above isn't optional. The static accessor is named **`ThreadSafeFileIOClass`**, not `ThreadSafeFileIO` (the class itself is `ThreadSafeFileIO`; only the static property has the `Class` suffix) — easy to mistype from memory.
 
 ### `ThreadSafeFileIO`
 
 ```csharp
-public ThreadSafeFileIO(IThreadLockManager threadLockManager, IOptions<ThreadSafeItemsSettings>? settings = null, ILoggerFactory? loggerFactory = null);
+public ThreadSafeFileIO(ThreadLockManager threadLockManager, IOptions<ThreadSafeItemsSettings>? settings = null, ILoggerFactory? loggerFactory = null);
 
 public ThreadSafeItemsSettings RuntimeSettings { get; set; }   // mutate in place to change EnableLogging at runtime
 
@@ -128,7 +130,7 @@ Every method acquires an async lock keyed by the **file path itself** before del
 ```csharp
 public static IServiceCollection AddThreadLocks(this IServiceCollection services, IConfiguration config);
 public static void Initialize(IServiceProvider sp);
-public static IThreadLockManager ThreadLockManager { get; }   // throws InvalidOperationException before Initialize
+public static ThreadLockManager ThreadLockManager { get; }   // throws InvalidOperationException before Initialize
 ```
 
 ### `Service_ThreadSafeItems` (static)

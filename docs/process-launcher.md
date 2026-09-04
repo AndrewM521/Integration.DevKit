@@ -65,8 +65,10 @@ if (started.MethodSuccess)
 
 ## `ManagedProcessConfig`
 
+This module has no pluggable extension point, so there's no `Interfaces/`/`Abstractions/`/`Implementations/` split — `ManagedProcessConfig`, `ManagedProcess`, and `ProcessManager` are all plain classes directly under `Integration.DevKit.ProcessLauncher` (settings live in `Integration.DevKit.ProcessLauncher.Settings`).
+
 ```csharp
-public class ManagedProcessConfig : IManagedProcessConfig
+public class ManagedProcessConfig
 {
     public string ProcessKey { get; init; } = Guid.NewGuid().ToString();
     public string Command { get; init; } = string.Empty;
@@ -93,9 +95,9 @@ public class ManagedProcessConfig : IManagedProcessConfig
 ## Starting and controlling a process
 
 ```csharp
-public interface IProcessManager
+public class ProcessManager
 {
-    OperationResult<IManagedProcess> StartProcess(IManagedProcessConfig config);
+    OperationResult<ManagedProcess> StartProcess(ManagedProcessConfig config);
     NullOperationResult CancelProcess(string processKey, bool forceKill = false);
     NullOperationResult CancelAllProcesses(bool forceKill = false);
     OperationResult<bool> IsRunning(string processKey);
@@ -108,7 +110,7 @@ public interface IProcessManager
 > **A process that exits on its own removes itself from tracking immediately.** `ProcessManager` listens for `Process.Exited` and un-tracks the process (by `ProcessKey`) as soon as it fires — which happens before any external code gets a chance to call `CancelProcess` on it. If you call `CancelProcess("SomeKey")` after the process has already exited naturally, it will fail because the key is no longer tracked; check `IsRunning` first if that distinction matters to your caller.
 
 ```csharp
-public interface IManagedProcess : IAsyncDisposable
+public class ManagedProcess : IAsyncDisposable
 {
     string ProcessKey { get; }
     Process? Process { get; }
@@ -121,7 +123,7 @@ public interface IManagedProcess : IAsyncDisposable
 }
 ```
 
-`Cancel(forceKill: false)` (the default) attempts a graceful shutdown first — `CloseMainWindow()`, then waits up to 3 seconds — before force-killing the process tree if it's still running. `Cancel(forceKill: true)` kills immediately. `IManagedProcess` instances are only obtainable through `IProcessManager.StartProcess` — there is no public constructor.
+`Cancel(forceKill: false)` (the default) attempts a graceful shutdown first — `CloseMainWindow()`, then waits up to 3 seconds — before force-killing the process tree if it's still running. `Cancel(forceKill: true)` kills immediately. `ManagedProcess` instances are only obtainable through `ProcessManager.StartProcess` — its constructor is internal.
 
 ```csharp
 var cancelResult = processManager.CancelProcess("PingTest", forceKill: false);
@@ -138,10 +140,10 @@ if (!cancelResult.MethodSuccess)
 ```csharp
 public static IServiceCollection AddProcessLauncher(this IServiceCollection services, IConfiguration config);
 public static void Initialize(IServiceProvider sp);
-public static IProcessManager ProcessManager { get; }   // throws InvalidOperationException before Initialize
+public static ProcessManager ProcessManager { get; }   // throws InvalidOperationException before Initialize
 ```
 
-### `ProcessManager` (constructible directly, unlike most other DevKit implementation classes)
+### `ProcessManager`
 
 ```csharp
 public ProcessManager(IOptions<ProcessLauncherSettings> settings, ILoggerFactory? loggerFactory = null);
@@ -151,7 +153,7 @@ public ProcessLauncherSettings RuntimeSettings { get; set; }   // mutate in plac
 
 ## Error Handling
 
-Every public method on `IProcessManager`/`IManagedProcess` returns an `OperationResult<T>`/`NullOperationResult` for expected failure modes (missing process, duplicate key, empty command) rather than throwing.
+Every public method on `ProcessManager`/`ManagedProcess` returns an `OperationResult<T>`/`NullOperationResult` for expected failure modes (missing process, duplicate key, empty command) rather than throwing.
 
 ## Best Practices
 

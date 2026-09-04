@@ -1,6 +1,6 @@
 # Credential Management
 
-`Integration.DevKit.CredentialMgmt` doesn't try to replace every place a secret might live — env vars, ASP.NET Core User Secrets, a cloud vault, or its own encrypted file store. Instead it standardizes the *contract* other DevKit modules talk to (`ISecretReader`/`ISecretStore`), ships one concrete read/write implementation (`FileSecretStore`, encrypted at rest via ASP.NET Core's Data Protection stack), and gives you composition helpers (`ConfigurationSecretReader`, `CompositeSecretReader`, `ImportFrom`) so you can layer in whatever other sources a project needs without writing provider-specific glue. It's the store that [REST API Management](rest-api.md#credentials) and [SQL Management](sql-management.md#credentials) can optionally plug into via `SetSecretStore`.
+`Integration.DevKit.CredentialMgmt` doesn't try to replace every place a secret might live — env vars, ASP.NET Core User Secrets, a cloud vault, or its own encrypted file store. Instead it standardizes the *contract* other DevKit modules talk to (`ISecretReader`/`ISecretStore`), ships one concrete read/write implementation (`FileSecretStore`, encrypted at rest via ASP.NET Core's Data Protection stack), and gives you composition helpers (`ConfigurationSecretReader`, `CompositeSecretReader`, `ImportFrom`) so you can layer in whatever other sources a project needs without writing provider-specific glue. It's the store that [REST API Management](rest-api.md#oauth2-authentication) sources OAuth2 client secrets from, and that [SQL Management](sql-management.md#credentials) can optionally plug into via `SetSecretStore`.
 
 ## Requirements
 
@@ -49,7 +49,7 @@ if (apiKey.MethodSuccess)
 }
 ```
 
-The `"File"` provider's `Options` are typically loaded from `appsettings.json` rather than built in-memory like above — see the full JSON shape in [Config-driven registration](#config-driven-registration). Registering the `"File"` provider also registers `ThreadLocks` for you automatically (`FileSecretStore` needs an `IThreadLockManager` to serialize concurrent access to the same container's file) — you don't need to call `AddThreadLocks()` yourself unless you're also using that module directly.
+The `"File"` provider's `Options` are typically loaded from `appsettings.json` rather than built in-memory like above — see the full JSON shape in [Config-driven registration](#config-driven-registration). Registering the `"File"` provider also registers `ThreadLocks` for you automatically (`FileSecretStore` needs a `ThreadLockManager` to serialize concurrent access to the same container's file) — you don't need to call `AddThreadLocks()` yourself unless you're also using that module directly.
 
 ## `ISecretReader` and `ISecretStore`
 
@@ -72,12 +72,14 @@ public interface ISecretStore : ISecretReader
 
 `ISecretReader` is the minimal, read-only contract — it's what env vars, `IConfiguration`, and read-only cloud-vault views can implement in a handful of lines, without taking on write support they can't (or shouldn't) provide. `ISecretStore` extends it with the write operations, for backends — like `FileSecretStore` — that actually own their storage.
 
+These two interfaces are the only part of this module still shipped as a separate `.Contracts` package (`Integration.DevKit.CredentialMgmt.Contracts`) — unlike the other modules in this SDK, which fold their interfaces into the main package. `SecretStoreBase` lives in `Integration.DevKit.CredentialMgmt.Abstractions`; `ConfigurationSecretReader`, `CompositeSecretReader`, and `FileSecretStore` live in `Integration.DevKit.CredentialMgmt.Implementations`. See [Extending DevKit modules](extending-modules.md) for the general pattern.
+
 Think of `fileName` as a **container name** — a logical grouping of related secrets (e.g. `"Api"`, `"Database"`) — and `key` as the individual secret's name within that container. `ISecretStore` implementations must encrypt data at rest and restrict access to the underlying storage; `FileSecretStore` is the one shipped implementation that satisfies this. `ISecretReader` carries no such guarantee itself — a config-backed reader is only as safe as the configuration source behind it (e.g. User Secrets are not encrypted at rest).
 
 ## `FileSecretStore`
 
 ```csharp
-namespace Integration.DevKit.CredentialMgmt;
+namespace Integration.DevKit.CredentialMgmt.Implementations;
 
 public class FileSecretStore : SecretStoreBase
 {
@@ -85,7 +87,7 @@ public class FileSecretStore : SecretStoreBase
         IDataProtectionProvider provider,
         string applicationName,
         string secretsDir,
-        IThreadLockManager threadLockManager,
+        ThreadLockManager threadLockManager,
         ILoggerFactory? loggerFactory = null,
         bool enableLogging = true);
 
@@ -98,7 +100,7 @@ public class FileSecretStore : SecretStoreBase
 }
 ```
 
-You don't normally construct this directly — `AddCredentialMgmt` registers and wires it up for you. If you do need to, note that its base class `SecretStoreBase` has a `protected` constructor and `protected` `Encrypt`/`Decrypt` helpers, so `FileSecretStore` is the only way to use this module today (there is currently no other concrete `ISecretStore` implementation shipped).
+You don't normally construct this directly — `AddCredentialMgmt` registers and wires it up for you. If you do need to, note that its base class `SecretStoreBase` (`Integration.DevKit.CredentialMgmt.Abstractions`) has a `protected` constructor and `protected` `Encrypt`/`Decrypt` helpers, so `FileSecretStore` is the only concrete `ISecretStore` this module ships — see [Implementing your own secret source](#implementing-your-own-secret-source) below for writing another one.
 
 ### How secrets are stored
 
@@ -155,6 +157,70 @@ Service_CredentialMgmt.FileSecretStore.ImportFrom(
 
 This is the recommended way to bootstrap the encrypted `FileSecretStore` from User Secrets (locally) or environment variables/CI secrets (in automated environments) without hand-rolling a one-off import script per source — the plaintext value only ever exists in memory for the duration of this call.
 
+## Implementing your own secret source
+
+The shipped classes (`ConfigurationSecretReader`, `CompositeSecretReader`, `FileSecretStore`) cover the common cases, but `ISecretReader`/`ISecretStore` are genuine extension points — implement them yourself for anything else (a cloud secrets vault, a database-backed store, a read-only wrapper over some other config system). See [Extending DevKit modules](extending-modules.md) for the general pattern.
+
+**A minimal custom `ISecretReader`** — read-only, mirrors `ConfigurationSecretReader`:
+
+```csharp
+using Integration.DevKit.Core;
+using Integration.DevKit.CredentialMgmt.Contracts;
+
+public class EnvironmentSecretReader : ISecretReader
+{
+    public string StoreName { get; } = "EnvironmentSecretReader";
+
+    public OperationResult<string> GetKey(string fileName, string key)
+    {
+        var result = new OperationResult<string>();
+        var value = Environment.GetEnvironmentVariable($"{fileName}_{key}");
+
+        if (string.IsNullOrEmpty(value))
+        {
+            return result.SetMethodFailure(new KeyNotFoundException($"Secret '{key}' not found in container '{fileName}'"));
+        }
+
+        return result.SetMethodSuccess(value);
+    }
+}
+```
+
+**A minimal custom `ISecretStore`** — subclass `SecretStoreBase` rather than implementing `ISecretStore` directly; it already handles encryption via its `protected` `Encrypt`/`Decrypt` helpers (see [`FileSecretStore`](#filesecretstore) above), so a custom store only needs to implement the storage mechanism itself:
+
+```csharp
+using Integration.DevKit.Core;
+using Integration.DevKit.CredentialMgmt.Abstractions;
+using Microsoft.AspNetCore.DataProtection;
+
+public class DatabaseSecretStore : SecretStoreBase
+{
+    public DatabaseSecretStore(IDataProtectionProvider provider, string storeName)
+        : base(provider, purpose: "DatabaseSecretStore", storeName)
+    {
+    }
+
+    public override NullOperationResult SetKey(string fileName, string key, string value)
+    {
+        var ciphertext = Encrypt(value);
+        // ... persist ciphertext for (fileName, key) to your database ...
+        return new NullOperationResult().SetMethodSuccess();
+    }
+
+    public override OperationResult<string> GetKey(string fileName, string key)
+    {
+        // ... load ciphertext for (fileName, key) from your database ...
+        var ciphertext = /* ... */ "";
+        return new OperationResult<string>().SetMethodSuccess(Decrypt(ciphertext));
+    }
+
+    public override NullOperationResult DeleteKey(string fileName, string key) => throw new NotImplementedException();
+    public override NullOperationResult DeleteSecret(string fileName) => throw new NotImplementedException();
+}
+```
+
+Neither example needs to live under `Integration.DevKit.CredentialMgmt.*` — `Implementations`/`Abstractions` are this library's own internal convention for the classes it ships, not a location imposed on consumers. Put your custom reader/store wherever the rest of your application's code lives, and register it the same way as the built-in `"File"` provider via `Service_CredentialMgmt.RegisterProvider` (see [Config-driven registration](#config-driven-registration) below).
+
 ## Config-driven registration
 
 `AddCredentialMgmt(configuration)` selects and registers a backend from an `Integration.DevKit:CredentialManagement` configuration section, matching the binding convention used by [`AddSQLMgmt`](sql-management.md) and [`AddRESTApiMgmt`](rest-api.md) — this is the same call shown in [Getting started](#getting-started), typically loaded from `appsettings.json` instead of built in-memory:
@@ -181,18 +247,18 @@ This is the recommended way to bootstrap the encrypted `FileSecretStore` from Us
 
 ## Wiring into `ApiClient` / `SQLClient`
 
-Both [`IApiClient`](rest-api.md) and [`ISQLClient`](sql-management.md) accept a secret store via `SetSecretStore(ISecretStore secretStore)`, after which they'll read/write their own credentials through it instead of the plain-text values in configuration:
+The two modules integrate differently:
+
+- **`ApiClient`** ([REST API Management](rest-api.md#oauth2-authentication)) has no direct secret-store attachment — it authenticates exclusively through `SetAuthStrategy(IAuthStrategy?)`. To source credentials from this module, pass an `ISecretReader` (e.g. a `CompositeSecretReader` wrapping `Service_CredentialMgmt.FileSecretStore`) into `OAuth2ClientCredentialsAuthStrategy`'s constructor — see the full example in [OAuth2 authentication](rest-api.md#oauth2-authentication).
+- **`SQLClient`** ([SQL Management](sql-management.md#credentials)) still accepts a secret store directly via `SetSecretStore(ISecretStore secretStore)`, after which it reads/writes its connection string through it instead of the plain-text value in configuration:
 
 ```csharp
-var client = Service_RESTApiMgmt.ApiManager.GetClient("my-client");
-client.SetSecretStore(Service_CredentialMgmt.FileSecretStore);
-client.SetCredentials("api-user", "api-password");
-
-// later, from anywhere holding a reference to the same client:
-var username = client.GetUsername();
+var sqlClient = Service_SQLMgmt.SQLManager.GetClient("my-client");
+sqlClient.SetSecretStore(Service_CredentialMgmt.FileSecretStore);
+sqlClient.SetSecretStoreCredentials("Server=...;Database=...;");
 ```
 
-Each client stores its credentials under its own container name, derived internally (both `ApiClient` and `SQLClient` currently use a container name in the form `ApiClient({ClientName})` — a copy-paste artifact on the SQL side that's harmless but worth knowing if you're inspecting `.secret` files directly on disk). This integration is entirely opt-in: neither client requires a secret store to function, and calling `SetCredentials`/`SetSecretStoreCredentials` before `SetSecretStore` throws (since there's nowhere to store the value yet).
+`SQLClient` stores its credentials under a container name derived internally (currently in the form `ApiClient({ClientName})` — a copy-paste artifact from the REST module that's harmless but worth knowing if you're inspecting `.secret` files directly on disk). This integration is entirely opt-in: `SQLClient` doesn't require a secret store to function, and calling `SetSecretStoreCredentials` before `SetSecretStore` throws (since there's nowhere to store the value yet).
 
 ## API Reference
 

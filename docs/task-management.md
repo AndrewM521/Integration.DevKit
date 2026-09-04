@@ -24,13 +24,14 @@ Or from NuGet: [Integration.DevKit.TaskMgmt](https://www.nuget.org/packages/Inte
 A task's body is **not** a delegate or an interface implementation — it's an abstract class you derive from and override one method on:
 
 ```csharp
-using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.TaskMgmt;
+using Integration.DevKit.TaskMgmt.Abstractions;
 
 internal class SendReportTask : ManagedTask
 {
     public SendReportTask() : base("SendReportTask") { }
 
-    public override async Task DoTaskWork(IManagedTaskIterationHandle iterationHandle)
+    public override async Task DoTaskWork(ManagedTaskIterationHandle iterationHandle)
     {
         // Do the work for one iteration here.
         // Use iterationHandle.CancelationToken to respect cancellation/timeouts.
@@ -54,7 +55,8 @@ Service_TaskMgmt.Initialize(app.Services);
 ### 3. Start the task
 
 ```csharp
-using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.TaskMgmt;
+using Integration.DevKit.TaskMgmt.Models;
 
 var settings = new ManagedTaskSettings { MaxIterations = 5 };
 
@@ -119,10 +121,11 @@ Passed to `StartTask` to control how that specific task instance runs:
 
 ## Iteration strategies
 
-By default (`BaseIterationStrategy`), the manager starts the next iteration immediately with no delay. To run on a schedule, assign a `Time_IterationStrategy` subclass instead:
+By default (`BaseIterationStrategy`), the manager starts the next iteration immediately with no delay. To run on a schedule, assign a `Time_IterationStrategy` subclass instead. `IIterationStrategy`/`BaseIterationStrategy`/`Time_IterationStrategy` live in `Integration.DevKit.TaskMgmt.Abstractions`; the shipped `TimeStrategy_*` subclasses live in `Integration.DevKit.TaskMgmt.Implementations`. See [Extending DevKit modules](extending-modules.md) for the general pattern.
 
 ```csharp
-using Integration.DevKit.TaskMgmt.Contracts;
+using Integration.DevKit.TaskMgmt.Implementations;
+using Integration.DevKit.TaskMgmt.Models;
 
 var strategySettings = new TimeStrategySettings
 {
@@ -152,10 +155,34 @@ Three concrete strategies ship out of the box, all constructed with a `TimeStrat
 | `CustomStartDate` | `null` | Anchor date for the schedule. |
 | `CustomStartTime` | `null` | Anchor time-of-day for the schedule. |
 
-## Starting and controlling tasks
+### Implementing your own iteration strategy
+
+Two ways to customize scheduling, in increasing order of control:
+
+- **Subclass `Time_IterationStrategy`** for clock-based scheduling — implement `ComputeNextTargetDTM(int currentIteration)` and the base class handles catch-up, smart polling, and start-time resolution for you. This is exactly how the three shipped `TimeStrategy_Daily`/`TimeStrategy_Hourly`/`TimeStrategy_Interval` classes are built — read `Integration.DevKit.TaskMgmt.Implementations.TimeStrategy_Interval` as a worked example.
+- **Implement `IIterationStrategy` directly** for non-time-based readiness logic (e.g. wait for an external signal, a queue depth, another task's completion) by overriding `WaitForReadyAsync(IManagedTaskHandle handle, CancellationToken cancellationToken, ILogger? logger = null)` — return from it whenever the next iteration should start.
 
 ```csharp
-public interface ITaskManager
+using Integration.DevKit.TaskMgmt.Abstractions;
+using Integration.DevKit.TaskMgmt.Models;
+
+public sealed class TimeStrategy_Weekly : Time_IterationStrategy
+{
+    public TimeStrategy_Weekly(TimeStrategySettings settings) : base(settings) { }
+
+    protected override DateTime ComputeNextTargetDTM(int currentIteration)
+    {
+        return LastTargetDTM.AddDays(7);
+    }
+}
+```
+
+## Starting and controlling tasks
+
+`TaskManager` lives directly under `Integration.DevKit.TaskMgmt` (no interface — see [Extending DevKit modules](extending-modules.md) for why this module's manager isn't behind one):
+
+```csharp
+public class TaskManager
 {
     TaskManagerSettings RuntimeSettings { get; }
 
@@ -188,7 +215,7 @@ Tasks already waiting on the old semaphore when `Initialize()` runs will see it 
 
 ### `IManagedTaskHandle`
 
-Returned by `StartTask`, and reachable from an iteration handle via `iterationHandle.TaskHandle`:
+Returned by `StartTask`, and reachable from an iteration handle via `iterationHandle.TaskHandle`. Lives in `Integration.DevKit.TaskMgmt.Interfaces` — one of this module's few remaining interfaces, kept because tests mock it to isolate iteration-strategy logic from the task runtime:
 
 ```csharp
 public interface IManagedTaskHandle
@@ -204,12 +231,12 @@ public interface IManagedTaskHandle
 }
 ```
 
-### `IManagedTaskIterationHandle`
+### `ManagedTaskIterationHandle`
 
-Passed into `DoTaskWork` for the currently-running iteration:
+Passed into `DoTaskWork` for the currently-running iteration. Lives directly under `Integration.DevKit.TaskMgmt` — a plain class, not an interface:
 
 ```csharp
-public interface IManagedTaskIterationHandle
+public sealed class ManagedTaskIterationHandle
 {
     IManagedTaskHandle TaskHandle { get; }
     int IterationNumber { get; }
@@ -227,13 +254,13 @@ public interface IManagedTaskIterationHandle
 
 ## Observability: task history
 
-`ITaskRegistry` (available as `Service_TaskMgmt.TaskRegistry`) keeps a read-only history of task runs, separate from `ITaskManager`, which is for control:
+`TaskRegistry` (available as `Service_TaskMgmt.TaskRegistry`) keeps a read-only history of task runs, separate from `TaskManager`, which is for control:
 
 ```csharp
-public interface ITaskRegistry
+public class TaskRegistry
 {
-    ConcurrentDictionary<string, IManagedTaskSnapshot> Snapshots { get; }
-    NullableOperationResult<IManagedTaskSnapshot?> TryGet(string taskKey);
+    ConcurrentDictionary<string, ManagedTaskSnapshot> Snapshots { get; }
+    NullableOperationResult<ManagedTaskSnapshot?> TryGet(string taskKey);
     NullOperationResult Remove(string taskKey);
 }
 ```
@@ -246,7 +273,7 @@ if (snapshot.MethodSuccess && snapshot.Result != null)
 }
 ```
 
-`IManagedTaskSnapshot` exposes `TaskKey`, `State`, `IterationCount`, `StartDTM`/`EndDTM`/`Runtime`, `Exception`, and a per-iteration `IterationHistory`; each `IManagedTaskIterationSnapshot` exposes the same shape (`State`, timing, `Exception`) for one iteration. Both are read-only, framework-constructed types — you retrieve them from the registry, you don't build them yourself.
+`ManagedTaskSnapshot` exposes `TaskKey`, `State`, `IterationCount`, `StartDTM`/`EndDTM`/`Runtime`, `Exception`, and a per-iteration `IterationHistory`; each `IManagedTaskIterationSnapshot` exposes the same shape (`State`, timing, `Exception`) for one iteration (`IManagedTaskIterationSnapshot` is still an interface, in `Integration.DevKit.TaskMgmt.Interfaces` — its concrete implementation is internal to the runtime). Both are read-only, framework-constructed types — you retrieve them from the registry, you don't build them yourself.
 
 ## API Reference
 
@@ -255,11 +282,13 @@ if (snapshot.MethodSuccess && snapshot.Result != null)
 ```csharp
 public static IServiceCollection AddTaskMgmt(this IServiceCollection services, IConfiguration config);
 public static void Initialize(IServiceProvider sp);
-public static ITaskManager TaskManager { get; }    // throws InvalidOperationException before Initialize
-public static ITaskRegistry TaskRegistry { get; }  // throws InvalidOperationException before Initialize
+public static TaskManager TaskManager { get; }    // throws InvalidOperationException before Initialize
+public static TaskRegistry TaskRegistry { get; }  // throws InvalidOperationException before Initialize
 ```
 
 ### `ManagedTask` (abstract)
+
+`Integration.DevKit.TaskMgmt.Abstractions`:
 
 ```csharp
 public abstract class ManagedTask : IDisposable
@@ -269,7 +298,7 @@ public abstract class ManagedTask : IDisposable
     public string TaskKey { get; }   // "{TaskName}_{TaskId}"
 
     protected ManagedTask(string taskName, Guid? id = null);
-    public abstract Task DoTaskWork(IManagedTaskIterationHandle iterationHandle);
+    public abstract Task DoTaskWork(ManagedTaskIterationHandle iterationHandle);
     public virtual void Dispose() { }
 }
 ```
@@ -282,6 +311,6 @@ public abstract class ManagedTask : IDisposable
 
 - Always thread `iterationHandle.CancelationToken` through any `Task.Delay`/I/O call inside `DoTaskWork` so cancellation and timeouts actually take effect promptly.
 - Make `DoTaskWork` idempotent where practical — a retried or restarted iteration should be safe to re-run.
-- Use `ITaskRegistry` snapshots for status/health reporting rather than polling `IManagedTaskHandle` state from multiple places.
+- Use `TaskRegistry` snapshots for status/health reporting rather than polling `IManagedTaskHandle` state from multiple places.
 - Set `MaxIterations`/`Timeout` explicitly for anything that should not run forever by default.
 - Keep `MaxTaskRegistryCount`/`MaxTaskIterationRegistryCount` in mind if you rely on history for auditing — older entries are evicted once the cap is reached.

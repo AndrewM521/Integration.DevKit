@@ -75,7 +75,6 @@ else
 | Property | Default | Notes |
 | --- | --- | --- |
 | `BaseUrl` | `"https://example.com"` | Relative URLs passed to `GetAsync`/etc. are resolved against this. |
-| `Username` / `Password` | `""` | Used for Basic auth via `SetCredentials`, or sourced from a secret store — see [Credentials](#credentials) below. |
 | `MaxConcurrentRequests` | `int.MaxValue` | Negative values are coerced to `int.MaxValue`. |
 | `HttpTimeout_Seconds` | `null` | `null` falls back to the manager's `Default_HttpTimeout_Seconds`. **`0` means no timeout** (mapped to `Timeout.InfiniteTimeSpan`), not "time out immediately" — negative values are coerced to `0`. |
 | `DefaultHeaders` | `{}` | Applied to every request from this client. |
@@ -84,11 +83,13 @@ All named clients share a single `IHttpClientFactory`-managed connection pool in
 
 ## Making requests
 
+`ApiClient`, `ApiManager`, and `ApiClientMetrics` are plain classes directly under `Integration.DevKit.RESTApiMgmt`. The module's only real extension points are `IApiManager` and `IAuthStrategy`, both in `Integration.DevKit.RESTApiMgmt.Interfaces`; `ApiClientSettings`/`ApiManagerSettings` live in `Integration.DevKit.RESTApiMgmt.Settings`. See [Extending DevKit modules](extending-modules.md) for the general pattern.
+
 ```csharp
-public interface IApiClient : IAsyncDisposable
+public class ApiClient : IAsyncDisposable
 {
     ApiClientSettings RuntimeSettings { get; }
-    IApiClientMetrics ClientMetrics { get; }
+    ApiClientMetrics ClientMetrics { get; }
     string ClientName { get; }
 
     NullOperationResult Initialize();
@@ -130,19 +131,6 @@ var result = await client.PostAsync("orders", payload.Result);
 
 `RESTApiMediaTypes` is `Json | Xml | PlainText | WWW_UrlEncoded`, mapping to the corresponding standard MIME type.
 
-### Credentials
-
-```csharp
-void SetSecretStore(ISecretStore secretStore);
-NullOperationResult SetCredentials(string username, string password);
-OperationResult<string> GetUsername();
-OperationResult<string> GetPassword();
-NullOperationResult DeleteCredential(string key);
-NullOperationResult DeleteAllCredentials();
-```
-
-If a secret store is attached via `SetSecretStore`, it takes priority over the plain `Username`/`Password` values configured on `ApiClientSettings`. See [Credential Management](credential-management.md) for the store implementation.
-
 ### OAuth2 authentication
 
 For downstream APIs that require an OAuth2 bearer token rather than Basic credentials, attach an `IAuthStrategy`:
@@ -154,9 +142,9 @@ public interface IAuthStrategy
 }
 ```
 
-`SetAuthStrategy` is independent of `SetSecretStore` — a client can use either, both, or neither. When set, the strategy runs on every outgoing request (`GetAsync`/`PostAsync`/`PutAsync`/`DeleteAsync`, sync or async) just before it's sent, and any failure it returns short-circuits the call as a failed `ApiOperationResult<string>` (HTTP 401) rather than hitting the network.
+`SetAuthStrategy` is the only credential/auth mechanism `ApiClient` has — there's no separate Basic-auth or secret-store attachment on the client itself; everything goes through an `IAuthStrategy`. When set, the strategy runs on every outgoing request (`GetAsync`/`PostAsync`/`PutAsync`/`DeleteAsync`, sync or async) just before it's sent, and any failure it returns short-circuits the call as a failed `ApiOperationResult<string>` (HTTP 401) rather than hitting the network.
 
-`OAuth2ClientCredentialsAuthStrategy` is the shipped implementation, covering the client-credentials grant plus refresh-token renewal — the fit for backend, service-to-service calls (there is no authorization-code/PKCE browser flow in this module; `IApiClient` isn't used for interactive user login). It sources the `client_secret` from an [`ISecretReader`](credential-management.md#isecretreader-and-isecretstore) on every token refresh, so it composes directly with the credential management module from [Credential Management](credential-management.md) — e.g. an environment variable via `ConfigurationSecretReader`, falling back to the encrypted `FileSecretStore` via `CompositeSecretReader`:
+`OAuth2ClientCredentialsAuthStrategy` (in `Integration.DevKit.RESTApiMgmt.Implementations`) is the shipped implementation, covering the client-credentials grant plus refresh-token renewal — the fit for backend, service-to-service calls (there is no authorization-code/PKCE browser flow in this module; `ApiClient` isn't used for interactive user login). It sources the `client_secret` from an [`ISecretReader`](credential-management.md#isecretreader-and-isecretstore) on every token refresh, so it composes directly with the credential management module from [Credential Management](credential-management.md) — e.g. an environment variable via `ConfigurationSecretReader`, falling back to the encrypted `FileSecretStore` via `CompositeSecretReader`:
 
 ```csharp
 var secretReader = new CompositeSecretReader(new ISecretReader[]
@@ -182,10 +170,43 @@ var result = await client.GetAsync("orders");
 
 The access token is cached in memory and reused until 60 seconds before its `expires_in`, at which point the next request triggers a refresh (guarded so concurrent requests don't all refresh at once). If the authorization server returned a `refresh_token` and a `refreshTokenStore` was supplied, refreshes use the `refresh_token` grant instead of re-running `client_credentials`; the refreshed token is written back to the same store so it survives an application restart.
 
+### Implementing your own `IAuthStrategy`
+
+`OAuth2ClientCredentialsAuthStrategy` is the only strategy this module ships, but `IAuthStrategy` is a genuine extension point — implement it yourself for anything else (a static API key, a signed-request scheme, mTLS header injection). See [Extending DevKit modules](extending-modules.md) for how this fits into the module's `Interfaces/`/`Implementations/` split in general. A minimal example:
+
+```csharp
+using Integration.DevKit.Core;
+using Integration.DevKit.RESTApiMgmt.Interfaces;
+
+public class ApiKeyAuthStrategy : IAuthStrategy
+{
+    private readonly string _headerName;
+    private readonly string _apiKey;
+
+    public ApiKeyAuthStrategy(string headerName, string apiKey)
+    {
+        _headerName = headerName;
+        _apiKey = apiKey;
+    }
+
+    public Task<NullOperationResult> ApplyAsync(HttpRequestMessage request)
+    {
+        request.Headers.Add(_headerName, _apiKey);
+        return Task.FromResult(new NullOperationResult().SetMethodSuccess());
+    }
+}
+```
+
+```csharp
+client.SetAuthStrategy(new ApiKeyAuthStrategy("X-Api-Key", apiKey));
+```
+
+There's no requirement about where a custom strategy like this lives — `Implementations/` is this library's own internal convention for the classes it ships, not something imposed on consumers. Put `ApiKeyAuthStrategy` wherever the rest of your application's code lives.
+
 ## Client metrics
 
 ```csharp
-public interface IApiClientMetrics
+public class ApiClientMetrics
 {
     int TotalRequests { get; }   // GetCount + PostCount + PutCount + DeleteCount + OtherCount
     int SuccessCount { get; }    // TotalRequests - FailureCount
@@ -206,12 +227,12 @@ Access via `client.ClientMetrics`; counters are read-only from the outside and u
 public interface IApiManager
 {
     ApiManagerSettings RuntimeSettings { get; set; }
-    IApiClient GetClient(string clientName);
+    ApiClient GetClient(string clientName);
     void LogRuntimeSettings();
 }
 ```
 
-`GetClient` caches and reuses one `IApiClient` per name (case-insensitive) — calling it twice with the same name returns the same instance. If `clientName` isn't found in the configured `Clients` dictionary, it logs a warning and hands back a client built from default `ApiClientSettings` rather than throwing, so a typo in a client name fails silently at the HTTP layer (wrong base URL) rather than at `GetClient` — double-check the name against your configuration if requests are going to the wrong host.
+`GetClient` caches and reuses one `ApiClient` per name (case-insensitive) — calling it twice with the same name returns the same instance. If `clientName` isn't found in the configured `Clients` dictionary, it logs a warning and hands back a client built from default `ApiClientSettings` rather than throwing, so a typo in a client name fails silently at the HTTP layer (wrong base URL) rather than at `GetClient` — double-check the name against your configuration if requests are going to the wrong host.
 
 ## API Reference
 
