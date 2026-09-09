@@ -1,6 +1,0 @@
-{
-    "CodeGPT.apiKey": "Gemini CLI",
-    "chat.tools.terminal.autoApprove": {
-        "Set-Content": true
-    }
-}
