@@ -4,34 +4,34 @@ using Integration.DevKit.CredentialMgmt.Contracts;
 using Integration.DevKit.RESTApiMgmt.Interfaces;
 using Integration.DevKit.RESTApiMgmt.Settings;
 using Integration.DevKit.RESTApiMgmt.Tests.TestSupport;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace Integration.DevKit.RESTApiMgmt.Tests;
 
 public class ApiClientTests
 {
-    private static Mock<ApiManager> CreateApiManagerMock(int defaultTimeoutSeconds = 30)
+    private static ApiManager CreateApiManager(int defaultTimeoutSeconds = 30)
     {
-        var manager = new Mock<ApiManager>();
-        manager.SetupGet(m => m.RuntimeSettings).Returns(new ApiManagerSettings { Default_HttpTimeout_Seconds = defaultTimeoutSeconds });
-        return manager;
+        var settings = Options.Create(new ApiManagerSettings { Default_HttpTimeout_Seconds = defaultTimeoutSeconds });
+        return new ApiManager(settings, new Mock<IHttpClientFactory>().Object);
     }
 
-    private static (ApiClient client, FakeHttpMessageHandler handler, Mock<ApiManager> manager) CreateClient(ApiClientSettings? settings = null)
+    private static (ApiClient client, FakeHttpMessageHandler handler, ApiManager manager) CreateClient(ApiClientSettings? settings = null)
     {
         var (client, handler, httpClient, manager) = CreateClientWithHttpClient(settings);
         return (client, handler, manager);
     }
 
-    private static (ApiClient client, FakeHttpMessageHandler handler, HttpClient httpClient, Mock<ApiManager> manager) CreateClientWithHttpClient(ApiClientSettings? settings = null)
+    private static (ApiClient client, FakeHttpMessageHandler handler, HttpClient httpClient, ApiManager manager) CreateClientWithHttpClient(ApiClientSettings? settings = null)
     {
         var handler = new FakeHttpMessageHandler();
         var httpClient = new HttpClient(handler);
-        var manager = CreateApiManagerMock();
+        var manager = CreateApiManager();
 
         settings ??= new ApiClientSettings { BaseUrl = "https://example.com/api/" };
 
-        var client = new ApiClient(manager.Object, "TestClient", settings, httpClient);
+        var client = new ApiClient(manager, "TestClient", settings, httpClient);
 
         return (client, handler, httpClient, manager);
     }
@@ -58,10 +58,10 @@ public class ApiClientTests
     {
         var handler = new FakeHttpMessageHandler();
         var httpClient = new HttpClient(handler);
-        var manager = CreateApiManagerMock(defaultTimeoutSeconds: 45);
+        var manager = CreateApiManager(defaultTimeoutSeconds: 45);
         var settings = new ApiClientSettings { BaseUrl = "https://example.com/", HttpTimeout_Seconds = null };
 
-        var client = new ApiClient(manager.Object, "TestClient", settings, httpClient);
+        var client = new ApiClient(manager, "TestClient", settings, httpClient);
 
         Assert.Equal(45, client.RuntimeSettings.HttpTimeout_Seconds);
     }
@@ -79,11 +79,11 @@ public class ApiClientTests
     {
         var handler = new FakeHttpMessageHandler();
         var httpClient = new HttpClient(handler);
-        var manager = CreateApiManagerMock();
+        var manager = CreateApiManager();
         var settings = new ApiClientSettings { BaseUrl = "https://example.com/" };
         settings.DefaultHeaders["X-Default"] = "abc";
 
-        _ = new ApiClient(manager.Object, "TestClient", settings, httpClient);
+        _ = new ApiClient(manager, "TestClient", settings, httpClient);
 
         Assert.Equal("abc", httpClient.DefaultRequestHeaders.GetValues("X-Default").Single());
     }
