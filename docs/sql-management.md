@@ -146,7 +146,7 @@ void SetSecretStore(ISecretStore secretStore);
 NullOperationResult SetSecretStoreCredentials(string connectionString);
 ```
 
-As with `ApiClient`, attaching a secret store overrides the plain `ConnectionString` configured on `SQLClientSettings`. See [Credential Management](credential-management.md).
+Attaching a secret store overrides the plain `ConnectionString` configured on `SQLClientSettings`. See [Credential Management](credential-management.md).
 
 ## API Reference
 

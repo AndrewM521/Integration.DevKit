@@ -6,10 +6,10 @@ Most modules in this SDK expose exactly one implementation of everything — `Th
 
 Every interface and abstract base class in this SDK earns its place by one of two tests:
 
-- **Multiple real implementations exist or are expected.** `IAuthStrategy` ships one implementation (`OAuth2ClientCredentialsAuthStrategy`) but is designed for you to add your own (an API-key scheme, mTLS, whatever your downstream API needs). `IIterationStrategy`/`Time_IterationStrategy` already has three shipped subclasses (`TimeStrategy_Daily`/`Hourly`/`Interval`). `ISecretReader`/`ISecretStore` has two shipped readers plus a store, explicitly designed to be composed and extended.
-- **A test needs to substitute it.** `IApiManager` and `IManagedTaskHandle` are mocked in this SDK's own test suite to isolate the class under test from the rest of the runtime.
+- **Multiple real implementations exist or are expected.** `IAuthStrategy` ships no built-in implementation, but is designed entirely for you to add your own (an OAuth2 flow, an API-key scheme, mTLS, whatever your downstream API needs). `IIterationStrategy`/`Time_IterationStrategy` already has three shipped subclasses (`TimeStrategy_Daily`/`Hourly`/`Interval`). `ISecretReader`/`ISecretStore` has two shipped readers plus a store, explicitly designed to be composed and extended.
+- **A test needs to substitute it.** `IManagedTaskHandle` is mocked in this SDK's own test suite to isolate the class under test from the rest of the runtime.
 
-Everything else — `ThreadLockManager`, `ProcessManager`/`ManagedProcess`, `SQLManager`/`SQLClient`, `TaskManager`/`TaskRegistry`, `ApiClient`/`ApiManager` itself — has exactly one implementation, nothing mocks it, and nothing is ever going to substitute a different one. Those modules expose plain classes with no interface, because the interface would be pure ceremony.
+Everything else — `ThreadLockManager`, `ProcessManager`/`ManagedProcess`, `SQLManager`/`SQLClient`, `TaskManager`/`TaskRegistry`, `ApiClient`/`ApiManager` — has exactly one implementation, nothing mocks it, and nothing is ever going to substitute a different one. Those modules expose plain classes with no interface, because the interface would be pure ceremony.
 
 ## The folder/namespace convention
 
@@ -29,7 +29,7 @@ Not every module has all four — a module only gets `Abstractions/`/`Implementa
 | `ThreadLocks` | — | — | — | ✓ |
 | `ProcessLauncher` | — | — | — | ✓ |
 | `SQLMgmt` | — | — | — | ✓ |
-| `RESTApiMgmt` | ✓ | — | ✓ | ✓ |
+| `RESTApiMgmt` | ✓ | — | — | ✓ |
 | `TaskMgmt` | ✓ | ✓ | ✓ | ✓ (plus `Models/` for plain DTOs — `ManagedTaskSettings`, `TimeStrategySettings`) |
 | `CredentialMgmt` | — (separate `.Contracts` package) | ✓ | ✓ | ✓ |
 
@@ -39,7 +39,7 @@ Not every module has all four — a module only gets `Abstractions/`/`Implementa
 
 | Module | Extension point | Shipped implementation(s) | Where a custom one goes |
 | --- | --- | --- | --- |
-| REST API Management | `IAuthStrategy` (`Interfaces/`) | `OAuth2ClientCredentialsAuthStrategy` (`Implementations/`) | Anywhere in your own application — see [Implementing your own `IAuthStrategy`](rest-api.md#implementing-your-own-iauthstrategy). |
+| REST API Management | `IAuthStrategy` (`Interfaces/`) | None shipped — implement your own | Anywhere in your own application — see [Implementing your own `IAuthStrategy`](rest-api.md#implementing-your-own-iauthstrategy). |
 | Task Management | `IIterationStrategy` / `Time_IterationStrategy` (`Interfaces/`, `Abstractions/`) | `TimeStrategy_Daily`/`Hourly`/`Interval` (`Implementations/`) | Anywhere in your own application — see [Implementing your own iteration strategy](task-management.md#implementing-your-own-iteration-strategy). |
 | Credential Management | `ISecretReader` / `ISecretStore` (in `Integration.DevKit.CredentialMgmt.Contracts`), `SecretStoreBase` (`Abstractions/`) | `ConfigurationSecretReader`, `CompositeSecretReader`, `FileSecretStore` (`Implementations/`) | Anywhere in your own application — see [Implementing your own secret source](credential-management.md#implementing-your-own-secret-source). |
 

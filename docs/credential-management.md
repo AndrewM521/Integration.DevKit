@@ -1,6 +1,6 @@
 # Credential Management
 
-`Integration.DevKit.CredentialMgmt` doesn't try to replace every place a secret might live — env vars, ASP.NET Core User Secrets, a cloud vault, or its own encrypted file store. Instead it standardizes the *contract* other DevKit modules talk to (`ISecretReader`/`ISecretStore`), ships one concrete read/write implementation (`FileSecretStore`, encrypted at rest via ASP.NET Core's Data Protection stack), and gives you composition helpers (`ConfigurationSecretReader`, `CompositeSecretReader`, `ImportFrom`) so you can layer in whatever other sources a project needs without writing provider-specific glue. It's the store that [REST API Management](rest-api.md#oauth2-authentication) sources OAuth2 client secrets from, and that [SQL Management](sql-management.md#credentials) can optionally plug into via `SetSecretStore`.
+`Integration.DevKit.CredentialMgmt` doesn't try to replace every place a secret might live — env vars, ASP.NET Core User Secrets, a cloud vault, or its own encrypted file store. Instead it standardizes the *contract* other DevKit modules talk to (`ISecretReader`/`ISecretStore`), ships one concrete read/write implementation (`FileSecretStore`, encrypted at rest via ASP.NET Core's Data Protection stack), and gives you composition helpers (`ConfigurationSecretReader`, `CompositeSecretReader`, `ImportFrom`) so you can layer in whatever other sources a project needs without writing provider-specific glue. It's the store you'd typically compose into a custom [REST API Management](rest-api.md#authentication-via-iauthstrategy) `IAuthStrategy` to source OAuth2 client secrets, and that [SQL Management](sql-management.md#credentials) can optionally plug into via `SetSecretStore`.
 
 ## Requirements
 
@@ -249,7 +249,7 @@ Neither example needs to live under `Integration.DevKit.CredentialMgmt.*` — `I
 
 The two modules integrate differently:
 
-- **`ApiClient`** ([REST API Management](rest-api.md#oauth2-authentication)) has no direct secret-store attachment — it authenticates exclusively through `SetAuthStrategy(IAuthStrategy?)`. To source credentials from this module, pass an `ISecretReader` (e.g. a `CompositeSecretReader` wrapping `Service_CredentialMgmt.FileSecretStore`) into `OAuth2ClientCredentialsAuthStrategy`'s constructor — see the full example in [OAuth2 authentication](rest-api.md#oauth2-authentication).
+- **`ApiClient`** ([REST API Management](rest-api.md#authentication-via-iauthstrategy)) has no direct secret-store attachment — it authenticates exclusively through `SetAuthStrategy(IAuthStrategy?)`. `IAuthStrategy` ships with no built-in implementation, so to source credentials from this module, read them from an `ISecretReader` (e.g. a `CompositeSecretReader` wrapping `Service_CredentialMgmt.FileSecretStore`) inside your own `IAuthStrategy` implementation — see [Authentication via `IAuthStrategy`](rest-api.md#authentication-via-iauthstrategy).
 - **`SQLClient`** ([SQL Management](sql-management.md#credentials)) still accepts a secret store directly via `SetSecretStore(ISecretStore secretStore)`, after which it reads/writes its connection string through it instead of the plain-text value in configuration:
 
 ```csharp
@@ -287,7 +287,7 @@ public class CompositeSecretReader : ISecretReader
 }
 ```
 
-### `SecretStoreExtensions`
+### `CredentialMgmtUtils`
 
 ```csharp
 public static NullOperationResult ImportFrom(this ISecretStore target, ISecretReader source, string fileName, string key);

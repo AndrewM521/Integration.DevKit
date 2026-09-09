@@ -83,7 +83,7 @@ All named clients share a single `IHttpClientFactory`-managed connection pool in
 
 ## Making requests
 
-`ApiClient`, `ApiManager`, and `ApiClientMetrics` are plain classes directly under `Integration.DevKit.RESTApiMgmt`. The module's only real extension points are `IApiManager` and `IAuthStrategy`, both in `Integration.DevKit.RESTApiMgmt.Interfaces`; `ApiClientSettings`/`ApiManagerSettings` live in `Integration.DevKit.RESTApiMgmt.Settings`. See [Extending DevKit modules](extending-modules.md) for the general pattern.
+`ApiClient`, `ApiManager`, and `ApiClientMetrics` are plain classes directly under `Integration.DevKit.RESTApiMgmt`. The module's only real extension point is `IAuthStrategy`, in `Integration.DevKit.RESTApiMgmt.Interfaces`; `ApiClientSettings`/`ApiManagerSettings` live in `Integration.DevKit.RESTApiMgmt.Settings`. See [Extending DevKit modules](extending-modules.md) for the general pattern.
 
 ```csharp
 public class ApiClient : IAsyncDisposable
@@ -131,9 +131,9 @@ var result = await client.PostAsync("orders", payload.Result);
 
 `RESTApiMediaTypes` is `Json | Xml | PlainText | WWW_UrlEncoded`, mapping to the corresponding standard MIME type.
 
-### OAuth2 authentication
+### Authentication via `IAuthStrategy`
 
-For downstream APIs that require an OAuth2 bearer token rather than Basic credentials, attach an `IAuthStrategy`:
+For downstream APIs that require an OAuth2 bearer token, a static API key, or any other credential scheme, attach an `IAuthStrategy`:
 
 ```csharp
 public interface IAuthStrategy
@@ -144,35 +144,11 @@ public interface IAuthStrategy
 
 `SetAuthStrategy` is the only credential/auth mechanism `ApiClient` has — there's no separate Basic-auth or secret-store attachment on the client itself; everything goes through an `IAuthStrategy`. When set, the strategy runs on every outgoing request (`GetAsync`/`PostAsync`/`PutAsync`/`DeleteAsync`, sync or async) just before it's sent, and any failure it returns short-circuits the call as a failed `ApiOperationResult<string>` (HTTP 401) rather than hitting the network.
 
-`OAuth2ClientCredentialsAuthStrategy` (in `Integration.DevKit.RESTApiMgmt.Implementations`) is the shipped implementation, covering the client-credentials grant plus refresh-token renewal — the fit for backend, service-to-service calls (there is no authorization-code/PKCE browser flow in this module; `ApiClient` isn't used for interactive user login). It sources the `client_secret` from an [`ISecretReader`](credential-management.md#isecretreader-and-isecretstore) on every token refresh, so it composes directly with the credential management module from [Credential Management](credential-management.md) — e.g. an environment variable via `ConfigurationSecretReader`, falling back to the encrypted `FileSecretStore` via `CompositeSecretReader`:
-
-```csharp
-var secretReader = new CompositeSecretReader(new ISecretReader[]
-{
-    new ConfigurationSecretReader(configuration),   // e.g. env var / CI secret
-    Service_CredentialMgmt.FileSecretStore,         // fall back to the encrypted store
-});
-
-var authStrategy = new OAuth2ClientCredentialsAuthStrategy(
-    tokenHttpClient: httpClientFactory.CreateClient("OAuth2TokenClient"),
-    tokenEndpoint: "https://idp.example.com/oauth2/token",
-    clientId: "my-client-id",
-    credentialContainer: "MyApi-OAuth",             // fileName passed to secretReader (and refreshTokenStore)
-    secretReader: secretReader,                      // "client_secret" is read from this container
-    refreshTokenStore: Service_CredentialMgmt.FileSecretStore, // optional — persists refresh_token across restarts
-    scope: "orders.read orders.write");
-
-var client = Service_RESTApiMgmt.ApiManager.GetClient("my-client");
-client.SetAuthStrategy(authStrategy);
-
-var result = await client.GetAsync("orders");
-```
-
-The access token is cached in memory and reused until 60 seconds before its `expires_in`, at which point the next request triggers a refresh (guarded so concurrent requests don't all refresh at once). If the authorization server returned a `refresh_token` and a `refreshTokenStore` was supplied, refreshes use the `refresh_token` grant instead of re-running `client_credentials`; the refreshed token is written back to the same store so it survives an application restart.
+This module ships **no built-in `IAuthStrategy` implementation** — `IAuthStrategy` is a pure extension point, and you're expected to write your own (an OAuth2 client-credentials flow, a static API key, a signed-request scheme, mTLS header injection). If your downstream API needs OAuth2, compose your own strategy with the [Credential Management](credential-management.md) module's `ISecretReader`/`ISecretStore` to source the client secret.
 
 ### Implementing your own `IAuthStrategy`
 
-`OAuth2ClientCredentialsAuthStrategy` is the only strategy this module ships, but `IAuthStrategy` is a genuine extension point — implement it yourself for anything else (a static API key, a signed-request scheme, mTLS header injection). See [Extending DevKit modules](extending-modules.md) for how this fits into the module's `Interfaces/`/`Implementations/` split in general. A minimal example:
+See [Extending DevKit modules](extending-modules.md) for how a custom `IAuthStrategy` fits into the module's `Interfaces/`/`Settings/` layout in general. A minimal example:
 
 ```csharp
 using Integration.DevKit.Core;
@@ -224,7 +200,7 @@ Access via `client.ClientMetrics`; counters are read-only from the outside and u
 ## `ApiManager`
 
 ```csharp
-public interface IApiManager
+public class ApiManager : IAsyncDisposable
 {
     ApiManagerSettings RuntimeSettings { get; set; }
     ApiClient GetClient(string clientName);
@@ -234,6 +210,8 @@ public interface IApiManager
 
 `GetClient` caches and reuses one `ApiClient` per name (case-insensitive) — calling it twice with the same name returns the same instance. If `clientName` isn't found in the configured `Clients` dictionary, it logs a warning and hands back a client built from default `ApiClientSettings` rather than throwing, so a typo in a client name fails silently at the HTTP layer (wrong base URL) rather than at `GetClient` — double-check the name against your configuration if requests are going to the wrong host.
 
+`ApiManager` is a plain concrete class with no interface — nothing in this SDK substitutes or mocks a different `ApiManager` implementation, so an interface would be pure ceremony. See [Extending DevKit modules](extending-modules.md).
+
 ## API Reference
 
 ### `Service_RESTApiMgmt` (static)
@@ -241,7 +219,7 @@ public interface IApiManager
 ```csharp
 public static IServiceCollection AddRESTApiMgmt(this IServiceCollection services, IConfiguration configuration);
 public static void Initialize(IServiceProvider sp);
-public static IApiManager ApiManager { get; }   // throws InvalidOperationException before Initialize
+public static ApiManager ApiManager { get; }   // throws InvalidOperationException before Initialize
 ```
 
 ### `ApiOperationResult<T>` (from [Integration.DevKit.Core](core.md#result-types))
@@ -256,28 +234,60 @@ public string? DisplaySummary { get; }
 
 Every REST call in this module returns `ApiOperationResult<string>` — there is no built-in JSON-deserializing overload. Deserialize `Result`/`ResponseBody` yourself (e.g. with `JsonUtils` from Core, or `System.Text.Json` directly).
 
-### `IAuthStrategy` / `OAuth2ClientCredentialsAuthStrategy`
+### `IAuthStrategy`
 
 ```csharp
 public interface IAuthStrategy
 {
     Task<NullOperationResult> ApplyAsync(HttpRequestMessage request);
 }
-
-public class OAuth2ClientCredentialsAuthStrategy : IAuthStrategy
-{
-    public OAuth2ClientCredentialsAuthStrategy(
-        HttpClient tokenHttpClient,
-        string tokenEndpoint,
-        string clientId,
-        string credentialContainer,
-        ISecretReader secretReader,
-        ISecretStore? refreshTokenStore = null,
-        string? scope = null);
-
-    public Task<NullOperationResult> ApplyAsync(HttpRequestMessage request);
-}
 ```
+
+No implementation of `IAuthStrategy` ships with this module — see [Authentication via `IAuthStrategy`](#authentication-via-iauthstrategy) above.
+
+### `ApiEndpoint`
+
+A small helper for building endpoint URLs against a persistent base route, in one of three styles:
+
+```csharp
+public class ApiEndpoint
+{
+    public ApiEndpoint(string route);
+
+    public string BuildUrl();
+
+    public Task<OperationResult<string>> BuildQueryUrlAsync(Dictionary<string, object> queryParams);
+    public OperationResult<string> BuildQueryUrl(Dictionary<string, object> queryParams);
+
+    public OperationResult<string> BuildSlashUrl(Dictionary<string, object> queryParams);
+    public OperationResult<string> BuildPositionalUrl(List<object> queryParams);
+}
+
+public enum EndpointUrlStyle { Query, Slash, Positional }
+```
+
+```csharp
+var endpoint = new ApiEndpoint("users/search");
+
+var queryUrl = endpoint.BuildQueryUrl(new() { ["name"] = "John Doe", ["age"] = 30 });
+// "users/search?name=John+Doe&age=30"
+
+var slashUrl = new ApiEndpoint("products/filter").BuildSlashUrl(new() { ["category"] = "Laptops" });
+// "products/filter/category/Laptops"
+
+var positionalUrl = new ApiEndpoint("orders/details").BuildPositionalUrl(new() { 12345, "full" });
+// "orders/details/12345/full"
+```
+
+`BuildQueryUrl`/`BuildQueryUrlAsync` URL-encode via `FormUrlEncodedContent`; `BuildSlashUrl`/`BuildPositionalUrl` URL-encode each segment individually via `WebUtility.UrlEncode`. All four return a failed `OperationResult<string>` (rather than throwing) if encoding fails. `ApiEndpoint` only builds the string — pass the result straight into `ApiClient.GetAsync`/etc. as `endpointUrl`.
+
+### `ApiRequest`
+
+The internal static class `ApiClient` delegates to for the actual HTTP send. You don't normally call it directly — `ApiClient.GetAsync`/`PostAsync`/`PutAsync`/`DeleteAsync` are thin wrappers around `ApiRequest.GetAsync`/etc. — but it's worth knowing about since the header-handling and error-wrapping behavior `ApiClient` exposes actually lives here:
+
+- Header handling normalizes a few well-known header names case-insensitively: `Content-Type` is set on `request.Content.Headers` (throwing if there's no content to attach it to), `Authorization` recognizes `basic`/`bearer` prefixes (falling back to treating a bare token as `Bearer`, or splitting on the first space for any other scheme), and `User-Agent` is parsed via `HttpHeaders.UserAgent.ParseAdd`. Any other header is added as-is (replacing an existing header of the same name).
+- If an `IAuthStrategy` is supplied and its `ApplyAsync` fails, the request is never sent — `ApiRequest` returns a failed `ApiOperationResult<string>` with `HttpStatusCode.Unauthorized` immediately.
+- `SendRequestAsync` wraps the actual `HttpClient.SendAsync` call, translating a non-2xx response into a failed `ApiOperationResult<string>` (carrying the response body and status code) and a network/protocol-level `HttpRequestException` into `HttpStatusCode.ServiceUnavailable`.
 
 ## Error handling
 
