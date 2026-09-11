@@ -19,7 +19,7 @@ namespace Integration.DevKit.TaskMgmt;
 internal sealed class ManagedTaskRuntime : IDisposable
 {
     private int _state = (int)ManagedTaskState.Idle;
-    private int _iterationCount;
+    private long _iterationCount;
 
     /// <summary>
     /// Gets the public-facing handle used to monitor and control this task runtime.
@@ -56,7 +56,7 @@ internal sealed class ManagedTaskRuntime : IDisposable
     /// <summary>
     /// Gets the total number of iterations that have been initiated by this runtime.
     /// </summary>
-    public int IterationCount
+    public long IterationCount
     {
         get => Volatile.Read(ref _iterationCount);
     }
@@ -117,7 +117,7 @@ internal sealed class ManagedTaskRuntime : IDisposable
     internal ManagedTaskIterationRuntime CreateIterationRuntime()
     {
         // Increment global counter
-        int nextId = Interlocked.Increment(ref _iterationCount);
+        long nextId = Interlocked.Increment(ref _iterationCount);
 
         // Create a new runtime for this next iteration
         return new ManagedTaskIterationRuntime(Handle, _lifecycleCTS.Token, nextId);

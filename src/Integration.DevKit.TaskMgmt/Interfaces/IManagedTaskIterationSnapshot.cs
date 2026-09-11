@@ -15,7 +15,7 @@ public interface IManagedTaskIterationSnapshot
     /// <summary>
     /// Gets the sequence number of this iteration (e.g., 1 for the first loop, 2 for the second).
     /// </summary>
-    public int IterationNumber { get; }
+    public long IterationNumber { get; }
 
     /// <summary>
     /// Gets the final state of this specific iteration.

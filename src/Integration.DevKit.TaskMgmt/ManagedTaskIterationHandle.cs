@@ -23,7 +23,7 @@ public sealed class ManagedTaskIterationHandle
     /// <summary>
     /// Gets the sequence number for this iteration.
     /// </summary>
-    public int IterationNumber => _taskIterationRuntime.IterationNumber;
+    public long IterationNumber => _taskIterationRuntime.IterationNumber;
 
     /// <summary>
     /// Gets the current state of the iteration.

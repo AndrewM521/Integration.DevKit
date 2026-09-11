@@ -39,7 +39,7 @@ public sealed class ManagedTaskSnapshot
     /// Gets the number of iterations or cycles the task has completed,
     /// typically used for recurring or long-running tasks.
     /// </summary>
-    public int IterationCount { get; internal set; }
+    public long IterationCount { get; internal set; }
 
     /// <summary>
     /// Gets the date and time when the task execution began.
@@ -66,10 +66,10 @@ public sealed class ManagedTaskSnapshot
     /// Gets a historical record of individual iterations completed by this task.
     /// </summary>
     /// <value>
-    /// A <see cref="SortedDictionary{Int32, IManagedTaskIterationSnapshot}"/> where the key
+    /// A <see cref="SortedDictionary{Int64, IManagedTaskIterationSnapshot}"/> where the key
     /// is the iteration index and the value is the performance data for that specific cycle.
     /// </value>
-    public SortedDictionary<int, IManagedTaskIterationSnapshot> IterationHistory { get; } = new();
+    public SortedDictionary<long, IManagedTaskIterationSnapshot> IterationHistory { get; } = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ManagedTaskSnapshot"/> class.

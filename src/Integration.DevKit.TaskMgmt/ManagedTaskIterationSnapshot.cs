@@ -15,7 +15,7 @@ namespace Integration.DevKit.TaskMgmt;
 public sealed class ManagedTaskIterationSnapshot : IManagedTaskIterationSnapshot
 {
     /// <inheritdoc/>
-    public int IterationNumber { get; internal set; }
+    public long IterationNumber { get; internal set; }
 
     /// <inheritdoc/>
     public ManagedTaskState State { get; internal set; }

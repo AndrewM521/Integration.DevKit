@@ -16,7 +16,7 @@ public class ApiClientMetrics
     /// <summary>
     /// Gets the total number of HTTP requests attempted by the client.
     /// </summary>
-    public int TotalRequests
+    public long TotalRequests
     {
         get
         {
@@ -27,7 +27,7 @@ public class ApiClientMetrics
     /// <summary>
     /// Gets the cumulative count of requests that resulted in a successful operation.
     /// </summary>
-    public int SuccessCount
+    public long SuccessCount
     {
         get
         {
@@ -35,36 +35,43 @@ public class ApiClientMetrics
         }
     }
 
+    private long _failureCount;
+    private long _getCount;
+    private long _postCount;
+    private long _putCount;
+    private long _deleteCount;
+    private long _otherCount;
+
     /// <summary>
     /// Gets the cumulative count of requests that resulted in a failure or error.
     /// </summary>
-    public int FailureCount { get; private set; } = 0;
+    public long FailureCount => Volatile.Read(ref _failureCount);
 
     /// <summary>
     /// Gets the total count of HTTP GET requests performed.
     /// </summary>
-    public int GetCount { get; private set; } = 0;
+    public long GetCount => Volatile.Read(ref _getCount);
 
     /// <summary>
     /// Gets the total count of HTTP POST requests performed.
     /// </summary>
-    public int PostCount { get; private set; } = 0;
+    public long PostCount => Volatile.Read(ref _postCount);
 
     /// <summary>
     /// Gets the total count of HTTP PUT requests performed.
     /// </summary>
-    public int PutCount { get; private set; } = 0;
+    public long PutCount => Volatile.Read(ref _putCount);
 
     /// <summary>
     /// Gets the total count of HTTP DELETE requests performed.
     /// </summary>
-    public int DeleteCount { get; private set; } = 0;
+    public long DeleteCount => Volatile.Read(ref _deleteCount);
 
     /// <summary>
     /// Gets the total count of requests using methods not explicitly tracked by individual properties
     /// (e.g., PATCH, HEAD, or custom verbs).
     /// </summary>
-    public int OtherCount { get; private set; } = 0;
+    public long OtherCount => Volatile.Read(ref _otherCount);
 
     /// <summary>
     /// Increments the specific counter associated with the provided <see cref="HttpMetricNames"/>.
@@ -75,19 +82,19 @@ public class ApiClientMetrics
         switch (httpMethod)
         {
             case HttpMetricNames.Get:
-                GetCount++;
+                Interlocked.Increment(ref _getCount);
                 break;
             case HttpMetricNames.Put:
-                PutCount++;
+                Interlocked.Increment(ref _putCount);
                 break;
             case HttpMetricNames.Post:
-                PostCount++;
+                Interlocked.Increment(ref _postCount);
                 break;
             case HttpMetricNames.Delete:
-                DeleteCount++;
+                Interlocked.Increment(ref _deleteCount);
                 break;
             default:
-                OtherCount++;
+                Interlocked.Increment(ref _otherCount);
                 break;
         }
     }
@@ -97,7 +104,7 @@ public class ApiClientMetrics
     /// </summary>
     internal void IncrementFailure()
     {
-        FailureCount++;
+        Interlocked.Increment(ref _failureCount);
     }
 
     /// <summary>

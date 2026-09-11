@@ -226,7 +226,7 @@ public interface IManagedTaskHandle
     DateTime StartDTM { get; }
     DateTime EndDTM { get; }
     TimeSpan Runtime { get; }
-    int CurrentIterationCount { get; }
+    long CurrentIterationCount { get; }
     void Cancel();                    // cancels the task and all of its iterations
 }
 ```
@@ -239,7 +239,7 @@ Passed into `DoTaskWork` for the currently-running iteration. Lives directly und
 public sealed class ManagedTaskIterationHandle
 {
     IManagedTaskHandle TaskHandle { get; }
-    int IterationNumber { get; }
+    long IterationNumber { get; }
     DateTime StartDTM { get; }
     CancellationToken CancelationToken { get; }   // exact spelling as shipped — one 'l'
     TimeSpan Runtime { get; }

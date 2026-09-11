@@ -52,7 +52,7 @@ public interface IManagedTaskHandle
     /// <remarks>
     /// This value is incremented at the start of each new execution cycle within the managed task.
     /// </remarks>
-    public int CurrentIterationCount { get; }
+    public long CurrentIterationCount { get; }
 
     /// <summary>
     /// Initiates a request to cancel the task and all associated workloads.

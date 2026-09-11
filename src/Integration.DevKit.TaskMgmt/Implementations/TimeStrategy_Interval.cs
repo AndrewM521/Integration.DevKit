@@ -37,7 +37,7 @@ public sealed class TimeStrategy_Interval : Time_IterationStrategy
     /// By adding the interval to the <c>Target</c> time rather than the <c>Current</c> time, this strategy 
     /// maintains a consistent schedule even if the task work takes several minutes or hours to complete.
     /// </remarks>
-    protected override DateTime ComputeNextTargetDTM(int iteration)
+    protected override DateTime ComputeNextTargetDTM(long iteration)
     {
         return LastTargetDTM.Add(_interval);
     }

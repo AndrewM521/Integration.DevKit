@@ -138,7 +138,7 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
     /// </summary>
     /// <param name="currentIteration">The current iteration count of the task.</param>
     /// <returns>The <see cref="DateTime"/> representing the next scheduled run.</returns>
-    public DateTime GetNextTargetDTM(int currentIteration)
+    public DateTime GetNextTargetDTM(long currentIteration)
     {
         if (LastTargetDTM == default)
         {
@@ -157,7 +157,7 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
     /// Derived classes (e.g., Cron or Interval strategies) should use <see cref="LastTargetDTM"/> 
     /// as the basis for this calculation.
     /// </remarks>
-    protected abstract DateTime ComputeNextTargetDTM(int currentIteration);
+    protected abstract DateTime ComputeNextTargetDTM(long currentIteration);
 
     /// <summary>
     /// Resolves the effective starting <see cref="DateTime"/> by combining custom or default date and time values.

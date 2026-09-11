@@ -75,7 +75,7 @@ internal class TaskRegistryRuntime
             // 3. Handle Iteration History (The new part)
             if (iterationRuntime != null)
             {
-                int iterNum = iterationRuntime.IterationNumber;
+                long iterNum = iterationRuntime.IterationNumber;
 
                 // Check if we already have this iteration recorded
                 if (snapshot.IterationHistory.TryGetValue(iterNum, out var existingIter))

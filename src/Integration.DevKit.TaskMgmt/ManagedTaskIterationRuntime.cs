@@ -32,7 +32,7 @@ internal sealed class ManagedTaskIterationRuntime : IDisposable
     /// <summary>
     /// Gets the sequence number of this iteration.
     /// </summary>
-    public int IterationNumber { get; }
+    public long IterationNumber { get; }
 
     /// <summary>
     /// Gets or sets the UTC start time of the iteration
@@ -101,7 +101,7 @@ internal sealed class ManagedTaskIterationRuntime : IDisposable
     /// <param name="taskHandle">The handle of the parent task.</param>
     /// <param name="globalToken">The global token used to link iteration-specific cancellation.</param>
     /// <param name="iterationNumber">The current iteration number.</param>
-    internal ManagedTaskIterationRuntime(ManagedTaskHandle taskHandle, CancellationToken globalToken, int iterationNumber)
+    internal ManagedTaskIterationRuntime(ManagedTaskHandle taskHandle, CancellationToken globalToken, long iterationNumber)
     {
         TaskHandle = taskHandle;
         _linkedCTS = CancellationTokenSource.CreateLinkedTokenSource(globalToken);

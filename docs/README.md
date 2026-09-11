@@ -2,6 +2,8 @@
 
 Integration.DevKit is a .NET 8 SDK made up of small, independently-referenceable modules for the things most integration-style applications end up building anyway: protected configuration, structured logging, REST API access, SQL access, background task management, thread coordination, external process management, and file-based secret storage.
 
+See [CHANGELOG.md](CHANGELOG.md) for release history, reconstructed from each module's `.csproj` version and the commit log.
+
 Every module follows the same three conventions, which makes the SDK predictable once you've learned one part of it:
 
 1. **Result objects instead of exceptions for expected failures.** Public methods return `OperationResult<T>` (or `NullOperationResult`, `NullableOperationResult<T>`, `ApiOperationResult<T>`) rather than throwing — check `MethodSuccess` before trusting `Result`. See [Core → Result types](core.md#result-types).

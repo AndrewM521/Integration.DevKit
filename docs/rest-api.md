@@ -184,18 +184,18 @@ There's no requirement about where a custom strategy like this lives — `Implem
 ```csharp
 public class ApiClientMetrics
 {
-    int TotalRequests { get; }   // GetCount + PostCount + PutCount + DeleteCount + OtherCount
-    int SuccessCount { get; }    // TotalRequests - FailureCount
-    int FailureCount { get; }
-    int GetCount { get; }
-    int PostCount { get; }
-    int PutCount { get; }
-    int DeleteCount { get; }
-    int OtherCount { get; }      // includes PATCH/HEAD/OPTIONS — there is no dedicated counter for those
+    long TotalRequests { get; }   // GetCount + PostCount + PutCount + DeleteCount + OtherCount
+    long SuccessCount { get; }    // TotalRequests - FailureCount
+    long FailureCount { get; }
+    long GetCount { get; }
+    long PostCount { get; }
+    long PutCount { get; }
+    long DeleteCount { get; }
+    long OtherCount { get; }      // includes PATCH/HEAD/OPTIONS — there is no dedicated counter for those
 }
 ```
 
-Access via `client.ClientMetrics`; counters are read-only from the outside and update automatically on every call made through that client.
+Access via `client.ClientMetrics`; counters are `long` (to avoid overflow on long-lived clients) and are updated atomically on every call made through that client, so they're safe to read from other threads.
 
 ## `ApiManager`
 

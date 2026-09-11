@@ -31,7 +31,7 @@ public sealed class TimeStrategy_Daily : Time_IterationStrategy
     /// By adding the day to the <c>Target</c> time rather than the <c>Current</c> time, this strategy 
     /// maintains a consistent schedule even if the task work takes several minutes or hours to complete.
     /// </remarks>
-    protected override DateTime ComputeNextTargetDTM(int currentIteration)
+    protected override DateTime ComputeNextTargetDTM(long currentIteration)
     {
         return LastTargetDTM.AddDays(1);
     }

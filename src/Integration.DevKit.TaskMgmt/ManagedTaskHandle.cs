@@ -31,7 +31,7 @@ public sealed class ManagedTaskHandle : IManagedTaskHandle
     /// <summary>
     /// Gets the number of iterations completed or executed for this task so far.
     /// </summary>
-    public int CurrentIterationCount => _managedTaskRuntime.IterationCount;
+    public long CurrentIterationCount => _managedTaskRuntime.IterationCount;
 
     /// <summary>
     /// Gets the UTC start time for the managed task.
