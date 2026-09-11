@@ -1,8 +1,8 @@
 # Integration.DevKit
 
-Integration.DevKit is a .NET 8 SDK made up of small, independently-referenceable modules for the things most integration-style applications end up building anyway: protected configuration, structured logging, REST API access, SQL access, background task management, thread coordination, external process management, and file-based secret storage.
+Integration.DevKit is a .NET 8 SDK made up of small, independently-referenceable modules for the things most integration-style applications end up building anyway: protected configuration, [structured logging](logging.md), REST API access, SQL access, background task management, thread coordination, external process management, and file-based secret storage.
 
-See [CHANGELOG.md](CHANGELOG.md) for release history, reconstructed from each module's `.csproj` version and the commit log.
+See [CHANGELOG.md](CHANGELOG.md) for release history
 
 Every module follows the same three conventions, which makes the SDK predictable once you've learned one part of it:
 
@@ -144,7 +144,7 @@ See [Core → Result types](core.md#result-types) for the full set of variants a
 - Check `MethodSuccess` before reading `Result` — don't assume a sensible default on failure unless a method's docs say otherwise.
 - Follow the register → build → initialize order for every module, respecting the ordering dependencies noted above and on each module's page.
 - Keep secrets out of `appsettings.json` in plain text — use [Credential Management](credential-management.md) or, at minimum, [configuration protection](core.md#configuration-protection).
-- Use the SDK's logger consistently for diagnostics rather than `Console.WriteLine` in production code paths.
+- Use the SDK's logger consistently for diagnostics rather than `Console.WriteLine` in production code paths — see [Logging](logging.md) for how to plug in your own `ILogger`-based provider.
 
 ## FAQ
 
