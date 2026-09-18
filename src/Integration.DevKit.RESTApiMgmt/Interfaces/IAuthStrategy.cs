@@ -19,6 +19,11 @@ public interface IAuthStrategy
     /// acquiring or refreshing any underlying credential as needed.
     /// </summary>
     /// <param name="request">The outgoing request to authenticate, mutated in place.</param>
+    /// <param name="authClient">
+    /// A client for calling an authentication endpoint (e.g. an OAuth2 token endpoint). Requests made through it
+    /// never re-enter this strategy, so it is safe to use even when the endpoint lives on the same API service.
+    /// Use a relative endpoint for the same host, or an absolute URL for a different host.
+    /// </param>
     /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
-    public Task<NullOperationResult> ApplyAsync(HttpRequestMessage request);
+    public Task<NullOperationResult> ApplyAsync(HttpRequestMessage request, IAuthClient authClient);
 }

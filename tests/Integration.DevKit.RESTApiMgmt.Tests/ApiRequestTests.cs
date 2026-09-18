@@ -199,7 +199,7 @@ public class ApiRequestTests
 
         var authStrategy = new Mock<IAuthStrategy>();
         authStrategy
-            .Setup(s => s.ApplyAsync(It.IsAny<HttpRequestMessage>()))
+            .Setup(s => s.ApplyAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<IAuthClient>()))
             .ReturnsAsync(new NullOperationResult().SetMethodFailure(new InvalidOperationException("token refresh failed")));
 
         var result = await ApiRequest.GetAsync(client, "/Posts", authStrategy: authStrategy.Object);
@@ -217,7 +217,7 @@ public class ApiRequestTests
 
         var authStrategy = new Mock<IAuthStrategy>();
         authStrategy
-            .Setup(s => s.ApplyAsync(It.IsAny<HttpRequestMessage>()))
+            .Setup(s => s.ApplyAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<IAuthClient>()))
             .ReturnsAsync(new NullOperationResult().SetMethodSuccess());
 
         var result = await ApiRequest.GetAsync(client, "/Posts", authStrategy: authStrategy.Object);

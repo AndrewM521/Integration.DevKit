@@ -98,6 +98,15 @@ public class ApiManager : IAsyncDisposable
     }
 
     /// <summary>
+    /// Creates an <see cref="HttpClient"/> with none of an <see cref="ApiClient"/>'s configured base address or
+    /// default headers, sharing the same underlying handler pool. Used for auth requests to a different host.
+    /// </summary>
+    internal HttpClient CreateHeaderFreeHttpClient()
+    {
+        return _httpFactory.CreateClient("ApiClient");
+    }
+
+    /// <summary>
     /// Logging method to output current <see cref="ApiManagerSettings"/> to the logs.
     /// </summary>
     public void LogRuntimeSettings()

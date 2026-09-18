@@ -18,8 +18,12 @@ public static class ApiRequest
     /// <param name="content">Optional HTTP body content sent to the server.</param>
     /// <param name="headers">Optional dictionary of HTTP headers to include in the request.</param>
     /// <param name="authStrategy">Optional <see cref="IAuthStrategy"/> applied to the request before it is sent.</param>
+    /// <param name="authClient">
+    /// Optional <see cref="IAuthClient"/> handed to <paramref name="authStrategy"/>. When null, a client over
+    /// <paramref name="client"/> is used, so absolute URLs on a different host also receive its default headers.
+    /// </param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> GetAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null)
+    public static async Task<ApiOperationResult<string>> GetAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null, IAuthClient? authClient = null)
     {
         var finalUri = ResolveUri(client, endpointUrl);
 
@@ -32,7 +36,7 @@ public static class ApiRequest
 
         AddHeadersToRequest(request, headers);
 
-        var applyAuthResult = await ApplyAuthAsync(request, authStrategy);
+        var applyAuthResult = await ApplyAuthAsync(request, client, authStrategy, authClient);
         if (applyAuthResult != null)
         {
             return applyAuthResult;
@@ -49,8 +53,12 @@ public static class ApiRequest
     /// <param name="content">Optional HTTP body content sent to the server.</param>
     /// <param name="headers">Optional dictionary of HTTP headers to include in the request.</param>
     /// <param name="authStrategy">Optional <see cref="IAuthStrategy"/> applied to the request before it is sent.</param>
+    /// <param name="authClient">
+    /// Optional <see cref="IAuthClient"/> handed to <paramref name="authStrategy"/>. When null, a client over
+    /// <paramref name="client"/> is used, so absolute URLs on a different host also receive its default headers.
+    /// </param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> PostAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null)
+    public static async Task<ApiOperationResult<string>> PostAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null, IAuthClient? authClient = null)
     {
         var finalUri = ResolveUri(client, endpointUrl);
 
@@ -63,7 +71,7 @@ public static class ApiRequest
 
         AddHeadersToRequest(request, headers);
 
-        var applyAuthResult = await ApplyAuthAsync(request, authStrategy);
+        var applyAuthResult = await ApplyAuthAsync(request, client, authStrategy, authClient);
         if (applyAuthResult != null)
         {
             return applyAuthResult;
@@ -80,8 +88,12 @@ public static class ApiRequest
     /// <param name="content">The HTTP request content sent to the server.</param>
     /// <param name="headers">Optional dictionary of HTTP headers to include in the request.</param>
     /// <param name="authStrategy">Optional <see cref="IAuthStrategy"/> applied to the request before it is sent.</param>
+    /// <param name="authClient">
+    /// Optional <see cref="IAuthClient"/> handed to <paramref name="authStrategy"/>. When null, a client over
+    /// <paramref name="client"/> is used, so absolute URLs on a different host also receive its default headers.
+    /// </param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> PutAsync(HttpClient client, string endpointUrl, HttpContent content, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null)
+    public static async Task<ApiOperationResult<string>> PutAsync(HttpClient client, string endpointUrl, HttpContent content, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null, IAuthClient? authClient = null)
     {
         var finalUri = ResolveUri(client, endpointUrl);
 
@@ -89,7 +101,7 @@ public static class ApiRequest
 
         AddHeadersToRequest(request, headers);
 
-        var applyAuthResult = await ApplyAuthAsync(request, authStrategy);
+        var applyAuthResult = await ApplyAuthAsync(request, client, authStrategy, authClient);
         if (applyAuthResult != null)
         {
             return applyAuthResult;
@@ -106,8 +118,12 @@ public static class ApiRequest
     /// <param name="content">Optional HTTP body content sent to the server.</param>
     /// <param name="headers">Optional dictionary of HTTP headers to include in the request.</param>
     /// <param name="authStrategy">Optional <see cref="IAuthStrategy"/> applied to the request before it is sent.</param>
+    /// <param name="authClient">
+    /// Optional <see cref="IAuthClient"/> handed to <paramref name="authStrategy"/>. When null, a client over
+    /// <paramref name="client"/> is used, so absolute URLs on a different host also receive its default headers.
+    /// </param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> DeleteAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null)
+    public static async Task<ApiOperationResult<string>> DeleteAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null, IAuthClient? authClient = null)
     {
         var finalUri = ResolveUri(client, endpointUrl);
 
@@ -120,7 +136,7 @@ public static class ApiRequest
 
         AddHeadersToRequest(request, headers);
 
-        var applyAuthResult = await ApplyAuthAsync(request, authStrategy);
+        var applyAuthResult = await ApplyAuthAsync(request, client, authStrategy, authClient);
         if (applyAuthResult != null)
         {
             return applyAuthResult;
@@ -210,14 +226,18 @@ public static class ApiRequest
     /// <see langword="null"/> if there was no strategy or it applied successfully; otherwise a failed
     /// <see cref="ApiOperationResult{T}"/> the caller should return immediately without sending the request.
     /// </returns>
-    private static async Task<ApiOperationResult<string>?> ApplyAuthAsync(HttpRequestMessage request, IAuthStrategy? authStrategy)
+    private static async Task<ApiOperationResult<string>?> ApplyAuthAsync(HttpRequestMessage request, HttpClient client, IAuthStrategy? authStrategy, IAuthClient? authClient)
     {
         if (authStrategy == null)
         {
             return null;
         }
 
-        var applyResult = await authStrategy.ApplyAsync(request);
+        // Direct callers of ApiRequest have no owning ApiClient to supply one; fall back to a client over the same
+        // HttpClient. It has no header-free client, so absolute URLs on another host share its default headers.
+        authClient ??= new AuthClient(client);
+
+        var applyResult = await authStrategy.ApplyAsync(request, authClient);
         if (!applyResult.MethodSuccess)
         {
             return new ApiOperationResult<string>()

@@ -195,13 +195,13 @@ public class ApiClientTests
 
         var authStrategy = new Mock<IAuthStrategy>();
         authStrategy
-            .Setup(s => s.ApplyAsync(It.IsAny<HttpRequestMessage>()))
+            .Setup(s => s.ApplyAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<IAuthClient>()))
             .ReturnsAsync(new NullOperationResult().SetMethodSuccess());
 
         client.SetAuthStrategy(authStrategy.Object);
         await client.GetAsync("/Posts");
 
-        authStrategy.Verify(s => s.ApplyAsync(It.IsAny<HttpRequestMessage>()), Times.Once);
+        authStrategy.Verify(s => s.ApplyAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<IAuthClient>()), Times.Once);
     }
 
     [Fact]
@@ -212,13 +212,13 @@ public class ApiClientTests
 
         var authStrategy = new Mock<IAuthStrategy>();
         authStrategy
-            .Setup(s => s.ApplyAsync(It.IsAny<HttpRequestMessage>()))
+            .Setup(s => s.ApplyAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<IAuthClient>()))
             .ReturnsAsync(new NullOperationResult().SetMethodSuccess());
 
         client.SetAuthStrategy(authStrategy.Object);
         client.SetAuthStrategy(null);
         await client.GetAsync("/Posts");
 
-        authStrategy.Verify(s => s.ApplyAsync(It.IsAny<HttpRequestMessage>()), Times.Never);
+        authStrategy.Verify(s => s.ApplyAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<IAuthClient>()), Times.Never);
     }
 }
