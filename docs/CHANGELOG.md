@@ -1,6 +1,10 @@
 # Changelog
 
-## [1.2.0.0-preview] - 2026-09-03 (current)
+## [2.0.0.0] - 2026-09-18 (current)
+
+### Versioning
+- Switched version numbering scheme to strict `Major.Minor.Build.0` format going forward.
+- All 8 modules (Core, REST API Management, SQL Management, Task Management, Process Launcher, Thread Locks, Thread-Safe File I/O, Credential Management) bumped from `1.2.0.0-preview` to `2.0.0.0`, promoting the 1.2 preview content below to a final release.
 
 ### Changed
 - All 8 current modules (Core, REST API Management, SQL Management, Task Management, Process Launcher, Thread Locks, Thread-Safe File I/O, Credential Management) bumped together to `1.2.0.0-preview`.
@@ -13,7 +17,7 @@
 - Most `.Contracts` projects (REST API Management, SQL Management, Task Management, Thread Locks, Process Launcher) were removed as part of the cleanup — `CredentialMgmt.Contracts` is now the only surviving `.Contracts` package.
 
 ### Added
-- OAuth support returned, not as a standalone module but as `OAuth2ClientCredentialsAuthStrategy` inside REST API Management.
+- REST API Management gained an `IAuthStrategy` extension point for applying auth to outgoing requests.
 - NuGet package references and metadata added to each module.
 - `Initialize` methods added to Task Management and the REST API client to allow re-initializing runtime settings.
 
