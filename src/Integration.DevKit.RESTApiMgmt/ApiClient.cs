@@ -458,16 +458,16 @@ public class ApiClient : IAsyncDisposable
 
             if (value is Dictionary<string, string> dict)
             {
-                _logger?.LogDebug($"{indent}{property.Name}:");
+                _logger?.LogTrace($"{indent}{property.Name}:");
 
                 foreach (var kvp in dict)
                 {
-                    _logger?.LogDebug($"{indent}  {kvp.Key}: {kvp.Value}");
+                    _logger?.LogTrace($"{indent}  {kvp.Key}: {kvp.Value}");
                 }
             }
             else
             {
-                _logger?.LogDebug($"{indent}{property.Name}: {value}");
+                _logger?.LogTrace($"{indent}{property.Name}: {value}");
             }
         }
     }

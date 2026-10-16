@@ -40,7 +40,7 @@ public class ProcessManager
     {
         RuntimeSettings = settings?.Value.Clone() ?? new ProcessLauncherSettings();
 
-        _logger = loggerFactory?.CreateConditionalLogger("ProcessLauncherManager", () => RuntimeSettings.EnableLogging);
+        _logger = loggerFactory?.CreateConditionalLogger(nameof(ProcessManager), () => RuntimeSettings.EnableLogging);
     }
 
     /// <summary>
@@ -86,7 +86,7 @@ public class ProcessManager
         }
         catch (Exception ex)
         {
-            _logger?.LogError($"Failed to start process {config.ProcessKey}");
+            _logger?.LogError(ex, $"Failed to start process {config.ProcessKey}");
 
             return result.SetMethodFailure(ex);
         }
@@ -133,7 +133,7 @@ public class ProcessManager
         }
         catch (Exception ex)
         {
-            _logger?.LogError($"Failed to cancel process {processKey}");
+            _logger?.LogError(ex, $"Failed to cancel process {processKey}");
 
             return result.SetMethodFailure(ex);
         }
@@ -171,9 +171,10 @@ public class ProcessManager
 
         if (errors.Count > 0)
         {
-            _logger?.LogError($"Failed to cancel all processes.");
+            var aggregateException = new AggregateException(errors);
+            _logger?.LogError(aggregateException, "Failed to cancel all processes.");
 
-            return result.SetMethodFailure(new AggregateException(errors));
+            return result.SetMethodFailure(aggregateException);
         }
 
         return result.SetMethodSuccess();
@@ -200,7 +201,7 @@ public class ProcessManager
         }
         catch (Exception ex)
         {
-            _logger?.LogError($"Failed to check if proccess {processKey} is running.");
+            _logger?.LogError(ex, $"Failed to check if process {processKey} is running.");
 
             return result.SetMethodFailure(ex);
         }

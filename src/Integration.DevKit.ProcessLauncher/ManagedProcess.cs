@@ -111,7 +111,7 @@ public class ManagedProcess : IAsyncDisposable
             {
                 Process.Kill(true);
 
-                _logger?.LogInformation($"Process '{ProcessKey}' force killed.");
+                _logger?.LogWarning($"Process '{ProcessKey}' force killed.");
             }
             else
             {
@@ -127,9 +127,9 @@ public class ManagedProcess : IAsyncDisposable
                         _logger?.LogWarning($"Failure to close proccess after waiting {waitTime.Seconds} seconds. Process '{ProcessKey}' force killed.");
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    _logger?.LogError($"Failed to cancel, trying to force cancel now..");
+                    _logger?.LogWarning(ex, "Failed to gracefully cancel, forcing cancel now.");
 
                     Process.Kill(true);
                 }
@@ -200,7 +200,7 @@ public class ManagedProcess : IAsyncDisposable
         }
         catch (Exception ex)
         {
-            _logger?.LogError($"Error disposing proccess: {ex}");
+            _logger?.LogError(ex, "Error disposing process.");
         }
         finally
         {

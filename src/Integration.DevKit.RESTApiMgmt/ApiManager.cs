@@ -59,7 +59,7 @@ public class ApiManager : IAsyncDisposable
 
         _httpFactory = httpFactory;
 
-        _logger = loggerFactory?.CreateConditionalLogger("ApiManager", () => RuntimeSettings.EnableLogging);
+        _logger = loggerFactory?.CreateConditionalLogger(nameof(ApiManager), () => RuntimeSettings.EnableLogging);
     }
 
 
@@ -122,7 +122,7 @@ public class ApiManager : IAsyncDisposable
 
             if (value is ConcurrentDictionary<string, ApiClientSettings> dict)
             {
-                _logger?.LogDebug($"  {property.Name}:");
+                _logger?.LogTrace($"  {property.Name}:");
 
                 foreach (var kvp in dict)
                 {
@@ -133,7 +133,7 @@ public class ApiManager : IAsyncDisposable
             }
             else
             {
-                _logger?.LogDebug($"  {property.Name}: {value}");
+                _logger?.LogTrace($"  {property.Name}: {value}");
             }
         }
     }
