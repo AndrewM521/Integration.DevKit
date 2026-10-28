@@ -9,7 +9,7 @@
 
 ## Requirements
 
-- .NET 8
+- .NET 8, 9 or 10
 - `Microsoft.Extensions.Configuration` (for the configuration-protection pipeline)
 - `Microsoft.Extensions.Hosting.Abstractions` (for `OnDemandHost` and `IHostApplicationLifetime`)
 

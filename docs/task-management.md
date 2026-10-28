@@ -6,7 +6,7 @@
 
 ## Requirements
 
-- .NET 8
+- .NET 8, 9 or 10
 - `Microsoft.Extensions.Hosting.Abstractions` (for `IHostApplicationLifetime`, used internally to stop tasks on shutdown)
 
 ## Installation

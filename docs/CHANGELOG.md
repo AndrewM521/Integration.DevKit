@@ -1,6 +1,21 @@
 # Changelog
 
-## [2.0.0.0] - 2026-09-18 (current)
+## [2.1.0.0] - 2026-10-28 (current)
+
+### Changed
+- All modules now multi-target `net8.0`, `net9.0` and `net10.0` (previously `net8.0` only). The target list is defined once in the root `Directory.Build.props` (`DevKitTargetFrameworks`). Building all three targets requires the .NET 10 SDK (CLI or Visual Studio 2026); Visual Studio 2022 cannot use that SDK, so it builds `net8.0` and `net9.0` only. Build NuGet packages from the CLI so they include `net10.0`.
+- All module versions bumped to `2.1.0.0`.
+- `Microsoft.Extensions.*` packages bumped to `10.0.14`; `Microsoft.Data.SqlClient` bumped to `6.1.8`.
+- Test tooling bumped: `Microsoft.NET.Test.Sdk` 18.11.0, `xunit` 2.9.3, `xunit.runner.visualstudio` 3.1.5, `coverlet.collector` 10.1.0.
+- Sample `TestApp` now targets `net10.0`.
+
+### Security
+- Credential Management: `Microsoft.AspNetCore.DataProtection` was `10.0.3`, which is affected by CVE-2026-40372. It now references a version matching each target: `8.0.33` (net8.0), `9.0.22` (net9.0), `10.0.14` (net10.0). This also stops the net8.0 build pulling DataProtection 10 into ASP.NET Core 8/9 apps. If an affected build ran somewhere internet-facing, consider rotating the DataProtection key ring.
+
+### Notes
+- Behavior changes from the `Microsoft.Extensions.*` 10.x packages apply on every target (they were already in effect in 2.0.x): configuration binding keeps JSON `null` as `null` instead of `""`, and `IHttpClientFactory` uses `SocketsHttpHandler` and redacts header values in its logs.
+
+## [2.0.0.0] - 2026-09-18
 
 ### Versioning
 - Switched version numbering scheme to strict `Major.Minor.Build.0` format going forward.

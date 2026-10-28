@@ -4,7 +4,7 @@
 
 ## Requirements
 
-- .NET 8
+- .NET 8, 9 or 10
 - `Microsoft.Extensions.Http` (for `IHttpClientFactory`)
 - [Integration.DevKit.Core](core.md) (for `ApiOperationResult<T>` and the other result types)
 

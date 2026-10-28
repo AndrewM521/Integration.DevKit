@@ -4,7 +4,7 @@
 
 ## Requirements
 
-- .NET 8
+- .NET 8, 9 or 10
 - `Microsoft.Data.SqlClient`
 - Network access to the target SQL Server
 

@@ -1,6 +1,6 @@
 # Integration.DevKit
 
-Integration.DevKit is a .NET 8 SDK made up of small, independently-referenceable modules for the things most integration-style applications end up building anyway: protected configuration, [structured logging](logging.md), REST API access, SQL access, background task management, thread coordination, external process management, and file-based secret storage.
+Integration.DevKit is a .NET SDK (targeting .NET 8, 9 and 10) made up of small, independently-referenceable modules for the things most integration-style applications end up building anyway: protected configuration, [structured logging](logging.md), REST API access, SQL access, background task management, thread coordination, external process management, and file-based secret storage.
 
 See [CHANGELOG.md](CHANGELOG.md) for release history
 
@@ -28,7 +28,7 @@ Most modules ship their interfaces and settings types as part of the main packag
 
 ## Requirements
 
-- .NET 8 SDK or later
+- .NET 10 SDK (CLI or Visual Studio 2026) to build all targets; Visual Studio 2022 builds the .NET 8 and 9 targets only
 - A host application using `Microsoft.Extensions.Hosting` (or [`OnDemandHost`](core.md#on-demand-hosting) if you don't already have one)
 
 ## Installation
