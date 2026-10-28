@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <!-- Target frameworks shared by every library and test project. -->
+    <DevKitTargetFrameworks>net8.0;net9.0;net10.0</DevKitTargetFrameworks>
+    <DevKitAppTargetFramework>net10.0</DevKitAppTargetFramework>
+  </PropertyGroup>
+
+  <!-- VS 2022 (MSBuild 17.x) can't use the .NET 10 SDK; build net8/net9 there. -->
+  <PropertyGroup Condition="$([MSBuild]::VersionLessThan('$(MSBuildVersion)', '18.0'))">
+    <DevKitTargetFrameworks>net8.0;net9.0</DevKitTargetFrameworks>
+    <DevKitAppTargetFramework>net9.0</DevKitAppTargetFramework>
+  </PropertyGroup>
+</Project>
