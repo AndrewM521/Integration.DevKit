@@ -46,7 +46,7 @@ public class ThreadSafeFileIO
 
         _threadLockManager = threadLockManager;
         RuntimeSettings = settings?.Value.Clone() ?? new ThreadSafeItemsSettings();
-        _logger = loggerFactory?.CreateConditionalLogger("ThreadSafeFileIO", () => RuntimeSettings.EnableLogging);
+        _logger = loggerFactory?.CreateConditionalLogger(nameof(ThreadSafeFileIO), () => RuntimeSettings.EnableLogging);
     }
 
     #region Async Methods
@@ -79,7 +79,7 @@ public class ThreadSafeFileIO
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex.Message);
+            _logger?.LogError(ex, $"File operation failed for '{path}'.");
 
             return result.SetMethodFailure(ex);
         }
@@ -88,7 +88,7 @@ public class ThreadSafeFileIO
             var exitLock = _threadLockManager.TryExitAsyncLock(path);
             if (!exitLock.MethodSuccess)
             {
-                _logger?.LogError(exitLock.Exception.Message);
+                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
             }
         }
     }
@@ -122,7 +122,7 @@ public class ThreadSafeFileIO
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex.Message);
+            _logger?.LogError(ex, $"File operation failed for '{path}'.");
 
             return result.SetMethodFailure(ex);
         }
@@ -131,7 +131,7 @@ public class ThreadSafeFileIO
             var exitLock = _threadLockManager.TryExitAsyncLock(path);
             if (!exitLock.MethodSuccess)
             {
-                _logger?.LogError(exitLock.Exception.Message);
+                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
             }
         }
     }
@@ -164,7 +164,7 @@ public class ThreadSafeFileIO
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex.Message);
+            _logger?.LogError(ex, $"File operation failed for '{path}'.");
 
             return result.SetMethodFailure(ex);
         }
@@ -173,7 +173,7 @@ public class ThreadSafeFileIO
             var exitLock = _threadLockManager.TryExitAsyncLock(path);
             if (!exitLock.MethodSuccess)
             {
-                _logger?.LogError(exitLock.Exception.Message);
+                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
             }
         }
     }
@@ -206,7 +206,7 @@ public class ThreadSafeFileIO
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex.Message);
+            _logger?.LogError(ex, $"File operation failed for '{path}'.");
 
             return result.SetMethodFailure(ex);
         }
@@ -215,7 +215,7 @@ public class ThreadSafeFileIO
             var exitLock = _threadLockManager.TryExitAsyncLock(path);
             if (!exitLock.MethodSuccess)
             {
-                _logger?.LogError(exitLock.Exception.Message);
+                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
             }
         }
     }
@@ -251,7 +251,7 @@ public class ThreadSafeFileIO
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex.Message);
+            _logger?.LogError(ex, $"File operation failed for '{path}'.");
 
             return result.SetMethodFailure(ex);
         }
@@ -260,7 +260,7 @@ public class ThreadSafeFileIO
             var exitLock = _threadLockManager.TryExitSyncLock(path);
             if (!exitLock.MethodSuccess)
             {
-                _logger?.LogError(exitLock.Exception.Message);
+                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
             }
         }
     }
@@ -294,7 +294,7 @@ public class ThreadSafeFileIO
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex.Message);
+            _logger?.LogError(ex, $"File operation failed for '{path}'.");
 
             return result.SetMethodFailure(ex);
         }
@@ -303,7 +303,7 @@ public class ThreadSafeFileIO
             var exitLock = _threadLockManager.TryExitSyncLock(path);
             if (!exitLock.MethodSuccess)
             {
-                _logger?.LogError(exitLock.Exception.Message);
+                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
             }
         }
     }
@@ -336,7 +336,7 @@ public class ThreadSafeFileIO
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex.Message);
+            _logger?.LogError(ex, $"File operation failed for '{path}'.");
 
             return result.SetMethodFailure(ex);
         }
@@ -345,7 +345,7 @@ public class ThreadSafeFileIO
             var exitLock = _threadLockManager.TryExitSyncLock(path);
             if (!exitLock.MethodSuccess)
             {
-                _logger?.LogError(exitLock.Exception.Message);
+                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
             }
         }
     }
@@ -378,7 +378,7 @@ public class ThreadSafeFileIO
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex.Message);
+            _logger?.LogError(ex, $"File operation failed for '{path}'.");
 
             return result.SetMethodFailure(ex);
         }
@@ -387,7 +387,7 @@ public class ThreadSafeFileIO
             var exitLock = _threadLockManager.TryExitSyncLock(path);
             if (!exitLock.MethodSuccess)
             {
-                _logger?.LogError(exitLock.Exception.Message);
+                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
             }
         }
     }

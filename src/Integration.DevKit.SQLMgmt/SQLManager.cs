@@ -42,7 +42,7 @@ public class SQLManager : IAsyncDisposable
 
         RuntimeSettings = settings.Value.Clone();
 
-        _logger = loggerFactory?.CreateConditionalLogger("SqlDBManager", () => RuntimeSettings.EnableLogging);
+        _logger = loggerFactory?.CreateConditionalLogger(nameof(SQLManager), () => RuntimeSettings.EnableLogging);
     }
 
     /// <summary>
@@ -87,7 +87,7 @@ public class SQLManager : IAsyncDisposable
 
             if (value is ConcurrentDictionary<string, SQLClientSettings> dict)
             {
-                _logger?.LogDebug($"  {property.Name}:");
+                _logger?.LogTrace($"  {property.Name}:");
 
                 foreach (var kvp in dict)
                 {
@@ -98,7 +98,7 @@ public class SQLManager : IAsyncDisposable
             }
             else
             {
-                _logger?.LogDebug($"  {property.Name}: {value}");
+                _logger?.LogTrace($"  {property.Name}: {value}");
             }
         }
     }

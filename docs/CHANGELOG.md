@@ -33,6 +33,7 @@
 
 ### Added
 - REST API Management gained an `IAuthStrategy` extension point for applying auth to outgoing requests.
+- `IAuthStrategy.ApplyAsync` now receives an `IAuthClient` for calling the authentication endpoint (e.g. an OAuth2 token endpoint). Calls made through it never re-enter the strategy, bypass the owning client's concurrency limit and metrics (so a strategy that used the same `ApiClient` could otherwise recurse or deadlock), and work for an endpoint on the same host (relative URL) or a different host (absolute URL, sent without the client's default headers).
 - NuGet package references and metadata added to each module.
 - `Initialize` methods added to Task Management and the REST API client to allow re-initializing runtime settings.
 

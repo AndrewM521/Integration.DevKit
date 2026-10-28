@@ -79,7 +79,7 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
         var localTarget = utcTarget.ToLocalTime();
         string runtimeStr = GetTargetRuntimeStr(localTarget, utcTarget);
 
-        logger?.LogInformation($"Task '{handle.TaskKey}' next runtime <{runtimeStr}>");
+        logger?.LogDebug($"Task '{handle.TaskKey}' next runtime <{runtimeStr}>");
 
         // The Execution/Wait Phase(External Relay)
         while (!cancellationToken.IsCancellationRequested)
@@ -126,7 +126,7 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
             // Log the next check for long-running waits
             if (wait > TimeSpan.FromMinutes(1))
             {
-                logger?.LogDebug($"Task '{handle.TaskKey}' sleeping for {wait.TotalMinutes:F1} minutes until next check.");
+                logger?.LogTrace($"Task '{handle.TaskKey}' sleeping for {wait.TotalMinutes:F1} minutes until next check.");
             }
 
             await Task.Delay(wait, cancellationToken);
@@ -198,7 +198,7 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
     /// </remarks>
     /// <param name="remaining">The duration of time left until the scheduled execution.</param>
     /// <returns>A <see cref="TimeSpan"/> representing the recommended duration to wait before the next check.</returns>
-    private TimeSpan CalculateSmartWait(TimeSpan remaining)
+    public TimeSpan CalculateSmartWait(TimeSpan remaining)
     {
         if (remaining <= TimeSpan.FromMinutes(5))
         {

@@ -88,7 +88,7 @@ internal class TaskRegistryRuntime
                     recordToUpdate.Runtime = iterationRuntime.Runtime;
                     recordToUpdate.Exception = iterationException;
 
-                    _logger?.LogDebug("Updated existing iteration {IterNum} for Task: {TaskKey}", iterNum, taskKey);
+                    _logger?.LogTrace("Updated existing iteration {IterNum} for Task: {TaskKey}", iterNum, taskKey);
                 }
                 else
                 {
@@ -135,7 +135,7 @@ internal class TaskRegistryRuntime
             {
                 try
                 {
-                    _logger?.LogDebug($"Registry limit exceeded ({maxTaskHistory}). Removing oldest task snapshot: {oldestKey}");
+                    _logger?.LogInformation($"Registry limit exceeded ({maxTaskHistory}). Removing oldest task snapshot: {oldestKey}");
 
                     if (!_taskRegistry.Snapshots.TryRemove(oldestKey, out _))
                     {
@@ -144,7 +144,7 @@ internal class TaskRegistryRuntime
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError($"Error while removing task {oldestKey} from registry. {ex.Message}");
+                    _logger?.LogError(ex, $"Error while removing task {oldestKey} from registry.");
                 }
             }
 

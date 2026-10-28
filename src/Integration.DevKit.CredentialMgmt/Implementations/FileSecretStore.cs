@@ -66,7 +66,7 @@ public class FileSecretStore : SecretStoreBase
         _threadLockManager = threadLockManager ?? throw new ArgumentNullException(nameof(threadLockManager));
 
         EnableLogging = enableLogging;
-        _logger = loggerFactory?.CreateConditionalLogger("FileSecretStore", () => EnableLogging);
+        _logger = loggerFactory?.CreateConditionalLogger(nameof(FileSecretStore), () => EnableLogging);
     }
 
     /// <inheritdoc />

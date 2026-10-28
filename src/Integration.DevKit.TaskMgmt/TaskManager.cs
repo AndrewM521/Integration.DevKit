@@ -66,14 +66,14 @@ public class TaskManager
             }
             else
             {
-                _logger?.LogError($"[{nameof(TaskManager)}] {cancelResult.Exception.Message}");
+                _logger?.LogError(cancelResult.Exception, $"[{nameof(TaskManager)}] Failed to cancel all tasks during host shutdown.");
             }
         });
 
-        _logger = loggerFactory?.CreateConditionalLogger("TaskManager", () => RuntimeSettings.EnableLogging);
-        _taskRegistryRuntime = new TaskRegistryRuntime(this, taskRegistry);
-
         RuntimeSettings = settings.Value.Clone();
+
+        _logger = loggerFactory?.CreateConditionalLogger(nameof(TaskManager), () => RuntimeSettings.EnableLogging);
+        _taskRegistryRuntime = new TaskRegistryRuntime(this, taskRegistry);
 
         Initialize();
     }
@@ -321,7 +321,7 @@ public class TaskManager
         foreach (var property in properties)
         {
             object? value = property.GetValue(RuntimeSettings);
-            _logger?.LogDebug($"  {property.Name}: {value}");
+            _logger?.LogTrace($"  {property.Name}: {value}");
         }
     }
 
@@ -369,11 +369,11 @@ public class TaskManager
                         string runningLongMsg = $"Task '{taskKey}' iteration {lastIterationHandle.IterationNumber} running longer than Iteration Strategy.";
                         if (runtimeSettings.AllowParallelIterationExecution)
                         {
-                            _logger?.LogDebug(runningLongMsg + $" Creating new parallel iteration due to execution policy. ({nameof(runtimeSettings.AllowParallelIterationExecution)})");
+                            _logger?.LogWarning(runningLongMsg + $" Creating new parallel iteration due to execution policy. ({nameof(runtimeSettings.AllowParallelIterationExecution)})");
                         }
                         else
                         {
-                            _logger?.LogDebug(runningLongMsg);
+                            _logger?.LogWarning(runningLongMsg);
                         }
                     }
                 }
@@ -444,7 +444,7 @@ public class TaskManager
 
             managedTaskRuntime.State = ManagedTaskState.Faulted;
 
-            _logger?.LogError($"Task '{taskKey}' threw an unexpected exception: {ex.Message}");
+            _logger?.LogError(ex, $"Task '{taskKey}' threw an unexpected exception.");
         }
         finally 
         {
@@ -554,7 +554,7 @@ public class TaskManager
 
                 if (completedTask == timeoutWatchdog)
                 {
-                    _logger?.LogDebug($"Task '{taskKey}' iteration {iterationRuntime.IterationNumber} timeout triggered.");
+                    _logger?.LogWarning($"Task '{taskKey}' iteration {iterationRuntime.IterationNumber} timeout triggered.");
 
                     iterationRuntime.Cancel();
                 }
@@ -608,7 +608,7 @@ public class TaskManager
                         // Add to the central queue (for the final Registry update)
                         centralExceptions.Enqueue(iterationException!);
 
-                        _logger?.LogError($"Task '{taskKey}' iteration {iterationRuntime.IterationNumber} faulted: {iterationException!.Message}");
+                        _logger?.LogError(iterationException, $"Task '{taskKey}' iteration {iterationRuntime.IterationNumber} faulted.");
 
                         // --- RETRY LOGIC ---
                         if (runtimeSettings.RetryOnException)
@@ -644,13 +644,13 @@ public class TaskManager
                     {
                         iterationRuntime.State = ManagedTaskState.Canceled;
 
-                        _logger?.LogDebug($"Task '{taskKey}' iteration {iterationRuntime.IterationNumber} was cancelled.");
+                        _logger?.LogTrace($"Task '{taskKey}' iteration {iterationRuntime.IterationNumber} was cancelled.");
                     }
                     else
                     {
                         iterationRuntime.State = ManagedTaskState.Completed;
 
-                        _logger?.LogDebug($"Task '{taskKey}' iteration {iterationRuntime.IterationNumber} completed sucessfully.");
+                        _logger?.LogTrace($"Task '{taskKey}' iteration {iterationRuntime.IterationNumber} completed sucessfully.");
                     }
                 }
                 else

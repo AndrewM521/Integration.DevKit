@@ -138,7 +138,7 @@ For downstream APIs that require an OAuth2 bearer token, a static API key, or an
 ```csharp
 public interface IAuthStrategy
 {
-    Task<NullOperationResult> ApplyAsync(HttpRequestMessage request);
+    Task<NullOperationResult> ApplyAsync(HttpRequestMessage request, IAuthClient authClient);
 }
 ```
 
@@ -165,7 +165,7 @@ public class ApiKeyAuthStrategy : IAuthStrategy
         _apiKey = apiKey;
     }
 
-    public Task<NullOperationResult> ApplyAsync(HttpRequestMessage request)
+    public Task<NullOperationResult> ApplyAsync(HttpRequestMessage request, IAuthClient authClient)
     {
         request.Headers.Add(_headerName, _apiKey);
         return Task.FromResult(new NullOperationResult().SetMethodSuccess());
@@ -178,6 +178,83 @@ client.SetAuthStrategy(new ApiKeyAuthStrategy("X-Api-Key", apiKey));
 ```
 
 There's no requirement about where a custom strategy like this lives — `Implementations/` is this library's own internal convention for the classes it ships, not something imposed on consumers. Put `ApiKeyAuthStrategy` wherever the rest of your application's code lives.
+
+### Fetching a token with `IAuthClient`
+
+A strategy that has to fetch a credential (an OAuth2 token, for example) usually calls an authentication endpoint that lives on the same API service as everything else. If it made that call through the same `ApiClient`, the call would run the strategy again — infinite recursion — and, with a low `MaxConcurrentRequests`, could also wait forever for a concurrency slot the outer request is still holding.
+
+To avoid both, `ApiClient` passes the strategy an `IAuthClient` on every `ApplyAsync` call. You don't create it or wire it into your strategy's constructor; use the one you're given:
+
+```csharp
+public interface IAuthClient
+{
+    Task<ApiOperationResult<string>> GetAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null);
+    Task<ApiOperationResult<string>> PostAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null);
+    Task<ApiOperationResult<string>> PutAsync(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null);
+    Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null);
+    OperationResult<HttpContent> CreateHttpContent(RESTApiMediaTypes mediaType, string data, Encoding? encoding = null);
+}
+```
+
+Requests made through it never apply an `IAuthStrategy`, don't take a concurrency slot from the owning client, and aren't counted in its `ClientMetrics`.
+
+```csharp
+public class ClientCredentialsStrategy : IAuthStrategy
+{
+    private readonly string _clientId;
+    private readonly string _clientSecret;
+    private string? _token;
+    private DateTime _expiresUtc;
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
+
+    public ClientCredentialsStrategy(string clientId, string clientSecret)
+    {
+        _clientId = clientId;
+        _clientSecret = clientSecret;
+    }
+
+    public async Task<NullOperationResult> ApplyAsync(HttpRequestMessage request, IAuthClient authClient)
+    {
+        // ApiClient calls ApplyAsync concurrently and does no caching, so cache and lock here.
+        await _refreshLock.WaitAsync();
+        try
+        {
+            if (_token == null || DateTime.UtcNow >= _expiresUtc)
+            {
+                var body = authClient.CreateHttpContent(
+                    RESTApiMediaTypes.WWW_UrlEncoded,
+                    $"grant_type=client_credentials&client_id={Uri.EscapeDataString(_clientId)}&client_secret={Uri.EscapeDataString(_clientSecret)}");
+
+                var response = await authClient.PostAsync("/oauth/token", body.Result);
+                if (!response.MethodSuccess)
+                {
+                    return new NullOperationResult().SetMethodFailure(
+                        new InvalidOperationException("Token request failed", response.Exception));
+                }
+
+                // Parse response.Result for the token and its lifetime (JsonUtils or System.Text.Json).
+                _token = /* access_token */ response.Result;
+                _expiresUtc = DateTime.UtcNow.AddMinutes(5);
+            }
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+            return new NullOperationResult().SetMethodSuccess();
+        }
+        finally
+        {
+            _refreshLock.Release();
+        }
+    }
+}
+```
+
+**Same host or a different host.** `IAuthClient` resolves the endpoint the same way `ApiClient` does:
+
+- A **relative** endpoint (`"/oauth/token"`) is resolved against the owning client's `BaseUrl`, and the client's `DefaultHeaders` are sent, exactly as for any other request to that API.
+- An **absolute** URL on a different scheme, host, or port (`"https://login.example.com/oauth/token"`) goes to that host instead. It is sent through a separate `HttpClient` that has none of the owning client's default headers, so an API key or tenant header meant for your API isn't sent to a third-party identity provider. Add any headers that host needs with the `requestHeaders` argument.
+- An absolute URL that points at the same host as `BaseUrl` is treated as same-host.
+
+If you call `ApiRequest` directly with an `IAuthStrategy` and no `IAuthClient`, a client over the `HttpClient` you passed is supplied. It has no separate header-free client, so absolute URLs on another host share that `HttpClient`'s default headers.
 
 ## Client metrics
 
@@ -239,11 +316,11 @@ Every REST call in this module returns `ApiOperationResult<string>` — there is
 ```csharp
 public interface IAuthStrategy
 {
-    Task<NullOperationResult> ApplyAsync(HttpRequestMessage request);
+    Task<NullOperationResult> ApplyAsync(HttpRequestMessage request, IAuthClient authClient);
 }
 ```
 
-No implementation of `IAuthStrategy` ships with this module — see [Authentication via `IAuthStrategy`](#authentication-via-iauthstrategy) above.
+No implementation of `IAuthStrategy` ships with this module — see [Authentication via `IAuthStrategy`](#authentication-via-iauthstrategy) above. `IAuthClient` is the client handed to `ApplyAsync` for calling an authentication endpoint — see [Fetching a token with `IAuthClient`](#fetching-a-token-with-iauthclient).
 
 ### `ApiEndpoint`
 
@@ -286,7 +363,7 @@ var positionalUrl = new ApiEndpoint("orders/details").BuildPositionalUrl(new() {
 The internal static class `ApiClient` delegates to for the actual HTTP send. You don't normally call it directly — `ApiClient.GetAsync`/`PostAsync`/`PutAsync`/`DeleteAsync` are thin wrappers around `ApiRequest.GetAsync`/etc. — but it's worth knowing about since the header-handling and error-wrapping behavior `ApiClient` exposes actually lives here:
 
 - Header handling normalizes a few well-known header names case-insensitively: `Content-Type` is set on `request.Content.Headers` (throwing if there's no content to attach it to), `Authorization` recognizes `basic`/`bearer` prefixes (falling back to treating a bare token as `Bearer`, or splitting on the first space for any other scheme), and `User-Agent` is parsed via `HttpHeaders.UserAgent.ParseAdd`. Any other header is added as-is (replacing an existing header of the same name).
-- If an `IAuthStrategy` is supplied and its `ApplyAsync` fails, the request is never sent — `ApiRequest` returns a failed `ApiOperationResult<string>` with `HttpStatusCode.Unauthorized` immediately.
+- If an `IAuthStrategy` is supplied and its `ApplyAsync` fails, the request is never sent — `ApiRequest` returns a failed `ApiOperationResult<string>` with `HttpStatusCode.Unauthorized` immediately. Each `*Async` method takes an optional `IAuthClient` to hand to the strategy; `ApiClient` supplies its own, and direct callers get a default over the `HttpClient` they passed.
 - `SendRequestAsync` wraps the actual `HttpClient.SendAsync` call, translating a non-2xx response into a failed `ApiOperationResult<string>` (carrying the response body and status code) and a network/protocol-level `HttpRequestException` into `HttpStatusCode.ServiceUnavailable`.
 
 ## Error handling

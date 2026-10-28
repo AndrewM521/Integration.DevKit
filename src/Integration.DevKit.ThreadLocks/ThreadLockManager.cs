@@ -33,7 +33,7 @@ public class ThreadLockManager
     {
         RuntimeSettings = settings?.Value.Clone() ?? new ThreadLockSettings();
 
-        _logger = loggerFactory?.CreateConditionalLogger("ThreadLockManager", () => RuntimeSettings.EnableLogging);
+        _logger = loggerFactory?.CreateConditionalLogger(nameof(ThreadLockManager), () => RuntimeSettings.EnableLogging);
     }
 
     #region Syncronous Methods
@@ -89,7 +89,7 @@ public class ThreadLockManager
 
                     lockInfo.UpdateLastAccessTime();
 
-                    _logger?.LogDebug($"Acquired sync lock '{key}'.");
+                    _logger?.LogTrace($"Acquired sync lock '{key}'.");
 
                     return result.SetMethodSuccess();
                 }
@@ -153,7 +153,7 @@ public class ThreadLockManager
 
                 lockInfo.UpdateLastAccessTime();
 
-                _logger?.LogDebug($"Released sync lock '{key}'.");
+                _logger?.LogTrace($"Released sync lock '{key}'.");
 
                 if (Interlocked.Decrement(ref lockInfo.RefCount) <= 0)
                 {
@@ -219,7 +219,7 @@ public class ThreadLockManager
 
             lockInfo.UpdateLastAccessTime();
 
-            _logger?.LogDebug($"Acquired async lock '{key}'.");
+            _logger?.LogTrace($"Acquired async lock '{key}'.");
 
             return result.SetMethodSuccess();
         }
@@ -261,7 +261,7 @@ public class ThreadLockManager
 
                 lockInfo.UpdateLastAccessTime();
 
-                _logger?.LogDebug($"Released async lock '{key}'.");
+                _logger?.LogTrace($"Released async lock '{key}'.");
 
                 if (Interlocked.Decrement(ref lockInfo.RefCount) <= 0)
                 {

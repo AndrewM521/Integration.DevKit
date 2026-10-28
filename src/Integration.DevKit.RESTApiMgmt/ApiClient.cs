@@ -41,6 +41,7 @@ public class ApiClient : IAsyncDisposable
     private readonly ILogger? _logger;
 
     private IAuthStrategy? _authStrategy;
+    private readonly AuthClient _authClient;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ApiClient"/> class.
@@ -60,6 +61,7 @@ public class ApiClient : IAsyncDisposable
         RuntimeSettings = clientSettings;
         _httpClient = httpClient;
         _metrics = new ApiClientMetrics();
+        _authClient = new AuthClient(_httpClient, CreateHeaderFreeHttpClient);
 
         Initialize();
     }
@@ -137,7 +139,7 @@ public class ApiClient : IAsyncDisposable
     public async Task<ApiOperationResult<string>> GetAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Get, () =>
-            ApiRequest.GetAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy));
+            ApiRequest.GetAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient));
     }
 
     /// <summary>
@@ -150,7 +152,7 @@ public class ApiClient : IAsyncDisposable
     public async Task<ApiOperationResult<string>> PutAsync(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Put, () =>
-            ApiRequest.PutAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy));
+            ApiRequest.PutAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient));
     }
 
     /// <summary>
@@ -163,7 +165,7 @@ public class ApiClient : IAsyncDisposable
     public async Task<ApiOperationResult<string>> PostAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Post, () =>
-            ApiRequest.PostAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy));
+            ApiRequest.PostAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient));
     }
 
     /// <summary>
@@ -176,7 +178,7 @@ public class ApiClient : IAsyncDisposable
     public async Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Delete, () =>
-            ApiRequest.DeleteAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy));
+            ApiRequest.DeleteAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient));
     }
 
     // A generic wrapper to handle the "Orchestration" (Metrics + Rate Limiting)
@@ -262,6 +264,8 @@ public class ApiClient : IAsyncDisposable
     /// <summary>
     /// Injects an <see cref="IAuthStrategy"/> that is applied to every outgoing request
     /// (e.g. an OAuth2 bearer token), independently of any Basic-style credentials.
+    /// The strategy receives an <see cref="IAuthClient"/> for calling its authentication endpoint
+    /// without re-entering itself.
     /// </summary>
     /// <param name="authStrategy">The strategy to apply, or <see langword="null"/> to stop applying one.</param>
     public void SetAuthStrategy(IAuthStrategy? authStrategy)
@@ -277,6 +281,14 @@ public class ApiClient : IAsyncDisposable
     /// <param name="encoding">The text <see cref="Encoding"/> to use. Defaults to UTF-8 if null.</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the formatted <see cref="HttpContent"/>.</returns>
     public OperationResult<HttpContent> CreateHttpContent(RESTApiMediaTypes mediaType, string data, Encoding? encoding = null)
+    {
+        return BuildHttpContent(mediaType, data, encoding);
+    }
+
+    /// <summary>
+    /// Shared implementation of <see cref="CreateHttpContent"/>, also used by <see cref="AuthClient"/>.
+    /// </summary>
+    internal static OperationResult<HttpContent> BuildHttpContent(RESTApiMediaTypes mediaType, string data, Encoding? encoding = null)
     {
         var result = new OperationResult<HttpContent>();
 
@@ -301,6 +313,17 @@ public class ApiClient : IAsyncDisposable
         {
             return result.SetMethodFailure(ex);
         }
+    }
+
+    /// <summary>
+    /// Creates the header-free client the <see cref="AuthClient"/> uses for absolute URLs on a different host.
+    /// </summary>
+    private HttpClient CreateHeaderFreeHttpClient()
+    {
+        var headerFreeClient = _apiManager.CreateHeaderFreeHttpClient();
+        headerFreeClient.Timeout = _httpClient.Timeout;
+
+        return headerFreeClient;
     }
 
     /// <summary>
@@ -333,7 +356,7 @@ public class ApiClient : IAsyncDisposable
     /// <summary>
     /// Maps the <see cref="RESTApiMediaTypes"/> enum to its corresponding MIME type string.
     /// </summary>
-    private OperationResult<string> GetMediaTypeString(RESTApiMediaTypes mediaType)
+    private static OperationResult<string> GetMediaTypeString(RESTApiMediaTypes mediaType)
     {
         var result = new OperationResult<string>();
 
@@ -435,16 +458,16 @@ public class ApiClient : IAsyncDisposable
 
             if (value is Dictionary<string, string> dict)
             {
-                _logger?.LogDebug($"{indent}{property.Name}:");
+                _logger?.LogTrace($"{indent}{property.Name}:");
 
                 foreach (var kvp in dict)
                 {
-                    _logger?.LogDebug($"{indent}  {kvp.Key}: {kvp.Value}");
+                    _logger?.LogTrace($"{indent}  {kvp.Key}: {kvp.Value}");
                 }
             }
             else
             {
-                _logger?.LogDebug($"{indent}{property.Name}: {value}");
+                _logger?.LogTrace($"{indent}{property.Name}: {value}");
             }
         }
     }

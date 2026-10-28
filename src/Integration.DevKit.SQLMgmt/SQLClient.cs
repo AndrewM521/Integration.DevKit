@@ -621,7 +621,7 @@ public class SQLClient : IDisposable
         foreach (var property in properties)
         {
             object? value = property.GetValue(RuntimeSettings);
-            _logger?.LogDebug($"{indent}{property.Name}: {value}");
+            _logger?.LogTrace($"{indent}{property.Name}: {value}");
         }
     }
 
