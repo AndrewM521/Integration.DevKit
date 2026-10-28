@@ -40,7 +40,6 @@ public class Program
             //await new ApiManagementDemo().RunAsync();
             //await new CredentialManagementDemo().RunAsync();
             //await new CredentialManagementCompositionDemo().RunAsync();
-            //await new OAuth2AuthenticationDemo().RunAsync();
             //await new ThreadSafeItemsDemo().RunAsync();
             //await new TaskManagementDemo().RunAsync();
             //await new TaskManagementSyncDemo().RunAsync();
