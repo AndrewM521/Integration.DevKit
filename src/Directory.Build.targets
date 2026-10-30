@@ -1,0 +1,20 @@
+<Project>
+  <!--
+    Ships each module's docs/<DevKitDocsFolder>/README.md inside its NuGet package
+    (shown on nuget.org) and links it into the project in Solution Explorer.
+    Set <DevKitDocsFolder> in the module's .csproj. This lives in .targets, not .props,
+    because .props is evaluated before the .csproj sets the property.
+  -->
+  <PropertyGroup Condition="'$(DevKitDocsFolder)' != ''">
+    <DevKitReadmePath>$(MSBuildThisFileDirectory)..\docs\$(DevKitDocsFolder)\README.md</DevKitReadmePath>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(DevKitDocsFolder)' != ''">
+    <None Include="$(DevKitReadmePath)" Pack="True" PackagePath="\" Link="README.md" />
+  </ItemGroup>
+
+  <Target Name="DevKitCheckReadme" BeforeTargets="Build" Condition="'$(DevKitDocsFolder)' != '' And !Exists('$(DevKitReadmePath)')">
+    <Error Text="README not found for $(MSBuildProjectName): $(DevKitReadmePath). Check DevKitDocsFolder." />
+  </Target>
+</Project>

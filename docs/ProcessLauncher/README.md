@@ -1,6 +1,10 @@
-# Process Launcher
+# Integration.DevKit.ProcessLauncher
 
-`Integration.DevKit.ProcessLauncher` starts and supervises external processes (`cmd.exe`, a CLI tool, another executable) with output capture, cancellation, and an optional timeout, using the SDK's result-object pattern instead of raw `System.Diagnostics.Process` exception handling.
+Start and supervise external processes with output capture, cancellation, and timeouts, using result objects instead of raw `Process` exception handling.
+
+## What it is
+
+`Integration.DevKit.ProcessLauncher` starts and supervises external processes (`cmd.exe`, a CLI tool, another executable). Each process is tracked by a key, can be given a wall-clock timeout, can be cancelled gracefully or force-killed, and can have its stdout/stderr captured — all through a `ProcessManager` that returns the SDK's result-object types.
 
 > **Security warning — only launch applications you trust.** `ManagedProcessConfig.Command`/`Arguments` are executed directly via `System.Diagnostics.Process` with no sandboxing, code signing check, or validation of any kind. This module provides supervision (timeout, cancellation, output capture) — it does **not** provide isolation or safety. Treat it the same as any direct call to `Process.Start`:
 >
@@ -9,17 +13,22 @@
 > - Only launch binaries/scripts from a trusted, ideally pinned/verified source (e.g. bundled with your app, or fetched from a location you control with integrity checks) — not something downloaded or referenced dynamically at runtime from an untrusted source.
 > - `ShowWindow = false` captures stdout/stderr into memory (see below) but still does not limit what the child process can do; it only affects window visibility and stream redirection.
 
-## Requirements
+## Why it exists
+
+`System.Diagnostics.Process` is low-level: timeouts, killing the whole process tree, async output capture, and tracking which processes you've started are all left to the caller, and mistakes lead to orphaned processes or deadlocked output streams. This module wraps those concerns so that launching a tool from an integration job is a config object and one call, with failures (empty command, duplicate key, already exited) reported as results rather than exceptions.
+
+## Requirements & installation
 
 - .NET 8, 9 or 10
-
-## Installation
+- [Integration.DevKit.Core](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/Core/README.md)
 
 ```bash
+dotnet add package Integration.DevKit.ProcessLauncher
+# or, from source
 dotnet add reference src/Integration.DevKit.ProcessLauncher/Integration.DevKit.ProcessLauncher.csproj
 ```
 
-Or from NuGet: [Integration.DevKit.ProcessLauncher](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher)
+NuGet: [Integration.DevKit.ProcessLauncher](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher)
 
 ## Getting started
 
@@ -49,7 +58,11 @@ if (started.MethodSuccess)
 }
 ```
 
-`AddProcessLauncher(configuration)` binds the `Integration.DevKit:ProcessLauncher` section, whose only setting is `EnableLogging` (default `true`) — every process is still configured per-call via `ManagedProcessConfig`. There's no ordering dependency on any other DevKit module: logging goes through the standard `ILoggerFactory`/`ILogger` abstractions and is optional.
+There's no ordering dependency on any other DevKit module: logging goes through the standard `ILoggerFactory`/`ILogger` abstractions and is optional.
+
+## Configuration
+
+`AddProcessLauncher(configuration)` binds the `Integration.DevKit:ProcessLauncher` section, whose only setting is `EnableLogging` (default `true`) — every process is still configured per-call via `ManagedProcessConfig`.
 
 ```json
 {
@@ -63,9 +76,7 @@ if (started.MethodSuccess)
 
 `EnableLogging` is checked fresh on every log call, so it can be flipped at runtime via `processManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging without detaching the `ILoggerFactory` you registered for the rest of the app.
 
-## `ManagedProcessConfig`
-
-This module has no pluggable extension point, so there's no `Interfaces/`/`Abstractions/`/`Implementations/` split — `ManagedProcessConfig`, `ManagedProcess`, and `ProcessManager` are all plain classes directly under `Integration.DevKit.ProcessLauncher` (settings live in `Integration.DevKit.ProcessLauncher.Settings`).
+### `ManagedProcessConfig`
 
 ```csharp
 public class ManagedProcessConfig
@@ -92,11 +103,51 @@ public class ManagedProcessConfig
 
 > **stdout/stderr capture is tied to `ShowWindow`, not `EnableProcessLogging`.** Output is only captured when `ShowWindow == false` (internally this maps to `RedirectStandardOutput`/`RedirectStandardError` on the underlying `ProcessStartInfo`). If `ShowWindow == true`, `GetOutput()`/`GetError()` will always return empty strings, regardless of `EnableProcessLogging`. If you need to capture output, set `ShowWindow = false`.
 
-## Starting and controlling a process
+## How to
+
+### Start a process and wait for it
+
+`StartProcess` fails (as a failed `OperationResult`, not a thrown exception) for an empty `Command` or a `ProcessKey` that's already running. `WaitForExitAsync` is a simple 250ms poll loop against `Process.HasExited` — it isn't event-driven, so don't expect sub-250ms exit detection latency.
+
+### Capture output
+
+Set `ShowWindow = false`, then read `GetOutput()`/`GetError()` on the `ManagedProcess` returned by `StartProcess`.
+
+### Cancel a process
+
+`Cancel(forceKill: false)` (the default) attempts a graceful shutdown first — `CloseMainWindow()`, then waits up to 3 seconds — before force-killing the process tree if it's still running. `Cancel(forceKill: true)` kills immediately.
+
+```csharp
+var cancelResult = processManager.CancelProcess("PingTest", forceKill: false);
+if (!cancelResult.MethodSuccess)
+{
+    logger.LogWarning(cancelResult.Exception, "Could not cancel process (it may have already exited)");
+}
+```
+
+> **A process that exits on its own removes itself from tracking immediately.** `ProcessManager` listens for `Process.Exited` and un-tracks the process (by `ProcessKey`) as soon as it fires — which happens before any external code gets a chance to call `CancelProcess` on it. If you call `CancelProcess("SomeKey")` after the process has already exited naturally, it will fail because the key is no longer tracked; check `IsRunning` first if that distinction matters to your caller.
+
+## API reference
+
+This module has no pluggable extension point, so there's no `Interfaces/`/`Abstractions/`/`Implementations/` split — `ManagedProcessConfig`, `ManagedProcess`, and `ProcessManager` are all plain classes directly under `Integration.DevKit.ProcessLauncher` (settings live in `Integration.DevKit.ProcessLauncher.Settings`).
+
+### `Service_ProcessLauncher` (static)
+
+```csharp
+public static IServiceCollection AddProcessLauncher(this IServiceCollection services, IConfiguration config);
+public static void Initialize(IServiceProvider sp);
+public static ProcessManager ProcessManager { get; }   // throws InvalidOperationException before Initialize
+```
+
+### `ProcessManager`
 
 ```csharp
 public class ProcessManager
 {
+    public ProcessManager(IOptions<ProcessLauncherSettings> settings, ILoggerFactory? loggerFactory = null);
+
+    public ProcessLauncherSettings RuntimeSettings { get; set; }   // mutate in place to change EnableLogging at runtime
+
     OperationResult<ManagedProcess> StartProcess(ManagedProcessConfig config);
     NullOperationResult CancelProcess(string processKey, bool forceKill = false);
     NullOperationResult CancelAllProcesses(bool forceKill = false);
@@ -105,9 +156,7 @@ public class ProcessManager
 }
 ```
 
-`StartProcess` fails (as a failed `OperationResult`, not a thrown exception) for an empty `Command` or a `ProcessKey` that's already running. `WaitForExitAsync` is a simple 250ms poll loop against `Process.HasExited` — it isn't event-driven, so don't expect sub-250ms exit detection latency.
-
-> **A process that exits on its own removes itself from tracking immediately.** `ProcessManager` listens for `Process.Exited` and un-tracks the process (by `ProcessKey`) as soon as it fires — which happens before any external code gets a chance to call `CancelProcess` on it. If you call `CancelProcess("SomeKey")` after the process has already exited naturally, it will fail because the key is no longer tracked; check `IsRunning` first if that distinction matters to your caller.
+### `ManagedProcess`
 
 ```csharp
 public class ManagedProcess : IAsyncDisposable
@@ -123,42 +172,20 @@ public class ManagedProcess : IAsyncDisposable
 }
 ```
 
-`Cancel(forceKill: false)` (the default) attempts a graceful shutdown first — `CloseMainWindow()`, then waits up to 3 seconds — before force-killing the process tree if it's still running. `Cancel(forceKill: true)` kills immediately. `ManagedProcess` instances are only obtainable through `ProcessManager.StartProcess` — its constructor is internal.
+`ManagedProcess` instances are only obtainable through `ProcessManager.StartProcess` — its constructor is internal.
 
-```csharp
-var cancelResult = processManager.CancelProcess("PingTest", forceKill: false);
-if (!cancelResult.MethodSuccess)
-{
-    logger.LogWarning(cancelResult.Exception, "Could not cancel process (it may have already exited)");
-}
-```
-
-## API Reference
-
-### `Service_ProcessLauncher` (static)
-
-```csharp
-public static IServiceCollection AddProcessLauncher(this IServiceCollection services, IConfiguration config);
-public static void Initialize(IServiceProvider sp);
-public static ProcessManager ProcessManager { get; }   // throws InvalidOperationException before Initialize
-```
-
-### `ProcessManager`
-
-```csharp
-public ProcessManager(IOptions<ProcessLauncherSettings> settings, ILoggerFactory? loggerFactory = null);
-
-public ProcessLauncherSettings RuntimeSettings { get; set; }   // mutate in place to change EnableLogging at runtime
-```
-
-## Error Handling
+## Error handling
 
 Every public method on `ProcessManager`/`ManagedProcess` returns an `OperationResult<T>`/`NullOperationResult` for expected failure modes (missing process, duplicate key, empty command) rather than throwing.
 
-## Best Practices
+## Best practices
 
 - Set an explicit `TimeoutSeconds` for anything that shouldn't be allowed to run forever — the `-1` default means no timeout.
 - Set `ShowWindow = false` whenever you need to read `GetOutput()`/`GetError()`.
 - Call `IsRunning(processKey)` before `CancelProcess(processKey)` if the process might have already exited on its own.
 - Don't configure `AutoRestartOnFailure` expecting restart behavior — it's not implemented yet.
 - Dispose of (`await using`) or explicitly cancel processes you start — `DisposeAsync()` cancels the internal monitor and cleans up the underlying `Process` object.
+
+## Changelog
+
+See [CHANGELOG.md](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/ProcessLauncher/CHANGELOG.md).

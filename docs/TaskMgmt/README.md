@@ -1,21 +1,34 @@
-# Task Management
+# Integration.DevKit.TaskMgmt
 
-`Integration.DevKit.TaskMgmt` runs recurring or long-running background work as **managed tasks**: you subclass an abstract base class, hand an instance to a task manager, and get back a handle for observing and cancelling it. The manager tracks retries, iteration counts, timeouts, and keeps a history of recent runs that you can query for observability.
+Run recurring or long-running background work as managed tasks with retries, iteration schedules, timeouts, cancellation, and a queryable run history.
 
-> If you've seen an earlier version of this document, note that the task body API described here (subclassing `ManagedTask`) replaces an earlier example that referenced non-existent `ManagedTask`/`SimpleTask` constructors. The API below is verified directly against source and the working samples in `samples/TestApp`.
+## What it is
 
-## Requirements
+`Integration.DevKit.TaskMgmt` runs background work as **managed tasks**: you subclass an abstract base class, hand an instance to a task manager, and get back a handle for observing and cancelling it. The manager tracks retries, iteration counts, timeouts, and keeps a history of recent runs that you can query for observability. Pluggable iteration strategies control when each iteration runs (immediately, every N minutes, hourly, daily, or on your own signal).
+
+## Why it exists
+
+Most integration services have jobs like "poll this API every 5 minutes" or "sync this table nightly". Built on raw `Task.Run` or a `BackgroundService`, each job ends up with its own loop, retry logic, catch-up handling after downtime, cancellation wiring, and ad-hoc status tracking. This module puts all of that in one place:
+
+- Write only the work for one iteration (`DoTaskWork`); the manager runs the loop.
+- Retry, iteration limits, and timeouts are settings, not code.
+- Schedules are reusable strategies, including catch-up behavior after downtime.
+- Every run is recorded in a registry you can read for health checks and diagnostics.
+- An exception inside a task is captured in its state instead of crashing the host.
+
+## Requirements & installation
 
 - .NET 8, 9 or 10
 - `Microsoft.Extensions.Hosting.Abstractions` (for `IHostApplicationLifetime`, used internally to stop tasks on shutdown)
-
-## Installation
+- [Integration.DevKit.Core](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/Core/README.md)
 
 ```bash
+dotnet add package Integration.DevKit.TaskMgmt
+# or, from source
 dotnet add reference src/Integration.DevKit.TaskMgmt/Integration.DevKit.TaskMgmt.csproj
 ```
 
-Or from NuGet: [Integration.DevKit.TaskMgmt](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt)
+NuGet: [Integration.DevKit.TaskMgmt](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt)
 
 ## Getting started
 
@@ -100,9 +113,9 @@ await handle.RunningTask!;   // await the whole task's lifetime (Asyncronous mod
 | `MaxTaskIterationRegistryCount` | `100` | How many iteration snapshots are retained per task before older ones are evicted. |
 | `EnableLogging` | `true` | Checked fresh on every log call — flip it at runtime via `taskManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging without detaching the `ILoggerFactory` you registered for the rest of the app. |
 
-Per-task behavior (retries, iteration limits, timing) is configured separately per call via `ManagedTaskSettings`, described next.
+Per-task behavior (retries, iteration limits, timing) is configured separately per call via `ManagedTaskSettings`.
 
-## `ManagedTaskSettings`
+### `ManagedTaskSettings`
 
 Passed to `StartTask` to control how that specific task instance runs:
 
@@ -114,14 +127,16 @@ Passed to `StartTask` to control how that specific task instance runs:
 | `StopIteratingOnException` | `true` | Whether an exception ends the task entirely (after any retries) rather than continuing to the next iteration. |
 | `StopIterationAfterMaxRetries` | `true` | Whether hitting `MaxRetryCount` stops the task rather than moving on. |
 | `IterationExecutionMode` | `ManagedTaskExecutionMode.Sequential` | `Sequential` or `Parallel`. |
-| `IterationStrategy` | `new BaseIterationStrategy()` | Governs the delay between iterations — see [Iteration strategies](#iteration-strategies) below. |
+| `IterationStrategy` | `new BaseIterationStrategy()` | Governs the delay between iterations — see [Schedule iterations](#schedule-iterations) below. |
 | `AllowParallelIterationExecution` | `false` | Allows more than one iteration of the same task to run concurrently. |
 | `MaxConcurrentParallelTasks` | `2` | Cap when parallel iteration execution is enabled. |
 | `Timeout` | `null` | Optional overall wall-clock timeout for the task; exceeding it cancels the task. |
 
-## Iteration strategies
+## How to
 
-By default (`BaseIterationStrategy`), the manager starts the next iteration immediately with no delay. To run on a schedule, assign a `Time_IterationStrategy` subclass instead. `IIterationStrategy`/`BaseIterationStrategy`/`Time_IterationStrategy` live in `Integration.DevKit.TaskMgmt.Abstractions`; the shipped `TimeStrategy_*` subclasses live in `Integration.DevKit.TaskMgmt.Implementations`. See [Extending DevKit modules](extending-modules.md) for the general pattern.
+### Schedule iterations
+
+By default (`BaseIterationStrategy`), the manager starts the next iteration immediately with no delay. To run on a schedule, assign a `Time_IterationStrategy` subclass instead. `IIterationStrategy`/`BaseIterationStrategy`/`Time_IterationStrategy` live in `Integration.DevKit.TaskMgmt.Abstractions`; the shipped `TimeStrategy_*` subclasses live in `Integration.DevKit.TaskMgmt.Implementations`. See [Extending DevKit modules](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/extending-modules.md) for the general pattern.
 
 ```csharp
 using Integration.DevKit.TaskMgmt.Implementations;
@@ -155,7 +170,7 @@ Three concrete strategies ship out of the box, all constructed with a `TimeStrat
 | `CustomStartDate` | `null` | Anchor date for the schedule. |
 | `CustomStartTime` | `null` | Anchor time-of-day for the schedule. |
 
-### Implementing your own iteration strategy
+### Implement your own iteration strategy
 
 Two ways to customize scheduling, in increasing order of control:
 
@@ -177,9 +192,70 @@ public sealed class TimeStrategy_Weekly : Time_IterationStrategy
 }
 ```
 
-## Starting and controlling tasks
+### Start and control tasks
 
-`TaskManager` lives directly under `Integration.DevKit.TaskMgmt` (no interface — see [Extending DevKit modules](extending-modules.md) for why this module's manager isn't behind one):
+`StartTask` fails (as a failed `OperationResult`, not a thrown exception) if a task with the same `TaskKey` (`"{TaskName}_{TaskId}"`) is already running. `TaskExecutionMode` is `Asyncronous` or `Syncronous` (exact spelling as shipped) — `Asyncronous` returns a handle you can `await handle.RunningTask` on independently, while `Syncronous` runs the task to completion as part of the `StartTask` call itself.
+
+Cancel a task by key with `TaskManager.CancelTask(taskKey)`, every task with `CancelAllTasks()`, or a single task from its handle with `handle.Cancel()`. `ManagedTaskIterationHandle.Cancel()` cancels only the current iteration.
+
+> **Respect the cancellation token.** If `DoTaskWork` ignores `iterationHandle.CancelationToken` (e.g. calling `Task.Delay(1000)` instead of `Task.Delay(1000, iterationHandle.CancelationToken)`), the manager will still mark the task as cancelled at the handle/state level once cancellation or a timeout fires, but your code inside `DoTaskWork` keeps running in the background until it naturally finishes — cancellation becomes advisory rather than immediate. Always pass the token through to any awaited delay or I/O call inside `DoTaskWork`.
+
+### Re-initialize after changing `RuntimeSettings`
+
+`RuntimeSettings` is mutable in place, but `TaskManager` sizes its internal concurrent-task semaphore from `MaxConcurrentTasks` once, at construction. Changing `MaxConcurrentTasks` (or the two registry-count settings) on the `RuntimeSettings` object has no effect until you call `Initialize()`, which re-normalizes the settings and rebuilds the semaphore:
+
+```csharp
+Service_TaskMgmt.TaskManager.RuntimeSettings.MaxConcurrentTasks = 10;
+Service_TaskMgmt.TaskManager.Initialize();
+```
+
+Tasks already waiting on the old semaphore when `Initialize()` runs will see it disposed out from under them — prefer calling this during a quiet period rather than under active load.
+
+### Read task history
+
+`TaskRegistry` (available as `Service_TaskMgmt.TaskRegistry`) keeps a read-only history of task runs, separate from `TaskManager`, which is for control:
+
+```csharp
+var snapshot = Service_TaskMgmt.TaskRegistry.TryGet(handle.TaskKey);
+if (snapshot.MethodSuccess && snapshot.Result != null)
+{
+    Console.WriteLine(snapshot.Result.GetSnapshotInfo(showIterations: true));
+}
+```
+
+`ManagedTaskSnapshot` exposes `TaskKey`, `State`, `IterationCount`, `StartDTM`/`EndDTM`/`Runtime`, `Exception`, and a per-iteration `IterationHistory`; each `IManagedTaskIterationSnapshot` exposes the same shape (`State`, timing, `Exception`) for one iteration (`IManagedTaskIterationSnapshot` is still an interface, in `Integration.DevKit.TaskMgmt.Interfaces` — its concrete implementation is internal to the runtime). Both are read-only, framework-constructed types — you retrieve them from the registry, you don't build them yourself.
+
+## API reference
+
+### `Service_TaskMgmt` (static)
+
+```csharp
+public static IServiceCollection AddTaskMgmt(this IServiceCollection services, IConfiguration config);
+public static void Initialize(IServiceProvider sp);
+public static TaskManager TaskManager { get; }    // throws InvalidOperationException before Initialize
+public static TaskRegistry TaskRegistry { get; }  // throws InvalidOperationException before Initialize
+```
+
+### `ManagedTask` (abstract)
+
+`Integration.DevKit.TaskMgmt.Abstractions`:
+
+```csharp
+public abstract class ManagedTask : IDisposable
+{
+    public string TaskName { get; }
+    public Guid TaskId { get; }
+    public string TaskKey { get; }   // "{TaskName}_{TaskId}"
+
+    protected ManagedTask(string taskName, Guid? id = null);
+    public abstract Task DoTaskWork(ManagedTaskIterationHandle iterationHandle);
+    public virtual void Dispose() { }
+}
+```
+
+### `TaskManager`
+
+Lives directly under `Integration.DevKit.TaskMgmt` (no interface — see [Extending DevKit modules](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/extending-modules.md) for why this module's manager isn't behind one):
 
 ```csharp
 public class TaskManager
@@ -199,19 +275,6 @@ public class TaskManager
     void LogRuntimeSettings();
 }
 ```
-
-`StartTask` fails (as a failed `OperationResult`, not a thrown exception) if a task with the same `TaskKey` (`"{TaskName}_{TaskId}"`) is already running. `TaskExecutionMode` is `Asyncronous` or `Syncronous` (exact spelling as shipped) — `Asyncronous` returns a handle you can `await handle.RunningTask` on independently, while `Syncronous` runs the task to completion as part of the `StartTask` call itself.
-
-### Re-initializing after mutating `RuntimeSettings`
-
-`RuntimeSettings` is mutable in place, but `TaskManager` sizes its internal concurrent-task semaphore from `MaxConcurrentTasks` once, at construction. Changing `MaxConcurrentTasks` (or the two registry-count settings) on the `RuntimeSettings` object has no effect until you call `Initialize()`, which re-normalizes the settings and rebuilds the semaphore:
-
-```csharp
-Service_TaskMgmt.TaskManager.RuntimeSettings.MaxConcurrentTasks = 10;
-Service_TaskMgmt.TaskManager.Initialize();
-```
-
-Tasks already waiting on the old semaphore when `Initialize()` runs will see it disposed out from under them — prefer calling this during a quiet period rather than under active load.
 
 ### `IManagedTaskHandle`
 
@@ -250,11 +313,7 @@ public sealed class ManagedTaskIterationHandle
 
 `ManagedTaskState` is `Idle | Starting | Running | Completed | Canceled | Faulted | CancelRequested`.
 
-> **Respect the cancellation token.** If `DoTaskWork` ignores `iterationHandle.CancelationToken` (e.g. calling `Task.Delay(1000)` instead of `Task.Delay(1000, iterationHandle.CancelationToken)`), the manager will still mark the task as cancelled at the handle/state level once cancellation or a timeout fires, but your code inside `DoTaskWork` keeps running in the background until it naturally finishes — cancellation becomes advisory rather than immediate. Always pass the token through to any awaited delay or I/O call inside `DoTaskWork`.
-
-## Observability: task history
-
-`TaskRegistry` (available as `Service_TaskMgmt.TaskRegistry`) keeps a read-only history of task runs, separate from `TaskManager`, which is for control:
+### `TaskRegistry`
 
 ```csharp
 public class TaskRegistry
@@ -265,52 +324,18 @@ public class TaskRegistry
 }
 ```
 
-```csharp
-var snapshot = Service_TaskMgmt.TaskRegistry.TryGet(handle.TaskKey);
-if (snapshot.MethodSuccess && snapshot.Result != null)
-{
-    Console.WriteLine(snapshot.Result.GetSnapshotInfo(showIterations: true));
-}
-```
-
-`ManagedTaskSnapshot` exposes `TaskKey`, `State`, `IterationCount`, `StartDTM`/`EndDTM`/`Runtime`, `Exception`, and a per-iteration `IterationHistory`; each `IManagedTaskIterationSnapshot` exposes the same shape (`State`, timing, `Exception`) for one iteration (`IManagedTaskIterationSnapshot` is still an interface, in `Integration.DevKit.TaskMgmt.Interfaces` — its concrete implementation is internal to the runtime). Both are read-only, framework-constructed types — you retrieve them from the registry, you don't build them yourself.
-
-## API Reference
-
-### `Service_TaskMgmt` (static)
-
-```csharp
-public static IServiceCollection AddTaskMgmt(this IServiceCollection services, IConfiguration config);
-public static void Initialize(IServiceProvider sp);
-public static TaskManager TaskManager { get; }    // throws InvalidOperationException before Initialize
-public static TaskRegistry TaskRegistry { get; }  // throws InvalidOperationException before Initialize
-```
-
-### `ManagedTask` (abstract)
-
-`Integration.DevKit.TaskMgmt.Abstractions`:
-
-```csharp
-public abstract class ManagedTask : IDisposable
-{
-    public string TaskName { get; }
-    public Guid TaskId { get; }
-    public string TaskKey { get; }   // "{TaskName}_{TaskId}"
-
-    protected ManagedTask(string taskName, Guid? id = null);
-    public abstract Task DoTaskWork(ManagedTaskIterationHandle iterationHandle);
-    public virtual void Dispose() { }
-}
-```
-
-## Error Handling
+## Error handling
 
 `StartTask`, `CancelTask`, `CancelAllTasks`, and `IsTaskRunning` all return `OperationResult<T>`/`NullOperationResult` rather than throwing for expected failure conditions (task already running, task not found, etc.) — check `MethodSuccess` and inspect `Exception` before proceeding. An unhandled exception thrown from inside `DoTaskWork` is caught by the manager and reflected in the task's `ManagedTaskState`/snapshot rather than crashing the host process; whether that also stops the task depends on `StopIteratingOnException` and `RetryOnException`.
 
-## Best Practices
+## Best practices
 
 - Always thread `iterationHandle.CancelationToken` through any `Task.Delay`/I/O call inside `DoTaskWork` so cancellation and timeouts actually take effect promptly.
 - Make `DoTaskWork` idempotent where practical — a retried or restarted iteration should be safe to re-run.
 - Use `TaskRegistry` snapshots for status/health reporting rather than polling `IManagedTaskHandle` state from multiple places.
 - Set `MaxIterations`/`Timeout` explicitly for anything that should not run forever by default.
 - Keep `MaxTaskRegistryCount`/`MaxTaskIterationRegistryCount` in mind if you rely on history for auditing — older entries are evicted once the cap is reached.
+
+## Changelog
+
+See [CHANGELOG.md](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/TaskMgmt/CHANGELOG.md).

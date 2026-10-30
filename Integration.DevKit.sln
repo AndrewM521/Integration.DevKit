@@ -33,20 +33,69 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D056A9C0-B94
 	ProjectSection(SolutionItems) = preProject
 		src\.editorconfig = src\.editorconfig
 		src\Directory.Build.props = src\Directory.Build.props
+		src\Directory.Build.targets = src\Directory.Build.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
 		docs\CHANGELOG.md = docs\CHANGELOG.md
-		docs\core.md = docs\core.md
-		docs\credential-management.md = docs\credential-management.md
+		docs\extending-modules.md = docs\extending-modules.md
 		docs\logging.md = docs\logging.md
-		docs\process-launcher.md = docs\process-launcher.md
 		docs\README.md = docs\README.md
-		docs\rest-api.md = docs\rest-api.md
-		docs\sql-management.md = docs\sql-management.md
-		docs\task-management.md = docs\task-management.md
-		docs\thread-locks.md = docs\thread-locks.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{0C984046-4EF2-4E03-B45C-23C0CAD7F15B}"
+	ProjectSection(SolutionItems) = preProject
+		docs\Core\CHANGELOG.md = docs\Core\CHANGELOG.md
+		docs\Core\README.md = docs\Core\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CredentialMgmt", "CredentialMgmt", "{7491B7AA-318F-43E2-AFE9-29E96E69FC9E}"
+	ProjectSection(SolutionItems) = preProject
+		docs\CredentialMgmt\CHANGELOG.md = docs\CredentialMgmt\CHANGELOG.md
+		docs\CredentialMgmt\README.md = docs\CredentialMgmt\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CredentialMgmt.Contracts", "CredentialMgmt.Contracts", "{B0F80E8A-31FD-46ED-A1D6-E37E533BCB10}"
+	ProjectSection(SolutionItems) = preProject
+		docs\CredentialMgmt.Contracts\CHANGELOG.md = docs\CredentialMgmt.Contracts\CHANGELOG.md
+		docs\CredentialMgmt.Contracts\README.md = docs\CredentialMgmt.Contracts\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ProcessLauncher", "ProcessLauncher", "{595C3FE9-CAD7-482F-9CA0-A394211A798E}"
+	ProjectSection(SolutionItems) = preProject
+		docs\ProcessLauncher\CHANGELOG.md = docs\ProcessLauncher\CHANGELOG.md
+		docs\ProcessLauncher\README.md = docs\ProcessLauncher\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RESTApiMgmt", "RESTApiMgmt", "{A4860AFF-632A-410C-B6BE-53D3F225DD7D}"
+	ProjectSection(SolutionItems) = preProject
+		docs\RESTApiMgmt\CHANGELOG.md = docs\RESTApiMgmt\CHANGELOG.md
+		docs\RESTApiMgmt\README.md = docs\RESTApiMgmt\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SQLMgmt", "SQLMgmt", "{CC387FD6-4941-471C-8122-809D534F64B2}"
+	ProjectSection(SolutionItems) = preProject
+		docs\SQLMgmt\CHANGELOG.md = docs\SQLMgmt\CHANGELOG.md
+		docs\SQLMgmt\README.md = docs\SQLMgmt\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TaskMgmt", "TaskMgmt", "{739C6CDB-45F0-42AE-9C67-E6C6D4616063}"
+	ProjectSection(SolutionItems) = preProject
+		docs\TaskMgmt\CHANGELOG.md = docs\TaskMgmt\CHANGELOG.md
+		docs\TaskMgmt\README.md = docs\TaskMgmt\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ThreadLocks", "ThreadLocks", "{1D7E58FB-285B-4F96-A50B-DE6FFCFBF032}"
+	ProjectSection(SolutionItems) = preProject
+		docs\ThreadLocks\CHANGELOG.md = docs\ThreadLocks\CHANGELOG.md
+		docs\ThreadLocks\README.md = docs\ThreadLocks\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ThreadSafeItems", "ThreadSafeItems", "{B0545F89-CF6B-437E-921E-F1C0C959DF7F}"
+	ProjectSection(SolutionItems) = preProject
+		docs\ThreadSafeItems\CHANGELOG.md = docs\ThreadSafeItems\CHANGELOG.md
+		docs\ThreadSafeItems\README.md = docs\ThreadSafeItems\README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{FAD2E43C-3429-49D3-B20F-C67763773DB5}"
@@ -292,6 +341,15 @@ Global
 		{EAA03D5C-7093-41AD-A31A-094BF0804BB0} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{681FDEEF-D290-42B6-B154-6DC8B17C9D69} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{9FF35A4A-F2D2-4021-8C75-314F064E0248} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{0C984046-4EF2-4E03-B45C-23C0CAD7F15B} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{7491B7AA-318F-43E2-AFE9-29E96E69FC9E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{B0F80E8A-31FD-46ED-A1D6-E37E533BCB10} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{595C3FE9-CAD7-482F-9CA0-A394211A798E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{A4860AFF-632A-410C-B6BE-53D3F225DD7D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{CC387FD6-4941-471C-8122-809D534F64B2} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{739C6CDB-45F0-42AE-9C67-E6C6D4616063} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{1D7E58FB-285B-4F96-A50B-DE6FFCFBF032} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{B0545F89-CF6B-437E-921E-F1C0C959DF7F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {32CFCE47-8C5C-4E17-B597-FE7AFF0AA062}

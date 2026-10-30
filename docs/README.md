@@ -2,25 +2,27 @@
 
 Integration.DevKit is a .NET SDK (targeting .NET 8, 9 and 10) made up of small, independently-referenceable modules for the things most integration-style applications end up building anyway: protected configuration, [structured logging](logging.md), REST API access, SQL access, background task management, thread coordination, external process management, and file-based secret storage.
 
-See [CHANGELOG.md](CHANGELOG.md) for release history
+See [CHANGELOG.md](CHANGELOG.md) for SDK-wide release history. Each module has its own folder in `docs/` with a `README.md` and a `CHANGELOG.md`
 
 Every module follows the same three conventions, which makes the SDK predictable once you've learned one part of it:
 
-1. **Result objects instead of exceptions for expected failures.** Public methods return `OperationResult<T>` (or `NullOperationResult`, `NullableOperationResult<T>`, `ApiOperationResult<T>`) rather than throwing — check `MethodSuccess` before trusting `Result`. See [Core → Result types](core.md#result-types).
+1. **Result objects instead of exceptions for expected failures.** Public methods return `OperationResult<T>` (or `NullOperationResult`, `NullableOperationResult<T>`, `ApiOperationResult<T>`) rather than throwing — check `MethodSuccess` before trusting `Result`. See [Core → Result types](Core/README.md#result-types).
 2. **Register, build, initialize.** Each module has an `Add<Module>(...)` extension method called during `ConfigureServices`, and a static `Service_<Module>.Initialize(IServiceProvider)` call made once after the host is built. A few modules have an ordering dependency on another (documented per-module below); most don't.
 3. **Named clients/managers where it makes sense.** REST clients, SQL clients, and locks are all looked up by string name/key through a manager rather than constructed directly.
 
 ## Modules
 
-| Module | What it's for | NuGet |
-| --- | --- | --- |
-| [Core](core.md) | Result types, configuration protection, file/directory/JSON/dictionary utilities, on-demand hosting. Depended on by every other module. | [Integration.DevKit.Core](https://www.nuget.org/packages/Integration.DevKit.Core) |
-| [REST API Management](rest-api.md) | Named `HttpClient`-backed clients with typed results, metrics, and optional secret-store-backed credentials. | [Integration.DevKit.RESTApiMgmt](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt) |
-| [SQL Management](sql-management.md) | Named SQL clients, connection testing, command/data-reader helpers. | [Integration.DevKit.SQLMgmt](https://www.nuget.org/packages/Integration.DevKit.SQLMgmt) |
-| [Thread Locks &amp; Thread-Safe File I/O](thread-locks.md) | Named sync/async locks; thread-safe file I/O built on top of them. | [Integration.DevKit.ThreadLocks](https://www.nuget.org/packages/Integration.DevKit.ThreadLocks) &middot; [ThreadSafeItems](https://www.nuget.org/packages/Integration.DevKit.ThreadSafeItems) |
-| [Task Management](task-management.md) | Recurring/long-running background work with retry policies, iteration timing strategies, and run history. | [Integration.DevKit.TaskMgmt](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt) |
-| [Process Launcher](process-launcher.md) | Starting and supervising external processes with output capture and cancellation. | [Integration.DevKit.ProcessLauncher](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher) |
-| [Credential Management](credential-management.md) | File-based secret storage encrypted at rest, pluggable into the REST and SQL clients. | [Integration.DevKit.CredentialMgmt](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt) &middot; [.Contracts](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt.Contracts) |
+| Module | What it's for | Changelog | NuGet |
+| --- | --- | --- | --- |
+| [Core](Core/README.md) | Result types, configuration protection, file/directory/JSON/dictionary utilities, on-demand hosting. Depended on by every other module. | [Changelog](Core/CHANGELOG.md) | [Integration.DevKit.Core](https://www.nuget.org/packages/Integration.DevKit.Core) |
+| [REST API Management](RESTApiMgmt/README.md) | Named `HttpClient`-backed clients with typed results, metrics, and a pluggable auth strategy. | [Changelog](RESTApiMgmt/CHANGELOG.md) | [Integration.DevKit.RESTApiMgmt](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt) |
+| [SQL Management](SQLMgmt/README.md) | Named SQL clients, connection testing, command/data-reader helpers. | [Changelog](SQLMgmt/CHANGELOG.md) | [Integration.DevKit.SQLMgmt](https://www.nuget.org/packages/Integration.DevKit.SQLMgmt) |
+| [Thread Locks](ThreadLocks/README.md) | Named, reference-counted sync/async locks. | [Changelog](ThreadLocks/CHANGELOG.md) | [Integration.DevKit.ThreadLocks](https://www.nuget.org/packages/Integration.DevKit.ThreadLocks) |
+| [Thread-Safe File I/O](ThreadSafeItems/README.md) | File reads/writes serialized per path, built on Thread Locks. | [Changelog](ThreadSafeItems/CHANGELOG.md) | [Integration.DevKit.ThreadSafeItems](https://www.nuget.org/packages/Integration.DevKit.ThreadSafeItems) |
+| [Task Management](TaskMgmt/README.md) | Recurring/long-running background work with retry policies, iteration timing strategies, and run history. | [Changelog](TaskMgmt/CHANGELOG.md) | [Integration.DevKit.TaskMgmt](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt) |
+| [Process Launcher](ProcessLauncher/README.md) | Starting and supervising external processes with output capture and cancellation. | [Changelog](ProcessLauncher/CHANGELOG.md) | [Integration.DevKit.ProcessLauncher](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher) |
+| [Credential Management](CredentialMgmt/README.md) | File-based secret storage encrypted at rest, pluggable into the REST and SQL clients. | [Changelog](CredentialMgmt/CHANGELOG.md) | [Integration.DevKit.CredentialMgmt](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt) |
+| [Credential Management Contracts](CredentialMgmt.Contracts/README.md) | `ISecretReader`/`ISecretStore` interfaces, without the implementation. | [Changelog](CredentialMgmt.Contracts/CHANGELOG.md) | [Integration.DevKit.CredentialMgmt.Contracts](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt.Contracts) |
 
 All packages are published under the [AndrewM5 NuGet profile](https://www.nuget.org/profiles/AndrewM5).
 
@@ -29,7 +31,7 @@ Most modules ship their interfaces and settings types as part of the main packag
 ## Requirements
 
 - .NET 10 SDK (CLI or Visual Studio 2026) to build all targets; Visual Studio 2022 builds the .NET 8 and 9 targets only
-- A host application using `Microsoft.Extensions.Hosting` (or [`OnDemandHost`](core.md#on-demand-hosting) if you don't already have one)
+- A host application using `Microsoft.Extensions.Hosting` (or [`OnDemandHost`](Core/README.md#on-demand-hosting) if you don't already have one)
 
 ## Installation
 
@@ -103,7 +105,7 @@ Every module binds its settings from a section under `Integration.DevKit` in you
 | Thread Locks | `Integration.DevKit:ThreadLocks` | Only setting is `EnableLogging`. |
 | Thread-Safe File I/O | `Integration.DevKit:ThreadSafeItems` | Only setting is `EnableLogging`. |
 | Process Launcher | `Integration.DevKit:ProcessLauncher` | Only setting is `EnableLogging`; every process is still configured per-call. |
-| Credential Management | `Integration.DevKit:CredentialManagement` | `Provider` selects the backend; provider-specific settings go under `Options`. See [Credential Management](credential-management.md). |
+| Credential Management | `Integration.DevKit:CredentialManagement` | `Provider` selects the backend; provider-specific settings go under `Options`. See [Credential Management](CredentialMgmt/README.md). |
 
 Every module's settings also include an `EnableLogging` flag (default `true`). Unlike the other settings, it's checked fresh on every log call rather than only at startup — so flipping it on a manager's `RuntimeSettings` at runtime (e.g. `apiManager.RuntimeSettings.EnableLogging = false;`) silences or resumes that module's logging immediately, without detaching the `ILoggerFactory` you registered for the rest of the app.
 
@@ -120,7 +122,7 @@ Every module's settings also include an `EnableLogging` flag (default `true`). U
 }
 ```
 
-Values can be encrypted at rest inside the JSON file itself using [configuration protection](core.md#configuration-protection), or you can plug REST/SQL clients into the [file-based secret store](credential-management.md) for credentials specifically.
+Values can be encrypted at rest inside the JSON file itself using [configuration protection](Core/README.md#configuration-protection), or you can plug REST/SQL clients into the [file-based secret store](CredentialMgmt/README.md) for credentials specifically.
 
 ## Error handling
 
@@ -137,13 +139,13 @@ if (!result.MethodSuccess)
 Use(result.Result);
 ```
 
-See [Core → Result types](core.md#result-types) for the full set of variants and when each is used.
+See [Core → Result types](Core/README.md#result-types) for the full set of variants and when each is used.
 
 ## Best Practices
 
 - Check `MethodSuccess` before reading `Result` — don't assume a sensible default on failure unless a method's docs say otherwise.
 - Follow the register → build → initialize order for every module, respecting the ordering dependencies noted above and on each module's page.
-- Keep secrets out of `appsettings.json` in plain text — use [Credential Management](credential-management.md) or, at minimum, [configuration protection](core.md#configuration-protection).
+- Keep secrets out of `appsettings.json` in plain text — use [Credential Management](CredentialMgmt/README.md) or, at minimum, [configuration protection](Core/README.md#configuration-protection).
 - Use the SDK's logger consistently for diagnostics rather than `Console.WriteLine` in production code paths — see [Logging](logging.md) for how to plug in your own `ILogger`-based provider.
 
 ## FAQ

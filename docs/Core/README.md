@@ -1,31 +1,60 @@
-# Core
+# Integration.DevKit.Core
 
-`Integration.DevKit.Core` is the foundation package that every other Integration.DevKit module depends on. It has no dependency on any other DevKit package. It provides:
+The foundation package every other Integration.DevKit module depends on: shared result types, configuration protection, file/JSON/dictionary utilities, and a lightweight on-demand host.
+
+## What it is
+
+`Integration.DevKit.Core` has no dependency on any other DevKit package. It provides:
 
 - A consistent result-object pattern (`OperationResult<T>` and its variants) used across the entire SDK instead of exceptions for expected failure paths.
 - Configuration protection: encrypting and decrypting values inside `appsettings.json`.
 - File, directory, dictionary, and JSON utilities used internally by the other modules (and safe to use directly).
 - `OnDemandHost`, a lightweight service-container/host for applications that are not already built on `Microsoft.Extensions.Hosting`.
 
-## Requirements
+## Why it exists
+
+Every DevKit module needs the same building blocks: a way to report failure without throwing, safe file access with path validation, and a way to pull a few values out of loosely-structured JSON. Putting these in one small package means every module behaves the same way — once you know how to check an `OperationResult<T>`, you know how to handle failures anywhere in the SDK — and none of the modules re-implement their own helpers.
+
+Core is also useful on its own: the result types and utilities have no dependency on the rest of the SDK, and `OnDemandHost` lets apps without a generic host (console tools, plugins, legacy code) still use DevKit's DI-based modules.
+
+## Requirements & installation
 
 - .NET 8, 9 or 10
 - `Microsoft.Extensions.Configuration` (for the configuration-protection pipeline)
 - `Microsoft.Extensions.Hosting.Abstractions` (for `OnDemandHost` and `IHostApplicationLifetime`)
 
-## Installation
-
 ```bash
+dotnet add package Integration.DevKit.Core
+# or, from source
 dotnet add reference src/Integration.DevKit.Core/Integration.DevKit.Core.csproj
 ```
 
-Or from NuGet: [Integration.DevKit.Core](https://www.nuget.org/packages/Integration.DevKit.Core)
+NuGet: [Integration.DevKit.Core](https://www.nuget.org/packages/Integration.DevKit.Core)
 
 Every other DevKit project already references Core transitively, so you rarely need to add it explicitly unless you're consuming Core's utilities on their own.
 
----
+## Getting started
 
-## Result types
+Core has no `Add*`/`Initialize` step — its types are used directly:
+
+```csharp
+using Integration.DevKit.Core;
+
+var written = FileUtils.WriteToFile(path, content);
+if (!written.MethodSuccess)
+{
+    logger.LogError(written.Exception, "Failed to write {Path}", path);
+    return;
+}
+```
+
+## Configuration
+
+Core binds no configuration section of its own. It does provide the [configuration protection](#configuration-protection) pipeline for encrypting values in your own `appsettings.json`.
+
+## How to
+
+### Result types
 
 Nearly every public method across the SDK returns a result object instead of throwing. All variants live in the `Integration.DevKit.Core` namespace and implement `IOperationResult<T>`:
 
@@ -62,15 +91,13 @@ if (!written.MethodSuccess)
 }
 ```
 
-`ApiOperationResult<T>` additionally carries HTTP context and is covered in detail in [REST API Management](rest-api.md).
+`ApiOperationResult<T>` additionally carries HTTP context and is covered in detail in [REST API Management](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/RESTApiMgmt/README.md).
 
----
-
-## Configuration protection
+### Configuration protection
 
 Configuration protection lets you keep secrets in `appsettings.json` in an encrypted-looking form and transparently decrypt them into the running `IConfiguration` tree. It is **not** a general-purpose encryption library — it's specifically shaped around round-tripping values through JSON configuration files.
 
-### `IConfigProtector`
+#### `IConfigProtector`
 
 ```csharp
 namespace Integration.DevKit.Core;
@@ -85,7 +112,7 @@ public interface IConfigProtector
 
 `Name` is the identifier written into the encrypted value's prefix (see `ConfigProtectorContract` below) so the correct protector can be selected again at decrypt time. Two implementations ship out of the box:
 
-#### `Base64ConfigProtector`
+**`Base64ConfigProtector`**
 
 ```csharp
 namespace Integration.DevKit.Core;
@@ -95,7 +122,7 @@ public sealed class Base64ConfigProtector : IConfigProtector   // Name => "BASE6
 
 Encodes/decodes with Base64. **This provides no confidentiality** — anyone can decode a Base64 string by hand. Use it only to obscure values from casual viewing (e.g. keeping a value out of plain sight in a diff or screen share), never to protect an actual secret.
 
-#### `AesConfigProtector`
+**`AesConfigProtector`**
 
 ```csharp
 namespace Integration.DevKit.Core.Configuration;
@@ -111,7 +138,7 @@ public string Decrypt(string cipherText)
 
 Both throw `ArgumentNullException` if a required constructor argument is null/whitespace (`AesConfigProtector` only). `Encrypt`/`Decrypt` pass through unchanged when given a null or empty string.
 
-### `ConfigProtectorContract`
+#### `ConfigProtectorContract`
 
 Describes how an encrypted value is tagged so the pipeline can find and route it:
 
@@ -130,7 +157,7 @@ public sealed class ConfigProtectorContract(char delimiter = ':')
 
 A protected value looks like `ENCv1:AES256:<base64 ciphertext>` — the prefix tells the decryption pipeline which registered `IConfigProtector` to hand the payload to.
 
-### Encrypting values into a JSON file
+#### Encrypting values into a JSON file
 
 `EncryptionOptions` + `JsonEncryptor`, wired through the extension method `ConfigProtectorExtensions.EncryptJsonOnBuild`, walk a JSON file and replace targeted values with their encrypted form:
 
@@ -167,7 +194,7 @@ new ConfigurationBuilder()
 
 `EncryptJsonOnBuild` rewrites the file in place; it does not itself register the value into the returned `IConfigurationBuilder`. Values already carrying the configured `Signature` prefix are left untouched (idempotent — running it twice will not double-encrypt).
 
-### Decrypting values when building configuration
+#### Decrypting values when building configuration
 
 `ConfigProtectorExtensions.DecryptJsonOnBuild` adds a configuration source that decrypts every matching value as the configuration is built:
 
@@ -180,11 +207,9 @@ var configuration = new ConfigurationBuilder()
 
 Internally this builds an intermediate `IConfiguration` from whatever sources were registered so far, then adds a `DecryptionConfigSource`/`DecryptionConfigProvider` pair that walks every leaf value: if it starts with `contract.Signature`, it's split on `contract.Delimiter` into `{signature+version}{delimiter}{providerName}{delimiter}{payload}`, and the matching `IConfigProtector` (looked up by `Name` in the list you pass in) decrypts the payload. Values that don't match the signature pass through unchanged. A malformed encrypted-looking value throws `FormatException`; an unrecognized provider name throws `KeyNotFoundException`.
 
----
+### On-demand hosting
 
-## On-demand hosting
-
-`Integration.DevKit.Core.OnDemand` provides a minimal static host for applications that want DevKit's DI-based modules (logging, task management, etc.) without building a full `Microsoft.Extensions.Hosting` generic host.
+`Integration.DevKit.Core.OnDemand` provides a minimal static host for applications that want DevKit's DI-based modules (task management, SQL, etc.) without building a full `Microsoft.Extensions.Hosting` generic host.
 
 ```csharp
 public static class OnDemandHost
@@ -204,7 +229,7 @@ public static class OnDemandHost
 ```csharp
 OnDemandHost.ConfigureServices(services =>
 {
-    services.AddCustomLogging(configuration);
+    services.AddSQLMgmt(configuration);
     services.AddTaskMgmt(configuration);
 });
 
@@ -216,9 +241,7 @@ await OnDemandHost.StopAsync();
 
 Most applications that already use `Host.CreateDefaultBuilder` do **not** need `OnDemandHost` — it exists for embedding DevKit modules into apps that don't otherwise have a hosting/DI pipeline (e.g. a console tool, a plugin, or legacy code).
 
----
-
-## File and directory utilities
+### File and directory utilities
 
 `FileUtils` and `DirectoryUtils` (both `Integration.DevKit.Core`) wrap `System.IO` with the SDK's result-object pattern and consistent path validation. Every operation validates its path first via `IsStringValidFilePath` / `IsStringValidDirectoryPath` and fails fast with a descriptive exception rather than letting a raw `IOException` surface.
 
@@ -255,11 +278,9 @@ bool DoesDirectoryExist(string path);
 
 By default, a path must end in a recognizable extension (e.g. `.txt`) to be considered a valid *file* path — pass `allowNoFileExtension: true` for extension-less files such as `Dockerfile` or `LICENSE`. Writes create any missing parent directory automatically and append a trailing newline if the content doesn't already end with one.
 
-For file access that must be safe across concurrent threads/tasks, use [`ThreadSafeFileIO`](thread-locks.md#thread-safe-file-io) instead of calling `FileUtils` directly from multiple callers.
+For file access that must be safe across concurrent threads/tasks, use [`ThreadSafeFileIO`](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/ThreadSafeItems/README.md) instead of calling `FileUtils` directly from multiple callers.
 
----
-
-## JSON utilities
+### JSON utilities
 
 `JsonUtils` (`Integration.DevKit.Core`) provides serialization plus a path-based extraction API for pulling specific values or sub-trees out of loosely-structured JSON without modeling the whole payload as a C# type — useful when consuming a third-party API response where you only need a few fields.
 
@@ -295,7 +316,7 @@ if (result.MethodSuccess)
 }
 ```
 
-## Dictionary utilities
+### Dictionary utilities
 
 `DictionaryUtils` (`Integration.DevKit.Core`) navigates the loosely-typed `Dictionary<string, object>` trees produced by `JsonUtils`:
 
@@ -313,14 +334,26 @@ public static class DictionaryUtils
 
 `GetValue<T>` walks a dot-notation `keyPath`, converting the located value to `T` (including element-by-element conversion for `List<T>`), and returns `defaultValue` if any segment is missing, the value is null, or conversion fails — it never throws.
 
-## Miscellaneous helpers
+### Miscellaneous helpers
 
 - **`GCManager.CallGC_Collect(string? description = null)`** — throttled, thread-safe forced garbage collection. Only actually collects when the managed heap has grown by more than 20 MB or more than 20 minutes have elapsed since the last forced collection; otherwise it's a no-op. Intended for long-running services with bursty allocation patterns, not for general use in request paths.
 - **`MiscUtils.ConvertUnixToCentralTime(long unixSeconds)`** — converts a Unix timestamp to local time in the US Central time zone, resolving the correct time zone ID for Windows (`"Central Standard Time"`) vs. Linux/containers (`"America/Chicago"`) automatically.
 
-## Best Practices
+## API reference
+
+The full member lists for `FileUtils`, `DirectoryUtils`, `JsonUtils`, `DictionaryUtils`, `OnDemandHost`, and the configuration-protection types are shown inline in [How to](#how-to) above.
+
+## Error handling
+
+Core is where the result-object pattern is defined — see [Result types](#result-types). Utility methods return a failed result rather than throwing for expected failures (invalid path, missing file, unparseable JSON). The configuration-protection pipeline is the exception: it throws `FormatException`/`KeyNotFoundException` at configuration-build time for malformed or unrecognized encrypted values, since a broken configuration should stop startup.
+
+## Best practices
 
 - Always check `MethodSuccess` before reading `Result` — don't rely on `Result` being a sensible default on failure unless you've confirmed that particular method guarantees one.
 - Don't use `AesConfigProtector` as a substitute for a real secrets manager in production — see the security note above.
 - Prefer `ThreadSafeFileIO` over direct `FileUtils` calls whenever the same file might be accessed concurrently from more than one place.
 - Keep encryption keys, IVs, and connection strings out of source control regardless of which `IConfigProtector` you use.
+
+## Changelog
+
+See [CHANGELOG.md](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/Core/CHANGELOG.md).

@@ -1,5 +1,21 @@
 # Changelog
 
+This is the SDK-wide changelog. Each module also keeps its own changelog with only the changes that affect that package:
+
+| Module | Changelog |
+| --- | --- |
+| Core | [Core/CHANGELOG.md](Core/CHANGELOG.md) |
+| REST API Management | [RESTApiMgmt/CHANGELOG.md](RESTApiMgmt/CHANGELOG.md) |
+| SQL Management | [SQLMgmt/CHANGELOG.md](SQLMgmt/CHANGELOG.md) |
+| Task Management | [TaskMgmt/CHANGELOG.md](TaskMgmt/CHANGELOG.md) |
+| Process Launcher | [ProcessLauncher/CHANGELOG.md](ProcessLauncher/CHANGELOG.md) |
+| Thread Locks | [ThreadLocks/CHANGELOG.md](ThreadLocks/CHANGELOG.md) |
+| Thread-Safe File I/O | [ThreadSafeItems/CHANGELOG.md](ThreadSafeItems/CHANGELOG.md) |
+| Credential Management | [CredentialMgmt/CHANGELOG.md](CredentialMgmt/CHANGELOG.md) |
+| Credential Management Contracts | [CredentialMgmt.Contracts/CHANGELOG.md](CredentialMgmt.Contracts/CHANGELOG.md) |
+
+Going forward, record module-specific changes in that module's changelog, and add an entry here only for releases or changes that span the SDK (version bumps, target frameworks, shared dependencies, build tooling). History for removed modules (CustomLogger/Logging, OAuth) lives only in this file.
+
 ## [2.1.0.0] - 2026-10-28 (current)
 
 ### Changed

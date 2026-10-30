@@ -1,20 +1,33 @@
-# REST API Management
+# Integration.DevKit.RESTApiMgmt
 
-`Integration.DevKit.RESTApiMgmt` provides a named-client abstraction over `HttpClient`: you configure one or more clients by name (base URL, headers, timeout, credentials), resolve them through a manager, and call `GetAsync`/`PostAsync`/`PutAsync`/`DeleteAsync`, all of which return the SDK's shared `ApiOperationResult<string>` result type instead of throwing on HTTP failures.
+Named, configuration-driven REST clients over `HttpClient` that return typed results instead of throwing, with built-in metrics and a pluggable authentication hook.
 
-## Requirements
+## What it is
+
+`Integration.DevKit.RESTApiMgmt` provides a named-client abstraction over `HttpClient`: you configure one or more clients by name (base URL, headers, timeout, concurrency limit), resolve them through a manager, and call `GetAsync`/`PostAsync`/`PutAsync`/`DeleteAsync`, all of which return the SDK's shared `ApiOperationResult<string>` result type instead of throwing on HTTP failures.
+
+## Why it exists
+
+Integration apps usually talk to several downstream APIs, and each one ends up with the same hand-written plumbing: a base URL and default headers, a timeout, a cap on concurrent requests, a way to attach a token, request counters for health checks, and `try`/`catch` around every call to turn network errors and non-2xx responses into something the caller can branch on. This module does that once:
+
+- Clients are defined in configuration and looked up by name, so adding or repointing an API is a config change.
+- Every failure — network, timeout, non-2xx — comes back as a failed `ApiOperationResult<string>` carrying the status code and response body, never as a thrown exception.
+- All clients share one `IHttpClientFactory` connection pool, avoiding socket exhaustion from creating `HttpClient`s by hand.
+- Authentication is a single extension point (`IAuthStrategy`) with a safe side-channel (`IAuthClient`) for fetching tokens without recursion or deadlocks.
+
+## Requirements & installation
 
 - .NET 8, 9 or 10
 - `Microsoft.Extensions.Http` (for `IHttpClientFactory`)
-- [Integration.DevKit.Core](core.md) (for `ApiOperationResult<T>` and the other result types)
-
-## Installation
+- [Integration.DevKit.Core](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/Core/README.md) (for `ApiOperationResult<T>` and the other result types)
 
 ```bash
+dotnet add package Integration.DevKit.RESTApiMgmt
+# or, from source
 dotnet add reference src/Integration.DevKit.RESTApiMgmt/Integration.DevKit.RESTApiMgmt.csproj
 ```
 
-Or from NuGet: [Integration.DevKit.RESTApiMgmt](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt)
+NuGet: [Integration.DevKit.RESTApiMgmt](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt)
 
 ## Getting started
 
@@ -81,9 +94,11 @@ else
 
 All named clients share a single `IHttpClientFactory`-managed connection pool internally (they're all created via the fixed factory name `"ApiClient"`); per-client `BaseUrl`, headers, and timeout are applied on top of that shared handler when each `ApiClient` is constructed.
 
-## Making requests
+## How to
 
-`ApiClient`, `ApiManager`, and `ApiClientMetrics` are plain classes directly under `Integration.DevKit.RESTApiMgmt`. The module's only real extension point is `IAuthStrategy`, in `Integration.DevKit.RESTApiMgmt.Interfaces`; `ApiClientSettings`/`ApiManagerSettings` live in `Integration.DevKit.RESTApiMgmt.Settings`. See [Extending DevKit modules](extending-modules.md) for the general pattern.
+### Make requests
+
+`ApiClient`, `ApiManager`, and `ApiClientMetrics` are plain classes directly under `Integration.DevKit.RESTApiMgmt`. The module's only real extension point is `IAuthStrategy`, in `Integration.DevKit.RESTApiMgmt.Interfaces`; `ApiClientSettings`/`ApiManagerSettings` live in `Integration.DevKit.RESTApiMgmt.Settings`. See [Extending DevKit modules](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/extending-modules.md) for the general pattern.
 
 ```csharp
 public class ApiClient : IAsyncDisposable
@@ -109,7 +124,35 @@ public class ApiClient : IAsyncDisposable
 }
 ```
 
-### Re-initializing after mutating `RuntimeSettings`
+```csharp
+var payload = client.CreateHttpContent(RESTApiMediaTypes.Json, "{\"id\":42}");
+var result = await client.PostAsync("orders", payload.Result);
+```
+
+`RESTApiMediaTypes` is `Json | Xml | PlainText | WWW_UrlEncoded`, mapping to the corresponding standard MIME type.
+
+`GetAsync` and `DeleteAsync` both accept an optional `HttpContent` body — this sets an actual `HttpContent` on the underlying `HttpRequestMessage` for a GET/DELETE request. That's non-standard HTTP usage (most servers ignore a GET body, and some client stacks strip it), so only rely on it against an API you know supports it.
+
+### Build endpoint URLs with `ApiEndpoint`
+
+A small helper for building endpoint URLs against a persistent base route, in one of three styles:
+
+```csharp
+var endpoint = new ApiEndpoint("users/search");
+
+var queryUrl = endpoint.BuildQueryUrl(new() { ["name"] = "John Doe", ["age"] = 30 });
+// "users/search?name=John+Doe&age=30"
+
+var slashUrl = new ApiEndpoint("products/filter").BuildSlashUrl(new() { ["category"] = "Laptops" });
+// "products/filter/category/Laptops"
+
+var positionalUrl = new ApiEndpoint("orders/details").BuildPositionalUrl(new() { 12345, "full" });
+// "orders/details/12345/full"
+```
+
+`ApiEndpoint` only builds the string — pass the result straight into `ApiClient.GetAsync`/etc. as `endpointUrl`. See [`ApiEndpoint`](#apiendpoint) in the API reference for the full signature.
+
+### Re-initialize after changing `RuntimeSettings`
 
 `ApiClient` caches several things derived from `RuntimeSettings` at construction time: the underlying `HttpClient`'s base address, timeout, and default headers, plus a `SemaphoreSlim` sized from `MaxConcurrentRequests`. Mutating `RuntimeSettings` in place (e.g. `client.RuntimeSettings.BaseUrl = "..."`) has no effect until you call `Initialize()`, which re-derives all of it:
 
@@ -122,16 +165,7 @@ client.Initialize();
 
 Requests already waiting on the old rate limiter when `Initialize()` runs will see it disposed out from under them — prefer calling this during a quiet period rather than under active load.
 
-`GetAsync` and `DeleteAsync` both accept an optional `HttpContent` body — this sets an actual `HttpContent` on the underlying `HttpRequestMessage` for a GET/DELETE request. That's non-standard HTTP usage (most servers ignore a GET body, and some client stacks strip it), so only rely on it against an API you know supports it.
-
-```csharp
-var payload = client.CreateHttpContent(RESTApiMediaTypes.Json, "{\"id\":42}");
-var result = await client.PostAsync("orders", payload.Result);
-```
-
-`RESTApiMediaTypes` is `Json | Xml | PlainText | WWW_UrlEncoded`, mapping to the corresponding standard MIME type.
-
-### Authentication via `IAuthStrategy`
+### Authenticate with `IAuthStrategy`
 
 For downstream APIs that require an OAuth2 bearer token, a static API key, or any other credential scheme, attach an `IAuthStrategy`:
 
@@ -144,11 +178,11 @@ public interface IAuthStrategy
 
 `SetAuthStrategy` is the only credential/auth mechanism `ApiClient` has — there's no separate Basic-auth or secret-store attachment on the client itself; everything goes through an `IAuthStrategy`. When set, the strategy runs on every outgoing request (`GetAsync`/`PostAsync`/`PutAsync`/`DeleteAsync`, sync or async) just before it's sent, and any failure it returns short-circuits the call as a failed `ApiOperationResult<string>` (HTTP 401) rather than hitting the network.
 
-This module ships **no built-in `IAuthStrategy` implementation** — `IAuthStrategy` is a pure extension point, and you're expected to write your own (an OAuth2 client-credentials flow, a static API key, a signed-request scheme, mTLS header injection). If your downstream API needs OAuth2, compose your own strategy with the [Credential Management](credential-management.md) module's `ISecretReader`/`ISecretStore` to source the client secret.
+This module ships **no built-in `IAuthStrategy` implementation** — `IAuthStrategy` is a pure extension point, and you're expected to write your own (an OAuth2 client-credentials flow, a static API key, a signed-request scheme, mTLS header injection). If your downstream API needs OAuth2, compose your own strategy with the [Credential Management](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/CredentialMgmt/README.md) module's `ISecretReader`/`ISecretStore` to source the client secret.
 
-### Implementing your own `IAuthStrategy`
+### Implement your own `IAuthStrategy`
 
-See [Extending DevKit modules](extending-modules.md) for how a custom `IAuthStrategy` fits into the module's `Interfaces/`/`Settings/` layout in general. A minimal example:
+See [Extending DevKit modules](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/extending-modules.md) for how a custom `IAuthStrategy` fits into the module's `Interfaces/`/`Settings/` layout in general. A minimal example:
 
 ```csharp
 using Integration.DevKit.Core;
@@ -179,7 +213,7 @@ client.SetAuthStrategy(new ApiKeyAuthStrategy("X-Api-Key", apiKey));
 
 There's no requirement about where a custom strategy like this lives — `Implementations/` is this library's own internal convention for the classes it ships, not something imposed on consumers. Put `ApiKeyAuthStrategy` wherever the rest of your application's code lives.
 
-### Fetching a token with `IAuthClient`
+### Fetch a token with `IAuthClient`
 
 A strategy that has to fetch a credential (an OAuth2 token, for example) usually calls an authentication endpoint that lives on the same API service as everything else. If it made that call through the same `ApiClient`, the call would run the strategy again — infinite recursion — and, with a low `MaxConcurrentRequests`, could also wait forever for a concurrency slot the outer request is still holding.
 
@@ -256,7 +290,7 @@ public class ClientCredentialsStrategy : IAuthStrategy
 
 If you call `ApiRequest` directly with an `IAuthStrategy` and no `IAuthClient`, a client over the `HttpClient` you passed is supplied. It has no separate header-free client, so absolute URLs on another host share that `HttpClient`'s default headers.
 
-## Client metrics
+### Read client metrics
 
 ```csharp
 public class ApiClientMetrics
@@ -274,7 +308,17 @@ public class ApiClientMetrics
 
 Access via `client.ClientMetrics`; counters are `long` (to avoid overflow on long-lived clients) and are updated atomically on every call made through that client, so they're safe to read from other threads.
 
-## `ApiManager`
+## API reference
+
+### `Service_RESTApiMgmt` (static)
+
+```csharp
+public static IServiceCollection AddRESTApiMgmt(this IServiceCollection services, IConfiguration configuration);
+public static void Initialize(IServiceProvider sp);
+public static ApiManager ApiManager { get; }   // throws InvalidOperationException before Initialize
+```
+
+### `ApiManager`
 
 ```csharp
 public class ApiManager : IAsyncDisposable
@@ -287,19 +331,13 @@ public class ApiManager : IAsyncDisposable
 
 `GetClient` caches and reuses one `ApiClient` per name (case-insensitive) — calling it twice with the same name returns the same instance. If `clientName` isn't found in the configured `Clients` dictionary, it logs a warning and hands back a client built from default `ApiClientSettings` rather than throwing, so a typo in a client name fails silently at the HTTP layer (wrong base URL) rather than at `GetClient` — double-check the name against your configuration if requests are going to the wrong host.
 
-`ApiManager` is a plain concrete class with no interface — nothing in this SDK substitutes or mocks a different `ApiManager` implementation, so an interface would be pure ceremony. See [Extending DevKit modules](extending-modules.md).
+`ApiManager` is a plain concrete class with no interface — nothing in this SDK substitutes or mocks a different `ApiManager` implementation, so an interface would be pure ceremony. See [Extending DevKit modules](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/extending-modules.md).
 
-## API Reference
+### `ApiClient`
 
-### `Service_RESTApiMgmt` (static)
+See [Make requests](#make-requests) above.
 
-```csharp
-public static IServiceCollection AddRESTApiMgmt(this IServiceCollection services, IConfiguration configuration);
-public static void Initialize(IServiceProvider sp);
-public static ApiManager ApiManager { get; }   // throws InvalidOperationException before Initialize
-```
-
-### `ApiOperationResult<T>` (from [Integration.DevKit.Core](core.md#result-types))
+### `ApiOperationResult<T>` (from [Integration.DevKit.Core](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/Core/README.md#result-types))
 
 ```csharp
 public string RequestUrl { get; }
@@ -320,11 +358,9 @@ public interface IAuthStrategy
 }
 ```
 
-No implementation of `IAuthStrategy` ships with this module — see [Authentication via `IAuthStrategy`](#authentication-via-iauthstrategy) above. `IAuthClient` is the client handed to `ApplyAsync` for calling an authentication endpoint — see [Fetching a token with `IAuthClient`](#fetching-a-token-with-iauthclient).
+No implementation of `IAuthStrategy` ships with this module — see [Authenticate with `IAuthStrategy`](#authenticate-with-iauthstrategy) above. `IAuthClient` is the client handed to `ApplyAsync` for calling an authentication endpoint — see [Fetch a token with `IAuthClient`](#fetch-a-token-with-iauthclient).
 
 ### `ApiEndpoint`
-
-A small helper for building endpoint URLs against a persistent base route, in one of three styles:
 
 ```csharp
 public class ApiEndpoint
@@ -343,20 +379,7 @@ public class ApiEndpoint
 public enum EndpointUrlStyle { Query, Slash, Positional }
 ```
 
-```csharp
-var endpoint = new ApiEndpoint("users/search");
-
-var queryUrl = endpoint.BuildQueryUrl(new() { ["name"] = "John Doe", ["age"] = 30 });
-// "users/search?name=John+Doe&age=30"
-
-var slashUrl = new ApiEndpoint("products/filter").BuildSlashUrl(new() { ["category"] = "Laptops" });
-// "products/filter/category/Laptops"
-
-var positionalUrl = new ApiEndpoint("orders/details").BuildPositionalUrl(new() { 12345, "full" });
-// "orders/details/12345/full"
-```
-
-`BuildQueryUrl`/`BuildQueryUrlAsync` URL-encode via `FormUrlEncodedContent`; `BuildSlashUrl`/`BuildPositionalUrl` URL-encode each segment individually via `WebUtility.UrlEncode`. All four return a failed `OperationResult<string>` (rather than throwing) if encoding fails. `ApiEndpoint` only builds the string — pass the result straight into `ApiClient.GetAsync`/etc. as `endpointUrl`.
+`BuildQueryUrl`/`BuildQueryUrlAsync` URL-encode via `FormUrlEncodedContent`; `BuildSlashUrl`/`BuildPositionalUrl` URL-encode each segment individually via `WebUtility.UrlEncode`. All four return a failed `OperationResult<string>` (rather than throwing) if encoding fails.
 
 ### `ApiRequest`
 
@@ -385,9 +408,13 @@ if (!result.MethodSuccess)
 }
 ```
 
-## Best Practices
+## Best practices
 
 - Use one named client per logical downstream API rather than one client per call — this keeps connection pooling, headers, and metrics scoped sensibly.
 - Set an explicit `HttpTimeout_Seconds` per client rather than relying on the manager-wide default, especially for calls with different latency expectations.
 - Treat GET/DELETE bodies as an advanced feature — confirm the target API actually reads them before depending on it.
 - Inspect `ClientMetrics` in health checks or diagnostics endpoints rather than adding your own request counters.
+
+## Changelog
+
+See [CHANGELOG.md](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/RESTApiMgmt/CHANGELOG.md).
