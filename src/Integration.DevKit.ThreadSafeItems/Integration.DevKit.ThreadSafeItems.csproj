@@ -6,9 +6,10 @@
     <Nullable>enable</Nullable>
     <Title>DevKit.ThreadSafeItems</Title>
     <RootNamespace>Integration.DevKit.ThreadSafeItems</RootNamespace>
-    <Version>2.1.0.0</Version>
+    <Version>2.2.0.0</Version>
     <PackageId>Integration.DevKit.ThreadSafeItems</PackageId>
     <PackageProjectUrl>https://www.nuget.org/packages/Integration.DevKit.ThreadSafeItems</PackageProjectUrl>
+    <DevKitDocsFolder>ThreadSafeItems</DevKitDocsFolder>
   </PropertyGroup>
 
   <ItemGroup>

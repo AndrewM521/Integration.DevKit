@@ -6,9 +6,10 @@
     <Nullable>enable</Nullable>
     <Title>DevKit.ProcessLauncher</Title>
     <RootNamespace>Integration.DevKit.ProcessLauncher</RootNamespace>
-    <Version>2.1.0.0</Version>
+    <Version>2.1.1.0</Version>
     <PackageId>Integration.DevKit.ProcessLauncher</PackageId>
     <PackageProjectUrl>https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher</PackageProjectUrl>
+    <DevKitDocsFolder>ProcessLauncher</DevKitDocsFolder>
   </PropertyGroup>
 
   <ItemGroup>

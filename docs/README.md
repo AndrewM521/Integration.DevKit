@@ -1,9 +1,9 @@
 # Integration.DevKit
 
-Integration.DevKit is a .NET 8, 9, and 10 SDK made up of small, independently-referenceable modules for the things most integration-style applications use
+Integration.DevKit is a .NET Core SDK made up of small, independently-referenceable modules for the things most integration-style applications use
 
 Every module follows the same three conventions, which makes the SDK predictable once you've learned one part of it:
-1. **Result objects instead of exceptions for expected failures.** Public methods return `OperationResult<T>` (or `NullOperationResult`, `NullableOperationResult<T>`, `ApiOperationResult<T>`) rather than throwing — check `MethodSuccess` before trusting `Result`. See [Core → Result types](Core/ResultTypes.md).
+1. **Result objects instead of exceptions for expected failures.** Public methods return `OperationResult<T>` (or `NullOperationResult`, `NullableOperationResult<T>`, `ApiOperationResult<T>`) rather than throwing. See [Core → Result types](Core/ResultTypes.md).
 2. **Register, build, initialize.** Each module has an `Add<Module>(...)` extension method called during `ConfigureServices`, and a static `Service_<Module>.Initialize(IServiceProvider)` call made once after the host is built. A few modules have an ordering dependency on another (documented per-module below); most don't.
 3. **Named clients/managers where it makes sense.** REST clients, SQL clients, and locks are all looked up by string name/key through a manager rather than constructed directly.
 
@@ -11,7 +11,7 @@ See [CHANGELOG.md](CHANGELOG.md) for SDK-wide release history. Each module has i
 
 ## Requirements
 
-- .NET 8, 9, or 10 SDK
+- .NET Core 8, 9, or 10 SDK
 - A `Microsoft.Extensions.DependencyInjection` service container for every module except Core (each module registers with `Add<Module>` and initializes from the built `IServiceProvider`)
 - Task Management only: a host that provides `IHostApplicationLifetime`, such as `Microsoft.Extensions.Hosting` (or [`OnDemandHost`](Core/OnDemandHosting.md) if you don't already have one)
 

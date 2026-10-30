@@ -6,9 +6,10 @@
     <Nullable>enable</Nullable>
     <Title>DevKit.Core</Title>
     <RootNamespace>Integration.DevKit.Core</RootNamespace>
-    <Version>2.1.0.0</Version>
+    <Version>2.1.1.0</Version>
     <PackageId>Integration.DevKit.Core</PackageId>
     <PackageProjectUrl>https://www.nuget.org/packages/Integration.DevKit.Core</PackageProjectUrl>
+    <DevKitDocsFolder>Core</DevKitDocsFolder>
   </PropertyGroup>
 
   <ItemGroup>

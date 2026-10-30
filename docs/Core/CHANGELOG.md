@@ -2,7 +2,15 @@
 
 This changelog covers only the `Integration.DevKit.Core` package. See the [root changelog](../CHANGELOG.md) for the full SDK release notes.
 
-## [2.1.0.0] - 2026-10-28 (current)
+## [2.1.1.0] - 2026-10-30 (current)
+
+### Added
+- The NuGet package now includes this module's README (`docs/Core/README.md`), shown on the package's nuget.org page.
+
+### Changed
+- Version bumped from `2.1.0.0` to `2.1.1.0`.
+
+## [2.1.0.0] - 2026-10-28
 
 ### Changed
 - Now multi-targets `net8.0`, `net9.0` and `net10.0` (previously `net8.0` only). Building all three targets requires the .NET 10 SDK.

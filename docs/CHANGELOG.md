@@ -16,7 +16,18 @@ This is the SDK-wide changelog. Each module also keeps its own changelog with on
 
 Going forward, record module-specific changes in that module's changelog, and add an entry here only for releases or changes that span the SDK (version bumps, target frameworks, shared dependencies, build tooling). History for removed modules (CustomLogger/Logging, OAuth) lives only in this file.
 
-## [2.1.0.0] - 2026-10-28 (current)
+## [2.1.1.0] - 2026-10-30 (current)
+
+### Added
+- Every module's NuGet package now includes its README from `docs/<Module>/README.md`. Packing is set up once in `src/Directory.Build.targets` and turned on per project with `<DevKitDocsFolder>` in the `.csproj`.
+
+### Docs
+- Docs reorganized into one folder per module under `docs/`, each with its own `README.md` and `CHANGELOG.md`. Core and ThreadSafeItems also have a page per group of classes.
+
+### Changed
+- Module versions bumped from `2.1.0.0` to `2.1.1.0`, except ThreadSafeItems, which goes to `2.2.0.0` for a breaking rename (see its [changelog](ThreadSafeItems/CHANGELOG.md)).
+
+## [2.1.0.0] - 2026-10-28
 
 ### Changed
 - All modules now multi-target `net8.0`, `net9.0` and `net10.0`. Building all three targets requires the .NET 10 SDK (CLI or Visual Studio 2026); Visual Studio 2022 cannot use that SDK, so it builds `net8.0` and `net9.0` only.

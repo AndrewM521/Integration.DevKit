@@ -6,9 +6,10 @@
     <Nullable>enable</Nullable>
     <Title>DevKit.TaskMgmt</Title>
     <RootNamespace>Integration.DevKit.TaskMgmt</RootNamespace>
-    <Version>2.1.0.0</Version>
+    <Version>2.1.1.0</Version>
     <PackageId>Integration.DevKit.TaskMgmt</PackageId>
     <PackageProjectUrl>https://www.nuget.org/packages/Integration.DevKit.TaskMgmt</PackageProjectUrl>
+    <DevKitDocsFolder>TaskMgmt</DevKitDocsFolder>
   </PropertyGroup>
 
   <ItemGroup>
