@@ -13,22 +13,19 @@ Raw ADO.NET means repeating the same boilerplate for every query: open a connect
 - Keeps connection details in configuration, looked up by client name, so code doesn't carry connection strings around.
 - Handles connection open/close (or a single serialized connection, if your provider needs it) for you.
 - Returns failures as `OperationResult<T>`/`NullOperationResult` so a failed query is a branch, not an exception.
-- Optionally reads the connection string from an encrypted [secret store](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/CredentialMgmt/README.md) instead of plain configuration.
+- Optionally reads the connection string from an encrypted [secret store](../CredentialMgmt/README.md) instead of plain configuration.
 
 ## Requirements & installation
 
-- .NET 8, 9 or 10
 - `Microsoft.Data.SqlClient`
 - Network access to the target SQL Server
-- [Integration.DevKit.Core](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/Core/README.md) and [Integration.DevKit.CredentialMgmt.Contracts](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/CredentialMgmt.Contracts/README.md) (pulled in automatically)
+- [Integration.DevKit.Core](../Core/README.md) and [Integration.DevKit.CredentialMgmt.Contracts](../CredentialMgmt.Contracts/README.md) (pulled in automatically)
+
+NuGet: [Integration.DevKit.SQLMgmt](https://www.nuget.org/packages/Integration.DevKit.SQLMgmt)
 
 ```bash
 dotnet add package Integration.DevKit.SQLMgmt
-# or, from source
-dotnet add reference src/Integration.DevKit.SQLMgmt/Integration.DevKit.SQLMgmt.csproj
 ```
-
-NuGet: [Integration.DevKit.SQLMgmt](https://www.nuget.org/packages/Integration.DevKit.SQLMgmt)
 
 ## Getting started
 
@@ -65,14 +62,19 @@ var pingResult = await sqlClient.TestSqlConnectionAsync();
 }
 ```
 
-| Property | Default | Notes |
+| Property | Default | Purpose |
 | --- | --- | --- |
-| `ConnectionString` | `""` | Ignored if a secret store is attached (see below) — the store takes priority. |
+| `EnableLogging` | `true` | Turns this module's logging on or off, including every `SQLClient` it hands out. Change it at runtime with `sqlManager.RuntimeSettings.EnableLogging = false;`; see [Conditional logging](../Core/ConditionalLogging.md) for how this works. |
+| `Clients` | `{}` | Named client settings, keyed by client name (case-insensitive). Each entry uses the per-client properties below. |
+
+Per-client properties (`SQLClientSettings`):
+
+| Property | Default | Purpose |
+| --- | --- | --- |
+| `ConnectionString` | `""` | SQL Server connection string for this client. Ignored if a secret store is attached (see below), because the store takes priority. |
 | `UseSingleConnection` | `false` | `false`: a new `SqlConnection` is opened and disposed per call. `true`: one persistent connection is reused and serialized behind an internal semaphore — useful for providers with expensive connection setup, but means all calls on that client queue behind each other. |
 
 `SQLManager.GetClient(clientName)` caches one `SQLClient` per name (case-insensitive). If the name isn't found in `Clients`, it logs a warning and falls back to a client with empty default settings — it does **not** throw, despite its XML documentation suggesting it validates the name. Double-check the client name if connections are failing unexpectedly.
-
-`EnableLogging` (default `true`) is checked fresh on every log call rather than only at startup — flip it at runtime via `sqlManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging (including every `SQLClient` it hands out) without detaching the `ILoggerFactory` you registered for the rest of the app.
 
 ## How to
 
@@ -128,7 +130,7 @@ sqlClient.SetSecretStore(Service_CredentialMgmt.FileSecretStore);
 sqlClient.SetSecretStoreCredentials("Server=...;Database=...;");
 ```
 
-This is entirely opt-in, and calling `SetSecretStoreCredentials` before `SetSecretStore` throws (since there's nowhere to store the value yet). See [Credential Management](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/CredentialMgmt/README.md#wire-into-sqlclient) for details.
+This is entirely opt-in, and calling `SetSecretStoreCredentials` before `SetSecretStore` throws (since there's nowhere to store the value yet). See [Credential Management](../CredentialMgmt/README.md#wire-into-sqlclient) for details.
 
 ## API reference
 
@@ -197,8 +199,8 @@ SQL operations report failure through the SDK's result-object pattern (`Operatio
 - Prefer `UseSingleConnection = true` only when connection setup is genuinely expensive for your provider — it serializes every call on that client behind one connection.
 - Don't assume `GetClient` validates the client name — verify configured client names match what you request, since a miss silently falls back to default settings.
 - Keep connection strings in a protected configuration store or secret store rather than plain `appsettings.json`.
-- Use [`ThreadSafeFileIO`](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/ThreadSafeItems/README.md) if you're also writing query results out to a shared file — SQL client access itself is already safe for concurrent use per-client.
+- Use [`ThreadSafeFileIO`](../ThreadSafeItems/README.md) if you're also writing query results out to a shared file — SQL client access itself is already safe for concurrent use per-client.
 
 ## Changelog
 
-See [CHANGELOG.md](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/SQLMgmt/CHANGELOG.md).
+See [CHANGELOG.md](CHANGELOG.md).

@@ -17,17 +17,14 @@ Integration apps usually talk to several downstream APIs, and each one ends up w
 
 ## Requirements & installation
 
-- .NET 8, 9 or 10
 - `Microsoft.Extensions.Http` (for `IHttpClientFactory`)
-- [Integration.DevKit.Core](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/Core/README.md) (for `ApiOperationResult<T>` and the other result types)
+- [Integration.DevKit.Core](../Core/README.md) (for `ApiOperationResult<T>` and the other result types)
+
+NuGet: [Integration.DevKit.RESTApiMgmt](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt)
 
 ```bash
 dotnet add package Integration.DevKit.RESTApiMgmt
-# or, from source
-dotnet add reference src/Integration.DevKit.RESTApiMgmt/Integration.DevKit.RESTApiMgmt.csproj
 ```
-
-NuGet: [Integration.DevKit.RESTApiMgmt](https://www.nuget.org/packages/Integration.DevKit.RESTApiMgmt)
 
 ## Getting started
 
@@ -81,16 +78,22 @@ else
 }
 ```
 
-`EnableLogging` (default `true`) is checked fresh on every log call rather than only at startup — flip it at runtime via `apiManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging (including every `ApiClient` it hands out) without detaching the `ILoggerFactory` you registered for the rest of the app.
+| Property | Default | Purpose |
+| --- | --- | --- |
+| `Default_HttpTimeout_Seconds` | `30` | Request timeout used by any client that doesn't set its own `HttpTimeout_Seconds`. |
+| `EnableLogging` | `true` | Turns this module's logging on or off, including every `ApiClient` it hands out. Change it at runtime with `apiManager.RuntimeSettings.EnableLogging = false;`; see [Conditional logging](../Core/ConditionalLogging.md) for how this works. |
+| `Clients` | `{}` | Named client settings, keyed by client name. Each entry uses the `ApiClientSettings` properties below. A name that isn't listed gets a client with default settings and a logged warning. |
 
 ### `ApiClientSettings` (per named client)
 
-| Property | Default | Notes |
+| Property | Default | Purpose |
 | --- | --- | --- |
-| `BaseUrl` | `"https://example.com"` | Relative URLs passed to `GetAsync`/etc. are resolved against this. |
-| `MaxConcurrentRequests` | `int.MaxValue` | Negative values are coerced to `int.MaxValue`. |
+| `BaseUrl` | `"https://example.com"` | Base address for this client. Relative URLs passed to `GetAsync`/etc. are resolved against this. |
+| `MaxConcurrentRequests` | `int.MaxValue` | Maximum requests this client sends at once; extra calls wait. Negative values are coerced to `int.MaxValue`. |
 | `HttpTimeout_Seconds` | `null` | `null` falls back to the manager's `Default_HttpTimeout_Seconds`. **`0` means no timeout** (mapped to `Timeout.InfiniteTimeSpan`), not "time out immediately" — negative values are coerced to `0`. |
-| `DefaultHeaders` | `{}` | Applied to every request from this client. |
+| `DefaultHeaders` | `{}` | Headers applied to every request from this client. |
+| `Username` | `""` | Credential for your own auth code. `ApiClient` doesn't read it; get it from `client.RuntimeSettings.Username`, for example in an `IAuthStrategy`. |
+| `Password` | `""` | Credential for your own auth code, read the same way as `Username`. Prefer a secret store or [configuration protection](../Core/ConfigurationProtection.md) over plain text. |
 
 All named clients share a single `IHttpClientFactory`-managed connection pool internally (they're all created via the fixed factory name `"ApiClient"`); per-client `BaseUrl`, headers, and timeout are applied on top of that shared handler when each `ApiClient` is constructed.
 
@@ -98,7 +101,7 @@ All named clients share a single `IHttpClientFactory`-managed connection pool in
 
 ### Make requests
 
-`ApiClient`, `ApiManager`, and `ApiClientMetrics` are plain classes directly under `Integration.DevKit.RESTApiMgmt`. The module's only real extension point is `IAuthStrategy`, in `Integration.DevKit.RESTApiMgmt.Interfaces`; `ApiClientSettings`/`ApiManagerSettings` live in `Integration.DevKit.RESTApiMgmt.Settings`. See [Extending DevKit modules](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/extending-modules.md) for the general pattern.
+`ApiClient`, `ApiManager`, and `ApiClientMetrics` are plain classes directly under `Integration.DevKit.RESTApiMgmt`. The module's only real extension point is `IAuthStrategy`, in `Integration.DevKit.RESTApiMgmt.Interfaces`; `ApiClientSettings`/`ApiManagerSettings` live in `Integration.DevKit.RESTApiMgmt.Settings`. See [Extending DevKit modules](../extending-modules.md) for the general pattern.
 
 ```csharp
 public class ApiClient : IAsyncDisposable
@@ -178,11 +181,11 @@ public interface IAuthStrategy
 
 `SetAuthStrategy` is the only credential/auth mechanism `ApiClient` has — there's no separate Basic-auth or secret-store attachment on the client itself; everything goes through an `IAuthStrategy`. When set, the strategy runs on every outgoing request (`GetAsync`/`PostAsync`/`PutAsync`/`DeleteAsync`, sync or async) just before it's sent, and any failure it returns short-circuits the call as a failed `ApiOperationResult<string>` (HTTP 401) rather than hitting the network.
 
-This module ships **no built-in `IAuthStrategy` implementation** — `IAuthStrategy` is a pure extension point, and you're expected to write your own (an OAuth2 client-credentials flow, a static API key, a signed-request scheme, mTLS header injection). If your downstream API needs OAuth2, compose your own strategy with the [Credential Management](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/CredentialMgmt/README.md) module's `ISecretReader`/`ISecretStore` to source the client secret.
+This module ships **no built-in `IAuthStrategy` implementation** — `IAuthStrategy` is a pure extension point, and you're expected to write your own (an OAuth2 client-credentials flow, a static API key, a signed-request scheme, mTLS header injection). If your downstream API needs OAuth2, compose your own strategy with the [Credential Management](../CredentialMgmt/README.md) module's `ISecretReader`/`ISecretStore` to source the client secret.
 
 ### Implement your own `IAuthStrategy`
 
-See [Extending DevKit modules](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/extending-modules.md) for how a custom `IAuthStrategy` fits into the module's `Interfaces/`/`Settings/` layout in general. A minimal example:
+See [Extending DevKit modules](../extending-modules.md) for how a custom `IAuthStrategy` fits into the module's `Interfaces/`/`Settings/` layout in general. A minimal example:
 
 ```csharp
 using Integration.DevKit.Core;
@@ -331,13 +334,13 @@ public class ApiManager : IAsyncDisposable
 
 `GetClient` caches and reuses one `ApiClient` per name (case-insensitive) — calling it twice with the same name returns the same instance. If `clientName` isn't found in the configured `Clients` dictionary, it logs a warning and hands back a client built from default `ApiClientSettings` rather than throwing, so a typo in a client name fails silently at the HTTP layer (wrong base URL) rather than at `GetClient` — double-check the name against your configuration if requests are going to the wrong host.
 
-`ApiManager` is a plain concrete class with no interface — nothing in this SDK substitutes or mocks a different `ApiManager` implementation, so an interface would be pure ceremony. See [Extending DevKit modules](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/extending-modules.md).
+`ApiManager` is a plain concrete class with no interface — nothing in this SDK substitutes or mocks a different `ApiManager` implementation, so an interface would be pure ceremony. See [Extending DevKit modules](../extending-modules.md).
 
 ### `ApiClient`
 
 See [Make requests](#make-requests) above.
 
-### `ApiOperationResult<T>` (from [Integration.DevKit.Core](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/Core/README.md#result-types))
+### `ApiOperationResult<T>` (from [Integration.DevKit.Core](../Core/ResultTypes.md))
 
 ```csharp
 public string RequestUrl { get; }
@@ -417,4 +420,4 @@ if (!result.MethodSuccess)
 
 ## Changelog
 
-See [CHANGELOG.md](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/RESTApiMgmt/CHANGELOG.md).
+See [CHANGELOG.md](CHANGELOG.md).

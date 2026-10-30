@@ -8,20 +8,17 @@ Named, reference-counted sync and async locks you acquire by string key instead 
 
 ## Why it exists
 
-C#'s `lock` and `SemaphoreSlim` need a shared object that every caller can reach. When the thing you want to protect is identified by a value — "this file path", "this customer" — you end up building a dictionary of lock objects, reference-counting them so the dictionary doesn't grow forever, and handling timeouts. This module does that once. It's also the foundation for [ThreadSafeItems](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/ThreadSafeItems/README.md) and for the `FileSecretStore` in [CredentialMgmt](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/CredentialMgmt/README.md), both of which lock on file paths.
+C#'s `lock` and `SemaphoreSlim` need a shared object that every caller can reach. When the thing you want to protect is identified by a value — "this file path", "this customer" — you end up building a dictionary of lock objects, reference-counting them so the dictionary doesn't grow forever, and handling timeouts. This module does that once. It's also the foundation for [ThreadSafeItems](../ThreadSafeItems/README.md) and for the `FileSecretStore` in [CredentialMgmt](../CredentialMgmt/README.md), both of which lock on file paths.
 
 ## Requirements & installation
 
-- .NET 8, 9 or 10
-- [Integration.DevKit.Core](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/Core/README.md)
+- [Integration.DevKit.Core](../Core/README.md)
+
+NuGet: [Integration.DevKit.ThreadLocks](https://www.nuget.org/packages/Integration.DevKit.ThreadLocks)
 
 ```bash
 dotnet add package Integration.DevKit.ThreadLocks
-# or, from source
-dotnet add reference src/Integration.DevKit.ThreadLocks/Integration.DevKit.ThreadLocks.csproj
 ```
-
-NuGet: [Integration.DevKit.ThreadLocks](https://www.nuget.org/packages/Integration.DevKit.ThreadLocks)
 
 ## Getting started
 
@@ -37,7 +34,7 @@ var lockManager = Service_ThreadLocks.ThreadLockManager;
 
 ## Configuration
 
-`AddThreadLocks` binds the `Integration.DevKit:ThreadLocks` section. The only setting is `EnableLogging` (default `true`), checked fresh on every log call — flip it at runtime via `lockManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging without detaching the `ILoggerFactory` you registered for the rest of the app.
+`AddThreadLocks` binds the `Integration.DevKit:ThreadLocks` section.
 
 ```json
 {
@@ -48,6 +45,10 @@ var lockManager = Service_ThreadLocks.ThreadLockManager;
   }
 }
 ```
+
+| Property | Default | Purpose |
+| --- | --- | --- |
+| `EnableLogging` | `true` | Turns this module's logging on or off. Change it at runtime with `lockManager.RuntimeSettings.EnableLogging = false;`; see [Conditional logging](../Core/ConditionalLogging.md) for how this works. |
 
 ## How to
 
@@ -115,8 +116,8 @@ Lock acquisition reports failure through the SDK's result-object pattern (`NullO
 - Never mix sync and async lock calls against the same key.
 - Always pair `TryEnterX...` with `TryExitX...` in a `try`/`finally`.
 - Use a bounded timeout in production code paths so a stuck holder can't block callers forever.
-- For file access, use [ThreadSafeItems](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/ThreadSafeItems/README.md) rather than locking around `FileUtils` yourself.
+- For file access, use [ThreadSafeItems](../ThreadSafeItems/README.md) rather than locking around `FileUtils` yourself.
 
 ## Changelog
 
-See [CHANGELOG.md](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/ThreadLocks/CHANGELOG.md).
+See [CHANGELOG.md](CHANGELOG.md).

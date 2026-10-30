@@ -12,25 +12,22 @@ File-based secret storage encrypted at rest, plus helpers for layering secrets f
 - `ImportFrom` — seeds a store from any reader in one call.
 - Config-driven registration that selects a backend by provider name, with a hook for registering your own.
 
-The interfaces these implement (`ISecretReader`/`ISecretStore`) ship separately in [Integration.DevKit.CredentialMgmt.Contracts](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/CredentialMgmt.Contracts/README.md).
+The interfaces these implement (`ISecretReader`/`ISecretStore`) ship separately in [Integration.DevKit.CredentialMgmt.Contracts](../CredentialMgmt.Contracts/README.md).
 
 ## Why it exists
 
-Secrets end up in many places — env vars, User Secrets, a cloud vault, a file on the server — and each needs its own glue code. This module doesn't try to replace every one of those. Instead it standardizes the *contract* other DevKit modules talk to (`ISecretReader`/`ISecretStore`), provides one concrete encrypted store for when you have nowhere better to put secrets, and gives you composition helpers so you can layer in whatever other sources a project needs without provider-specific code. It's the store you'd typically compose into a custom [REST API Management](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/RESTApiMgmt/README.md#authenticate-with-iauthstrategy) `IAuthStrategy` to source OAuth2 client secrets, and that [SQL Management](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/SQLMgmt/README.md#store-credentials-in-a-secret-store) can plug into via `SetSecretStore`.
+Secrets end up in many places — env vars, User Secrets, a cloud vault, a file on the server — and each needs its own glue code. This module doesn't try to replace every one of those. Instead it standardizes the *contract* other DevKit modules talk to (`ISecretReader`/`ISecretStore`), provides one concrete encrypted store for when you have nowhere better to put secrets, and gives you composition helpers so you can layer in whatever other sources a project needs without provider-specific code. It's the store you'd typically compose into a custom [REST API Management](../RESTApiMgmt/README.md#authenticate-with-iauthstrategy) `IAuthStrategy` to source OAuth2 client secrets, and that [SQL Management](../SQLMgmt/README.md#store-credentials-in-a-secret-store) can plug into via `SetSecretStore`.
 
 ## Requirements & installation
 
-- .NET 8, 9 or 10
 - `Microsoft.AspNetCore.DataProtection` (version matched to each target framework)
-- [Integration.DevKit.CredentialMgmt.Contracts](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/CredentialMgmt.Contracts/README.md) and [Integration.DevKit.ThreadLocks](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/ThreadLocks/README.md) (pulled in automatically)
+- [Integration.DevKit.CredentialMgmt.Contracts](../CredentialMgmt.Contracts/README.md) and [Integration.DevKit.ThreadLocks](../ThreadLocks/README.md) (pulled in automatically)
+
+NuGet: [Integration.DevKit.CredentialMgmt](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt)
 
 ```bash
 dotnet add package Integration.DevKit.CredentialMgmt
-# or, from source
-dotnet add reference src/Integration.DevKit.CredentialMgmt/Integration.DevKit.CredentialMgmt.csproj
 ```
-
-NuGet: [Integration.DevKit.CredentialMgmt](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt)
 
 ## Getting started
 
@@ -88,7 +85,19 @@ Registering the `"File"` provider also registers `ThreadLocks` for you automatic
 }
 ```
 
-`EnableLogging` (default `true`) is checked fresh on every log call rather than only at startup — flip it at runtime via `Service_CredentialMgmt.FileSecretStore.EnableLogging = false;` to silence this module's logging without detaching the `ILoggerFactory` you registered for the rest of the app.
+| Property | Default | Purpose |
+| --- | --- | --- |
+| `Provider` | `"File"` | Which secret-store backend to register: the built-in `"File"` provider, or the name of a custom provider added with `Service_CredentialMgmt.RegisterProvider`. An unknown name throws `NotSupportedException` at registration. |
+| `EnableLogging` | `true` | Turns this module's logging on or off. Change it at runtime with `Service_CredentialMgmt.FileSecretStore.EnableLogging = false;`; see [Conditional logging](../Core/ConditionalLogging.md) for how this works. |
+| `Options` | `{}` | Provider-specific settings. Keys are matched case-insensitively. The `"File"` provider's keys are listed below. |
+
+`Options` keys for the `"File"` provider (all required; a missing key fails at registration):
+
+| Property | Default | Purpose |
+| --- | --- | --- |
+| `ApplicationName` | none | Application name for ASP.NET Core Data Protection. Apps sharing a key ring must use the same name to read each other's secrets. |
+| `SecretsFolder` | none | Folder where the encrypted secrets files are stored. |
+| `KeysFolder` | none | Folder where the Data Protection key ring is stored. Back this up; secrets can't be decrypted without it. |
 
 `Provider` currently only supports `"File"` out of the box, delegating to the built-in `"File"` provider registration under the hood using the bound `Options` values (`ApplicationName`, `SecretsFolder`, `KeysFolder`) — an unsupported value throws `NotSupportedException` at registration time. Register a custom provider (e.g. a cloud secrets vault) via `Service_CredentialMgmt.RegisterProvider` before calling `AddCredentialMgmt`, and it becomes selectable the same way by name.
 
@@ -153,7 +162,7 @@ This is the recommended way to bootstrap the encrypted `FileSecretStore` from Us
 
 ### Implement your own secret source
 
-The shipped classes cover the common cases, but `ISecretReader`/`ISecretStore` are genuine extension points — implement them yourself for anything else (a cloud secrets vault, a database-backed store, a read-only wrapper over some other config system). See [Extending DevKit modules](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/extending-modules.md) for the general pattern.
+The shipped classes cover the common cases, but `ISecretReader`/`ISecretStore` are genuine extension points — implement them yourself for anything else (a cloud secrets vault, a database-backed store, a read-only wrapper over some other config system). See [Extending DevKit modules](../extending-modules.md) for the general pattern.
 
 **A minimal custom `ISecretReader`** — read-only, mirrors `ConfigurationSecretReader`:
 
@@ -217,11 +226,11 @@ Neither example needs to live under `Integration.DevKit.CredentialMgmt.*` — `I
 
 ### Wire into `ApiClient`
 
-`ApiClient` ([REST API Management](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/RESTApiMgmt/README.md#authenticate-with-iauthstrategy)) has no direct secret-store attachment — it authenticates exclusively through `SetAuthStrategy(IAuthStrategy?)`. `IAuthStrategy` ships with no built-in implementation, so to source credentials from this module, read them from an `ISecretReader` (e.g. a `CompositeSecretReader` wrapping `Service_CredentialMgmt.FileSecretStore`) inside your own `IAuthStrategy` implementation.
+`ApiClient` ([REST API Management](../RESTApiMgmt/README.md#authenticate-with-iauthstrategy)) has no direct secret-store attachment — it authenticates exclusively through `SetAuthStrategy(IAuthStrategy?)`. `IAuthStrategy` ships with no built-in implementation, so to source credentials from this module, read them from an `ISecretReader` (e.g. a `CompositeSecretReader` wrapping `Service_CredentialMgmt.FileSecretStore`) inside your own `IAuthStrategy` implementation.
 
 ### Wire into `SQLClient`
 
-`SQLClient` ([SQL Management](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/SQLMgmt/README.md#store-credentials-in-a-secret-store)) accepts a secret store directly via `SetSecretStore(ISecretStore secretStore)`, after which it reads/writes its connection string through it instead of the plain-text value in configuration:
+`SQLClient` ([SQL Management](../SQLMgmt/README.md#store-credentials-in-a-secret-store)) accepts a secret store directly via `SetSecretStore(ISecretStore secretStore)`, after which it reads/writes its connection string through it instead of the plain-text value in configuration:
 
 ```csharp
 var sqlClient = Service_SQLMgmt.SQLManager.GetClient("my-client");
@@ -233,7 +242,7 @@ sqlClient.SetSecretStoreCredentials("Server=...;Database=...;");
 
 ## API reference
 
-`SecretStoreBase` lives in `Integration.DevKit.CredentialMgmt.Abstractions`; `ConfigurationSecretReader`, `CompositeSecretReader`, and `FileSecretStore` live in `Integration.DevKit.CredentialMgmt.Implementations`. `ISecretReader`/`ISecretStore` are documented in [CredentialMgmt.Contracts](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/CredentialMgmt.Contracts/README.md).
+`SecretStoreBase` lives in `Integration.DevKit.CredentialMgmt.Abstractions`; `ConfigurationSecretReader`, `CompositeSecretReader`, and `FileSecretStore` live in `Integration.DevKit.CredentialMgmt.Implementations`. `ISecretReader`/`ISecretStore` are documented in [CredentialMgmt.Contracts](../CredentialMgmt.Contracts/README.md).
 
 ### `Service_CredentialMgmt` (static)
 
@@ -301,8 +310,8 @@ Every `ISecretReader`/`ISecretStore` method returns `OperationResult<string>`/`N
 - Restrict file-system access to both `SecretsFolder` and `KeysFolder` to the accounts/processes that need them — losing either one alone is recoverable, losing both together is not.
 - Use one container (`fileName`) per logical group of secrets (e.g. per integration or per environment) rather than one giant container for everything.
 - Back up `KeysFolder` alongside your secrets — if the Data Protection key ring is lost, existing `.secret` files become permanently undecryptable.
-- Prefer this module (or a managed secret store) over plain values in `appsettings.json`, and reserve [`AesConfigProtector`](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/Core/README.md#configuration-protection) for lower-stakes obfuscation only.
+- Prefer this module (or a managed secret store) over plain values in `appsettings.json`, and reserve [`AesConfigProtector`](../Core/ConfigurationProtection.md) for lower-stakes obfuscation only.
 
 ## Changelog
 
-See [CHANGELOG.md](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/CredentialMgmt/CHANGELOG.md).
+See [CHANGELOG.md](CHANGELOG.md).

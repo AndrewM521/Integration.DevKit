@@ -1,6 +1,11 @@
 # Changelog — Integration.DevKit.ThreadSafeItems
 
-SDK-wide changes are summarized here when they affect this package. See the [root changelog](../CHANGELOG.md) for the full SDK release notes.
+This changelog covers only the `Integration.DevKit.ThreadSafeItems` package. See the [root changelog](../CHANGELOG.md) for the full SDK release notes.
+
+## [Unreleased]
+
+### Changed
+- **Breaking:** the static accessor `Service_ThreadSafeItems.ThreadSafeFileIOClass` was renamed to `Service_ThreadSafeItems.ThreadSafeFileIO`, matching the class name. Update call sites from `.ThreadSafeFileIOClass` to `.ThreadSafeFileIO`.
 
 ## [2.1.0.0] - 2026-10-28 (current)
 

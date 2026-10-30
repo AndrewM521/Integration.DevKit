@@ -1,6 +1,6 @@
 # Changelog — Integration.DevKit.SQLMgmt
 
-SDK-wide changes are summarized here when they affect this package. See the [root changelog](../CHANGELOG.md) for the full SDK release notes.
+This changelog covers only the `Integration.DevKit.SQLMgmt` package. See the [root changelog](../CHANGELOG.md) for the full SDK release notes.
 
 ## [2.1.0.0] - 2026-10-28 (current)
 

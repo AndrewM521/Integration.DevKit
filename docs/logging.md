@@ -4,7 +4,7 @@ DevKit core modules only depend on `Microsoft.Extensions.Logging.Abstractions` (
 
 ## Bring your own logger
 
-DevKit modules (`ProcessManager`, `ApiManager`, `SQLManager`, `TaskManager`, `ThreadSafeFileIO`, etc.) take an optional `ILoggerFactory?`/`ILogger?` constructor parameter. When they're constructed through DI, any `ILoggerFactory` registered in the container is used automatically — you don't need to pass anything module-by-module. The standard way to get one registered is the framework's own `services.AddLogging(...)`, with your provider of choice added via `AddProvider`/`AddConsole`/or your logging library's own `Add*` extension.
+Every module takes an optional `ILoggerFactory?`/`ILogger?` constructor parameter. When they're constructed through DI, any `ILoggerFactory` registered in the container is used automatically. The standard way to get one registered is the framework's own `services.AddLogging(...)`, with your provider of choice added via `AddProvider`/`AddConsole`/or your logging library's own `Add*` extension.
 
 ```csharp
 var builder = Host.CreateDefaultBuilder(args)
@@ -32,4 +32,4 @@ Because `Host.CreateDefaultBuilder` already wires up `ILoggerFactory` from every
 
 ## Turning logging on or off per module
 
-Every module's settings include an `EnableLogging` flag (default `true`). Unlike the other settings, it's checked fresh on every log call rather than only at startup — so flipping it on a manager's `RuntimeSettings` at runtime (e.g. `apiManager.RuntimeSettings.EnableLogging = false;`) silences or resumes that module's logging immediately, without detaching the `ILoggerFactory` you registered for the rest of the app. See [README → Configuration](README.md#configuration) for the config section each module reads this from.
+Every module's settings include an `EnableLogging` flag (default `true`), which can also be changed at runtime (e.g. `apiManager.RuntimeSettings.EnableLogging = false;`). See [Conditional logging](Core/ConditionalLogging.md) for how this works, and [README → Configuration](README.md#configuration) for the config section each module reads it from.

@@ -19,16 +19,13 @@ Start and supervise external processes with output capture, cancellation, and ti
 
 ## Requirements & installation
 
-- .NET 8, 9 or 10
-- [Integration.DevKit.Core](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/Core/README.md)
+- [Integration.DevKit.Core](../Core/README.md)
+
+NuGet: [Integration.DevKit.ProcessLauncher](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher)
 
 ```bash
 dotnet add package Integration.DevKit.ProcessLauncher
-# or, from source
-dotnet add reference src/Integration.DevKit.ProcessLauncher/Integration.DevKit.ProcessLauncher.csproj
 ```
-
-NuGet: [Integration.DevKit.ProcessLauncher](https://www.nuget.org/packages/Integration.DevKit.ProcessLauncher)
 
 ## Getting started
 
@@ -62,7 +59,7 @@ There's no ordering dependency on any other DevKit module: logging goes through 
 
 ## Configuration
 
-`AddProcessLauncher(configuration)` binds the `Integration.DevKit:ProcessLauncher` section, whose only setting is `EnableLogging` (default `true`) — every process is still configured per-call via `ManagedProcessConfig`.
+`AddProcessLauncher(configuration)` binds the `Integration.DevKit:ProcessLauncher` section. Each process is configured per call through `ManagedProcessConfig` (below), not through `appsettings.json`.
 
 ```json
 {
@@ -74,7 +71,9 @@ There's no ordering dependency on any other DevKit module: logging goes through 
 }
 ```
 
-`EnableLogging` is checked fresh on every log call, so it can be flipped at runtime via `processManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging without detaching the `ILoggerFactory` you registered for the rest of the app.
+| Property | Default | Purpose |
+| --- | --- | --- |
+| `EnableLogging` | `true` | Turns this module's logging on or off. Change it at runtime with `processManager.RuntimeSettings.EnableLogging = false;`; see [Conditional logging](../Core/ConditionalLogging.md) for how this works. |
 
 ### `ManagedProcessConfig`
 
@@ -188,4 +187,4 @@ Every public method on `ProcessManager`/`ManagedProcess` returns an `OperationRe
 
 ## Changelog
 
-See [CHANGELOG.md](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/ProcessLauncher/CHANGELOG.md).
+See [CHANGELOG.md](CHANGELOG.md).

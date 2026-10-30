@@ -27,7 +27,7 @@ public static class Service_ThreadSafeItems
     private static ThreadSafeFileIO? _threadSafeFileIO;
 
     /// <summary>
-    /// Adds the <see cref="ThreadSafeFileIO"/> service to the service collection as a singleton.
+    /// Adds the <see cref="ThreadSafeItems.ThreadSafeFileIO"/> service to the service collection as a singleton.
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to add the service to.</param>
     /// <param name="config">The application configuration used to bind <see cref="ThreadSafeItemsSettings"/>.</param>
@@ -55,13 +55,13 @@ public static class Service_ThreadSafeItems
     }
 
     /// <summary>
-    /// Initializes the static host by resolving <see cref="ThreadSafeFileIO"/> and validating 
+    /// Initializes the static host by resolving <see cref="ThreadSafeItems.ThreadSafeFileIO"/> and validating 
     /// its dependencies from the service provider.
     /// </summary>
     /// <param name="sp">The <see cref="IServiceProvider"/> used to resolve dependencies.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="sp"/> is <see langword="null"/>.</exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if <see cref="ThreadLockManager"/> or <see cref="ThreadSafeFileIO"/> are not 
+    /// Thrown if <see cref="ThreadLockManager"/> or <see cref="ThreadSafeItems.ThreadSafeFileIO"/> are not 
     /// correctly registered in the service collection.
     /// </exception>
     public static void Initialize(IServiceProvider sp)
@@ -83,20 +83,20 @@ public static class Service_ThreadSafeItems
         _threadSafeFileIO = sp.GetService<ThreadSafeFileIO>();
         if (_threadSafeFileIO == null)
         {
-            throw new InvalidOperationException($"{nameof(ThreadSafeFileIO)} is not registered. Make sure you call AddThreadSafeItems() when configuring services.");
+            throw new InvalidOperationException($"{nameof(ThreadSafeItems.ThreadSafeFileIO)} is not registered. Make sure you call AddThreadSafeItems() when configuring services.");
         }
     }
 
     /// <summary>
-    /// Gets the globally accessible instance of the <see cref="ThreadSafeFileIO"/> class.
+    /// Gets the globally accessible instance of the <see cref="ThreadSafeItems.ThreadSafeFileIO"/> class.
     /// </summary>
     /// <value>
-    /// The initialized <see cref="ThreadSafeFileIO"/> instance used for thread-safe file operations.
+    /// The initialized <see cref="ThreadSafeItems.ThreadSafeFileIO"/> instance used for thread-safe file operations.
     /// </value>
     /// <exception cref="InvalidOperationException">
     /// Thrown if the property is accessed before <see cref="Initialize(IServiceProvider)"/> has been called.
     /// </exception>
-    public static ThreadSafeFileIO ThreadSafeFileIOClass { 
+    public static ThreadSafeFileIO ThreadSafeFileIO { 
         get
         {
             if (_threadSafeFileIO == null)

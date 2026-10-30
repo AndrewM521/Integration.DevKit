@@ -18,17 +18,14 @@ Most integration services have jobs like "poll this API every 5 minutes" or "syn
 
 ## Requirements & installation
 
-- .NET 8, 9 or 10
 - `Microsoft.Extensions.Hosting.Abstractions` (for `IHostApplicationLifetime`, used internally to stop tasks on shutdown)
-- [Integration.DevKit.Core](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/Core/README.md)
+- [Integration.DevKit.Core](../Core/README.md)
+
+NuGet: [Integration.DevKit.TaskMgmt](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt)
 
 ```bash
 dotnet add package Integration.DevKit.TaskMgmt
-# or, from source
-dotnet add reference src/Integration.DevKit.TaskMgmt/Integration.DevKit.TaskMgmt.csproj
 ```
-
-NuGet: [Integration.DevKit.TaskMgmt](https://www.nuget.org/packages/Integration.DevKit.TaskMgmt)
 
 ## Getting started
 
@@ -111,7 +108,7 @@ await handle.RunningTask!;   // await the whole task's lifetime (Asyncronous mod
 | `MaxConcurrentTasks` | `int.MaxValue` | Upper bound on tasks running at once across the manager. |
 | `MaxTaskRegistryCount` | `2000` | How many completed task snapshots the registry retains before evicting the oldest (FIFO). |
 | `MaxTaskIterationRegistryCount` | `100` | How many iteration snapshots are retained per task before older ones are evicted. |
-| `EnableLogging` | `true` | Checked fresh on every log call — flip it at runtime via `taskManager.RuntimeSettings.EnableLogging = false;` to silence this module's logging without detaching the `ILoggerFactory` you registered for the rest of the app. |
+| `EnableLogging` | `true` | Turns this module's logging on or off. Change it at runtime with `taskManager.RuntimeSettings.EnableLogging = false;`; see [Conditional logging](../Core/ConditionalLogging.md) for how this works. |
 
 Per-task behavior (retries, iteration limits, timing) is configured separately per call via `ManagedTaskSettings`.
 
@@ -136,7 +133,7 @@ Passed to `StartTask` to control how that specific task instance runs:
 
 ### Schedule iterations
 
-By default (`BaseIterationStrategy`), the manager starts the next iteration immediately with no delay. To run on a schedule, assign a `Time_IterationStrategy` subclass instead. `IIterationStrategy`/`BaseIterationStrategy`/`Time_IterationStrategy` live in `Integration.DevKit.TaskMgmt.Abstractions`; the shipped `TimeStrategy_*` subclasses live in `Integration.DevKit.TaskMgmt.Implementations`. See [Extending DevKit modules](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/extending-modules.md) for the general pattern.
+By default (`BaseIterationStrategy`), the manager starts the next iteration immediately with no delay. To run on a schedule, assign a `Time_IterationStrategy` subclass instead. `IIterationStrategy`/`BaseIterationStrategy`/`Time_IterationStrategy` live in `Integration.DevKit.TaskMgmt.Abstractions`; the shipped `TimeStrategy_*` subclasses live in `Integration.DevKit.TaskMgmt.Implementations`. See [Extending DevKit modules](../extending-modules.md) for the general pattern.
 
 ```csharp
 using Integration.DevKit.TaskMgmt.Implementations;
@@ -255,7 +252,7 @@ public abstract class ManagedTask : IDisposable
 
 ### `TaskManager`
 
-Lives directly under `Integration.DevKit.TaskMgmt` (no interface — see [Extending DevKit modules](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/extending-modules.md) for why this module's manager isn't behind one):
+Lives directly under `Integration.DevKit.TaskMgmt` (no interface — see [Extending DevKit modules](../extending-modules.md) for why this module's manager isn't behind one):
 
 ```csharp
 public class TaskManager
@@ -338,4 +335,4 @@ public class TaskRegistry
 
 ## Changelog
 
-See [CHANGELOG.md](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/TaskMgmt/CHANGELOG.md).
+See [CHANGELOG.md](CHANGELOG.md).

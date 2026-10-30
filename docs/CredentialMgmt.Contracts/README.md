@@ -9,24 +9,21 @@ This package contains only two interfaces, in the `Integration.DevKit.Credential
 - `ISecretReader` — read-only access to secrets, grouped by container.
 - `ISecretStore` — extends `ISecretReader` with write and delete operations.
 
-The implementations (`FileSecretStore`, `ConfigurationSecretReader`, `CompositeSecretReader`) live in [Integration.DevKit.CredentialMgmt](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/CredentialMgmt/README.md).
+The implementations (`FileSecretStore`, `ConfigurationSecretReader`, `CompositeSecretReader`) live in [Integration.DevKit.CredentialMgmt](../CredentialMgmt/README.md).
 
 ## Why it exists
 
-Other modules — [SQLMgmt](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/SQLMgmt/README.md) and [RESTApiMgmt](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/RESTApiMgmt/README.md) — and their tests need to accept "a secret store" without pulling in ASP.NET Core Data Protection or the file store. Keeping the interfaces in their own small package lets them do that, and lets you write your own secret source (a cloud vault, a database) against the contract alone. This is the only DevKit module that still ships a separate `.Contracts` package; the rest fold their interfaces into the main package.
+Other modules — [SQLMgmt](../SQLMgmt/README.md) and [RESTApiMgmt](../RESTApiMgmt/README.md) — and their tests need to accept "a secret store" without pulling in ASP.NET Core Data Protection or the file store. Keeping the interfaces in their own small package lets them do that, and lets you write your own secret source (a cloud vault, a database) against the contract alone. This is the only DevKit module that still ships a separate `.Contracts` package; the rest fold their interfaces into the main package.
 
 ## Requirements & installation
 
-- .NET 8, 9 or 10
-- [Integration.DevKit.Core](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/Core/README.md) (pulled in automatically)
+- [Integration.DevKit.Core](../Core/README.md) (pulled in automatically)
+
+NuGet: [Integration.DevKit.CredentialMgmt.Contracts](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt.Contracts)
 
 ```bash
 dotnet add package Integration.DevKit.CredentialMgmt.Contracts
-# or, from source
-dotnet add reference src/Integration.DevKit.CredentialMgmt.Contracts/Integration.DevKit.CredentialMgmt.Contracts.csproj
 ```
-
-NuGet: [Integration.DevKit.CredentialMgmt.Contracts](https://www.nuget.org/packages/Integration.DevKit.CredentialMgmt.Contracts)
 
 You rarely reference this package directly — it comes in with CredentialMgmt, SQLMgmt, and RESTApiMgmt. Reference it on its own only when writing a secret source that shouldn't depend on the full CredentialMgmt package.
 
@@ -58,7 +55,7 @@ Think of `fileName` as a **container name** — a logical grouping of related se
 
 ### Implement your own
 
-Implement `ISecretReader` directly for a read-only source. For a read/write store, subclass `SecretStoreBase` from CredentialMgmt (it handles encryption for you) rather than implementing `ISecretStore` from scratch. Worked examples for both are in [CredentialMgmt → Implement your own secret source](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/CredentialMgmt/README.md#implement-your-own-secret-source).
+Implement `ISecretReader` directly for a read-only source. For a read/write store, subclass `SecretStoreBase` from CredentialMgmt (it handles encryption for you) rather than implementing `ISecretStore` from scratch. Worked examples for both are in [CredentialMgmt → Implement your own secret source](../CredentialMgmt/README.md#implement-your-own-secret-source).
 
 ## API reference
 
@@ -90,4 +87,4 @@ Implementations should return a failed result rather than throw. By convention, 
 
 ## Changelog
 
-See [CHANGELOG.md](https://github.com/AndrewM521/AndrewM5.DevKit/blob/main/docs/CredentialMgmt.Contracts/CHANGELOG.md).
+See [CHANGELOG.md](CHANGELOG.md).

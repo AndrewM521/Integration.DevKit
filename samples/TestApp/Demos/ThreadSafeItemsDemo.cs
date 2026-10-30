@@ -19,7 +19,7 @@ public class ThreadSafeItemsDemo : IDemo
     {
         Console.WriteLine("----|----|Thread Safe FileIO |----|----");
 
-        var _threadSafeFileIO = Service_ThreadSafeItems.ThreadSafeFileIOClass;
+        var _threadSafeFileIO = Service_ThreadSafeItems.ThreadSafeFileIO;
         string filePath = "C:\\Users\\andre\\Projects\\Junk\\ThreadSafeTest.txt";
         string filePath_AsyncLock = "C:\\Users\\andre\\Projects\\Junk\\ThreadSafeTest_AsyncLock.txt";
         string filePath_SyncLock = "C:\\Users\\andre\\Projects\\Junk\\ThreadSafeTest_SyncLock.txt";

@@ -19,7 +19,7 @@ Going forward, record module-specific changes in that module's changelog, and ad
 ## [2.1.0.0] - 2026-10-28 (current)
 
 ### Changed
-- All modules now multi-target `net8.0`, `net9.0` and `net10.0` (previously `net8.0` only). The target list is defined once in the root `Directory.Build.props` (`DevKitTargetFrameworks`). Building all three targets requires the .NET 10 SDK (CLI or Visual Studio 2026); Visual Studio 2022 cannot use that SDK, so it builds `net8.0` and `net9.0` only. Build NuGet packages from the CLI so they include `net10.0`.
+- All modules now multi-target `net8.0`, `net9.0` and `net10.0`. Building all three targets requires the .NET 10 SDK (CLI or Visual Studio 2026); Visual Studio 2022 cannot use that SDK, so it builds `net8.0` and `net9.0` only.
 - All module versions bumped to `2.1.0.0`.
 - `Microsoft.Extensions.*` packages bumped to `10.0.14`; `Microsoft.Data.SqlClient` bumped to `6.1.8`.
 - Test tooling bumped: `Microsoft.NET.Test.Sdk` 18.11.0, `xunit` 2.9.3, `xunit.runner.visualstudio` 3.1.5, `coverlet.collector` 10.1.0.
@@ -35,17 +35,17 @@ Going forward, record module-specific changes in that module's changelog, and ad
 
 ### Versioning
 - Switched version numbering scheme to strict `Major.Minor.Build.0` format going forward.
-- All 8 modules (Core, REST API Management, SQL Management, Task Management, Process Launcher, Thread Locks, Thread-Safe File I/O, Credential Management) bumped from `1.2.0.0-preview` to `2.0.0.0`, promoting the 1.2 preview content below to a final release.
+- 8 modules (Core, REST API Management, SQL Management, Task Management, Process Launcher, Thread Locks, Thread-Safe File I/O, Credential Management) bumped from `1.2.0.0-preview` to `2.0.0.0`, promoting the 1.2 preview content below to a final release.
 
 ### Changed
-- All 8 current modules (Core, REST API Management, SQL Management, Task Management, Process Launcher, Thread Locks, Thread-Safe File I/O, Credential Management) bumped together to `1.2.0.0-preview`.
+- 8 current modules (Core, REST API Management, SQL Management, Task Management, Process Launcher, Thread Locks, Thread-Safe File I/O, Credential Management) bumped together to `1.2.0.0-preview`.
 - Added unit tests across modules and expanded setup code into separate classes for readability.
 - Major cleanup and reorganization of files/folders.
 - Fixed a small bug in JSON key normalization.
 
 ### Removed
-- **CustomLogger (formerly Logging)** module removed entirely — its files were deleted after being demoted to sample code the same week (see 1.0.1.x below for its removal date).
-- Most `.Contracts` projects (REST API Management, SQL Management, Task Management, Thread Locks, Process Launcher) were removed as part of the cleanup — `CredentialMgmt.Contracts` is now the only surviving `.Contracts` package.
+- **CustomLogger (formerly Logging)** module removed entirely.
+- Most `.Contracts` projects were removed as part of the cleanup — `CredentialMgmt.Contracts` is now the only surviving `.Contracts` package.
 
 ### Added
 - REST API Management gained an `IAuthStrategy` extension point for applying auth to outgoing requests.

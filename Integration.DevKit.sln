@@ -47,7 +47,15 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{0C984046-4EF2-4E03-B45C-23C0CAD7F15B}"
 	ProjectSection(SolutionItems) = preProject
 		docs\Core\CHANGELOG.md = docs\Core\CHANGELOG.md
+		docs\Core\ConditionalLogging.md = docs\Core\ConditionalLogging.md
+		docs\Core\ConfigurationProtection.md = docs\Core\ConfigurationProtection.md
+		docs\Core\DictionaryUtils.md = docs\Core\DictionaryUtils.md
+		docs\Core\FileAndDirectoryUtils.md = docs\Core\FileAndDirectoryUtils.md
+		docs\Core\JsonUtils.md = docs\Core\JsonUtils.md
+		docs\Core\MiscHelpers.md = docs\Core\MiscHelpers.md
+		docs\Core\OnDemandHosting.md = docs\Core\OnDemandHosting.md
 		docs\Core\README.md = docs\Core\README.md
+		docs\Core\ResultTypes.md = docs\Core\ResultTypes.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CredentialMgmt", "CredentialMgmt", "{7491B7AA-318F-43E2-AFE9-29E96E69FC9E}"
@@ -96,6 +104,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ThreadSafeItems", "ThreadSa
 	ProjectSection(SolutionItems) = preProject
 		docs\ThreadSafeItems\CHANGELOG.md = docs\ThreadSafeItems\CHANGELOG.md
 		docs\ThreadSafeItems\README.md = docs\ThreadSafeItems\README.md
+		docs\ThreadSafeItems\ThreadSafeFileIO.md = docs\ThreadSafeItems\ThreadSafeFileIO.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{FAD2E43C-3429-49D3-B20F-C67763773DB5}"

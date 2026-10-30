@@ -1,6 +1,6 @@
 # Changelog — Integration.DevKit.TaskMgmt
 
-SDK-wide changes are summarized here when they affect this package. See the [root changelog](../CHANGELOG.md) for the full SDK release notes.
+This changelog covers only the `Integration.DevKit.TaskMgmt` package. See the [root changelog](../CHANGELOG.md) for the full SDK release notes.
 
 ## [2.1.0.0] - 2026-10-28 (current)
 
