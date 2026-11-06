@@ -1,6 +1,11 @@
-# Changelog — Integration.DevKit.RESTApiMgmt
+﻿# Changelog — Integration.DevKit.RESTApiMgmt
 
 This changelog covers only the `Integration.DevKit.RESTApiMgmt` package. See the [root changelog](../CHANGELOG.md) for the full SDK release notes.
+
+## [Unreleased]
+
+### Added
+- Retry with exponential backoff for `ApiClient` requests that fail with a transient error (network error, timeout, HTTP 408, 429, 500, 502, 503, 504). Configure it with `MaxRetries` / `RetryBaseDelay_Milliseconds` on a client, or `Default_MaxRetries` / `Default_RetryBaseDelay_Milliseconds` on the manager. Off by default (`Default_MaxRetries = 0`), so existing behavior is unchanged.
 
 ## [2.1.1.0] - 2026-10-30 (current)
 

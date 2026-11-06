@@ -49,4 +49,19 @@ public class ApiClientSettings
     /// If <see langword="null"/>, the underlying system default timeout is used.
     /// </summary>
     public int? HttpTimeout_Seconds { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets how many times a request is retried after a transient failure
+    /// (network error, timeout, HTTP 408, 429, 500, 502, 503 or 504).
+    /// If <see langword="null"/>, <see cref="ApiManagerSettings.Default_MaxRetries"/> is used. Negative values are coerced to 0.
+    /// </summary>
+    /// <remarks>Retries apply to every HTTP method, including POST, so only enable them for endpoints that are safe to repeat.</remarks>
+    public int? MaxRetries { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets the delay, in milliseconds, before the first retry. Each later retry waits twice as long, with up to
+    /// 20% random jitter, capped at 30 seconds.
+    /// If <see langword="null"/>, <see cref="ApiManagerSettings.Default_RetryBaseDelay_Milliseconds"/> is used. Negative values are coerced to 0.
+    /// </summary>
+    public int? RetryBaseDelay_Milliseconds { get; set; } = null;
 }

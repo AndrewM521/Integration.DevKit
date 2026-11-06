@@ -8,6 +8,7 @@ using Integration.DevKit.Core;
 using Integration.DevKit.RESTApiMgmt.Interfaces;
 using Integration.DevKit.RESTApiMgmt.Settings;
 using Microsoft.Extensions.Logging;
+using System.Net;
 using System.Reflection;
 using System.Text;
 
@@ -33,6 +34,8 @@ public class ApiClient : IAsyncDisposable
     /// Gets the metrics collector associated with this client.
     /// </summary>
     public ApiClientMetrics ClientMetrics => _metrics;
+
+    private const double MaxRetryDelay_Milliseconds = 30000;
 
     private readonly HttpClient _httpClient;
     private readonly ApiManager _apiManager;
@@ -100,6 +103,9 @@ public class ApiClient : IAsyncDisposable
                 RuntimeSettings.HttpTimeout_Seconds = _apiManager.RuntimeSettings.Default_HttpTimeout_Seconds;
             }
 
+            RuntimeSettings.MaxRetries = Math.Max(0, RuntimeSettings.MaxRetries ?? _apiManager.RuntimeSettings.Default_MaxRetries);
+            RuntimeSettings.RetryBaseDelay_Milliseconds = Math.Max(0, RuntimeSettings.RetryBaseDelay_Milliseconds ?? _apiManager.RuntimeSettings.Default_RetryBaseDelay_Milliseconds);
+
             _httpClient.BaseAddress = new Uri(RuntimeSettings.BaseUrl);
 
             if (RuntimeSettings.HttpTimeout_Seconds != 0)
@@ -138,8 +144,8 @@ public class ApiClient : IAsyncDisposable
     /// <returns>A task representing the result as an <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
     public async Task<ApiOperationResult<string>> GetAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
-        return await SendRequestOrchestratorAsync(HttpMethod.Get, () =>
-            ApiRequest.GetAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient));
+        return await SendRequestOrchestratorAsync(HttpMethod.Get, httpContent, content =>
+            ApiRequest.GetAsync(_httpClient, endpointUrl, content, requestHeaders, _authStrategy, _authClient));
     }
 
     /// <summary>
@@ -151,8 +157,8 @@ public class ApiClient : IAsyncDisposable
     /// <returns>A task representing the result as an <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
     public async Task<ApiOperationResult<string>> PutAsync(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
     {
-        return await SendRequestOrchestratorAsync(HttpMethod.Put, () =>
-            ApiRequest.PutAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient));
+        return await SendRequestOrchestratorAsync(HttpMethod.Put, httpContent, content =>
+            ApiRequest.PutAsync(_httpClient, endpointUrl, content!, requestHeaders, _authStrategy, _authClient));
     }
 
     /// <summary>
@@ -164,8 +170,8 @@ public class ApiClient : IAsyncDisposable
     /// <returns>A task representing the result as an <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
     public async Task<ApiOperationResult<string>> PostAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
-        return await SendRequestOrchestratorAsync(HttpMethod.Post, () =>
-            ApiRequest.PostAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient));
+        return await SendRequestOrchestratorAsync(HttpMethod.Post, httpContent, content =>
+            ApiRequest.PostAsync(_httpClient, endpointUrl, content, requestHeaders, _authStrategy, _authClient));
     }
 
     /// <summary>
@@ -177,20 +183,63 @@ public class ApiClient : IAsyncDisposable
     /// <returns>A task representing the result as an <see cref="ApiOperationResult{T}"/> containing the response body string.</returns>
     public async Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
-        return await SendRequestOrchestratorAsync(HttpMethod.Delete, () =>
-            ApiRequest.DeleteAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient));
+        return await SendRequestOrchestratorAsync(HttpMethod.Delete, httpContent, content =>
+            ApiRequest.DeleteAsync(_httpClient, endpointUrl, content, requestHeaders, _authStrategy, _authClient));
     }
 
-    // A generic wrapper to handle the "Orchestration" (Metrics + Rate Limiting)
-    private async Task<ApiOperationResult<string>> SendRequestOrchestratorAsync(HttpMethod method, Func<Task<ApiOperationResult<string>>> action)
+    // A generic wrapper to handle the "Orchestration" (Metrics + Rate Limiting + Retries)
+    private async Task<ApiOperationResult<string>> SendRequestOrchestratorAsync(HttpMethod method, HttpContent? httpContent, Func<HttpContent?, Task<ApiOperationResult<string>>> action)
     {
         HttpMetricNames metricName = GetMetricName(method);
+        int maxRetries = RuntimeSettings.MaxRetries ?? 0;
         
         await _rateLimiter.WaitAsync();
 
         try
         {
-            var result = await action();
+            // Each request disposes the content it sends, so when retrying, buffer the body once and send a fresh copy per attempt.
+            byte[]? body = null;
+
+            if (maxRetries > 0 && httpContent != null)
+            {
+                try
+                {
+                    body = await httpContent.ReadAsByteArrayAsync();
+                }
+                catch
+                {
+                    // Unreadable content (e.g. already disposed): send it once and let ApiRequest report the failure.
+                    maxRetries = 0;
+                }
+            }
+
+            ApiOperationResult<string> result;
+            int attempt = 0;
+
+            while (true)
+            {
+                HttpContent? attemptContent = body == null ? httpContent : CopyContent(httpContent!, body);
+
+                result = await action(attemptContent);
+
+                if (result.MethodSuccess || attempt >= maxRetries || !IsTransientFailure(result.StatusCode))
+                {
+                    break;
+                }
+
+                attempt++;
+
+                TimeSpan delay = GetRetryDelay(attempt);
+
+                _logger?.LogWarning($"Api Client '{ClientName}': {method} {result.RequestUrl} failed with {(int)result.StatusCode} {result.StatusCode}. Retry {attempt} of {maxRetries} in {delay.TotalMilliseconds:F0} ms");
+
+                await Task.Delay(delay);
+            }
+
+            if (body != null)
+            {
+                httpContent!.Dispose();
+            }
 
             _metrics.IncrementMetric(metricName);
 
@@ -313,6 +362,56 @@ public class ApiClient : IAsyncDisposable
         {
             return result.SetMethodFailure(ex);
         }
+    }
+
+    /// <summary>
+    /// Returns whether a failed request is worth retrying: network errors and timeouts (reported as 503 and 500
+    /// by <see cref="ApiRequest.SendRequestAsync"/>), plus HTTP 408, 429, 500, 502, 503 and 504.
+    /// </summary>
+    private static bool IsTransientFailure(HttpStatusCode statusCode)
+    {
+        switch (statusCode)
+        {
+            case HttpStatusCode.RequestTimeout:
+            case HttpStatusCode.TooManyRequests:
+            case HttpStatusCode.InternalServerError:
+            case HttpStatusCode.BadGateway:
+            case HttpStatusCode.ServiceUnavailable:
+            case HttpStatusCode.GatewayTimeout:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// Exponential backoff: the base delay doubled for each earlier retry, with ±20% jitter, capped at 30 seconds.
+    /// </summary>
+    private TimeSpan GetRetryDelay(int attempt)
+    {
+        double delay_Milliseconds = (RuntimeSettings.RetryBaseDelay_Milliseconds ?? 0) * Math.Pow(2, attempt - 1);
+        double jitter = 0.8 + (Random.Shared.NextDouble() * 0.4);
+
+        return TimeSpan.FromMilliseconds(Math.Min(delay_Milliseconds * jitter, MaxRetryDelay_Milliseconds));
+    }
+
+    /// <summary>
+    /// Creates a fresh copy of buffered request content, keeping its content headers (e.g. Content-Type).
+    /// </summary>
+    private static HttpContent CopyContent(HttpContent original, byte[] body)
+    {
+        var copy = new ByteArrayContent(body);
+
+        foreach (var header in original.Headers)
+        {
+            // ByteArrayContent computes its own length.
+            if (!header.Key.Equals("Content-Length", StringComparison.OrdinalIgnoreCase))
+            {
+                copy.Headers.TryAddWithoutValidation(header.Key, header.Value);
+            }
+        }
+
+        return copy;
     }
 
     /// <summary>

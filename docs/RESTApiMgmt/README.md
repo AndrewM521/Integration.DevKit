@@ -1,4 +1,4 @@
-# Integration.DevKit.RESTApiMgmt
+﻿# Integration.DevKit.RESTApiMgmt
 
 Named, configuration-driven REST clients over `HttpClient` that return typed results instead of throwing, with built-in metrics and a pluggable authentication hook.
 
@@ -62,12 +62,15 @@ else
   "Integration.DevKit": {
     "ApiClientManagement": {
       "Default_HttpTimeout_Seconds": 30,
+      "Default_MaxRetries": 0,
+      "Default_RetryBaseDelay_Milliseconds": 500,
       "EnableLogging": true,
       "Clients": {
         "my-client": {
           "BaseUrl": "https://api.example.com/",
           "MaxConcurrentRequests": 10,
           "HttpTimeout_Seconds": 15,
+          "MaxRetries": 3,
           "DefaultHeaders": {
             "Accept": "application/json"
           }
@@ -81,6 +84,8 @@ else
 | Property | Default | Purpose |
 | --- | --- | --- |
 | `Default_HttpTimeout_Seconds` | `30` | Request timeout used by any client that doesn't set its own `HttpTimeout_Seconds`. |
+| `Default_MaxRetries` | `0` | Retry count used by any client that doesn't set its own `MaxRetries`. `0` turns retries off. |
+| `Default_RetryBaseDelay_Milliseconds` | `500` | First-retry delay used by any client that doesn't set its own `RetryBaseDelay_Milliseconds`. |
 | `EnableLogging` | `true` | Turns this module's logging on or off, including every `ApiClient` it hands out. Change it at runtime with `apiManager.RuntimeSettings.EnableLogging = false;`; see [Conditional logging](../Core/ConditionalLogging.md) for how this works. |
 | `Clients` | `{}` | Named client settings, keyed by client name. Each entry uses the `ApiClientSettings` properties below. A name that isn't listed gets a client with default settings and a logged warning. |
 
@@ -91,6 +96,8 @@ else
 | `BaseUrl` | `"https://example.com"` | Base address for this client. Relative URLs passed to `GetAsync`/etc. are resolved against this. |
 | `MaxConcurrentRequests` | `int.MaxValue` | Maximum requests this client sends at once; extra calls wait. Negative values are coerced to `int.MaxValue`. |
 | `HttpTimeout_Seconds` | `null` | `null` falls back to the manager's `Default_HttpTimeout_Seconds`. **`0` means no timeout** (mapped to `Timeout.InfiniteTimeSpan`), not "time out immediately" — negative values are coerced to `0`. |
+| `MaxRetries` | `null` | How many times a request is retried after a transient failure (see [Retries](#retries)). `null` falls back to the manager's `Default_MaxRetries`; negative values are coerced to `0`. |
+| `RetryBaseDelay_Milliseconds` | `null` | Delay before the first retry; each later retry waits twice as long (±20% jitter, capped at 30 s). `null` falls back to the manager's `Default_RetryBaseDelay_Milliseconds`. |
 | `DefaultHeaders` | `{}` | Headers applied to every request from this client. |
 | `Username` | `""` | Credential for your own auth code. `ApiClient` doesn't read it; get it from `client.RuntimeSettings.Username`, for example in an `IAuthStrategy`. |
 | `Password` | `""` | Credential for your own auth code, read the same way as `Username`. Prefer a secret store or [configuration protection](../Core/ConfigurationProtection.md) over plain text. |
@@ -410,6 +417,16 @@ if (!result.MethodSuccess)
     return;
 }
 ```
+
+### Retries
+
+When `MaxRetries` is above `0`, a failed request is retried with exponential backoff if it failed with a network error, a timeout, or HTTP `408`, `429`, `500`, `502`, `503` or `504`. Any other failure (for example `401` or `404`) is returned straight away. After the last retry you get the last attempt's result.
+
+- Retries apply to **every method, including POST**. Only enable them on clients whose endpoints are safe to repeat.
+- The request body is buffered and resent on each attempt, and the auth strategy runs again for each attempt.
+- The whole call, retries included, counts once in `ClientMetrics` and holds one `MaxConcurrentRequests` slot until it finishes.
+- `HttpTimeout_Seconds` applies to each attempt, not to the call as a whole.
+- `Retry-After` headers are not read.
 
 ## Best practices
 

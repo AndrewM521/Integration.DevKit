@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using Integration.DevKit.Core;
 using Integration.DevKit.CredentialMgmt.Contracts;
 using Integration.DevKit.RESTApiMgmt.Interfaces;
@@ -220,5 +220,77 @@ public class ApiClientTests
         await client.GetAsync("/Posts");
 
         authStrategy.Verify(s => s.ApplyAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<IAuthClient>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task PostAsync_TransientFailures_RetriesWithSameBodyAndCountsOnce()
+    {
+        var (client, handler, _) = CreateClient(new ApiClientSettings { BaseUrl = "https://example.com/", MaxRetries = 3, RetryBaseDelay_Milliseconds = 0 });
+        var bodies = new List<string>();
+        handler.Responder = request =>
+        {
+            bodies.Add(request.Content!.ReadAsStringAsync().GetAwaiter().GetResult());
+            return bodies.Count < 3
+                ? FakeHttpMessageHandler.JsonResponse(HttpStatusCode.ServiceUnavailable, "{}")
+                : FakeHttpMessageHandler.JsonResponse(HttpStatusCode.OK, "{}");
+        };
+
+        var content = new StringContent("{\"id\":1}", System.Text.Encoding.UTF8, "application/json");
+        var result = await client.PostAsync("/Posts", content);
+
+        Assert.True(result.MethodSuccess);
+        Assert.Equal(3, handler.CallCount);
+        Assert.All(bodies, body => Assert.Equal("{\"id\":1}", body));
+        Assert.All(handler.Requests, request => Assert.Equal("application/json", request.Content!.Headers.ContentType!.MediaType));
+        Assert.Equal(1, client.ClientMetrics.PostCount);
+        Assert.Equal(0, client.ClientMetrics.FailureCount);
+    }
+
+    [Fact]
+    public async Task GetAsync_RetriesExhausted_ReturnsLastFailure()
+    {
+        var (client, handler, _) = CreateClient(new ApiClientSettings { BaseUrl = "https://example.com/", MaxRetries = 2, RetryBaseDelay_Milliseconds = 0 });
+        handler.Responder = _ => FakeHttpMessageHandler.JsonResponse(HttpStatusCode.TooManyRequests, "{}");
+
+        var result = await client.GetAsync("/Posts");
+
+        Assert.False(result.MethodSuccess);
+        Assert.Equal(HttpStatusCode.TooManyRequests, result.StatusCode);
+        Assert.Equal(3, handler.CallCount);
+        Assert.Equal(1, client.ClientMetrics.FailureCount);
+    }
+
+    [Fact]
+    public async Task GetAsync_NonTransientFailure_IsNotRetried()
+    {
+        var (client, handler, _) = CreateClient(new ApiClientSettings { BaseUrl = "https://example.com/", MaxRetries = 3, RetryBaseDelay_Milliseconds = 0 });
+        handler.Responder = _ => FakeHttpMessageHandler.JsonResponse(HttpStatusCode.NotFound, "{}");
+
+        await client.GetAsync("/Posts");
+
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task GetAsync_DefaultSettings_DoesNotRetry()
+    {
+        var (client, handler, _) = CreateClient();
+        handler.Responder = _ => FakeHttpMessageHandler.JsonResponse(HttpStatusCode.ServiceUnavailable, "{}");
+
+        await client.GetAsync("/Posts");
+
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public void Initialize_NullRetrySettings_FallBackToManagerDefaults()
+    {
+        var settings = Options.Create(new ApiManagerSettings { Default_MaxRetries = 4, Default_RetryBaseDelay_Milliseconds = 250 });
+        var manager = new ApiManager(settings, new Mock<IHttpClientFactory>().Object);
+
+        var client = new ApiClient(manager, "TestClient", new ApiClientSettings { BaseUrl = "https://example.com/" }, new HttpClient(new FakeHttpMessageHandler()));
+
+        Assert.Equal(4, client.RuntimeSettings.MaxRetries);
+        Assert.Equal(250, client.RuntimeSettings.RetryBaseDelay_Milliseconds);
     }
 }

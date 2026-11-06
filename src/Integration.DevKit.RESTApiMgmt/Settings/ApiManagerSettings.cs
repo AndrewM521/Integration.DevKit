@@ -21,6 +21,21 @@ public class ApiManagerSettings
     public int Default_HttpTimeout_Seconds { get; set; } = 30;
 
     /// <summary>
+    /// Gets or sets the global default number of times a request is retried after a transient failure
+    /// (network error, timeout, HTTP 408, 429, 500, 502, 503 or 504).
+    /// This value is used when a specific <see cref="ApiClientSettings.MaxRetries"/> is not provided.
+    /// Default is 0 (no retries).
+    /// </summary>
+    public int Default_MaxRetries { get; set; } = 0;
+
+    /// <summary>
+    /// Gets or sets the global default delay, in milliseconds, before the first retry. Each later retry waits twice as long.
+    /// This value is used when a specific <see cref="ApiClientSettings.RetryBaseDelay_Milliseconds"/> is not provided.
+    /// Default is 500 milliseconds.
+    /// </summary>
+    public int Default_RetryBaseDelay_Milliseconds { get; set; } = 500;
+
+    /// <summary>
     /// Gets or sets the registry of named <see cref="ApiClientSettings"/>.
     /// </summary>
     /// <value>
@@ -38,13 +53,15 @@ public class ApiManagerSettings
 
     /// <summary>
     /// Creates a new instance of <see cref="ApiManagerSettings"/> with a deep copy of the <see cref="Clients"/>
-    /// collection, preserving <see cref="Default_HttpTimeout_Seconds"/> and <see cref="EnableLogging"/>.
+    /// collection, preserving <see cref="Default_HttpTimeout_Seconds"/>, the retry defaults and <see cref="EnableLogging"/>.
     /// </summary>
     /// <returns>A new <see cref="ApiManagerSettings"/> instance containing a copy of the current client definitions.</returns>
     public ApiManagerSettings Clone()
     {
         return new ApiManagerSettings {
             Default_HttpTimeout_Seconds = Default_HttpTimeout_Seconds,
+            Default_MaxRetries = Default_MaxRetries,
+            Default_RetryBaseDelay_Milliseconds = Default_RetryBaseDelay_Milliseconds,
             Clients = new ConcurrentDictionary<string, ApiClientSettings>(Clients),
             EnableLogging = EnableLogging
         };
