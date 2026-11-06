@@ -38,6 +38,9 @@ public static class Service_RESTApiMgmt
 
         services.AddHttpClient();
 
+        services.AddHttpClient("ApiClient")
+            .AddHttpMessageHandler(sp => new RetryHandler(sp.GetRequiredService<ApiManager>()));
+
         return services;
     }
 

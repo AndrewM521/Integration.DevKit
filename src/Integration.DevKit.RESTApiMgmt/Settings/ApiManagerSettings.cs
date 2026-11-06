@@ -37,8 +37,20 @@ public class ApiManagerSettings
     public bool EnableLogging { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets how many times a transient failure (network error, 408, 429, 500, 502, 503, 504) is retried.
+    /// POST and PATCH are never retried. Set to 0 to disable retries. Default is 3.
+    /// </summary>
+    public int MaxRetries { get; set; } = 3;
+
+    /// <summary>
+    /// Gets or sets the first retry delay in milliseconds. Each retry doubles it and adds random jitter,
+    /// unless the server sends a Retry-After header. Default is 500.
+    /// </summary>
+    public int RetryBaseDelay_Milliseconds { get; set; } = 500;
+
+    /// <summary>
     /// Creates a new instance of <see cref="ApiManagerSettings"/> with a deep copy of the <see cref="Clients"/>
-    /// collection, preserving <see cref="Default_HttpTimeout_Seconds"/> and <see cref="EnableLogging"/>.
+    /// collection, preserving all other settings.
     /// </summary>
     /// <returns>A new <see cref="ApiManagerSettings"/> instance containing a copy of the current client definitions.</returns>
     public ApiManagerSettings Clone()
@@ -46,7 +58,9 @@ public class ApiManagerSettings
         return new ApiManagerSettings {
             Default_HttpTimeout_Seconds = Default_HttpTimeout_Seconds,
             Clients = new ConcurrentDictionary<string, ApiClientSettings>(Clients),
-            EnableLogging = EnableLogging
+            EnableLogging = EnableLogging,
+            MaxRetries = MaxRetries,
+            RetryBaseDelay_Milliseconds = RetryBaseDelay_Milliseconds
         };
     }
 }
