@@ -47,6 +47,9 @@ public static class Service_ThreadSafeItems
             throw new ArgumentNullException(nameof(config));
         }
 
+        // ThreadSafeFileIO needs a ThreadLockManager; TryAdd makes this a no-op if AddThreadLocks() was already called
+        services.AddThreadLocks(config);
+
         services.Configure<ThreadSafeItemsSettings>(config.GetSection("Integration.DevKit:ThreadSafeItems"));
 
         services.TryAddSingleton<ThreadSafeFileIO>();

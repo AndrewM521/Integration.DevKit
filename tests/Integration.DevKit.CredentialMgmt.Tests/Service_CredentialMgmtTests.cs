@@ -54,6 +54,49 @@ public class Service_CredentialMgmtTests : IDisposable
     }
 
     [Fact]
+    public void AddCredentialMgmt_RelativeFolders_ResolveAgainstTheAppFolder_NotTheWorkingDirectory()
+    {
+        // A Windows service starts in System32; relative folders used to land wherever the process was started from
+        string relative = "devkit-relative-" + Guid.NewGuid();
+        var expectedRoot = Path.Combine(AppContext.BaseDirectory, relative);
+        var originalDirectory = Environment.CurrentDirectory;
+
+        try
+        {
+            Environment.CurrentDirectory = _tempDir;
+
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Integration.DevKit:CredentialManagement:Provider"] = "File",
+                    ["Integration.DevKit:CredentialManagement:Options:ApplicationName"] = "RelativeApp",
+                    ["Integration.DevKit:CredentialManagement:Options:SecretsFolder"] = Path.Combine(relative, "secrets"),
+                    ["Integration.DevKit:CredentialManagement:Options:KeysFolder"] = Path.Combine(relative, "keys")
+                })
+                .Build();
+
+            var services = new ServiceCollection();
+            services.AddCredentialMgmt(config);
+            using var provider = services.BuildServiceProvider();
+
+            Assert.True(provider.GetRequiredService<FileSecretStore>().SetKey("Api", "Key", "value").MethodSuccess);
+
+            Assert.True(Directory.Exists(Path.Combine(expectedRoot, "secrets")));
+            Assert.True(Directory.Exists(Path.Combine(expectedRoot, "keys")));
+            Assert.False(Directory.Exists(Path.Combine(_tempDir, relative)));
+        }
+        finally
+        {
+            Environment.CurrentDirectory = originalDirectory;
+
+            if (Directory.Exists(expectedRoot))
+            {
+                Directory.Delete(expectedRoot, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public void AddCredentialMgmt_BuiltInFileProvider_AlsoRegistersThreadLockManager()
     {
         var config = new ConfigurationBuilder()

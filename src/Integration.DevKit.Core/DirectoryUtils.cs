@@ -4,6 +4,8 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using System.Runtime.ExceptionServices;
+
 namespace Integration.DevKit.Core;
 
 /// <summary>
@@ -13,6 +15,29 @@ namespace Integration.DevKit.Core;
 public static class DirectoryUtils
 {
     private static readonly string RequiredDirectoryPathErrorMsg = "Path must be a Directory.";
+
+    /// <summary>
+    /// Throws unless <paramref name="path"/> is a usable directory path. Shared by every method that takes a directory path.
+    /// </summary>
+    private static void RequireDirectoryPath(string path)
+    {
+        // An existing folder wins over the name check, so folders like "v1.2" aren't mistaken for files
+        if (DoesDirectoryExist(path))
+        {
+            return;
+        }
+
+        var validatePath = IsStringValidDirectoryPath(path);
+        if (!validatePath.MethodSuccess)
+        {
+            ExceptionDispatchInfo.Throw(validatePath.Exception);
+        }
+
+        if (!validatePath.Result)
+        {
+            throw new ArgumentException(RequiredDirectoryPathErrorMsg);
+        }
+    }
 
     #region Main Methods
     /// <summary>
@@ -26,16 +51,7 @@ public static class DirectoryUtils
 
         try
         {
-            var validatePath = IsStringValidDirectoryPath(path);
-            if (!validatePath.MethodSuccess)
-            {
-                throw validatePath.Exception;
-            }
-
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredDirectoryPathErrorMsg);
-            }
+            RequireDirectoryPath(path);
 
             if (!DoesDirectoryExist(path))
             {
@@ -65,16 +81,7 @@ public static class DirectoryUtils
 
         try
         {
-            var validatePath = IsStringValidDirectoryPath(path);
-            if (!validatePath.MethodSuccess)
-            {
-                throw validatePath.Exception;
-            }
-
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredDirectoryPathErrorMsg);
-            }
+            RequireDirectoryPath(path);
 
             if (DoesDirectoryExist(path))
             {
@@ -102,16 +109,7 @@ public static class DirectoryUtils
 
         try
         {
-            var validatePath = IsStringValidDirectoryPath(path);
-            if (!validatePath.MethodSuccess)
-            {
-                throw validatePath.Exception;
-            }
-
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredDirectoryPathErrorMsg);
-            }
+            RequireDirectoryPath(path);
 
             var files = Directory.GetFiles(path, searchPattern, searchOption);
 
@@ -149,11 +147,11 @@ public static class DirectoryUtils
                 return result.SetMethodSuccess(false);
             }
 
-            /// WHY WE USE FileInfo: Even though this validates a directory path, we instantiate a FileInfo object 
-            /// to trick .NET into running the string through its strict, native OS-level path parsing engine. 
-            /// This instantly catches complex structural errors (like malformed drive syntax "C:::\\" or path length 
-            /// limits) without doing an expensive disk I/O check. We avoid DirectoryInfo here because it has a 
-            /// known quirk where it automatically strips trailing dots/spaces during parsing, which masks formatting errors.
+            // WHY WE USE FileInfo: Even though this validates a directory path, we instantiate a FileInfo object 
+            // to trick .NET into running the string through its strict, native OS-level path parsing engine. 
+            // This instantly catches complex structural errors (like malformed drive syntax "C:::\\" or path length 
+            // limits) without doing an expensive disk I/O check. We avoid DirectoryInfo here because it has a 
+            // known quirk where it automatically strips trailing dots/spaces during parsing, which masks formatting errors.
             var fileInfo = new FileInfo(path);
 
             var lastSegment = Path.GetFileName(path);

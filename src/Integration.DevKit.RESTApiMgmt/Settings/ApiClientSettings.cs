@@ -12,18 +12,6 @@ namespace Integration.DevKit.RESTApiMgmt.Settings;
 public class ApiClientSettings
 {
     /// <summary>
-    /// Gets or sets the username used for authenticating requests. 
-    /// Default is <see cref="string.Empty"/>.
-    /// </summary>
-    public string Username { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Gets or sets the password or secret key used for authenticating requests. 
-    /// Default is <see cref="string.Empty"/>.
-    /// </summary>
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>
     /// Gets or sets the base URL for the API service. 
     /// All relative paths provided to request methods will be appended to this value.
     /// Default is "https://example.com".
@@ -32,7 +20,7 @@ public class ApiClientSettings
 
     /// <summary>
     /// Gets or sets the threshold for the number of requests allowed before rate limiting is engaged. 
-    /// Default is <see cref="int.MaxValue"/>.
+    /// Default is <see cref="int.MaxValue"/>. Zero or negative values mean no limit (<see cref="int.MaxValue"/>).
     /// </summary>
     public int MaxConcurrentRequests { get; set; } = int.MaxValue;
 

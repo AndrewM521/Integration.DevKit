@@ -12,8 +12,8 @@ Part of [Integration.DevKit.Core](README.md).
 
 ## How it works
 
-- **Key paths** are a single key (`"Id"`) or dot notation (`"Meta.Metadata.Id"`).
-- **`GetValue<T>`** converts the located value to `T`, including element-by-element conversion for `List<T>`. It returns `defaultValue` if any segment is missing, the value is null, or conversion fails. It never throws.
+- **Key paths** are a single key (`"Id"`) or dot notation (`"Meta.Metadata.Id"`). A number steps into a list, like `JsonUtils` paths (`"orders.0.id"`).
+- **`GetValue<T>`** converts the located value to `T`, including element-by-element conversion for `List<T>`. It returns `defaultValue` if any segment is missing, the value is null, or conversion fails (including a null inside a `List<int>`). It never throws.
 - **`GetDictionary`, `GetList<T>`, `GetDictionaryList`** return an empty collection when the path is missing or the value is the wrong type.
 
 ## How to

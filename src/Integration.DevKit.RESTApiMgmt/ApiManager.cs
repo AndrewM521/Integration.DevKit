@@ -7,7 +7,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
-using System.Reflection;
 using Integration.DevKit.Core.Logging;
 using Integration.DevKit.RESTApiMgmt.Settings;
 
@@ -52,9 +51,10 @@ public class ApiManager : IAsyncDisposable
 
         RuntimeSettings = settings.Value.Clone();
 
+        // Same rule as ApiClientSettings.HttpTimeout_Seconds: negative means no timeout (0). -1 reached HttpClient as -1 seconds, which it rejects.
         if (RuntimeSettings.Default_HttpTimeout_Seconds < 0)
         {
-            RuntimeSettings.Default_HttpTimeout_Seconds = -1;
+            RuntimeSettings.Default_HttpTimeout_Seconds = 0;
         }
 
         _httpFactory = httpFactory;
@@ -71,16 +71,16 @@ public class ApiManager : IAsyncDisposable
     /// An instance of <see cref="ApiClient"/> associated with the provided <paramref name="clientName"/>.
     /// </returns>
     /// <remarks>
-    /// If the requested <paramref name="clientName"/> is not found in the <see cref="ApiManagerSettings.Clients"/>, 
-    /// the manager provides a new <see cref="ApiClient"/> using default settings.
+    /// Names are matched case-insensitively. The client is created on first use and cached.
     /// </remarks>
+    /// <exception cref="KeyNotFoundException">Thrown if <paramref name="clientName"/> is not in <see cref="ApiManagerSettings.Clients"/>.</exception>
     public ApiClient GetClient(string clientName)
     {
         if (!RuntimeSettings.Clients.TryGetValue(clientName, out var clientSettings))
         {
-            _logger?.LogWarning($"Api Client '{clientName}' is not configured. Using default settings instead");
-
-            clientSettings = new ApiClientSettings();
+            // Never fall back to defaults: the default BaseUrl is a real third-party host, and a typo
+            // would send traffic (and any credentials an auth strategy adds) there.
+            throw new KeyNotFoundException($"Api client '{clientName}' is not configured. Add it under Integration.DevKit:ApiClientManagement:Clients.");
         }
 
         return _clients.GetOrAdd(clientName, _ =>
@@ -99,43 +99,12 @@ public class ApiManager : IAsyncDisposable
 
     /// <summary>
     /// Creates an <see cref="HttpClient"/> with none of an <see cref="ApiClient"/>'s configured base address or
-    /// default headers, sharing the same underlying handler pool. Used for auth requests to a different host.
+    /// default headers, sharing the same underlying handler pool. Used for auth requests to a different host,
+    /// and by <see cref="ApiClient.Initialize"/> to replace a client's <see cref="HttpClient"/> when its base address or timeout changes.
     /// </summary>
     internal HttpClient CreateHeaderFreeHttpClient()
     {
         return _httpFactory.CreateClient("ApiClient");
-    }
-
-    /// <summary>
-    /// Logging method to output current <see cref="ApiManagerSettings"/> to the logs.
-    /// </summary>
-    public void LogRuntimeSettings()
-    {
-        _logger?.LogDebug($"--- Api Manager Settings ---");
-
-        Type type = RuntimeSettings.GetType();
-        PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-        foreach (var property in properties)
-        {
-            object? value = property.GetValue(RuntimeSettings);
-
-            if (value is ConcurrentDictionary<string, ApiClientSettings> dict)
-            {
-                _logger?.LogTrace($"  {property.Name}:");
-
-                foreach (var kvp in dict)
-                {
-                    var client = GetClient(kvp.Key);
-
-                    client.LogRuntimeSettings(true);
-                }
-            }
-            else
-            {
-                _logger?.LogTrace($"  {property.Name}: {value}");
-            }
-        }
     }
 
     /// <summary>

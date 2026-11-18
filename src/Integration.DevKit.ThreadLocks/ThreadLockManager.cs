@@ -23,6 +23,7 @@ public class ThreadLockManager
     private readonly ConcurrentDictionary<string, ThreadLockInfo_Sync> _syncLocks = new ConcurrentDictionary<string, ThreadLockInfo_Sync>();
     private readonly ConcurrentDictionary<string, ThreadLockInfo_Async> _asyncLocks = new ConcurrentDictionary<string, ThreadLockInfo_Async>();
     private readonly ILogger? _logger;
+    private readonly object _gate = new object();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ThreadLockManager"/> class.
@@ -66,54 +67,29 @@ public class ThreadLockManager
                 timeoutMilliseconds = -1;
             }
 
-            while (true) // Loop to handle the race condition
+            ThreadLockInfo_Sync lockInfo;
+
+            // Get-or-add and the ref count bump must be atomic with the remove in ReleaseSyncReference,
+            // or a caller can enter a lock object that is about to be dropped from the map.
+            lock (_gate)
             {
-                var lockInfo = _syncLocks.GetOrAdd(key, _ => new ThreadLockInfo_Sync());
-
-                // Use a temporary increment to "signal" interest
-                Interlocked.Increment(ref lockInfo.RefCount);
-
-                // Verify this is still the active object in the map
-                if (_syncLocks.TryGetValue(key, out var current) && ReferenceEquals(current, lockInfo))
-                {
-                    // ACTUALLY attempt the Monitor lock
-                    if (!Monitor.TryEnter(lockInfo.LockObject, timeoutMilliseconds))
-                    {
-                        // We failed to get the lock (timeout)
-                        Interlocked.Decrement(ref lockInfo.RefCount);
-
-                        _logger?.LogWarning($"Timed out waiting for sync lock '{key}' after {timeoutMilliseconds}ms.");
-
-                        return result.SetMethodFailure(new TimeoutException($"Lock timeout for: {key}"));
-                    }
-
-                    lockInfo.UpdateLastAccessTime();
-
-                    _logger?.LogTrace($"Acquired sync lock '{key}'.");
-
-                    return result.SetMethodSuccess();
-                }
-                else
-                {
-                    // If we get here, the lockInfo was removed/replaced by another thread 
-                    // while we were trying to increment it. Back out and loop.
-                    Interlocked.Decrement(ref lockInfo.RefCount);
-                }
+                lockInfo = _syncLocks.GetOrAdd(key, _ => new ThreadLockInfo_Sync());
+                lockInfo.RefCount++;
             }
 
-            //var lockInfo = _syncLocks.GetOrAdd(key, _ => new ThreadLockInfo_Sync());
+            if (!Monitor.TryEnter(lockInfo.LockObject, timeoutMilliseconds))
+            {
+                ReleaseSyncReference(key, lockInfo);
 
-            //Interlocked.Increment(ref lockInfo.RefCount);
+                _logger?.LogWarning($"Timed out waiting for sync lock '{key}' after {timeoutMilliseconds}ms.");
 
-            //if (!Monitor.TryEnter(lockInfo.LockObject, timeoutMilliseconds))
-            //{
-            //    Interlocked.Decrement(ref lockInfo.RefCount);
-            //    throw new TimeoutException("Timeout while waiting for lock.");
-            //}
+                return result.SetMethodFailure(new TimeoutException($"Lock timeout for: {key}"));
+            }
 
-            //lockInfo.UpdateLastAccessTime();
 
-            //return result.SetMethodSuccess();
+            _logger?.LogTrace($"Acquired sync lock '{key}'.");
+
+            return result.SetMethodSuccess();
         }
         catch (Exception ex)
         {
@@ -151,14 +127,10 @@ public class ThreadLockManager
 
                 Monitor.Exit(lockInfo.LockObject);
 
-                lockInfo.UpdateLastAccessTime();
 
                 _logger?.LogTrace($"Released sync lock '{key}'.");
 
-                if (Interlocked.Decrement(ref lockInfo.RefCount) <= 0)
-                {
-                    _syncLocks.TryRemove(new KeyValuePair<string, ThreadLockInfo_Sync>(key, lockInfo));
-                }
+                ReleaseSyncReference(key, lockInfo);
             }
 
             return result.SetMethodSuccess();
@@ -195,9 +167,14 @@ public class ThreadLockManager
         {
             ValidateAndNormalizeKey(ref key);
 
-            var lockInfo = _asyncLocks.GetOrAdd(key, _ => new ThreadLockInfo_Async());
+            ThreadLockInfo_Async lockInfo;
 
-            Interlocked.Increment(ref lockInfo.RefCount);
+            // Same reason as the sync path: must be atomic with the remove in ReleaseAsyncReference.
+            lock (_gate)
+            {
+                lockInfo = _asyncLocks.GetOrAdd(key, _ => new ThreadLockInfo_Async());
+                lockInfo.RefCount++;
+            }
 
             if (timeoutMilliseconds < 0)
             {
@@ -209,7 +186,7 @@ public class ThreadLockManager
 
                 if (!entered)
                 {
-                    Interlocked.Decrement(ref lockInfo.RefCount);
+                    ReleaseAsyncReference(key, lockInfo);
 
                     _logger?.LogWarning($"Timed out waiting for async lock '{key}' after {timeoutMilliseconds}ms.");
 
@@ -217,7 +194,6 @@ public class ThreadLockManager
                 }
             }
 
-            lockInfo.UpdateLastAccessTime();
 
             _logger?.LogTrace($"Acquired async lock '{key}'.");
 
@@ -259,17 +235,10 @@ public class ThreadLockManager
                     throw new InvalidOperationException($"Async lock '{key}' was released more times than it was acquired.", ex);
                 }
 
-                lockInfo.UpdateLastAccessTime();
 
                 _logger?.LogTrace($"Released async lock '{key}'.");
 
-                if (Interlocked.Decrement(ref lockInfo.RefCount) <= 0)
-                {
-                    if (_asyncLocks.TryRemove(new KeyValuePair<string, ThreadLockInfo_Async>(key, lockInfo)))
-                    {
-                        lockInfo.Dispose();
-                    }
-                }
+                ReleaseAsyncReference(key, lockInfo);
             }
 
             return result.SetMethodSuccess();
@@ -280,6 +249,34 @@ public class ThreadLockManager
         }
     }
     #endregion
+
+    /// <summary>
+    /// Drops one reference to a sync lock and removes it from the map once nobody holds or waits on it.
+    /// </summary>
+    private void ReleaseSyncReference(string key, ThreadLockInfo_Sync lockInfo)
+    {
+        lock (_gate)
+        {
+            if (--lockInfo.RefCount <= 0)
+            {
+                _syncLocks.TryRemove(new KeyValuePair<string, ThreadLockInfo_Sync>(key, lockInfo));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Drops one reference to an async lock and removes and disposes it once nobody holds or waits on it.
+    /// </summary>
+    private void ReleaseAsyncReference(string key, ThreadLockInfo_Async lockInfo)
+    {
+        lock (_gate)
+        {
+            if (--lockInfo.RefCount <= 0 && _asyncLocks.TryRemove(new KeyValuePair<string, ThreadLockInfo_Async>(key, lockInfo)))
+            {
+                lockInfo.Dispose();
+            }
+        }
+    }
 
     /// <summary>
     /// Validates that the key is not null or whitespace and normalizes it to a 

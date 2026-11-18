@@ -105,7 +105,15 @@ internal sealed class ManagedTaskRuntime : IDisposable
         RuntimeSettings = settings;
 
         _lifecycleCTS = CancellationTokenSource.CreateLinkedTokenSource(externalCancelationToken);
-        _concurrencyLock = new SemaphoreSlim(settings.MaxConcurrentParallelTasks);
+        // 0 or less would make a semaphore with no slots, so every iteration would wait forever
+        int maxConcurrentIterations = int.MaxValue;
+
+        if (settings.MaxConcurrentParallelTasks > 0)
+        {
+            maxConcurrentIterations = settings.MaxConcurrentParallelTasks;
+        }
+
+        _concurrencyLock = new SemaphoreSlim(maxConcurrentIterations);
 
         Handle = new ManagedTaskHandle(this);
     }

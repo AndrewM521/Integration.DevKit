@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
@@ -6,6 +7,7 @@ using System.Diagnostics;
 using Integration.DevKit.Core;
 using Integration.DevKit.Core.Logging;
 using Integration.DevKit.ProcessLauncher.Settings;
+using System.Runtime.ExceptionServices;
 
 namespace Integration.DevKit.ProcessLauncher;
 
@@ -18,7 +20,7 @@ namespace Integration.DevKit.ProcessLauncher;
 /// keyed by their <see cref="ManagedProcessConfig.ProcessKey"/>. It acts as a single point of
 /// control for aggregate operations and process lookups.
 /// </remarks>
-public class ProcessManager
+public class ProcessManager : IAsyncDisposable
 {
     /// <summary>
     /// Gets or sets the current runtime settings for this manager, initialized from the bound
@@ -36,11 +38,18 @@ public class ProcessManager
     /// </summary>
     /// <param name="settings">The initial configuration settings injected via the Options pattern.</param>
     /// <param name="loggerFactory">An optional logger factory to provide contextual logging for the launcher.</param>
-    public ProcessManager(IOptions<ProcessLauncherSettings> settings, ILoggerFactory? loggerFactory = null)
+    /// <param name="appLifetime">
+    /// Optional host lifetime. When supplied, every running process is canceled on
+    /// <see cref="IHostApplicationLifetime.ApplicationStopping"/> so none outlive the app.
+    /// </param>
+    public ProcessManager(IOptions<ProcessLauncherSettings> settings, ILoggerFactory? loggerFactory = null, IHostApplicationLifetime? appLifetime = null)
     {
         RuntimeSettings = settings?.Value.Clone() ?? new ProcessLauncherSettings();
 
         _logger = loggerFactory?.CreateConditionalLogger(nameof(ProcessManager), () => RuntimeSettings.EnableLogging);
+
+        // Without this, child processes keep running after the app stops, and a restart starts a second copy
+        appLifetime?.ApplicationStopping.Register(() => CancelAllProcesses());
     }
 
     /// <summary>
@@ -67,20 +76,21 @@ public class ProcessManager
                 throw new ArgumentException("Command must be specified.");
             }
 
-            if (_processes.ContainsKey(config.ProcessKey))
+            var process = new ManagedProcess(config, _logger);
+
+            // Register before Start(): a fast process can exit (and run its Exited handler) before Start() returns.
+            if (!_processes.TryAdd(config.ProcessKey, process))
             {
                 throw new InvalidOperationException($"Process '{config.ProcessKey}' is already running.");
             }
 
-            var process = new ManagedProcess(config, _logger);
-            
             var startProcess = StartProcess(process);
             if (!startProcess.MethodSuccess)
             {
-                throw startProcess.Exception;
-            }
+                _processes.TryRemove(new KeyValuePair<string, ManagedProcess>(config.ProcessKey, process));
 
-            _processes[config.ProcessKey] = process;
+                ExceptionDispatchInfo.Throw(startProcess.Exception);
+            }
 
             return result.SetMethodSuccess(process);
         }
@@ -116,13 +126,18 @@ public class ProcessManager
 
         try
         {
-            if (_processes.TryRemove(processKey, out var baseManagedProcess))
+            if (_processes.TryGetValue(processKey, out var baseManagedProcess))
             {
+                // Cancel first: if the kill fails the process is still running, and dropping it from the list
+                // would let the same key start a second copy
                 var cancelProcess = baseManagedProcess.Cancel(forceKill);
                 if (!cancelProcess.MethodSuccess)
                 {
-                    throw cancelProcess.Exception;
+                    ExceptionDispatchInfo.Throw(cancelProcess.Exception);
                 }
+
+                // Only this exact process, never a newer one started under the same key
+                _processes.TryRemove(new KeyValuePair<string, ManagedProcess>(processKey, baseManagedProcess));
 
                 return result.SetMethodSuccess();
             }
@@ -158,16 +173,18 @@ public class ProcessManager
     public NullOperationResult CancelAllProcesses(bool forceKill = false)
     {
         var result = new NullOperationResult();
-        List<Exception> errors = new List<Exception>();
+        ConcurrentBag<Exception> errors = new ConcurrentBag<Exception>();
 
-        foreach (var key in _processes.Keys)
+        // In parallel: a graceful cancel can wait 3 seconds per process, which would add up past a host's shutdown timeout
+        // Keys is a snapshot copy, so processes exiting during the loop are fine
+        Parallel.ForEach(_processes.Keys, key =>
         {
             var cancelProcess = CancelProcess(key, forceKill);
             if (!cancelProcess.MethodSuccess)
             {
                 errors.Add(cancelProcess.Exception);
             }
-        }
+        });
 
         if (errors.Count > 0)
         {
@@ -208,16 +225,18 @@ public class ProcessManager
     }
 
     /// <summary>
-    /// Periodically polls the process status until it exits or the cancellation token is triggered.
+    /// Waits until the process exits or the cancellation token is triggered.
     /// </summary>
-    /// <param name="process">The process to monitor.</param>
+    /// <param name="process">The process to monitor. A <see langword="null"/> process completes at once.</param>
     /// <param name="token">A token to signal abandonment of the wait operation.</param>
-    public async Task WaitForExitAsync(Process process, CancellationToken token = default)
+    public Task WaitForExitAsync(Process? process, CancellationToken token = default)
     {
-        while (process != null && !process.HasExited)
+        if (process == null)
         {
-            await Task.Delay(250, token);
+            return Task.CompletedTask;
         }
+
+        return process.WaitForExitAsync(token);
     }
 
 
@@ -239,13 +258,13 @@ public class ProcessManager
                 managedProcess.Process.OutputDataReceived += (_, e) => {
                     if (e.Data != null)
                     {
-                        managedProcess._stdout.AppendLine(e.Data);
+                        managedProcess.AppendOutput(e.Data);
                     }
                 };
                 managedProcess.Process.ErrorDataReceived += (_, e) => {
                     if (e.Data != null)
                     {
-                        managedProcess._stderr.AppendLine(e.Data);
+                        managedProcess.AppendError(e.Data);
                     }
                 };
             }
@@ -253,10 +272,8 @@ public class ProcessManager
             managedProcess.Process.Exited += (_, _) => {
                 _logger?.LogInformation($"Process '{managedProcess.ProcessKey}' exited with code {managedProcess.Process?.ExitCode}");
 
-                if (_processes.TryGetValue(managedProcess.ProcessKey, out var foundProcess))
-                {
-                    _processes.Remove(foundProcess.ProcessKey, out ManagedProcess? _);
-                }
+                // Only remove this exact process, never a newer one started under the same key
+                _processes.TryRemove(new KeyValuePair<string, ManagedProcess>(managedProcess.ProcessKey, managedProcess));
             };
 
             managedProcess.Process.Start();
@@ -290,14 +307,15 @@ public class ProcessManager
                 {
                     if (managedProcess._cts.IsCancellationRequested)
                     {
+                        // Cancel() is already stopping it; killing here too would turn every graceful cancel into a force kill
                         _logger?.LogInformation($"Process '{managedProcess.ProcessKey}' cancelled by user.");
                     }
                     else
                     {
                         _logger?.LogWarning($"Process '{managedProcess.ProcessKey}' timed out after {managedProcess._timeout}.");
-                    }
 
-                    managedProcess.Cancel(true);
+                        managedProcess.Cancel(true);
+                    }
                 }
             });
 
@@ -307,5 +325,15 @@ public class ProcessManager
         {
             return result.SetMethodFailure(ex);
         }
+    }
+
+    /// <summary>
+    /// Cancels every running process so none outlive this manager.
+    /// </summary>
+    public ValueTask DisposeAsync()
+    {
+        CancelAllProcesses();
+
+        return ValueTask.CompletedTask;
     }
 }

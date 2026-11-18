@@ -53,7 +53,7 @@ public static class SQLUtils
     /// The value cast or converted to <typeparamref name="T"/>, or <paramref name="defaultValue"/> if the operation fails.
     /// </returns>
     /// <remarks>
-    /// This method performs an ordinal lookup and handles type conversion using <see cref="Convert.ChangeType(object, Type)"/> 
+    /// This method performs an ordinal lookup and handles type conversion using <see cref="Convert.ChangeType(object, Type, IFormatProvider)"/> with the invariant culture 
     /// if a direct cast is not possible.
     /// </remarks>
     public static T GetValueOrDefault<T>(this DbDataReader reader, string columnName, T defaultValue)
@@ -74,7 +74,16 @@ public static class SQLUtils
                 return typedVal;
             }
 
-            return (T)Convert.ChangeType(val, typeof(T));
+            // Convert.ChangeType can't target Nullable<T> (e.g. int?), so convert to the inner type
+            Type conversionType = typeof(T);
+
+            Type? nullableInnerType = Nullable.GetUnderlyingType(typeof(T));
+            if (nullableInnerType != null)
+            {
+                conversionType = nullableInnerType;
+            }
+
+            return (T)Convert.ChangeType(val, conversionType, System.Globalization.CultureInfo.InvariantCulture);
         }
         catch
         {
@@ -125,25 +134,12 @@ public static class SQLUtils
     /// The resulting dictionary uses <see cref="StringComparer.OrdinalIgnoreCase"/> for keys to ensure 
     /// case-insensitive column lookups.
     /// </remarks>
-    public static async Task<Dictionary<string, object?>> RowToDictionaryAsync(this DbDataReader reader, CancellationToken cancellationToken = default)
+    public static Task<Dictionary<string, object?>> RowToDictionaryAsync(this DbDataReader reader, CancellationToken cancellationToken = default)
     {
-        var row = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        for (int i = 0; i < reader.FieldCount; i++)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var columnName = reader.GetName(i);
-            object? rowVal = null;
-
-            if (!await reader.IsDBNullAsync(i, cancellationToken))
-            {
-                rowVal = reader.GetValue(i);
-            }
-
-            row[columnName] = rowVal;
-        }
-
-        return row;
+        // A non-sequential reader already holds the whole row, so awaiting IsDBNullAsync per cell only adds overhead
+        return Task.FromResult(reader.RowToDictionary());
     }
 
     /// <summary>
@@ -210,80 +206,12 @@ public static class SQLUtils
             return csvContent;
         }
 
-        // Map out the column names and their database indices
-        var schemaMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        for (int i = 0; i < reader.FieldCount; i++)
-        {
-            schemaMap[reader.GetName(i)] = i;
-        }
-
-        // Determine target column indices based on user selection or full schema
-        List<int> targetIndices = new List<int>();
-        string[] headers;
-
-        if (columnsToInclude != null && columnsToInclude.Count > 0)
-        {
-            var headersList = new List<string>();
-            // Filter and order based on the user's provided list
-            foreach (var colName in columnsToInclude)
-            {
-                if (schemaMap.TryGetValue(colName, out int index))
-                {
-                    targetIndices.Add(index);
-                    headersList.Add(colName);
-                }
-                else
-                {
-                    Debug.WriteLine($"Column '{colName}' requested for CSV export was not found in the data reader source.");
-                }
-            }
-            headers = headersList.ToArray();
-        }
-        else
-        {
-            // Default behavior: Include all columns in their natural DB order
-            for (int i = 0; i < reader.FieldCount; i++)
-            {
-                targetIndices.Add(i);
-            }
-            headers = schemaMap.Keys.ToArray();
-        }
-
-        // Add the headers to the CSV output
+        var (targetIndices, headers) = GetCsvColumns(reader, columnsToInclude);
         csvContent.Add(headers);
-        int targetFieldCount = targetIndices.Count;
 
-        // Extract Rows dynamically
         while (reader.Read())
         {
-            string[] row = new string[targetFieldCount];
-
-            for (int i = 0; i < targetFieldCount; i++)
-            {
-                int dbIndex = targetIndices[i];
-
-                if (reader.IsDBNull(dbIndex))
-                {
-                    row[i] = "";
-                }
-                else
-                {
-                    string val = reader.GetValue(dbIndex)?.ToString() ?? "";
-
-                    // Standard CSV escaping
-                    if (val.Contains(",") || val.Contains("\r") || val.Contains("\n") || val.Contains("\""))
-                    {
-                        val = val.Replace("\"", "")
-                                 .Replace(",", " ")
-                                 .Replace("\r", "")
-                                 .Replace("\n", "");
-                    }
-
-                    row[i] = val;
-                }
-            }
-
-            csvContent.Add(row);
+            csvContent.Add(GetCsvRow(reader, targetIndices));
         }
 
         return csvContent;
@@ -313,84 +241,120 @@ public static class SQLUtils
             return csvContent;
         }
 
-        // Map out the column names and their database indices
-        var schemaMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        for (int i = 0; i < reader.FieldCount; i++)
+        var (targetIndices, headers) = GetCsvColumns(reader, columnsToInclude);
+        csvContent.Add(headers);
+
+        while (await reader.ReadAsync(cancellationToken))
         {
-            schemaMap[reader.GetName(i)] = i;
+            // Throw, never break: a partial export must not look complete
+            cancellationToken.ThrowIfCancellationRequested();
+
+            csvContent.Add(GetCsvRow(reader, targetIndices));
         }
 
-        // Determine target column indices based on user selection or full schema
+        return csvContent;
+    }
+    /// <summary>
+    /// Resolves which reader columns to export and their header names, in output order.
+    /// </summary>
+    private static (List<int> TargetIndices, string[] Headers) GetCsvColumns(DbDataReader reader, List<string>? columnsToInclude)
+    {
         List<int> targetIndices = new List<int>();
-        string[] headers;
+        List<string> headers = new List<string>();
 
         if (columnsToInclude != null && columnsToInclude.Count > 0)
         {
-            var headersList = new List<string>();
+            Dictionary<string, int> schemaMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                schemaMap[reader.GetName(i)] = i;
+            }
+
             // Filter and order based on the user's provided list
             foreach (var colName in columnsToInclude)
             {
                 if (schemaMap.TryGetValue(colName, out int index))
                 {
                     targetIndices.Add(index);
-                    headersList.Add(colName);
+                    headers.Add(EscapeCsvValue(colName));
                 }
                 else
                 {
                     Debug.WriteLine($"Column '{colName}' requested for CSV export was not found in the data reader source.");
                 }
             }
-            headers = headersList.ToArray();
         }
         else
         {
-            // Default behavior: Include all columns in their natural DB order
+            // All columns in their natural DB order. Read names by index so duplicate names (e.g. joins) keep one header per column.
             for (int i = 0; i < reader.FieldCount; i++)
             {
                 targetIndices.Add(i);
+                headers.Add(EscapeCsvValue(reader.GetName(i)));
             }
-            headers = schemaMap.Keys.ToArray();
         }
 
-        // Add the headers to the CSV output
-        csvContent.Add(headers);
-        int targetFieldCount = targetIndices.Count;
+        return (targetIndices, headers.ToArray());
+    }
 
-        // Extract Rows dynamically
-        while (await reader.ReadAsync(cancellationToken))
+    /// <summary>
+    /// Builds one CSV row from the reader's current record.
+    /// </summary>
+    private static string[] GetCsvRow(DbDataReader reader, List<int> targetIndices)
+    {
+        string[] row = new string[targetIndices.Count];
+
+        for (int i = 0; i < targetIndices.Count; i++)
         {
-            if (cancellationToken.IsCancellationRequested) break;
+            int dbIndex = targetIndices[i];
 
-            string[] row = new string[targetFieldCount];
+            // A NULL cell stays empty
+            row[i] = "";
 
-            for (int i = 0; i < targetFieldCount; i++)
+            if (!reader.IsDBNull(dbIndex))
             {
-                int dbIndex = targetIndices[i];
-
-                if (await reader.IsDBNullAsync(dbIndex, cancellationToken))
-                {
-                    row[i] = "";
-                }
-                else
-                {
-                    string val = reader.GetValue(dbIndex)?.ToString() ?? "";
-
-                    // Standard CSV escaping
-                    if (val.Contains(",") || val.Contains("\r") || val.Contains("\n") || val.Contains("\""))
-                    {
-                        val = val.Replace("\"", "")
-                                 .Replace(",", " ")
-                                 .Replace("\r", "")
-                                 .Replace("\n", "");
-                    }
-
-                    row[i] = val;
-                }
+                row[i] = EscapeCsvValue(FormatCsvValue(reader.GetValue(dbIndex)));
             }
-
-            csvContent.Add(row);
         }
 
-        return csvContent;
+        return row;
+    }
+
+    /// <summary>
+    /// Formats a cell the same way on every server, like <c>ApiEndpoint</c> does for URLs: numbers with the invariant
+    /// culture (1234.5, never "1234,5") and dates as ISO 8601 round-trip ("o"), so 03/04 can't be read as the wrong day.
+    /// </summary>
+    private static string FormatCsvValue(object value)
+    {
+        if (value is DateTime dt)
+        {
+            return dt.ToString("o", System.Globalization.CultureInfo.InvariantCulture);
+        }
+        else if (value is DateTimeOffset dto)
+        {
+            return dto.ToString("o", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        string? valueStr = Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture);
+        if (valueStr == null)
+        {
+            return "";
+        }
+
+        return valueStr;
+    }
+
+    /// <summary>
+    /// Applies standard CSV (RFC 4180) quoting: values containing a comma, quote or line break are wrapped
+    /// in quotes and inner quotes are doubled, so the original value is preserved.
+    /// </summary>
+    private static string EscapeCsvValue(string value)
+    {
+        if (value.IndexOfAny(new[] { ',', '"', '\r', '\n' }) < 0)
+        {
+            return value;
+        }
+
+        return "\"" + value.Replace("\"", "\"\"") + "\"";
     }
 }

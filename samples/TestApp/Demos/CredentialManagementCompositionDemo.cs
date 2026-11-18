@@ -80,8 +80,8 @@ public class CredentialManagementCompositionDemo : IDemo
             {
                 ["Integration.DevKit:CredentialManagement:Provider"] = "File",
                 ["Integration.DevKit:CredentialManagement:Options:ApplicationName"] = "TestApp-ConfigDriven",
-                ["Integration.DevKit:CredentialManagement:Options:SecretsFolder"] = "C:\\Users\\andre\\Projects\\Junk\\Secrets",
-                ["Integration.DevKit:CredentialManagement:Options:KeysFolder"] = "C:\\Users\\andre\\Projects\\Junk\\Keys"
+                ["Integration.DevKit:CredentialManagement:Options:SecretsFolder"] = Path.Combine(AppContext.BaseDirectory, "Junk", "Secrets"),
+                ["Integration.DevKit:CredentialManagement:Options:KeysFolder"] = Path.Combine(AppContext.BaseDirectory, "Junk", "Keys")
             })
             .Build();
 

@@ -5,6 +5,17 @@ namespace Integration.DevKit.SQLMgmt.Tests;
 
 public class SQLManagerTests
 {
+    private static SQLManager CreateManager(params string[] clientNames)
+    {
+        var settings = new SQLManagerSettings();
+        foreach (var name in clientNames)
+        {
+            settings.Clients[name] = new SQLClientSettings();
+        }
+
+        return new SQLManager(Options.Create(settings));
+    }
+
     [Fact]
     public void Constructor_NullSettings_Throws()
     {
@@ -26,20 +37,30 @@ public class SQLManagerTests
     }
 
     [Fact]
-    public void GetClient_UnconfiguredName_FallsBackToDefaultSettings()
+    public void GetClient_UnconfiguredName_Throws()
     {
+        // Falling back to defaults used to cache a broken client under the misspelled name
         var manager = new SQLManager(Options.Create(new SQLManagerSettings()));
 
-        var client = manager.GetClient("never-configured");
+        Assert.Throws<KeyNotFoundException>(() => manager.GetClient("never-configured"));
+    }
 
-        Assert.Equal("never-configured", client.ClientName);
-        Assert.Equal(string.Empty, client.RuntimeSettings.ConnectionString);
+    [Fact]
+    public void GetClient_NameDiffersOnlyByCaseFromConfig_UsesConfiguredSettings()
+    {
+        var settings = new SQLManagerSettings();
+        settings.Clients["TestClient"] = new SQLClientSettings { ConnectionString = "Server=configured;" };
+        var manager = new SQLManager(Options.Create(settings));
+
+        var client = manager.GetClient("testclient");
+
+        Assert.Equal("Server=configured;", client.RuntimeSettings.ConnectionString);
     }
 
     [Fact]
     public void GetClient_SameNameCalledTwice_ReturnsCachedInstance()
     {
-        var manager = new SQLManager(Options.Create(new SQLManagerSettings()));
+        var manager = CreateManager("cached");
 
         var first = manager.GetClient("cached");
         var second = manager.GetClient("cached");
@@ -50,7 +71,7 @@ public class SQLManagerTests
     [Fact]
     public void GetClient_NameDiffersOnlyByCase_ReturnsSameCachedInstance()
     {
-        var manager = new SQLManager(Options.Create(new SQLManagerSettings()));
+        var manager = CreateManager("MyClient");
 
         var first = manager.GetClient("MyClient");
         var second = manager.GetClient("myclient");
@@ -61,7 +82,7 @@ public class SQLManagerTests
     [Fact]
     public void GetClient_DifferentNames_ReturnDifferentInstances()
     {
-        var manager = new SQLManager(Options.Create(new SQLManagerSettings()));
+        var manager = CreateManager("a", "b");
 
         var a = manager.GetClient("a");
         var b = manager.GetClient("b");
@@ -72,7 +93,7 @@ public class SQLManagerTests
     [Fact]
     public async Task DisposeAsync_DisposesAllCreatedClients()
     {
-        var manager = new SQLManager(Options.Create(new SQLManagerSettings()));
+        var manager = CreateManager("a", "b");
         manager.GetClient("a");
         manager.GetClient("b");
 

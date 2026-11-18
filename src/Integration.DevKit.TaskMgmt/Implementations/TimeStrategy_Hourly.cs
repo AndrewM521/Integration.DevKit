@@ -33,6 +33,7 @@ public sealed class TimeStrategy_Hourly : Time_IterationStrategy
     /// </remarks>
     protected override DateTime ComputeNextTargetDTM(long currentIteration)
     {
-        return LastTargetDTM.AddHours(1);
+        // Add in UTC so daylight-saving changes do not skip or double an hour
+        return LastTargetDTM.ToUniversalTime().AddHours(1).ToLocalTime();
     }
 }

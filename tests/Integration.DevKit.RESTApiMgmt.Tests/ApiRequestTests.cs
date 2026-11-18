@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using Integration.DevKit.Core;
 using Integration.DevKit.RESTApiMgmt.Interfaces;
 using Integration.DevKit.RESTApiMgmt.Tests.TestSupport;
@@ -124,11 +124,9 @@ public class ApiRequestTests
     }
 
     [Fact]
-    public async Task GetAsync_WithContentTypeHeaderButNoContent_HeaderFailureIsSwallowedAndRequestStillSucceeds()
+    public async Task GetAsync_WithContentTypeHeaderButNoContent_FailsWithBadRequestAndNeverSends()
     {
-        // AddHeadersToRequest catches its own per-header failures into an OperationResult that
-        // ApiRequest never inspects, so a bad header (Content-Type with no HttpContent to attach
-        // it to) is silently dropped rather than surfacing to the caller.
+        // Content-Type has no HttpContent to attach to; the request must not go out silently missing it.
         var (client, handler) = CreateClient("https://example.com/api/");
         handler.Responder = _ => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(string.Empty) };
 
@@ -136,8 +134,9 @@ public class ApiRequestTests
 
         var result = await ApiRequest.GetAsync(client, "/Posts", content: null, headers: headers);
 
-        Assert.True(result.MethodSuccess);
-        Assert.Single(handler.Requests);
+        Assert.False(result.MethodSuccess);
+        Assert.Equal(HttpStatusCode.BadRequest, result.StatusCode);
+        Assert.Empty(handler.Requests);
     }
 
     [Theory]
@@ -172,23 +171,22 @@ public class ApiRequestTests
     }
 
     [Fact]
-    public async Task GetAsync_MultipleBadHeaders_FailuresAreSwallowedAndRequestStillSucceeds()
+    public async Task GetAsync_MultipleBadHeaders_FailsWithEveryHeaderErrorAndNeverSends()
     {
-        // Same as above: AddHeadersToRequest aggregates per-header failures internally but its
-        // result is never checked by ApiRequest, so even multiple bad headers don't throw.
         var (client, handler) = CreateClient("https://example.com/api/");
         handler.Responder = _ => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(string.Empty) };
 
         var headers = new Dictionary<string, string>
         {
             ["Content-Type"] = "application/json", // no content on a GET -> fails internally
-            ["User-Agent"] = "not a valid product token!!" // ParseAdd fails internally too
+            ["Bad Header"] = "x" // spaces aren't allowed in header names
         };
 
         var result = await ApiRequest.GetAsync(client, "/Posts", headers: headers);
 
-        Assert.True(result.MethodSuccess);
-        Assert.Single(handler.Requests);
+        Assert.False(result.MethodSuccess);
+        Assert.Equal(2, Assert.IsType<AggregateException>(result.Exception).InnerExceptions.Count);
+        Assert.Empty(handler.Requests);
     }
 
     [Fact]
@@ -224,5 +222,30 @@ public class ApiRequestTests
 
         Assert.True(result.MethodSuccess);
         Assert.Single(handler.Requests);
+    }
+
+    [Fact]
+    public async Task SendRequestAsync_Timeout_ReturnsRequestTimeout()
+    {
+        var (client, handler) = CreateClient("https://example.com/api/");
+        handler.Responder = _ => throw new TaskCanceledException("timed out");
+
+        var result = await ApiRequest.GetAsync(client, "items");
+
+        Assert.False(result.MethodSuccess);
+        Assert.Equal(HttpStatusCode.RequestTimeout, result.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAsync_OnSuccess_ResponseBodyIsTheBody()
+    {
+        // The summary text used to land in ResponseBody on every successful call
+        var (client, handler) = CreateClient("https://example.com/api/");
+        handler.Responder = _ => FakeHttpMessageHandler.JsonResponse(HttpStatusCode.OK, "{\"id\":1}");
+
+        var result = await ApiRequest.GetAsync(client, "/Posts/1");
+
+        Assert.Equal("{\"id\":1}", result.ResponseBody);
+        Assert.Equal("HTTP 200 OK", result.DisplaySummary);
     }
 }

@@ -21,7 +21,6 @@ public class ApiManagementDemo : IDemo
         var _apiManager = Service_RESTApiMgmt.ApiManager;
         var _client = _apiManager.GetClient("TestClient");
 
-        _apiManager.LogRuntimeSettings();
 
         ApiEndpoint Posts = new ApiEndpoint("/Posts");
 

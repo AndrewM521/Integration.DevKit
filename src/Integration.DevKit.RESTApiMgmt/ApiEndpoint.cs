@@ -1,4 +1,4 @@
-﻿using System.Net;
+﻿using System.Globalization;
 using Integration.DevKit.Core;
 
 namespace Integration.DevKit.RESTApiMgmt;
@@ -29,39 +29,12 @@ public class ApiEndpoint
     /// <example>
     /// Base Route: "users/search"
     /// Params: { name = "John Doe", age = 30 }
-    /// Result: "users/search?name=John+Doe&amp;age=30"
+    /// Result: "users/search?name=John%20Doe&amp;age=30"
     /// </example>
-    public async Task<OperationResult<string>> BuildQueryUrlAsync(Dictionary<string, object> queryParams)
+    public Task<OperationResult<string>> BuildQueryUrlAsync(Dictionary<string, object> queryParams)
     {
-        var result = new OperationResult<string>();
-
-        try
-        {
-            string url = _route;
-
-            if (queryParams == null || queryParams.Count == 0)
-            {
-                return result.SetMethodSuccess(url);
-            }
-
-            var items = new List<KeyValuePair<string, string>>();
-            foreach (var kvp in queryParams)
-            {
-                if (kvp.Value != null)
-                {
-                    items.Add(new KeyValuePair<string, string>(kvp.Key, kvp.Value.ToString()!));
-                }
-            }
-
-            string queryStr = await new FormUrlEncodedContent(items).ReadAsStringAsync();
-            url += $"?{queryStr}";
-
-            return result.SetMethodSuccess(url);
-        }
-        catch (Exception ex)
-        {
-            return result.SetMethodFailure(ex);
-        }
+        // Nothing here waits on I/O; kept for callers that already use the async form
+        return Task.FromResult(BuildQueryUrl(queryParams));
     }
     #endregion
 
@@ -83,11 +56,55 @@ public class ApiEndpoint
     /// <example>
     /// Base Route: "users/search"
     /// Params: { name = "John Doe", age = 30 }
-    /// Result: "users/search?name=John+Doe&amp;age=30"
+    /// Result: "users/search?name=John%20Doe&amp;age=30"
     /// </example>
     public OperationResult<string> BuildQueryUrl(Dictionary<string, object> queryParams)
     {
-        return BuildQueryUrlAsync(queryParams).GetAwaiter().GetResult();
+        var result = new OperationResult<string>();
+
+        try
+        {
+            string url = _route;
+
+            if (queryParams == null || queryParams.Count == 0)
+            {
+                return result.SetMethodSuccess(url);
+            }
+
+            System.Text.StringBuilder queryStr = new System.Text.StringBuilder();
+            foreach (var kvp in queryParams)
+            {
+                if (kvp.Value == null)
+                {
+                    continue;
+                }
+
+                if (queryStr.Length > 0)
+                {
+                    queryStr.Append('&');
+                }
+
+                queryStr.Append(Uri.EscapeDataString(kvp.Key));
+                queryStr.Append('=');
+                queryStr.Append(Uri.EscapeDataString(FormatValue(kvp.Value)));
+            }
+
+            // A route like "search?type=all" already has a query, so add to it instead of starting a second one
+            string separator = "?";
+
+            if (url.Contains('?'))
+            {
+                separator = "&";
+            }
+
+            url += separator + queryStr;
+
+            return result.SetMethodSuccess(url);
+        }
+        catch (Exception ex)
+        {
+            return result.SetMethodFailure(ex);
+        }
     }
 
     /// <summary>
@@ -112,7 +129,7 @@ public class ApiEndpoint
             {
                 if (kvp.Value != null)
                 {
-                    url += $"/{WebUtility.UrlEncode(kvp.Key)}/{WebUtility.UrlEncode(kvp.Value.ToString()!)}";
+                    url += $"/{Uri.EscapeDataString(kvp.Key)}/{Uri.EscapeDataString(FormatValue(kvp.Value))}";
                 }
             }
 
@@ -146,7 +163,7 @@ public class ApiEndpoint
             {
                 if (val != null)
                 {
-                    url += $"/{WebUtility.UrlEncode(val.ToString()!)}";
+                    url += $"/{Uri.EscapeDataString(FormatValue(val))}";
                 }
             }
 
@@ -158,6 +175,30 @@ public class ApiEndpoint
         }
     }
     #endregion
+
+    /// <summary>
+    /// Formats a URL value the same way on every machine: dates as ISO 8601 (round-trip <c>"o"</c>),
+    /// everything else with <see cref="CultureInfo.InvariantCulture"/> (so <c>1.5</c> never becomes <c>1,5</c>).
+    /// </summary>
+    private static string FormatValue(object value)
+    {
+        if (value is DateTime dt)
+        {
+            return dt.ToString("o", CultureInfo.InvariantCulture);
+        }
+        else if (value is DateTimeOffset dto)
+        {
+            return dto.ToString("o", CultureInfo.InvariantCulture);
+        }
+
+        string? valueStr = Convert.ToString(value, CultureInfo.InvariantCulture);
+        if (valueStr == null)
+        {
+            return string.Empty;
+        }
+
+        return valueStr;
+    }
 }
 
 /// <summary>

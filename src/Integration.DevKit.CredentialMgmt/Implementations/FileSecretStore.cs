@@ -11,6 +11,8 @@ using Integration.DevKit.ThreadLocks;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using System.Runtime.ExceptionServices;
+using System.Text;
 
 namespace Integration.DevKit.CredentialMgmt.Implementations;
 
@@ -23,7 +25,7 @@ namespace Integration.DevKit.CredentialMgmt.Implementations;
 /// all of which are encrypted as a single block using the underlying <see cref="SecretStoreBase.Encrypt(string)"/> logic.
 /// <para/>
 /// Every public method locks around its full read-modify-write sequence via <see cref="ThreadLockManager"/>,
-/// keyed per container (<c>fileName</c>). Without this, two concurrent calls against the same container could
+/// keyed on the container's file path, so names that map to the same file share one lock. Without this, two concurrent calls against the same container could
 /// both read the same starting state and one would silently overwrite the other's change on save.
 /// </remarks>
 public class FileSecretStore : SecretStoreBase
@@ -78,7 +80,14 @@ public class FileSecretStore : SecretStoreBase
     public override NullOperationResult SetKey(string fileName, string key, string value)
     {
         var result = new NullOperationResult();
-        var lockKey = $"{StoreName}:{fileName}";
+        // Lock on the file itself: names that clean up to the same file (e.g. "a/b" and "a_b") must share one lock
+        var getPath = GetFilePath(fileName);
+        if (!getPath.MethodSuccess)
+        {
+            return result.SetMethodFailure(getPath.Exception);
+        }
+
+        string lockKey = getPath.Result;
 
         var enterLock = _threadLockManager.TryEnterSyncLock(lockKey, LockTimeoutMs);
         if (!enterLock.MethodSuccess)
@@ -90,42 +99,17 @@ public class FileSecretStore : SecretStoreBase
 
         try
         {
-            var getPath = GetFilePath(fileName);
-            if (!getPath.MethodSuccess)
-            {
-                throw getPath.Exception;
-            }
-
             var filePath = getPath.Result;
-            var tmpFilePath = filePath + ".tmp";
 
             var getDecryptedContent = Load(filePath);
             if (!getDecryptedContent.MethodSuccess)
             {
-                throw getDecryptedContent.Exception;
+                ExceptionDispatchInfo.Throw(getDecryptedContent.Exception);
             }
 
             getDecryptedContent.Result[key] = value;
 
-            var getJson = JsonUtils.SerializeObjectToJson(getDecryptedContent.Result);
-            if (!getJson.MethodSuccess)
-            {
-                throw getJson.Exception;
-            }
-
-            var encrypted = Encrypt(getJson.Result);
-
-            var writeToFile = FileUtils.WriteToFile(tmpFilePath, encrypted);
-            if (!writeToFile.MethodSuccess)
-            {
-                throw writeToFile.Exception;
-            }
-
-            var moveFile = FileUtils.MoveFile(tmpFilePath, filePath, true);
-            if (!moveFile.MethodSuccess)
-            {
-                throw moveFile.Exception;
-            }
+            Save(filePath, getDecryptedContent.Result);
 
             _logger?.LogDebug($"Set key '{key}' in secret '{fileName}'.");
 
@@ -152,7 +136,14 @@ public class FileSecretStore : SecretStoreBase
     public override OperationResult<string> GetKey(string fileName, string key)
     {
         var result = new OperationResult<string>();
-        var lockKey = $"{StoreName}:{fileName}";
+        // Lock on the file itself: names that clean up to the same file (e.g. "a/b" and "a_b") must share one lock
+        var getPath = GetFilePath(fileName);
+        if (!getPath.MethodSuccess)
+        {
+            return result.SetMethodFailure(getPath.Exception);
+        }
+
+        string lockKey = getPath.Result;
 
         var enterLock = _threadLockManager.TryEnterSyncLock(lockKey, LockTimeoutMs);
         if (!enterLock.MethodSuccess)
@@ -162,16 +153,10 @@ public class FileSecretStore : SecretStoreBase
 
         try
         {
-            var getPath = GetFilePath(fileName);
-            if (!getPath.MethodSuccess)
-            {
-                throw getPath.Exception;
-            }
-
             var getDecryptedContent = Load(getPath.Result);
             if (!getDecryptedContent.MethodSuccess)
             {
-                throw getDecryptedContent.Exception;
+                ExceptionDispatchInfo.Throw(getDecryptedContent.Exception);
             }
 
             if (!getDecryptedContent.Result.TryGetValue(key, out var raw))
@@ -203,7 +188,14 @@ public class FileSecretStore : SecretStoreBase
     public override NullOperationResult DeleteKey(string fileName, string key)
     {
         var result = new NullOperationResult();
-        var lockKey = $"{StoreName}:{fileName}";
+        // Lock on the file itself: names that clean up to the same file (e.g. "a/b" and "a_b") must share one lock
+        var getPath = GetFilePath(fileName);
+        if (!getPath.MethodSuccess)
+        {
+            return result.SetMethodFailure(getPath.Exception);
+        }
+
+        string lockKey = getPath.Result;
 
         var enterLock = _threadLockManager.TryEnterSyncLock(lockKey, LockTimeoutMs);
         if (!enterLock.MethodSuccess)
@@ -213,12 +205,6 @@ public class FileSecretStore : SecretStoreBase
 
         try
         {
-            var getPath = GetFilePath(fileName);
-            if (!getPath.MethodSuccess)
-            {
-                throw getPath.Exception;
-            }
-
             var filePath = getPath.Result;
 
             if (!FileUtils.DoesFileExist(filePath))
@@ -230,7 +216,7 @@ public class FileSecretStore : SecretStoreBase
             var getDecryptedContent = Load(filePath);
             if (!getDecryptedContent.MethodSuccess)
             {
-                throw getDecryptedContent.Exception;
+                ExceptionDispatchInfo.Throw(getDecryptedContent.Exception);
             }
 
             if (!getDecryptedContent.Result.Remove(key))
@@ -241,27 +227,7 @@ public class FileSecretStore : SecretStoreBase
                 return result.SetMethodSuccess();
             }
 
-            var tmpFilePath = filePath + ".tmp";
-
-            var getJson = JsonUtils.SerializeObjectToJson(getDecryptedContent.Result);
-            if (!getJson.MethodSuccess)
-            {
-                throw getJson.Exception;
-            }
-
-            var encrypted = Encrypt(getJson.Result);
-
-            var writeToFile = FileUtils.WriteToFile(tmpFilePath, encrypted);
-            if (!writeToFile.MethodSuccess)
-            {
-                throw writeToFile.Exception;
-            }
-
-            var moveFile = FileUtils.MoveFile(tmpFilePath, filePath, true);
-            if (!moveFile.MethodSuccess)
-            {
-                throw moveFile.Exception;
-            }
+            Save(filePath, getDecryptedContent.Result);
 
             return result.SetMethodSuccess();
         }
@@ -279,7 +245,14 @@ public class FileSecretStore : SecretStoreBase
     public override NullOperationResult DeleteSecret(string fileName)
     {
         var result = new NullOperationResult();
-        var lockKey = $"{StoreName}:{fileName}";
+        // Lock on the file itself: names that clean up to the same file (e.g. "a/b" and "a_b") must share one lock
+        var getPath = GetFilePath(fileName);
+        if (!getPath.MethodSuccess)
+        {
+            return result.SetMethodFailure(getPath.Exception);
+        }
+
+        string lockKey = getPath.Result;
 
         var enterLock = _threadLockManager.TryEnterSyncLock(lockKey, LockTimeoutMs);
         if (!enterLock.MethodSuccess)
@@ -289,18 +262,12 @@ public class FileSecretStore : SecretStoreBase
 
         try
         {
-            var getPath = GetFilePath(fileName);
-            if (!getPath.MethodSuccess)
-            {
-                throw getPath.Exception;
-            }
-
             if (FileUtils.DoesFileExist(getPath.Result))
             {
                 var deleteFile = FileUtils.DeleteFile(getPath.Result);
                 if (!deleteFile.MethodSuccess)
                 {
-                    throw deleteFile.Exception;
+                    ExceptionDispatchInfo.Throw(deleteFile.Exception);
                 }
             }
 
@@ -335,7 +302,7 @@ public class FileSecretStore : SecretStoreBase
             var getContent = FileUtils.ReadFileText(path);
             if (!getContent.MethodSuccess)
             {
-                throw getContent.Exception;
+                ExceptionDispatchInfo.Throw(getContent.Exception);
             }
 
             var json = Decrypt(getContent.Result);
@@ -343,7 +310,7 @@ public class FileSecretStore : SecretStoreBase
             var getParsedObj = JsonUtils.DeserializeJsonToObject(json);
             if (!getParsedObj.MethodSuccess)
             {
-                throw getParsedObj.Exception;
+                ExceptionDispatchInfo.Throw(getParsedObj.Exception);
             }
 
             if (getParsedObj.Result is not Dictionary<string, object> parsedDictionary)
@@ -357,6 +324,33 @@ public class FileSecretStore : SecretStoreBase
         {
             return result.SetMethodFailure(ex);
         }
+    }
+
+    /// <summary>
+    /// Encrypts the container and replaces its file atomically. Must be called while holding the container's lock.
+    /// </summary>
+    private void Save(string filePath, Dictionary<string, object> content)
+    {
+        var getJson = JsonUtils.SerializeObjectToJson(content);
+        if (!getJson.MethodSuccess)
+        {
+            ExceptionDispatchInfo.Throw(getJson.Exception);
+        }
+
+        byte[] encrypted = Encoding.UTF8.GetBytes(Encrypt(getJson.Result));
+        string tmpFilePath = filePath + ".tmp";
+
+        Directory.CreateDirectory(_secretsDir);
+
+        using (var stream = new FileStream(tmpFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+        {
+            stream.Write(encrypted);
+
+            // Force the bytes to disk before the move, or a power cut can leave an empty file in place of the secrets
+            stream.Flush(flushToDisk: true);
+        }
+
+        File.Move(tmpFilePath, filePath, overwrite: true);
     }
 
     /// <summary>

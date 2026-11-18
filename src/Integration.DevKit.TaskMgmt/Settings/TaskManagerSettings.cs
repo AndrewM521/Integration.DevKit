@@ -16,7 +16,7 @@ public class TaskManagerSettings
     /// Gets or sets the maximum number of tasks allowed to run concurrently across the entire manager.
     /// </summary>
     /// <value>
-    /// The concurrency limit. The default value is <see cref="int.MaxValue"/>.
+    /// The concurrency limit. The default value is <see cref="int.MaxValue"/>. Zero or negative means no limit.
     /// </value>
     public int MaxConcurrentTasks { get; set; } = int.MaxValue;
 
@@ -34,8 +34,7 @@ public class TaskManagerSettings
     /// Gets or sets the maximum number of historical iteration records kept for each individual task.
     /// </summary>
     /// <remarks>
-    /// This property limits the size of the <see cref="ManagedTaskSnapshot.IterationHistory"/> 
-    /// dictionary. It is essential for long-running tasks to prevent the snapshot from 
+    /// This property limits how many iterations <see cref="ManagedTaskSnapshot.GetIterationHistory"/> keeps. It is essential for long-running tasks to prevent the snapshot from 
     /// growing indefinitely over time.
     /// </remarks>
     /// <value>Default value is 100.</value>

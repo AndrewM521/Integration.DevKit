@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 This is the SDK-wide changelog. Each module also keeps its own changelog with only the changes that affect that package:
 
@@ -16,7 +16,43 @@ This is the SDK-wide changelog. Each module also keeps its own changelog with on
 
 Going forward, record module-specific changes in that module's changelog, and add an entry here only for releases or changes that span the SDK (version bumps, target frameworks, shared dependencies, build tooling). History for removed modules (CustomLogger/Logging, OAuth) lives only in this file.
 
-## [2.1.1.0] - 2026-10-30 (current)
+## [3.0.0.0] - 2026-11-16 (current)
+
+### Removed
+- **Breaking:** Core's configuration protection (`EncryptJsonOnBuild`/`DecryptJsonOnBuild` and the protector classes), `LogRuntimeSettings` in REST API, SQL and Task Management, the unused `ApiClientSettings.Username`/`Password`, and `TaskManager.AwaitAllTasksToFinish` (use `Task.WhenAll`). See each module's changelog.
+- **Breaking:** the `allowNoFileExtension` parameter of `FileUtils.DeleteFiles`, which was ignored. See the Core changelog.
+
+### Fixed
+- Concurrency fixes in Thread Locks, Thread-Safe File I/O, SQL Management (single-connection mode) and Task Management, plus `FileUtils` empty writes and SQL CSV export. Process Launcher no longer leaves fast-exiting processes registered; Credential Management's `CompositeSecretReader` keeps each reader's error; Task Management's hourly/interval schedules no longer drift at daylight-saving changes; REST API Management fixes `MaxConcurrentRequests = 0` and repeat `Initialize()` calls. Task Management no longer keeps every finished iteration in memory, starts a fresh snapshot when a key is run again, no longer empties its registry at the size limit, no longer loses track of a running task when the same key is started twice, no longer skips the first run of a schedule whose start time is ahead, and caps the exceptions it keeps. Thread-Safe File I/O uses one lock per file however the path is spelled. See each module's changelog.
+- REST API: successful calls report the real `ResponseBody`, and a client with unusable settings fails at `GetClient` instead of crashing on its first request. Core: `OnDemandHost` stops on `StopApplication()`, and `DictionaryUtils` no longer throws on a null in a value-type list.
+- Task Management: a parallel task with no iteration limit no longer hangs `StartTask` and fills memory. Credential Management: secret writes are flushed to disk before they replace the old file. REST API: `Initialize()` no longer edits headers on a client that is sending requests. Process Launcher: a failed cancel no longer loses track of a running process. SQL: CSV export uses the invariant culture and ISO 8601 dates. Core: tiny exponent numbers in JSON are no longer read as `0`, and existing folders with a dot in their name (e.g. `v1.2`) count as folders. See each module's changelog.
+
+### Behavior changes
+- REST API: unappliable request headers now fail the call (`400`) instead of being dropped, and timeouts return `408` instead of `500`. `ApiEndpoint` encodes spaces as `%20` in paths and query strings (RFC 3986; query strings used `+`) and formats values with the invariant culture.
+- REST API and SQL: `GetClient` throws for an unconfigured client name instead of falling back to defaults, and names are matched case-insensitively.
+- Task Management: `ManagedTaskSnapshot.IterationHistory` is replaced by `GetIterationHistory()`, which returns a safe copy.
+- Process Launcher: `EnableProcessLogging` and `AutoRestartOnFailure` removed; output is capped by the new `MaxOutputLines`; processes are canceled on app shutdown.
+- Core: `OnDemandHost` is now an instance class that can be restarted; `OnDemand_Registry` is removed. JSON numbers that aren't integers become `decimal` (so amounts keep every digit), except values too small for `decimal`, which stay `double`. Value conversions in Core, SQL and Credential Management use the invariant culture.
+- Task Management: `TimeStrategy_Interval` rejects zero or negative intervals. Retries now back off (1s, 2s, 4s ... up to 60s) instead of running every 50 ms. `StartTask` rejects a time strategy instance already used by another running task.
+- Process Launcher: a graceful cancel now really waits up to 3 seconds before killing; before, it always force killed at once.
+- REST API and SQL: the sync methods no longer deadlock when called from a UI thread or classic ASP.NET.
+- Core: `OnDemandHost` starts hosted services one by one in registration order and stops them in reverse, like the generic host.
+- SQL: the secret store container is renamed from `ApiClient(<name>)` to `SQLClient(<name>)`; stored connection strings must be saved again.
+- REST API: a negative `Default_HttpTimeout_Seconds` means no timeout; `GetClient` throws for settings it can't apply.
+- Core: `JsonUtils` rejects trailing commas everywhere.
+- SQL: a connection string from the secret store is read once and reused until the store is set again. **Breaking:** `RunDataReader(sql:)` is now `RunDataReader(sqlStatement:)`.
+- Task Management: `StartTask` rejects a parallel task with no concurrency limit, no iteration limit and no iteration strategy.
+- Credential Management: relative `SecretsFolder`/`KeysFolder` paths resolve against the app's folder, not the working directory.
+
+### Changed
+- Core, RESTApiMgmt, SQLMgmt, TaskMgmt and ProcessLauncher bumped to `3.0.0.0`; ThreadLocks, CredentialMgmt and CredentialMgmt.Contracts to `2.1.2.0`; ThreadSafeItems to `2.3.0.0`.
+- New test projects `tests/Integration.DevKit.ProcessLauncher.Tests` and `tests/Integration.DevKit.ThreadSafeItems.Tests`.
+- Sample `TestApp` writes its scratch files, secrets, keys and logs to a `Junk` folder next to the app (relative paths, resolved against the app's folder) instead of hard-coded folders on one machine; `Junk/` is git-ignored. The unused `RnadomManagement` config section is removed.
+- Sample `TestApp` now reads plain `appsettings.json`; its encrypted sample values were replaced with their plain text.
+- Errors rethrown inside any module keep their original stack trace.
+- Each package references only the `Microsoft.Extensions.*` packages it uses; `Integration.DevKit.Core` no longer brings `Options`/`Options.ConfigurationExtensions`.
+
+## [2.1.1.0] - 2026-10-30
 
 ### Added
 - Every module's NuGet package now includes its README from `docs/<Module>/README.md`. Packing is set up once in `src/Directory.Build.targets` and turned on per project with `<DevKitDocsFolder>` in the `.csproj`.

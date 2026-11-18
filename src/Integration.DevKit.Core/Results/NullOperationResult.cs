@@ -27,7 +27,7 @@ public class NullOperationResult : NullableOperationResult<object?>
     /// </summary>
     /// <param name="ex">The exception that caused the operation to fail.</param>
     /// <returns>The current <see cref="NullOperationResult"/> instance for method chaining.</returns>
-    public new NullOperationResult SetMethodFailure(Exception ex)
+    public NullOperationResult SetMethodFailure(Exception ex)
     {
         base.SetMethodFailure(ex);
         return this;

@@ -223,4 +223,36 @@ public class FileSecretStoreTests : IDisposable
             Assert.Equal($"v{i}", get.Result);
         }
     }
+
+    [Fact]
+    public void ContainerNamesThatShareAFile_ShareOneLock()
+    {
+        // "a/b" and "a_b" both save to TestApp_a_b.secret; with separate locks, parallel writes lost each other's keys
+        var store = CreateStore();
+        const int writes = 12;
+
+        // The first write creates the key ring, which is slow enough to push queued writers past the 5-second lock wait
+        Assert.True(store.SetKey("warm-up", "key", "value").MethodSuccess);
+
+        Parallel.For(0, writes, i =>
+        {
+            // Half the writes use each spelling, so both names hit the same file at once
+            string containerName = "a_b";
+
+            if (i % 2 == 0)
+            {
+                containerName = "a/b";
+            }
+
+            var set = store.SetKey(containerName, $"key{i}", $"value{i}");
+            Assert.True(set.MethodSuccess, set.Exception?.ToString());
+        });
+
+        for (int i = 0; i < writes; i++)
+        {
+            var get = store.GetKey("a_b", $"key{i}");
+            Assert.True(get.MethodSuccess, $"key{i} was lost");
+            Assert.Equal($"value{i}", get.Result);
+        }
+    }
 }

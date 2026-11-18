@@ -25,7 +25,7 @@ public interface IManagedTaskHandle
     /// Gets the underlying <see cref="Task"/> object representing the execution of the Managed Task.
     /// </summary>
     /// <remarks>
-    /// This represents the total lifetime of the <see cref="ManagedTask"/>. 
+    /// This represents the total lifetime of the <see cref="Integration.DevKit.TaskMgmt.Abstractions.ManagedTask"/>. 
     /// To monitor individual execution cycles, refer to the iteration handles or snapshots instead.
     /// </remarks>
     /// <value>The running <see cref="Task"/> if the task has started; otherwise, <see langword="null"/>.</value>

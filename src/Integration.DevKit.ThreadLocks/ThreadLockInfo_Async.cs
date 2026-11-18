@@ -29,11 +29,6 @@ internal sealed class ThreadLockInfo_Async : IDisposable
     public int RefCount = 0;
 
     /// <summary>
-    /// Gets the timestamp of the last time this lock was accessed or updated.
-    /// </summary>
-    public DateTime LastAccessTime = DateTime.MinValue;
-
-    /// <summary>
     /// Disposes the underlying <see cref="SemaphoreSlim"/>.
     /// </summary>
     /// <remarks>
@@ -43,16 +38,5 @@ internal sealed class ThreadLockInfo_Async : IDisposable
     public void Dispose()
     {
         Semaphore.Dispose();
-    }
-
-    /// <summary>
-    /// Updates the <see cref="LastAccessTime"/> to the current UTC time.
-    /// </summary>
-    /// <remarks>
-    /// Ensures that the manager has an accurate record of activity for this lock.
-    /// </remarks>
-    public void UpdateLastAccessTime()
-    {
-        LastAccessTime = DateTime.UtcNow;
     }
 }

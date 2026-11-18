@@ -1,4 +1,4 @@
-# Integration.DevKit.SQLMgmt
+﻿# Integration.DevKit.SQLMgmt
 
 Named SQL Server clients with connection testing and command/data-reader helpers that return result objects instead of throwing.
 
@@ -74,7 +74,7 @@ Per-client properties (`SQLClientSettings`):
 | `ConnectionString` | `""` | SQL Server connection string for this client. Ignored if a secret store is attached (see below), because the store takes priority. |
 | `UseSingleConnection` | `false` | `false`: a new `SqlConnection` is opened and disposed per call. `true`: one persistent connection is reused and serialized behind an internal semaphore — useful for providers with expensive connection setup, but means all calls on that client queue behind each other. |
 
-`SQLManager.GetClient(clientName)` caches one `SQLClient` per name (case-insensitive). If the name isn't found in `Clients`, it logs a warning and falls back to a client with empty default settings — it does **not** throw, despite its XML documentation suggesting it validates the name. Double-check the client name if connections are failing unexpectedly.
+`SQLManager.GetClient(clientName)` caches one `SQLClient` per name (case-insensitive). Names are matched case-insensitively against the configured `Clients`. A name that isn't configured throws `KeyNotFoundException`.
 
 ## How to
 
@@ -113,7 +113,7 @@ await sqlClient.RunDataReaderAsync("SELECT * FROM Orders", CommandType.Text, asy
 });
 ```
 
-`ToCsvContent`/`ToCsvContentAsync` strip commas, quotes, and newlines from cell values rather than quote-escaping them — the output is a simplified, lossy CSV, not an RFC 4180-compliant one. Don't use it where exact round-tripping of special characters matters.
+`ToCsvContent`/`ToCsvContentAsync` quote cells the RFC 4180 way: a value containing a comma, quote, or line break is wrapped in double quotes and inner quotes are doubled (`a "b"` becomes `"a ""b"""`), so the original value round-trips. Headers are taken per column, so duplicate column names (e.g. from a join) still line up with their data.
 
 ### Store credentials in a secret store
 
@@ -122,13 +122,15 @@ void SetSecretStore(ISecretStore secretStore);
 NullOperationResult SetSecretStoreCredentials(string connectionString);
 ```
 
-Attaching a secret store overrides the plain `ConnectionString` configured on `SQLClientSettings`:
+Attaching a secret store overrides the plain `ConnectionString` configured on `SQLClientSettings`. The value is stored under the key `ConnectionString` in the container `SQLClient(<client name>)`:
 
 ```csharp
 var sqlClient = Service_SQLMgmt.SQLManager.GetClient("my-client");
 sqlClient.SetSecretStore(Service_CredentialMgmt.FileSecretStore);
 sqlClient.SetSecretStoreCredentials("Server=...;Database=...;");
 ```
+
+The connection string is read from the store once and reused. `SetSecretStore`, `SetSecretStoreCredentials`, `DeleteCredential` and `DeleteAllCredentials` clear it, so the next query reads the store again.
 
 This is entirely opt-in, and calling `SetSecretStoreCredentials` before `SetSecretStore` throws (since there's nowhere to store the value yet). See [Credential Management](../CredentialMgmt/README.md#wire-into-sqlclient) for details.
 
@@ -170,7 +172,6 @@ public class SQLClient : IDisposable
     NullOperationResult SetSecretStoreCredentials(string connectionString);
     NullOperationResult DeleteCredential(string key);
     NullOperationResult DeleteAllCredentials();
-    void LogRuntimeSettings(bool calledFromManager = false);
 }
 ```
 
@@ -197,7 +198,6 @@ SQL operations report failure through the SDK's result-object pattern (`Operatio
 ## Best practices
 
 - Prefer `UseSingleConnection = true` only when connection setup is genuinely expensive for your provider — it serializes every call on that client behind one connection.
-- Don't assume `GetClient` validates the client name — verify configured client names match what you request, since a miss silently falls back to default settings.
 - Keep connection strings in a protected configuration store or secret store rather than plain `appsettings.json`.
 - Use [`ThreadSafeFileIO`](../ThreadSafeItems/README.md) if you're also writing query results out to a shared file — SQL client access itself is already safe for concurrent use per-client.
 

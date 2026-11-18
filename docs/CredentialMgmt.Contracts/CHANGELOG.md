@@ -2,7 +2,13 @@
 
 This changelog covers only the `Integration.DevKit.CredentialMgmt.Contracts` package. See the [root changelog](../CHANGELOG.md) for the full SDK release notes.
 
-## [2.1.1.0] - 2026-10-30 (current)
+## [2.1.2.0] - 2026-11-16 (current)
+
+### Changed
+- The package no longer lists `Microsoft.Extensions.Options`, `Options.ConfigurationExtensions`, `Configuration.Abstractions`, `Hosting.Abstractions` and `DependencyInjection` as its own dependencies; it never used them. It still gets what `Integration.DevKit.Core` needs through Core.
+- Version bumped from `2.1.1.0` to `2.1.2.0`.
+
+## [2.1.1.0] - 2026-10-30
 
 ### Added
 - The NuGet package now includes this module's README (`docs/CredentialMgmt.Contracts/README.md`), shown on the package's nuget.org page.

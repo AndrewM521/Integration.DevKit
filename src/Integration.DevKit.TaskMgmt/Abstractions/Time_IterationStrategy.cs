@@ -62,16 +62,8 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
         {
             logger?.LogInformation($"Task '{handle.TaskKey}' is behind schedule. Catching up to current time (Skipping missed iterations)...");
 
-            // Keep advancing until 'target' is in the future
-            while (remaining <= TimeSpan.Zero && !cancellationToken.IsCancellationRequested)
-            {
-                LastTargetDTM = target;
-
-                // Advance target based on the strategy's math
-                target = ComputeNextTargetDTM(handle.CurrentIterationCount);
-                utcTarget = new DateTimeOffset(target.ToUniversalTime());
-                remaining = utcTarget - DateTimeOffset.UtcNow;
-            }
+            target = SkipToPresent(target, handle.CurrentIterationCount, cancellationToken);
+            utcTarget = new DateTimeOffset(target.ToUniversalTime());
 
             logger?.LogInformation($"Task '{handle.TaskKey}' catch-up complete");
         }
@@ -115,14 +107,6 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
                 wait = remaining;
             }
 
-            // Ensure we don't pass a negative or zero to Task.Delay if time ticked forward during calculation.
-            if (wait <= TimeSpan.Zero)
-            {
-                LastTargetDTM = DateTime.Now;
-
-                break; // Target reached exactly during calculation
-            }
-
             // Log the next check for long-running waits
             if (wait > TimeSpan.FromMinutes(1))
             {
@@ -142,7 +126,15 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
     {
         if (LastTargetDTM == default)
         {
-            LastTargetDTM = GetStartDTM();
+            var startDTM = GetStartDTM();
+
+            // A start time still ahead is the first run itself; adding an interval to it would skip that run
+            if (startDTM > DateTime.Now)
+            {
+                return startDTM;
+            }
+
+            LastTargetDTM = startDTM;
         }
 
         return ComputeNextTargetDTM(currentIteration);
@@ -158,6 +150,25 @@ public abstract class Time_IterationStrategy : BaseIterationStrategy
     /// as the basis for this calculation.
     /// </remarks>
     protected abstract DateTime ComputeNextTargetDTM(long currentIteration);
+
+    /// <summary>
+    /// Advances past every missed slot: sets <see cref="LastTargetDTM"/> to the last slot that is not in the future
+    /// and returns the next one. Strategies with a fixed step can override this to jump there directly.
+    /// </summary>
+    /// <param name="target">The first missed target.</param>
+    /// <param name="currentIteration">The task's current iteration count.</param>
+    /// <param name="cancellationToken">Stops the catch-up early.</param>
+    /// <returns>The first target in the future.</returns>
+    protected virtual DateTime SkipToPresent(DateTime target, long currentIteration, CancellationToken cancellationToken)
+    {
+        while (target.ToUniversalTime() <= DateTime.UtcNow && !cancellationToken.IsCancellationRequested)
+        {
+            LastTargetDTM = target;
+            target = ComputeNextTargetDTM(currentIteration);
+        }
+
+        return target;
+    }
 
     /// <summary>
     /// Resolves the effective starting <see cref="DateTime"/> by combining custom or default date and time values.

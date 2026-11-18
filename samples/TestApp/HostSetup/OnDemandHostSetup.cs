@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2026 AndrewM5
  * Licensed under the MIT License.
  * See LICENSE file in the project root for full license information.
@@ -19,7 +19,7 @@ using Microsoft.Extensions.Logging;
 namespace TestApp.HostSetup;
 
 /// <summary>
-/// The <see cref="OnDemandHost"/> alternative to <see cref="RegularHostSetup"/> — a static,
+/// The <see cref="OnDemandHost"/> alternative to <see cref="RegularHostSetup"/>. A lightweight,
 /// non-<see cref="Microsoft.Extensions.Hosting.IHostBuilder"/> service container for non-DI/on-demand
 /// scenarios. Registers the same DevKit modules and runs the same <c>Service_Xxx.Initialize</c> calls,
 /// just through <see cref="OnDemandHost"/>'s own <c>ConfigureServices</c>/<c>StartAsync</c>/<c>StopAsync</c>.
@@ -32,9 +32,11 @@ namespace TestApp.HostSetup;
 /// </remarks>
 public class OnDemandHostSetup
 {
-    public async Task StartAsync(IConfiguration decryptedConfig, SerilogLoggerSetup? serilogSetup = null)
+    private readonly OnDemandHost _host = new OnDemandHost();
+
+    public async Task StartAsync(IConfiguration configuration, SerilogLoggerSetup? serilogSetup = null)
     {
-        OnDemandHost.ConfigureServices(services =>
+        _host.ConfigureServices(services =>
         {
             if (serilogSetup != null)
             {
@@ -45,25 +47,28 @@ public class OnDemandHostSetup
                 services.AddLogging(builder => builder.AddConsole());
             }
 
-            services.AddProcessLauncher(decryptedConfig);
-            services.AddRESTApiMgmt(decryptedConfig);
-            services.AddCredentialMgmt(decryptedConfig);
-            services.AddThreadLocks(decryptedConfig);
-            services.AddThreadSafeItems(decryptedConfig);
-            services.AddTaskMgmt(decryptedConfig);
-            services.AddSQLMgmt(decryptedConfig);
+            services.AddProcessLauncher(configuration);
+            services.AddRESTApiMgmt(configuration);
+            services.AddCredentialMgmt(configuration);
+            services.AddThreadLocks(configuration);
+            services.AddThreadSafeItems(configuration);
+            services.AddTaskMgmt(configuration);
+            services.AddSQLMgmt(configuration);
         });
 
-        await OnDemandHost.StartAsync(decryptedConfig);
+        await _host.StartAsync(configuration);
 
-        Service_ProcessLauncher.Initialize(OnDemandHost.Services);
-        Service_RESTApiMgmt.Initialize(OnDemandHost.Services);
-        Service_ThreadLocks.Initialize(OnDemandHost.Services);
-        Service_ThreadSafeItems.Initialize(OnDemandHost.Services);
-        Service_TaskMgmt.Initialize(OnDemandHost.Services);
-        Service_SQLMgmt.Initialize(OnDemandHost.Services);
-        Service_CredentialMgmt.InitializeFileSecretStore(OnDemandHost.Services);
+        Service_ProcessLauncher.Initialize(_host.Services);
+        Service_RESTApiMgmt.Initialize(_host.Services);
+        Service_ThreadLocks.Initialize(_host.Services);
+        Service_ThreadSafeItems.Initialize(_host.Services);
+        Service_TaskMgmt.Initialize(_host.Services);
+        Service_SQLMgmt.Initialize(_host.Services);
+        Service_CredentialMgmt.InitializeFileSecretStore(_host.Services);
     }
 
-    public Task StopAsync() => OnDemandHost.StopAsync();
+    public Task StopAsync()
+    {
+        return _host.StopAsync();
+    }
 }

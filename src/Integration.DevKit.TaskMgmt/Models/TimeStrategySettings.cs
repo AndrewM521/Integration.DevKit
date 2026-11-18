@@ -4,12 +4,6 @@
  * See LICENSE file in the project root for full license information.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Integration.DevKit.TaskMgmt.Models;
 
 /// <summary>
@@ -22,8 +16,8 @@ public class TimeStrategySettings
     /// Gets or sets a value indicating whether the task should execute immediately upon starting 
     /// without waiting for the first scheduled time slot.
     /// </summary>
-    /// <value>Default is <see langword="true"/>.</value>
-    public bool SkipFirstIterationWait { get; set; } = true;
+    /// <value>Default is <see langword="false"/>: the first iteration waits for its scheduled time.</value>
+    public bool SkipFirstIterationWait { get; set; } = false;
 
     /// <summary>
     /// Gets or sets a value indicating whether the strategy should skip iterations that were 
@@ -34,8 +28,8 @@ public class TimeStrategySettings
     /// the next execution target in the future. This prevents the task manager from attempting 
     /// to "catch up" by running multiple iterations back-to-back for time already passed.
     /// </remarks>
-    /// <value>Default is <see langword="true"/>.</value>
-    public bool FastForwardToPresent { get; set; } = true;
+    /// <value>Default is <see langword="false"/>: missed iterations are run back-to-back until the schedule is current.</value>
+    public bool FastForwardToPresent { get; set; } = false;
 
     /// <summary>
     /// Gets or sets a specific date the strategy should begin its calculations from.

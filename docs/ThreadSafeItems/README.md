@@ -8,7 +8,7 @@ Thread-safe wrappers around shared resources, built on [ThreadLocks](../ThreadLo
 
 | Class | What it does |
 | --- | --- |
-| [`ThreadSafeFileIO`](ThreadSafeFileIO.md) | Wraps the `FileUtils` methods from [Integration.DevKit.Core](../Core/FileAndDirectoryUtils.md) with an async lock keyed on the file path, so reads and writes to the same file never overlap. |
+| [`ThreadSafeFileIO`](ThreadSafeFileIO.md) | Wraps the `FileUtils` methods from [Integration.DevKit.Core](../Core/FileAndDirectoryUtils.md) with an async lock keyed on the file's full path, so reads and writes to the same file never overlap, however the path is spelled. |
 
 All classes are reached through `Service_ThreadSafeItems` after it's initialized (see [Getting started](#getting-started)). Each class has its own page with how-to guides and its full API.
 
@@ -32,17 +32,16 @@ dotnet add package Integration.DevKit.ThreadSafeItems
 using Integration.DevKit.ThreadLocks;
 using Integration.DevKit.ThreadSafeItems;
 
-services.AddThreadLocks(configuration);        // required first
-services.AddThreadSafeItems(configuration);    // binds the Integration.DevKit:ThreadSafeItems section
+services.AddThreadSafeItems(configuration);    // also registers ThreadLocks; binds the Integration.DevKit:ThreadSafeItems section
 // ... build the host ...
-Service_ThreadLocks.Initialize(app.Services);       // required first
+Service_ThreadLocks.Initialize(app.Services);       // only needed if you also use Service_ThreadLocks directly
 Service_ThreadSafeItems.Initialize(app.Services);
 
 var fileIO = Service_ThreadSafeItems.ThreadSafeFileIO;
 await fileIO.WriteToFileAsync(path, "some content");
 ```
 
-`Service_ThreadSafeItems.Initialize` explicitly checks that `ThreadLockManager` is resolvable and throws `InvalidOperationException` telling you to call `AddThreadLocks()` first if it isn't — the ordering above isn't optional.
+`AddThreadSafeItems` registers the ThreadLocks module itself, so a separate `AddThreadLocks()` call is optional. `Service_ThreadSafeItems.Initialize` still checks that a `ThreadLockManager` can be resolved, in case the services were registered by hand.
 
 ## Configuration
 
@@ -74,7 +73,7 @@ Use [`ThreadSafeFileIO`](ThreadSafeFileIO.md). It covers writing, appending, rea
 
 ```csharp
 public static IServiceCollection AddThreadSafeItems(this IServiceCollection services, IConfiguration config);
-public static void Initialize(IServiceProvider sp);   // throws if AddThreadLocks wasn't called first
+public static void Initialize(IServiceProvider sp);   // throws if no ThreadLockManager is registered
 public static ThreadSafeFileIO ThreadSafeFileIO { get; }   // throws InvalidOperationException before Initialize
 ```
 

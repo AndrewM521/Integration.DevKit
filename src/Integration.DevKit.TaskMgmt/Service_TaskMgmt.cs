@@ -71,13 +71,13 @@ public static class Service_TaskMgmt
         _taskRegistry = sp.GetService<TaskRegistry>();
         if (_taskRegistry == null)
         {
-            throw new InvalidOperationException($"{nameof(TaskRegistry)} is not registered. Make sure you call AddTaskManager() when configuring services.");
+            throw new InvalidOperationException($"{nameof(TaskRegistry)} is not registered. Make sure you call {nameof(AddTaskMgmt)}() when configuring services.");
         }
 
         _taskManager = sp.GetService<TaskManager>();
         if (_taskManager == null)
         {
-            throw new InvalidOperationException($"{nameof(TaskManager)} is not registered. Make sure you call AddTaskManager() when configuring services.");
+            throw new InvalidOperationException($"{nameof(TaskManager)} is not registered. Make sure you call {nameof(AddTaskMgmt)}() when configuring services.");
         }
     }
 

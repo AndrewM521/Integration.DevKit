@@ -41,7 +41,7 @@ public class ProcessLauncherDemo : IDemo
         Console.WriteLine("Console Command Ping Test");
         var processConfig = new ManagedProcessConfig
         {
-            ProcessKey = "PingTest",
+            ProcessKey = "PingTest_Endless",
             Command = "cmd.exe",
             Arguments = "/c ping 127.0.0.1 -t",
             ShowWindow = true,
@@ -59,7 +59,7 @@ public class ProcessLauncherDemo : IDemo
         await Task.Delay(3000);
 
         Console.WriteLine("Canceling Console Command Ping Test");
-        startResult.Result.Cancel();
+        startResult1.Result.Cancel();
 
         await _processManager.WaitForExitAsync(startResult1.Result.Process);
     }

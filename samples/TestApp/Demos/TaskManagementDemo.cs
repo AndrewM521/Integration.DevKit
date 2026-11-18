@@ -19,7 +19,6 @@ public class TaskManagementDemo : IDemo
     public async Task RunAsync()
     {
         var _taskManager = Service_TaskMgmt.TaskManager;
-        _taskManager.LogRuntimeSettings();
 
         OperationResult<IManagedTaskHandle> createTask;
         var settings = new ManagedTaskSettings();

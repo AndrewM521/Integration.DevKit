@@ -90,14 +90,14 @@ public class ThreadSafeFileIO
     // Async (async lock per path)
     Task<NullOperationResult> WriteToFileAsync(string path, string content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000);
     Task<NullOperationResult> WriteToFileAsync(string path, string[] content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000);
-    Task<OperationResult<string[]>> ReadFileLinesAsync(string path, int lockTimeoutMs = 5000);
-    Task<OperationResult<string>> ReadFileTextAsync(string path, int lockTimeoutMs = 5000);
+    Task<OperationResult<string[]>> ReadFileLinesAsync(string path, int lockTimeoutMs = 5000, bool allowNoFileExtension = false);
+    Task<OperationResult<string>> ReadFileTextAsync(string path, int lockTimeoutMs = 5000, bool allowNoFileExtension = false);
 
     // Sync (sync lock per path)
     NullOperationResult WriteToFile(string path, string content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000);
     NullOperationResult WriteToFile(string path, string[] content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000);
-    OperationResult<string[]> ReadFileLines(string path, int lockTimeoutMs = 5000);
-    OperationResult<string> ReadFileText(string path, int lockTimeoutMs = 5000);
+    OperationResult<string[]> ReadFileLines(string path, int lockTimeoutMs = 5000, bool allowNoFileExtension = false);
+    OperationResult<string> ReadFileText(string path, int lockTimeoutMs = 5000, bool allowNoFileExtension = false);
 }
 ```
 

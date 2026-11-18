@@ -1,131 +1,150 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Integration.DevKit.Core.OnDemand;
 
 /// <summary>
-/// A simplified, static host wrapper designed to coordinate service registration, 
-/// startup execution, and graceful shutdown in non-DI or on-demand applications.
+/// A minimal host for applications that want DevKit's DI-based modules without a
+/// <c>Microsoft.Extensions.Hosting</c> generic host.
 /// </summary>
-public static class OnDemandHost
+/// <remarks>
+/// Each instance owns its own service collection and lifetime, and can be started and stopped repeatedly.
+/// Every start builds a fresh <see cref="IServiceProvider"/> and a fresh <see cref="IHostApplicationLifetime"/>;
+/// every stop disposes the provider, so singletons (SQL connections, HTTP clients, ...) are released.
+/// </remarks>
+public sealed class OnDemandHost : IAsyncDisposable
 {
-    private static readonly OnDemand_Lifetime _lifetime = new();
-    private static IServiceProvider? _services;
-    private static bool _isRunning;
-    private static readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly IServiceCollection _serviceCollection = new ServiceCollection();
+    private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
+
+    private OnDemand_Lifetime _lifetime = new OnDemand_Lifetime();
+    private ServiceProvider? _serviceProvider;
+    private bool _isRunning;
+    private bool _processExitHooked;
 
     /// <summary>
-    /// Gets the compiled service provider used to resolve dependencies.
+    /// Creates a host and registers its <see cref="IHostApplicationLifetime"/>.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown if accessed before the host is started.</exception>
-    public static IServiceProvider Services
+    public OnDemandHost()
+    {
+        // Resolved through a factory so each start's new lifetime is the one handed out
+        _serviceCollection.AddSingleton<IHostApplicationLifetime>(_ => _lifetime);
+    }
+
+    /// <summary>
+    /// Gets the service provider built by the current run.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if the host is not running.</exception>
+    public IServiceProvider Services
     {
         get
         {
-            if (_services == null)
+            if (_serviceProvider == null)
             {
-                throw new InvalidOperationException("The OnDemandHost has not been started yet. Call OnDemandHost.Start() first.");
+                throw new InvalidOperationException("The OnDemandHost is not running. Call StartAsync() first.");
             }
-            return _services;
+
+            return _serviceProvider;
         }
     }
 
     /// <summary>
-    /// Configures the on-demand container. Registers core dependencies like the custom lifetime.
+    /// Gets whether the host is currently started.
     /// </summary>
-    public static void ConfigureServices(Action<IServiceCollection> configureAction)
-    {
-        if (configureAction == null) throw new ArgumentNullException(nameof(configureAction));
+    public bool IsRunning => _isRunning;
 
-        // 1. Ensure our custom lifetime is registered as the application's IHostApplicationLifetime
-        if (!OnDemand_Registry.ServiceCollection.Any(d => d.ServiceType == typeof(IHostApplicationLifetime)))
+    /// <summary>
+    /// Adds services to this host. Changes take effect on the next <see cref="StartAsync"/>.
+    /// </summary>
+    /// <param name="configureAction">The registration callback.</param>
+    /// <returns>This host, for chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="configureAction"/> is <see langword="null"/>.</exception>
+    public OnDemandHost ConfigureServices(Action<IServiceCollection> configureAction)
+    {
+        if (configureAction == null)
         {
-            OnDemand_Registry.ServiceCollection.AddSingleton<IHostApplicationLifetime>(_lifetime);
-            OnDemand_Registry.ServiceCollection.AddSingleton(_lifetime); // Also make concrete type resolvable
+            throw new ArgumentNullException(nameof(configureAction));
         }
 
-        // 2. Allow the consumer to easily chain registration actions
-        configureAction(OnDemand_Registry.ServiceCollection);
+        configureAction(_serviceCollection);
+
+        return this;
     }
 
     /// <summary>
-    /// Finalizes the service container asynchronously, hooks into OS exit signals, and executes all background hosted services.
+    /// Builds the service provider, starts every registered <see cref="IHostedService"/>, then signals
+    /// <see cref="IHostApplicationLifetime.ApplicationStarted"/>. Does nothing if the host is already running.
     /// </summary>
-    public static async Task StartAsync(IConfiguration? configuration = null, CancellationToken cancellationToken = default)
+    /// <param name="configuration">Optional configuration, registered as <see cref="IConfiguration"/> if none is registered yet.</param>
+    /// <param name="cancellationToken">A token to cancel waiting for the start lock.</param>
+    public async Task StartAsync(IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-        if (_isRunning) return;
-
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+
         try
         {
-            if (_isRunning) return;
-
-            // 1. Build the container
-            _services = OnDemand_Registry.GetServiceProvider(configuration, forceRebuild: true);
-
-            // 2. Wire up system shutdown hooks automatically (using a fire-and-forget wrapper for sync events)
-            AppDomain.CurrentDomain.ProcessExit += (s, e) => Task.Run(StopAsync).GetAwaiter().GetResult();
-
-            var hostedServices = _services.GetServices<IHostedService>();
-            var startTasks = new List<Task>();
-
-            foreach (var service in hostedServices)
+            if (_isRunning)
             {
-                // Capture the service loop variable locally to avoid closure issues
-                var currentService = service;
-
-                startTasks.Add(Task.Run(() => currentService.StartAsync(_lifetime.ApplicationStopping), cancellationToken));
+                return;
             }
 
-            await Task.WhenAll(startTasks).ConfigureAwait(false);
-
-            _isRunning = true;
-        }
-        finally
-        {
-            _lock.Release();
-        }
-    }
-
-    /// <summary>
-    /// Signals the custom lifetime to gracefully shut down background execution loops asynchronously.
-    /// </summary>
-    public static async Task StopAsync()
-    {
-        if (!_isRunning) return;
-
-        await _lock.WaitAsync().ConfigureAwait(false);
-        try
-        {
-            if (!_isRunning) return;
-
-            // 1. Fire the internal cancellation tokens to break the loops (e.g. ExecuteAsync)
-            _lifetime.TriggerShutdown();
-
-            // 2. Explicitly invoke StopAsync on all hosted services so they can perform final cleanups
-            if (_services != null)
+            if (configuration != null)
             {
-                var hostedServices = _services.GetServices<IHostedService>();
-                var stopTasks = new List<Task>();
+                // Only when the caller didn't register their own IConfiguration already
+                bool hasConfiguration = false;
 
-                foreach (var service in hostedServices)
+                foreach (var descriptor in _serviceCollection)
                 {
-                    // Capture loop variable locally
-                    var currentService = service;
-                    stopTasks.Add(Task.Run(() => currentService.StopAsync(CancellationToken.None)));
+                    if (descriptor.ServiceType == typeof(IConfiguration))
+                    {
+                        hasConfiguration = true;
+                        break;
+                    }
                 }
 
-                await Task.WhenAll(stopTasks).ConfigureAwait(false);
+                if (!hasConfiguration)
+                {
+                    _serviceCollection.AddSingleton(configuration);
+                }
             }
 
-            _isRunning = false;
+            // A canceled token can't be reset, so every run gets a new lifetime
+            _lifetime = new OnDemand_Lifetime();
+
+            // StopApplication() must stop the host, like the generic host. Tied to this run's lifetime so a late
+            // callback can't stop a later run; the stop StopAsync triggers itself finds the host already stopped.
+            var lifetime = _lifetime;
+            lifetime.ApplicationStopping.Register(() => _ = Task.Run(() => StopCoreAsync(lifetime)));
+
+            _serviceProvider = _serviceCollection.BuildServiceProvider();
+
+            try
+            {
+                // One at a time in registration order, like the generic host: a service may rely on an earlier one having started
+                foreach (var service in _serviceProvider.GetServices<IHostedService>())
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    await service.StartAsync(_lifetime.ApplicationStopping).ConfigureAwait(false);
+                }
+            }
+            catch
+            {
+                // Don't leave a half-started provider behind
+                await _serviceProvider.DisposeAsync().ConfigureAwait(false);
+                _serviceProvider = null;
+                throw;
+            }
+
+            if (!_processExitHooked)
+            {
+                AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+                _processExitHooked = true;
+            }
+
+            _isRunning = true;
+            _lifetime.NotifyStarted();
         }
         finally
         {
@@ -134,25 +153,102 @@ public static class OnDemandHost
     }
 
     /// <summary>
-    /// Finalizes the service container, hooks into OS exit signals, and boots background operations.
+    /// Signals <see cref="IHostApplicationLifetime.ApplicationStopping"/>, stops every hosted service, signals
+    /// <see cref="IHostApplicationLifetime.ApplicationStopped"/> and disposes the service provider.
+    /// Does nothing if the host is not running.
     /// </summary>
-    public static void Start(IConfiguration? configuration = null)
+    public Task StopAsync()
     {
-        if (_isRunning) return;
-
-        // Route directly to the async engine and block until all hosted services are initialized
-        Task.Run(async () => await StartAsync(configuration).ConfigureAwait(false)).GetAwaiter().GetResult();
+        return StopCoreAsync(null);
     }
 
     /// <summary>
-    /// Signals the custom lifetime to gracefully shut down background execution loops.
+    /// Stops the host. With <paramref name="requestedBy"/>, only stops if that lifetime's run is still the current one.
     /// </summary>
-    public static void Stop()
+    private async Task StopCoreAsync(OnDemand_Lifetime? requestedBy)
     {
-        if (!_isRunning) return;
+        await _lock.WaitAsync().ConfigureAwait(false);
 
-        // Use Task.Run to run the async version and block the thread until it completes.
-        // This ensures both the cancellation trigger and all hosted service StopAsync routines execute.
+        try
+        {
+            if (!_isRunning || _serviceProvider == null || (requestedBy != null && requestedBy != _lifetime))
+            {
+                return;
+            }
+
+            _lifetime.NotifyStopping();
+
+            try
+            {
+                // Reverse registration order, like the generic host; one failing service doesn't stop the rest from stopping
+                List<Exception> errors = new List<Exception>();
+                List<IHostedService> services = new List<IHostedService>(_serviceProvider.GetServices<IHostedService>());
+
+                for (int i = services.Count - 1; i >= 0; i--)
+                {
+                    try
+                    {
+                        await services[i].StopAsync(CancellationToken.None).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        errors.Add(ex);
+                    }
+                }
+
+                if (errors.Count > 0)
+                {
+                    throw new AggregateException(errors);
+                }
+            }
+            finally
+            {
+                _lifetime.NotifyStopped();
+
+                await _serviceProvider.DisposeAsync().ConfigureAwait(false);
+                _serviceProvider = null;
+                _isRunning = false;
+            }
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Blocking version of <see cref="StartAsync"/>.
+    /// </summary>
+    public void Start(IConfiguration? configuration = null)
+    {
+        Task.Run(() => StartAsync(configuration)).GetAwaiter().GetResult();
+    }
+
+    /// <summary>
+    /// Blocking version of <see cref="StopAsync"/>.
+    /// </summary>
+    public void Stop()
+    {
+        Task.Run(StopAsync).GetAwaiter().GetResult();
+    }
+
+    /// <summary>
+    /// Stops the host and removes its process-exit hook.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        await StopAsync().ConfigureAwait(false);
+
+        if (_processExitHooked)
+        {
+            AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
+            _processExitHooked = false;
+        }
+    }
+
+    // Fallback so hosted services still stop if the app exits without calling StopAsync
+    private void OnProcessExit(object? sender, EventArgs e)
+    {
         Task.Run(StopAsync).GetAwaiter().GetResult();
     }
 }

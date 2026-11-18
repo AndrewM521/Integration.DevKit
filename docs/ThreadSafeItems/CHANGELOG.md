@@ -2,7 +2,22 @@
 
 This changelog covers only the `Integration.DevKit.ThreadSafeItems` package. See the [root changelog](../CHANGELOG.md) for the full SDK release notes.
 
-## [2.2.0.0] - 2026-10-30 (current)
+## [2.3.0.0] - 2026-11-16 (current)
+
+### Added
+- The read methods (`ReadFileLines`, `ReadFileText` and their async versions) take `allowNoFileExtension`, like the write methods, so files such as `LICENSE` can be read back.
+
+### Fixed
+- When an async call timed out waiting for the file lock, it still released the lock, freeing a lock held by another caller and letting a third writer in. Calls now only release a lock they acquired.
+- The file lock was keyed on the path as written, so `data\out.txt`, `.\data\out.txt` and the full path got separate locks and their writers collided on the same file. The lock is now keyed on the full path.
+
+### Changed
+- The eight `ThreadSafeFileIO` methods now share one lock-and-run helper per sync/async path.
+- Failures returned by the wrapped `FileUtils` read methods are no longer logged a second time by `ThreadSafeFileIO`; they are still returned in the result.
+- `AddThreadSafeItems` now registers the ThreadLocks module it needs, like `AddCredentialMgmt` does. Calling `AddThreadLocks` yourself still works.
+- Version bumped from `2.2.0.0` to `2.3.0.0`. Minor version bump because the read methods gained the `allowNoFileExtension` parameter.
+
+## [2.2.0.0] - 2026-10-30
 
 ### Added
 - The NuGet package now includes this module's README (`docs/ThreadSafeItems/README.md`), shown on the package's nuget.org page.

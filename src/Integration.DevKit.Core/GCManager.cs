@@ -140,7 +140,7 @@ public static class GCManager
             _lastCallToCollect = DateTime.UtcNow;
 
             // Brief delay to allow system stabilization
-            await Task.Delay(1000);
+            await Task.Delay(1000).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

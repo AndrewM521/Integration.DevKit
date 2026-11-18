@@ -4,6 +4,8 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
 # Custom project files
+# Scratch output of the sample app, including its secrets and its unencrypted DataProtection key ring
+Junk/
 Integration.DevKit.sln.licenseheader
 extensibility.settings.VisualStudio.json
 .vscode

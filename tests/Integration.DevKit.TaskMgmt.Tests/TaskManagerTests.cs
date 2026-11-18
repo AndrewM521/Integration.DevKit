@@ -1,7 +1,11 @@
+﻿using System.Collections.Concurrent;
+using Integration.DevKit.TaskMgmt.Abstractions;
+using Integration.DevKit.TaskMgmt.Implementations;
 using Integration.DevKit.TaskMgmt.Models;
 using Integration.DevKit.TaskMgmt.Settings;
 using Integration.DevKit.TaskMgmt.Tests.TestSupport;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 
@@ -83,7 +87,11 @@ public class TaskManagerTests
     {
         var manager = CreateManager();
         var task = new FakeManagedTask("dup-task");
-        task.Work = _ => Task.Delay(200);
+        task.Work = async handle =>
+        {
+            try { await Task.Delay(Timeout.Infinite, handle.CancelationToken); }
+            catch (OperationCanceledException) { }
+        };
 
         var first = await manager.StartTask(task, TaskExecutionMode.Asyncronous, new ManagedTaskSettings());
         Assert.True(first.MethodSuccess);
@@ -93,10 +101,12 @@ public class TaskManagerTests
         Assert.False(second.MethodSuccess);
         Assert.IsType<InvalidOperationException>(second.Exception);
 
-        // Let the still-running first task's background work finish naturally rather than
-        // relying on CancelTask, since StartTask's failure path removes the (shared) task key
-        // from the manager's internal registry even though the first task keeps running.
-        await first.Result.RunningTask!;
+        // The rejected start used to remove the running task's entry, so it could no longer be found or canceled
+        Assert.True(manager.IsTaskRunning(task.TaskKey).Result);
+        Assert.True(manager.CancelTask(task.TaskKey).MethodSuccess);
+
+        var finished = await Task.WhenAny(first.Result.RunningTask!, Task.Delay(5000));
+        Assert.Same(first.Result.RunningTask, finished);
     }
 
     [Fact]
@@ -210,15 +220,297 @@ public class TaskManagerTests
     }
 
     [Fact]
-    public async Task AwaitAllTasksToFinish_CompletesWhenAllProvidedTasksComplete()
+    public async Task StartTask_WorkThrowsSynchronously_IterationIsRecordedAsFaulted()
+    {
+        var lifetime = new Mock<IHostApplicationLifetime>();
+        lifetime.SetupGet(l => l.ApplicationStopping).Returns(CancellationToken.None);
+        var registry = new TaskRegistry();
+        var manager = new TaskManager(lifetime.Object, registry, Options.Create(new TaskManagerSettings()));
+
+        var task = new SyncThrowingTask("sync-throw");
+        await manager.StartTask(task, TaskExecutionMode.Syncronous, new ManagedTaskSettings { MaxIterations = 1 });
+
+        var snapshot = registry.Snapshots[task.TaskKey];
+        Assert.Equal(ManagedTaskState.Faulted, snapshot.State);
+        var iteration = Assert.Single(snapshot.GetIterationHistory());
+        Assert.Equal(ManagedTaskState.Faulted, iteration.State);
+        Assert.IsType<InvalidOperationException>(iteration.Exception);
+    }
+
+    private sealed class SyncThrowingTask : ManagedTask
+    {
+        public SyncThrowingTask(string taskName) : base(taskName)
+        {
+        }
+
+        // Not async on purpose: the exception escapes before a Task is returned.
+        public override Task DoTaskWork(ManagedTaskIterationHandle iterationHandle)
+        {
+            throw new InvalidOperationException("boom");
+        }
+    }
+
+    [Fact]
+    public async Task ZeroConcurrencyLimits_AreTreatedAsUnlimited()
+    {
+        // A semaphore with zero slots used to make the task wait forever
+        var manager = CreateManager(new TaskManagerSettings { MaxConcurrentTasks = 0 });
+        var task = new FakeManagedTask("zero-limits");
+
+        var run = manager.StartTask(task, TaskExecutionMode.Syncronous, new ManagedTaskSettings { MaxIterations = 1, MaxConcurrentParallelTasks = 0 });
+        var finished = await Task.WhenAny(run, Task.Delay(5000));
+
+        Assert.Same(run, finished);
+        Assert.Equal(1, task.RunCount);
+    }
+
+    private static (TaskManager Manager, TaskRegistry Registry) CreateManagerWithRegistry(TaskManagerSettings settings)
+    {
+        var lifetime = new Mock<IHostApplicationLifetime>();
+        lifetime.SetupGet(l => l.ApplicationStopping).Returns(CancellationToken.None);
+        var registry = new TaskRegistry();
+
+        return (new TaskManager(lifetime.Object, registry, Options.Create(settings)), registry);
+    }
+
+    [Fact]
+    public async Task RegistryOverLimit_DropsOnlyTheOldestSnapshot()
+    {
+        // The count wasn't re-read in the trim loop, so going one over the limit removed every snapshot
+        var (manager, registry) = CreateManagerWithRegistry(new TaskManagerSettings { MaxTaskRegistryCount = 2 });
+        var tasks = new[] { new FakeManagedTask("reg-1"), new FakeManagedTask("reg-2"), new FakeManagedTask("reg-3") };
+
+        foreach (var task in tasks)
+        {
+            await manager.StartTask(task, TaskExecutionMode.Syncronous, new ManagedTaskSettings { MaxIterations = 1 });
+        }
+
+        Assert.Equal(2, registry.Snapshots.Count);
+        Assert.False(registry.Snapshots.ContainsKey(tasks[0].TaskKey));
+        Assert.True(registry.Snapshots.ContainsKey(tasks[2].TaskKey));
+    }
+
+    [Fact]
+    public async Task RepeatedFailures_KeepOnlyAsManyExceptionsAsTheIterationHistory()
+    {
+        var (manager, registry) = CreateManagerWithRegistry(new TaskManagerSettings { MaxTaskIterationRegistryCount = 2 });
+        var task = new FakeManagedTask("many-faults");
+        task.Work = _ => throw new InvalidOperationException("boom");
+
+        await manager.StartTask(task, TaskExecutionMode.Syncronous, new ManagedTaskSettings { MaxIterations = 5, StopIteratingOnException = false });
+
+        var snapshot = registry.Snapshots[task.TaskKey];
+        Assert.Equal(5, task.RunCount);
+        Assert.Equal(ManagedTaskState.Faulted, snapshot.State);
+        Assert.Equal(2, Assert.IsType<AggregateException>(snapshot.Exception).InnerExceptions.Count);
+    }
+
+    [Fact]
+    public async Task Retry_WaitsBeforeTheNextAttempt()
+    {
+        // Retries used to run back to back about every 50 ms
+        var manager = CreateManager();
+        var task = new FakeManagedTask("retry-wait");
+        var attempts = new List<DateTime>();
+        task.Work = _ =>
+        {
+            attempts.Add(DateTime.UtcNow);
+            throw new InvalidOperationException("boom");
+        };
+
+        await manager.StartTask(task, TaskExecutionMode.Syncronous, new ManagedTaskSettings { MaxIterations = 1, RetryOnException = true, MaxRetryCount = 1 });
+
+        Assert.Equal(2, attempts.Count);
+        Assert.True(attempts[1] - attempts[0] >= TimeSpan.FromMilliseconds(900));
+    }
+
+    [Fact]
+    public async Task ParallelWithoutIterationLimit_ReturnsAtOnceAndRespectsTheConcurrencyLimit()
+    {
+        // The iteration loop never waited for a slot, so StartTask spun forever on the caller's thread and queued iterations without end
+        var manager = CreateManager();
+        int running = 0;
+        int maxSeen = 0;
+        var task = new FakeManagedTask("parallel-forever")
+        {
+            Work = async handle =>
+            {
+                int now = Interlocked.Increment(ref running);
+                int seen;
+                do
+                {
+                    seen = maxSeen;
+                }
+                while (now > seen && Interlocked.CompareExchange(ref maxSeen, now, seen) != seen);
+
+                try
+                {
+                    await Task.Delay(50, handle.CancelationToken);
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref running);
+                }
+            }
+        };
+
+        var start = Task.Run(() => manager.StartTask(task, TaskExecutionMode.Asyncronous, new ManagedTaskSettings
+        {
+            MaxIterations = -1,
+            IterationExecutionMode = ManagedTaskExecutionMode.Parallel,
+            MaxConcurrentParallelTasks = 2
+        }));
+
+        var first = await Task.WhenAny(start, Task.Delay(TimeSpan.FromSeconds(2)));
+        Assert.True(first == start, "StartTask did not return");
+        var handle = (await start).Result;
+
+        await Task.Delay(500);
+        handle.Cancel();
+        await handle.RunningTask!;
+
+        Assert.True(task.RunCount >= 2, $"Only {task.RunCount} iterations ran");
+        Assert.True(maxSeen <= 2, $"{maxSeen} iterations ran at once");
+    }
+
+    [Fact]
+    public async Task ParallelWithNothingToMakeTheLoopWait_IsRejected()
     {
         var manager = CreateManager();
-        var task1 = Task.Delay(10);
-        var task2 = Task.Delay(20);
 
-        await manager.AwaitAllTasksToFinish(new List<Task> { task1, task2 });
+        var result = await manager.StartTask(new FakeManagedTask("unbounded"), TaskExecutionMode.Asyncronous, new ManagedTaskSettings
+        {
+            MaxIterations = -1,
+            IterationExecutionMode = ManagedTaskExecutionMode.Parallel,
+            MaxConcurrentParallelTasks = 0
+        });
 
-        Assert.True(task1.IsCompleted);
-        Assert.True(task2.IsCompleted);
+        Assert.False(result.MethodSuccess);
+        Assert.IsType<ArgumentException>(result.Exception);
+    }
+
+    [Fact]
+    public async Task IterationTimeout_CancelsWorkThatRunsTooLong()
+    {
+        var (manager, registry) = CreateManagerWithRegistry(new TaskManagerSettings());
+        var task = new FakeManagedTask("timeout")
+        {
+            Work = handle => Task.Delay(TimeSpan.FromSeconds(10), handle.CancelationToken)
+        };
+
+        var timer = System.Diagnostics.Stopwatch.StartNew();
+        await manager.StartTask(task, TaskExecutionMode.Syncronous, new ManagedTaskSettings { MaxIterations = 1, Timeout = TimeSpan.FromMilliseconds(200) });
+        timer.Stop();
+
+        Assert.True(timer.Elapsed < TimeSpan.FromSeconds(3), $"Run took {timer.Elapsed}");
+        var iteration = Assert.Single(registry.Snapshots[task.TaskKey].GetIterationHistory());
+        Assert.Equal(ManagedTaskState.Canceled, iteration.State);
+    }
+
+    [Fact]
+    public async Task RerunOfAKey_StartsAFreshSnapshot()
+    {
+        // A second run used to keep the first run's settings and update its iteration records
+        var (manager, registry) = CreateManagerWithRegistry(new TaskManagerSettings());
+        var task = new FakeManagedTask("rerun");
+
+        await manager.StartTask(task, TaskExecutionMode.Syncronous, new ManagedTaskSettings { MaxIterations = 2 });
+        var secondStart = DateTime.UtcNow;
+        await manager.StartTask(task, TaskExecutionMode.Syncronous, new ManagedTaskSettings { MaxIterations = 1 });
+
+        var snapshot = registry.Snapshots[task.TaskKey];
+        Assert.Equal(1, snapshot.Settings!.MaxIterations);
+        var iteration = Assert.Single(snapshot.GetIterationHistory());
+        Assert.True(iteration.StartDTM >= secondStart);
+    }
+
+    [Fact]
+    public async Task SharedTimeStrategy_SecondRunningTaskIsRejected()
+    {
+        // Both tasks would move the same LastTargetDTM, so each would skip every other slot
+        var manager = CreateManager();
+        var strategy = new TimeStrategy_Interval(TimeSpan.FromHours(1), new TimeStrategySettings());
+        var first = new FakeManagedTask("shared-1");
+        var second = new FakeManagedTask("shared-2");
+
+        var start1 = await manager.StartTask(first, TaskExecutionMode.Asyncronous, new ManagedTaskSettings { MaxIterations = -1, IterationStrategy = strategy });
+        var start2 = await manager.StartTask(second, TaskExecutionMode.Asyncronous, new ManagedTaskSettings { MaxIterations = -1, IterationStrategy = strategy });
+
+        Assert.True(start1.MethodSuccess);
+        Assert.False(start2.MethodSuccess);
+        Assert.IsType<InvalidOperationException>(start2.Exception);
+        Assert.True(manager.IsTaskRunning(first.TaskKey).Result);
+
+        manager.CancelTask(first.TaskKey);
+        await start1.Result.RunningTask!;
+    }
+
+    [Fact]
+    public async Task Cancel_WorkThatStopsWithinASecond_LogsNoStillRunningWarning()
+    {
+        // The watchdog's grace delay never ran, so every cancel logged "running longer than 1 second"
+        var logs = new CapturingLoggerFactory();
+        var lifetime = new Mock<IHostApplicationLifetime>();
+        lifetime.SetupGet(l => l.ApplicationStopping).Returns(CancellationToken.None);
+        var manager = new TaskManager(lifetime.Object, new TaskRegistry(), Options.Create(new TaskManagerSettings()), logs);
+        var task = new FakeManagedTask("graceful-cancel");
+        task.Work = async handle =>
+        {
+            try { await Task.Delay(Timeout.Infinite, handle.CancelationToken); }
+            catch (OperationCanceledException) { await Task.Delay(200); }
+        };
+
+        var start = await manager.StartTask(task, TaskExecutionMode.Asyncronous, new ManagedTaskSettings());
+        await WaitUntilAsync(() => task.RunCount > 0);
+        manager.CancelTask(task.TaskKey);
+        await start.Result.RunningTask!;
+
+        Assert.DoesNotContain(logs.Messages, m => m.Contains("after being canceled"));
+    }
+
+    [Fact]
+    public async Task ParallelIterations_AllRunAndTheTaskCompletes()
+    {
+        var (manager, registry) = CreateManagerWithRegistry(new TaskManagerSettings());
+        var task = new FakeManagedTask("parallel");
+        task.Work = _ => Task.Delay(50);
+
+        await manager.StartTask(task, TaskExecutionMode.Syncronous, new ManagedTaskSettings { MaxIterations = 3, IterationExecutionMode = ManagedTaskExecutionMode.Parallel });
+
+        Assert.Equal(3, task.RunCount);
+        Assert.Equal(ManagedTaskState.Completed, registry.Snapshots[task.TaskKey].State);
+    }
+
+    private sealed class CapturingLoggerFactory : ILoggerFactory, ILogger
+    {
+        public ConcurrentQueue<string> Messages { get; } = new ConcurrentQueue<string>();
+
+        public ILogger CreateLogger(string categoryName)
+        {
+            return this;
+        }
+
+        public void AddProvider(ILoggerProvider provider)
+        {
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull
+        {
+            return null;
+        }
+
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return true;
+        }
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            Messages.Enqueue(formatter(state, exception));
+        }
     }
 }

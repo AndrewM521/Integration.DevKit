@@ -59,14 +59,14 @@ public static class Service_RESTApiMgmt
         _apiManager = sp.GetService<ApiManager>();
         if (_apiManager == null)
         {
-            throw new InvalidOperationException($"{nameof(ApiManager)} is not registered, make sure to call AddApiManagement() when configuring services.");
+            throw new InvalidOperationException($"{nameof(ApiManager)} is not registered, make sure to call {nameof(AddRESTApiMgmt)}() when configuring services.");
         }
     }
 
     /// <summary>
     /// Gets the globally accessible instance of the <see cref="ApiManager"/>.
     /// </summary>
-    /// <value> The initialized <see cref="IApiManager"/> instance. </value>
+    /// <value> The initialized <see cref="ApiManager"/> instance. </value>
     /// <exception cref="InvalidOperationException">
     /// Thrown if <see cref="Initialize"/> was not called prior to accessing this property.
     /// </exception>

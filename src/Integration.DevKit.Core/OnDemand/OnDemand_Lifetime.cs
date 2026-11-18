@@ -1,45 +1,58 @@
 ﻿using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Integration.DevKit.Core.OnDemand;
 
 /// <summary>
-/// Provides a lightweight implementation of the host application lifetime for on-demand shutdown scenarios.
+/// Minimal <see cref="IHostApplicationLifetime"/> for <see cref="OnDemandHost"/>, so modules that need one
+/// (such as Task Management) work without a generic host.
 /// </summary>
-public class OnDemand_Lifetime : IHostApplicationLifetime
+/// <remarks>
+/// A cancellation token can only be canceled once, so <see cref="OnDemandHost"/> creates a new lifetime on every start.
+/// </remarks>
+internal sealed class OnDemand_Lifetime : IHostApplicationLifetime
 {
     private readonly CancellationTokenSource _startedSource = new();
     private readonly CancellationTokenSource _stoppingSource = new();
     private readonly CancellationTokenSource _stoppedSource = new();
 
-    /// <summary>
-    /// Gets a token that is triggered when the application has started.
-    /// </summary>
+    /// <inheritdoc />
     public CancellationToken ApplicationStarted => _startedSource.Token;
 
-    /// <summary>
-    /// Gets a token that is triggered when the application is stopping.
-    /// </summary>
+    /// <inheritdoc />
     public CancellationToken ApplicationStopping => _stoppingSource.Token;
 
-    /// <summary>
-    /// Gets a token that is triggered when the application has stopped.
-    /// </summary>
+    /// <inheritdoc />
     public CancellationToken ApplicationStopped => _stoppedSource.Token;
 
     /// <summary>
-    /// Requests the application lifetime to stop and propagate the shutdown signal.
+    /// Signals <see cref="ApplicationStopping"/>. Hosted services are stopped by <see cref="OnDemandHost.StopAsync"/>.
     /// </summary>
-    public void StopApplication() => _stoppingSource.Cancel();
-
-    // Call this manually in your Program.cs Console.CancelKeyPress event
-    public void TriggerShutdown()
+    public void StopApplication()
     {
         _stoppingSource.Cancel();
+    }
+
+    /// <summary>
+    /// Signals <see cref="ApplicationStarted"/>.
+    /// </summary>
+    internal void NotifyStarted()
+    {
+        _startedSource.Cancel();
+    }
+
+    /// <summary>
+    /// Signals <see cref="ApplicationStopping"/>.
+    /// </summary>
+    internal void NotifyStopping()
+    {
+        _stoppingSource.Cancel();
+    }
+
+    /// <summary>
+    /// Signals <see cref="ApplicationStopped"/>.
+    /// </summary>
+    internal void NotifyStopped()
+    {
         _stoppedSource.Cancel();
     }
 }

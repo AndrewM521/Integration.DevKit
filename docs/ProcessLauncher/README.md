@@ -1,4 +1,4 @@
-# Integration.DevKit.ProcessLauncher
+﻿# Integration.DevKit.ProcessLauncher
 
 Start and supervise external processes with output capture, cancellation, and timeouts, using result objects instead of raw `Process` exception handling.
 
@@ -86,8 +86,7 @@ public class ManagedProcessConfig
     public bool ShowWindow { get; init; } = false;
     public string? WorkingDirectory { get; init; } = Environment.CurrentDirectory;
     public int TimeoutSeconds { get; set; } = -1;
-    public bool EnableProcessLogging { get; set; } = true;
-    public bool AutoRestartOnFailure { get; set; } = false;
+    public int MaxOutputLines { get; set; } = 10_000;
 }
 ```
 
@@ -97,20 +96,23 @@ public class ManagedProcessConfig
 | `ShowWindow` | Also controls whether stdout/stderr are captured — see the warning below. |
 | `WorkingDirectory` | Defaults to the current directory **at the moment this config instance is constructed**, not re-evaluated later. |
 | `TimeoutSeconds` | `0` or a negative value (including the `-1` default) means no timeout; a positive value is the wall-clock limit in seconds before the process is force-killed. |
-| `EnableProcessLogging` | **Currently has no effect** — see below. |
-| `AutoRestartOnFailure` | **Currently has no effect** — there is no auto-restart logic implemented anywhere in this module. Don't rely on it. |
+| `MaxOutputLines` | Most lines kept for each of stdout and stderr (default `10_000`). Older lines are dropped once the limit is reached, so a long-running, chatty process can't grow memory without limit. `0` or less keeps everything. |
 
-> **stdout/stderr capture is tied to `ShowWindow`, not `EnableProcessLogging`.** Output is only captured when `ShowWindow == false` (internally this maps to `RedirectStandardOutput`/`RedirectStandardError` on the underlying `ProcessStartInfo`). If `ShowWindow == true`, `GetOutput()`/`GetError()` will always return empty strings, regardless of `EnableProcessLogging`. If you need to capture output, set `ShowWindow = false`.
+> **stdout/stderr capture is tied to `ShowWindow`.** Output is only captured when `ShowWindow == false` (internally this maps to `RedirectStandardOutput`/`RedirectStandardError` on the underlying `ProcessStartInfo`). If `ShowWindow == true`, `GetOutput()`/`GetError()` will always return empty strings. If you need to capture output, set `ShowWindow = false`.
 
 ## How to
 
 ### Start a process and wait for it
 
-`StartProcess` fails (as a failed `OperationResult`, not a thrown exception) for an empty `Command` or a `ProcessKey` that's already running. `WaitForExitAsync` is a simple 250ms poll loop against `Process.HasExited` — it isn't event-driven, so don't expect sub-250ms exit detection latency.
+`StartProcess` fails (as a failed `OperationResult`, not a thrown exception) for an empty `Command` or a `ProcessKey` that's already running. `WaitForExitAsync` wraps .NET's `Process.WaitForExitAsync`, so it returns as soon as the process exits (and its redirected output has been read).
 
 ### Capture output
 
-Set `ShowWindow = false`, then read `GetOutput()`/`GetError()` on the `ManagedProcess` returned by `StartProcess`.
+Set `ShowWindow = false`, then read `GetOutput()`/`GetError()` on the `ManagedProcess` returned by `StartProcess`. Both are safe to call while the process is still writing. Only the newest `MaxOutputLines` lines of each stream are kept.
+
+### Shutdown
+
+When the host provides `IHostApplicationLifetime` (a generic host or `OnDemandHost`), `ProcessManager` cancels every running process on `ApplicationStopping`, so child processes don't outlive the app. Disposing the `ProcessManager` does the same. `CancelAllProcesses` cancels processes in parallel, so the graceful 3-second wait per process doesn't add up.
 
 ### Cancel a process
 
@@ -141,9 +143,9 @@ public static ProcessManager ProcessManager { get; }   // throws InvalidOperatio
 ### `ProcessManager`
 
 ```csharp
-public class ProcessManager
+public class ProcessManager : IAsyncDisposable
 {
-    public ProcessManager(IOptions<ProcessLauncherSettings> settings, ILoggerFactory? loggerFactory = null);
+    public ProcessManager(IOptions<ProcessLauncherSettings> settings, ILoggerFactory? loggerFactory = null, IHostApplicationLifetime? appLifetime = null);
 
     public ProcessLauncherSettings RuntimeSettings { get; set; }   // mutate in place to change EnableLogging at runtime
 
@@ -151,7 +153,8 @@ public class ProcessManager
     NullOperationResult CancelProcess(string processKey, bool forceKill = false);
     NullOperationResult CancelAllProcesses(bool forceKill = false);
     OperationResult<bool> IsRunning(string processKey);
-    Task WaitForExitAsync(Process process, CancellationToken token = default);
+    Task WaitForExitAsync(Process? process, CancellationToken token = default);
+    ValueTask DisposeAsync();   // cancels every running process
 }
 ```
 
@@ -182,7 +185,6 @@ Every public method on `ProcessManager`/`ManagedProcess` returns an `OperationRe
 - Set an explicit `TimeoutSeconds` for anything that shouldn't be allowed to run forever — the `-1` default means no timeout.
 - Set `ShowWindow = false` whenever you need to read `GetOutput()`/`GetError()`.
 - Call `IsRunning(processKey)` before `CancelProcess(processKey)` if the process might have already exited on its own.
-- Don't configure `AutoRestartOnFailure` expecting restart behavior — it's not implemented yet.
 - Dispose of (`await using`) or explicitly cancel processes you start — `DisposeAsync()` cancels the internal monitor and cleans up the underlying `Process` object.
 
 ## Changelog

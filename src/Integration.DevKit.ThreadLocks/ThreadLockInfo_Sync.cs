@@ -28,17 +28,4 @@ internal sealed class ThreadLockInfo_Sync
     /// Tracks the number of active references or threads waiting for this specific lock.
     /// </summary>
     public int RefCount = 0;
-
-    /// <summary>
-    /// Gets the timestamp of the last time this lock was successfully acquired or released.
-    /// </summary>
-    public DateTime LastAccessTime = DateTime.MinValue;
-
-    /// <summary>
-    /// Updates the <see cref="LastAccessTime"/> to the current UTC time.
-    /// </summary>
-    public void UpdateLastAccessTime()
-    {
-        LastAccessTime = DateTime.UtcNow;
-    }
 }

@@ -31,7 +31,7 @@ public class RegularHostSetup
 {
     private IHost? _app;
 
-    public async Task StartAsync(string[] args, IConfiguration decryptedConfig, SerilogLoggerSetup? serilogSetup = null)
+    public async Task StartAsync(string[] args, IConfiguration configuration, SerilogLoggerSetup? serilogSetup = null)
     {
         var hostBuilder = Host.CreateDefaultBuilder(args);
 
@@ -43,17 +43,17 @@ public class RegularHostSetup
         hostBuilder = hostBuilder
             .ConfigureServices((context, services) =>
             {
-                services.AddProcessLauncher(decryptedConfig);
-                services.AddRESTApiMgmt(decryptedConfig);
+                services.AddProcessLauncher(configuration);
+                services.AddRESTApiMgmt(configuration);
                 // "File" is just the built-in preset in the credential-management provider registry
                 // (read from the "Integration.DevKit:CredentialManagement" section of appsettings.json),
                 // selected via AddCredentialMgmt like any other provider — including a custom one
                 // registered via Service_CredentialMgmt.RegisterProvider.
-                services.AddCredentialMgmt(decryptedConfig);
-                services.AddThreadLocks(decryptedConfig);
-                services.AddThreadSafeItems(decryptedConfig);
-                services.AddTaskMgmt(decryptedConfig);
-                services.AddSQLMgmt(decryptedConfig);
+                services.AddCredentialMgmt(configuration);
+                services.AddThreadLocks(configuration);
+                services.AddThreadSafeItems(configuration);
+                services.AddTaskMgmt(configuration);
+                services.AddSQLMgmt(configuration);
             });
 
         _app = hostBuilder.Build();

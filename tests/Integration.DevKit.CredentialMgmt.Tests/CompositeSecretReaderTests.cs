@@ -1,4 +1,4 @@
-using Integration.DevKit.CredentialMgmt.Contracts;
+﻿using Integration.DevKit.CredentialMgmt.Contracts;
 using Integration.DevKit.CredentialMgmt.Implementations;
 using Integration.DevKit.CredentialMgmt.Tests.TestSupport;
 using Moq;
@@ -79,5 +79,22 @@ public class CompositeSecretReaderTests
         var composite = new CompositeSecretReader(new List<ISecretReader>(), "MyReader");
 
         Assert.Equal("MyReader", composite.StoreName);
+    }
+
+    [Fact]
+    public void GetKey_AllReadersFail_KeepsEachReadersError()
+    {
+        var failing = new Mock<ISecretReader>();
+        failing.Setup(r => r.GetKey("file", "key"))
+            .Returns(new Integration.DevKit.Core.OperationResult<string>().SetMethodFailure(new System.Security.Cryptography.CryptographicException("key ring missing")));
+
+        var composite = new CompositeSecretReader(new List<ISecretReader> { failing.Object, new FakeSecretReader() });
+
+        var result = composite.GetKey("file", "key");
+
+        Assert.False(result.MethodSuccess);
+        var inner = Assert.IsType<AggregateException>(result.Exception.InnerException);
+        Assert.Equal(2, inner.InnerExceptions.Count);
+        Assert.IsType<System.Security.Cryptography.CryptographicException>(inner.InnerExceptions[0]);
     }
 }

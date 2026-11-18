@@ -1,6 +1,6 @@
 # Integration.DevKit.Core
 
-The foundation package every other Integration.DevKit module depends on: shared result types, configuration protection, file/JSON/dictionary utilities, and a lightweight on-demand host.
+The foundation package every other Integration.DevKit module depends on: shared result types, file/JSON/dictionary utilities, and a lightweight on-demand host.
 
 ## What it is
 
@@ -9,7 +9,6 @@ The foundation package every other Integration.DevKit module depends on: shared 
 | Group | Main types | What it's for |
 | --- | --- | --- |
 | [Result types](ResultTypes.md) | `OperationResult<T>`, `NullableOperationResult<T>`, `NullOperationResult`, `ApiOperationResult<T>` | The result-object pattern used across the entire SDK instead of exceptions for expected failures. |
-| [Configuration protection](ConfigurationProtection.md) | `IConfigProtector`, `AesConfigProtector`, `Base64ConfigProtector`, `ConfigProtectorContract`, `EncryptionOptions` | Encrypting and decrypting values inside `appsettings.json`. |
 | [On-demand hosting](OnDemandHosting.md) | `OnDemandHost` | A lightweight service container/host for apps not built on `Microsoft.Extensions.Hosting`. |
 | [File and directory utilities](FileAndDirectoryUtils.md) | `FileUtils`, `DirectoryUtils` | File and directory operations with path validation and result objects. |
 | [JSON utilities](JsonUtils.md) | `JsonUtils`, `JsonExtractionLayout` | Serialization and pulling values out of loosely-structured JSON by key path. |
@@ -53,14 +52,13 @@ if (!written.MethodSuccess)
 
 ## Configuration
 
-Core binds no configuration section of its own. It does provide the [configuration protection](ConfigurationProtection.md) pipeline for encrypting values in your own `appsettings.json`.
+Core binds no configuration section of its own.
 
 ## How to
 
 Each group's page has its own how-to guides:
 
 - [Check a result, or return one from your own method](ResultTypes.md#how-to)
-- [Encrypt and decrypt values in `appsettings.json`](ConfigurationProtection.md#how-to)
 - [Run DevKit modules without a generic host](OnDemandHosting.md#how-to)
 - [Read, write, copy and move files; work with directories](FileAndDirectoryUtils.md#how-to)
 - [Pull values out of JSON](JsonUtils.md#how-to)
@@ -73,7 +71,6 @@ Each group's page has its own how-to guides:
 | Group | API reference |
 | --- | --- |
 | Result types | [ResultTypes.md](ResultTypes.md#api-reference) |
-| Configuration protection | [ConfigurationProtection.md](ConfigurationProtection.md#api-reference) |
 | On-demand hosting | [OnDemandHosting.md](OnDemandHosting.md#api-reference) |
 | File and directory utilities | [FileAndDirectoryUtils.md](FileAndDirectoryUtils.md#api-reference) |
 | JSON utilities | [JsonUtils.md](JsonUtils.md#api-reference) |
@@ -88,7 +85,7 @@ Core is where the result-object pattern is defined — see [Result types](Result
 ## Best practices
 
 - Always check `MethodSuccess` before reading `Result`.
-- See each group's page for its own best practices, e.g. [Configuration protection](ConfigurationProtection.md#best-practices) and [File and directory utilities](FileAndDirectoryUtils.md#best-practices).
+- See each group's page for its own best practices, e.g. [File and directory utilities](FileAndDirectoryUtils.md#best-practices).
 
 ## Changelog
 

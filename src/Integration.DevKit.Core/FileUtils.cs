@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Runtime.ExceptionServices;
 
 namespace Integration.DevKit.Core;
 
@@ -9,6 +10,51 @@ public static class FileUtils
 {
     private static readonly string RequiredDirectoryPathErrorMsg = "Path must be a Directory.";
     private static readonly string RequiredFilePathErrorMsg = "Path must be a File Path.";
+
+    /// <summary>
+    /// Throws unless <paramref name="path"/> is a usable file path. Shared by every method that takes a file path.
+    /// </summary>
+    private static void RequireFilePath(string path, bool allowNoFileExtension)
+    {
+        var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
+        if (!validatePath.MethodSuccess)
+        {
+            ExceptionDispatchInfo.Throw(validatePath.Exception);
+        }
+
+        if (!validatePath.Result)
+        {
+            throw new ArgumentException(RequiredFilePathErrorMsg);
+        }
+    }
+
+    /// <summary>
+    /// Shared start of every write: validates the path and creates its folder.
+    /// Returns <see langword="false"/> when there is nothing to do (appending empty content).
+    /// </summary>
+    private static bool PrepareWrite(string path, bool allowNoFileExtension, bool isEmpty, bool append)
+    {
+        RequireFilePath(path, allowNoFileExtension);
+
+        // Appending nothing is a no-op; overwriting with nothing must still truncate the file.
+        if (isEmpty && append)
+        {
+            return false;
+        }
+
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            // Trailing separator so the validator treats new folders like "v1.2" as directories, not files
+            var createDir = DirectoryUtils.CreateDirectory(directory + Path.DirectorySeparatorChar);
+            if (!createDir.MethodSuccess)
+            {
+                ExceptionDispatchInfo.Throw(createDir.Exception);
+            }
+        }
+
+        return true;
+    }
 
     #region Asyncronous Methods
     /// <summary>
@@ -35,30 +81,17 @@ public static class FileUtils
                 encoder = encoding;
             }
 
-            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
-            if (!validatePath.MethodSuccess)
+            if (content == null)
             {
-                throw validatePath.Exception;
+                content = "";
             }
 
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
-
-            if (string.IsNullOrEmpty(content))
+            if (!PrepareWrite(path, allowNoFileExtension, content.Length == 0, append))
             {
                 return result.SetMethodSuccess();
             }
 
-            var directory = Path.GetDirectoryName(path);
-            var createDir = DirectoryUtils.CreateDirectory(directory!);
-            if (!createDir.MethodSuccess)
-            {
-                throw createDir.Exception;
-            }
-
-            if (!content.EndsWith(Environment.NewLine))
+            if (content.Length > 0 && !content.EndsWith(Environment.NewLine))
             {
                 content += Environment.NewLine;
             }
@@ -70,40 +103,14 @@ public static class FileUtils
                 mode = FileMode.Append;
             }
 
-            long maxChunkSizeInBytes = 100 * 1024 * 1024;
-            int startIndex = 0;
-
             //FileShare: No other process or thread can open the file while this stream is open.
             //BufferSize: Buffer size for creating IO instructions. Windows default size is 4096, and windows combines multiple IO calls anyway, its not necessary to increase the size
             await using (var stream = new FileStream(path, mode, FileAccess.Write, FileShare.None, 4096, true))
             {
                 await using (var writer = new StreamWriter(stream, encoder))
                 {
-                    while (startIndex < content.Length)
-                    {
-                        int length = 0;
-                        long byteCount = 0;
-
-                        while (startIndex + length < content.Length)
-                        {
-                            char character = content[startIndex + length];
-                            long bytes = encoder.GetByteCount(new[] { character });
-
-                            if (byteCount + bytes > maxChunkSizeInBytes)
-                            {
-                                break;
-                            }
-
-                            byteCount += bytes;
-                            length++;
-                        }
-
-                        string chunk = content.Substring(startIndex, length);
-
-                        await writer.WriteAsync(chunk).ConfigureAwait(false);
-
-                        startIndex += length;
-                    }
+                    // StreamWriter already encodes and flushes large strings in buffered blocks
+                    await writer.WriteAsync(content).ConfigureAwait(false);
                 }
             }
 
@@ -133,9 +140,15 @@ public static class FileUtils
 
         try
         {
-            if (content == null || content.Length == 0)
+            // Appending nothing is a no-op; overwriting with nothing must still truncate the file.
+            if ((content == null || content.Length == 0) && append)
             {
                 return result.SetMethodSuccess();
+            }
+
+            if (content == null)
+            {
+                content = Array.Empty<string>();
             }
 
             string combinedContent = string.Join(Environment.NewLine, content);
@@ -143,7 +156,7 @@ public static class FileUtils
             var writeToFile = await WriteToFileAsync(path, combinedContent, append, allowNoFileExtension, encoding);
             if (!writeToFile.MethodSuccess)
             {
-                throw writeToFile.Exception;
+                ExceptionDispatchInfo.Throw(writeToFile.Exception);
             }
 
             return result.SetMethodSuccess();
@@ -171,50 +184,26 @@ public static class FileUtils
 
         try
         {
-            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
-            if (!validatePath.MethodSuccess)
+            if (content == null)
             {
-                throw validatePath.Exception;
+                content = Array.Empty<byte>();
             }
 
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
-
-            if (content == null || content.Length == 0)
+            if (!PrepareWrite(path, allowNoFileExtension, content.Length == 0, append))
             {
                 return result.SetMethodSuccess();
             }
 
-            var directory = Path.GetDirectoryName(path);
-            var createDir = DirectoryUtils.CreateDirectory(directory!);
-            if (!createDir.MethodSuccess)
+            var mode = FileMode.Create;
+
+            if (append)
             {
-                throw createDir.Exception;
+                mode = FileMode.Append;
             }
 
-            var mode = append ? FileMode.Append : FileMode.Create;
-
-            // 100 MB chunk size in bytes
-            int maxChunkSizeInBytes = 100 * 1024 * 1024;
-            int startIndex = 0;
-
-            // 5. Asynchronous File Stream Writing
             await using (var stream = new FileStream(path, mode, FileAccess.Write, FileShare.None, 4096, true))
             {
-                while (startIndex < content.Length)
-                {
-                    // Calculate how many bytes to write in this chunk
-                    int bytesLeft = content.Length - startIndex;
-                    int chunkSize = Math.Min(bytesLeft, maxChunkSizeInBytes);
-
-                    // Write the chunk memory directly to the stream
-                    var chunk = new ReadOnlyMemory<byte>(content, startIndex, chunkSize);
-                    await stream.WriteAsync(chunk).ConfigureAwait(false);
-
-                    startIndex += chunkSize;
-                }
+                await stream.WriteAsync(content).ConfigureAwait(false);
             }
 
             return result.SetMethodSuccess();
@@ -240,16 +229,7 @@ public static class FileUtils
 
         try
         {
-            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
-            if (!validatePath.MethodSuccess)
-            {
-                throw validatePath.Exception;
-            }
-
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
+            RequireFilePath(path, allowNoFileExtension);
 
             string[] lines = await File.ReadAllLinesAsync(path);
 
@@ -276,16 +256,7 @@ public static class FileUtils
 
         try
         {
-            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
-            if (!validatePath.MethodSuccess)
-            {
-                throw validatePath.Exception;
-            }
-
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
+            RequireFilePath(path, allowNoFileExtension);
 
             string line = await File.ReadAllTextAsync(path);
 
@@ -312,16 +283,7 @@ public static class FileUtils
 
         try
         {
-            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
-            if (!validatePath.MethodSuccess)
-            {
-                throw validatePath.Exception;
-            }
-
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
+            RequireFilePath(path, allowNoFileExtension);
 
             // Read the file as raw binary data
             byte[] bytes = await File.ReadAllBytesAsync(path);
@@ -351,16 +313,7 @@ public static class FileUtils
 
         try
         {
-            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
-            if (!validatePath.MethodSuccess)
-            {
-                throw validatePath.Exception;
-            }
-
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
+            RequireFilePath(path, allowNoFileExtension);
 
             File.Create(path).Dispose();
 
@@ -387,16 +340,7 @@ public static class FileUtils
 
         try
         {
-            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
-            if (!validatePath.MethodSuccess)
-            {
-                throw validatePath.Exception;
-            }
-
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
+            RequireFilePath(path, allowNoFileExtension);
 
             if (DoesFileExist(path))
             {
@@ -415,28 +359,25 @@ public static class FileUtils
     /// Deletes all files in a directory that match a specific search pattern.
     /// </summary>
     /// <param name="path">The directory containing the files.</param>
-    /// <param name="searchPattern">The search pattern (e.g., "*.log").</param>
-    /// <param name="allowNoFileExtension">
-    /// Optional flag to allow file names without an extension to pass validation 
-    /// instead of requiring an explicit extension (e.g., '.txt').
-    /// </param>
+    /// <param name="searchPattern">The search pattern (e.g., "*.log"). Matching files are deleted whether or not they have an extension.</param>
     /// <returns>A <see cref="NullOperationResult"/>.</returns>
     /// <exception cref="AggregateException">Thrown if one or more file deletions fail.</exception>
-    public static NullOperationResult DeleteFiles(string path, string searchPattern, bool allowNoFileExtension = false)
+    public static NullOperationResult DeleteFiles(string path, string searchPattern)
     {
         var result = new NullOperationResult();
 
         try
         {
+            // Nothing to delete; don't create the folder as a side effect
             if (!DirectoryUtils.DoesDirectoryExist(path))
             {
-                DirectoryUtils.CreateDirectory(path);
+                return result.SetMethodSuccess();
             }
 
             var getFiles = DirectoryUtils.GetFiles(path, SearchOption.TopDirectoryOnly, searchPattern);
             if (!getFiles.MethodSuccess)
             {
-                throw getFiles.Exception;
+                ExceptionDispatchInfo.Throw(getFiles.Exception);
             }
 
             var files = getFiles.Result;
@@ -446,7 +387,8 @@ public static class FileUtils
 
                 foreach (var file in files)
                 {
-                    var fileResult = DeleteFile(file);
+                    // These came from the directory listing, so they are real files whether or not they have an extension
+                    var fileResult = DeleteFile(file, allowNoFileExtension: true);
                     if (!fileResult.MethodSuccess)
                     {
                         errors.Add(fileResult.Exception);
@@ -484,29 +426,21 @@ public static class FileUtils
 
         try
         {
-            var validateSourcePath = IsStringValidFilePath(sourcePath);
-            if (!validateSourcePath.MethodSuccess)
-            {
-                throw validateSourcePath.Exception;
-            }
-
-            if (!validateSourcePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
+            RequireFilePath(sourcePath, allowNoFileExtension);
 
             if (!DoesFileExist(sourcePath))
             {
                 throw new FileNotFoundException("Source File Path does not exist.");
             }
 
+            // An existing folder wins over the name check, so folders like "v1.2" aren't mistaken for files
             var validateDestinationPath = DirectoryUtils.IsStringValidDirectoryPath(destinationPath);
             if (!validateDestinationPath.MethodSuccess)
             {
-                throw validateDestinationPath.Exception;
+                ExceptionDispatchInfo.Throw(validateDestinationPath.Exception);
             }
 
-            if (!validateDestinationPath.Result)
+            if (!DirectoryUtils.DoesDirectoryExist(destinationPath) && !validateDestinationPath.Result)
             {
                 throw new ArgumentException(RequiredDirectoryPathErrorMsg);
             }
@@ -540,32 +474,27 @@ public static class FileUtils
 
         try
         {
-            var validateSourcePath = IsStringValidFilePath(sourcePath);
-            if (!validateSourcePath.MethodSuccess)
-            {
-                throw validateSourcePath.Exception;
-            }
+            RequireFilePath(sourcePath, allowNoFileExtension);
 
-            if (!validateSourcePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
-
+            // An existing folder wins over the name check, so folders like "v1.2" aren't mistaken for files
             bool isDir = true;
             var validateDestinationDirPath = DirectoryUtils.IsStringValidDirectoryPath(destinationPath);
             if (!validateDestinationDirPath.MethodSuccess)
             {
-                throw validateDestinationDirPath.Exception;
+                ExceptionDispatchInfo.Throw(validateDestinationDirPath.Exception);
             }
 
-            if (!validateDestinationDirPath.Result)
+            // With allowNoFileExtension, a missing destination without a trailing separator is the new file name (e.g. "LICENSE")
+            bool isNewExtensionlessFile = allowNoFileExtension && !Path.EndsInDirectorySeparator(destinationPath);
+
+            if (!DirectoryUtils.DoesDirectoryExist(destinationPath) && (!validateDestinationDirPath.Result || isNewExtensionlessFile))
             {
                 isDir = false;
 
-                var validateDestinationFilePath = IsStringValidFilePath(destinationPath);
+                var validateDestinationFilePath = IsStringValidFilePath(destinationPath, allowNoFileExtension);
                 if (!validateDestinationFilePath.MethodSuccess)
                 {
-                    throw validateDestinationFilePath.Exception;
+                    ExceptionDispatchInfo.Throw(validateDestinationFilePath.Exception);
                 }
 
                 if (!validateDestinationFilePath.Result)
@@ -615,34 +544,17 @@ public static class FileUtils
                 encoder = encoding;
             }
 
-            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
-            if (!validatePath.MethodSuccess)
+            if (content == null)
             {
-                throw validatePath.Exception;
+                content = "";
             }
 
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
-
-            if (string.IsNullOrEmpty(content))
+            if (!PrepareWrite(path, allowNoFileExtension, content.Length == 0, append))
             {
                 return result.SetMethodSuccess();
             }
 
-            var directory = Path.GetDirectoryName(path) + "\\";
-
-            if (!string.IsNullOrWhiteSpace(directory))
-            {
-                var createDir = DirectoryUtils.CreateDirectory(directory!);
-                if (!createDir.MethodSuccess)
-                {
-                    throw createDir.Exception;
-                }
-            }
-
-            if (!content.EndsWith(Environment.NewLine))
+            if (content.Length > 0 && !content.EndsWith(Environment.NewLine))
             {
                 content += Environment.NewLine;
             }
@@ -654,46 +566,19 @@ public static class FileUtils
                 mode = FileMode.Append;
             }
 
-            long maxChunkSizeInBytes = 100 * 1024 * 1024;
-            int startIndex = 0;
-
             //FileShare: No other process or thread can open the file while this stream is open.
             //BufferSize: Buffer size for creating IO instructions. Windows default size is 4096, and windows combines multiple IO calls anyway, its not necessary to increase the size
 
             // Note: useAsync: false is the key here
             using (var stream = new FileStream(path, mode, FileAccess.Write, FileShare.None, 4096, useAsync: false))
             {
-                using (var writer = new StreamWriter(stream, encoding ?? Encoding.UTF8))
+                using (var writer = new StreamWriter(stream, encoder))
                 {
-                    while (startIndex < content.Length)
-                    {
-                        int length = 0;
-                        long byteCount = 0;
-
-                        while (startIndex + length < content.Length)
-                        {
-                            char character = content[startIndex + length];
-                            long bytes = encoder.GetByteCount(new[] { character });
-
-                            if (byteCount + bytes > maxChunkSizeInBytes)
-                            {
-                                break;
-                            }
-
-                            byteCount += bytes;
-                            length++;
-                        }
-
-                        string chunk = content.Substring(startIndex, length);
-
-                        writer.Write(chunk);
-                        writer.Flush();
-
-                        startIndex += length;
-                    }
+                    // StreamWriter already encodes and flushes large strings in buffered blocks
+                    writer.Write(content);
                 }
             }
-            
+
             return result.SetMethodSuccess();
         }
         catch (Exception ex)
@@ -720,9 +605,15 @@ public static class FileUtils
 
         try
         {
-            if (content == null || content.Length == 0)
+            // Appending nothing is a no-op; overwriting with nothing must still truncate the file.
+            if ((content == null || content.Length == 0) && append)
             {
                 return result.SetMethodSuccess();
+            }
+
+            if (content == null)
+            {
+                content = Array.Empty<string>();
             }
 
             string combinedContent = string.Join(Environment.NewLine, content);
@@ -730,7 +621,7 @@ public static class FileUtils
             var writeToFile = WriteToFile(path, combinedContent, append, allowNoFileExtension, encoding);
             if (!writeToFile.MethodSuccess)
             {
-                throw writeToFile.Exception;
+                ExceptionDispatchInfo.Throw(writeToFile.Exception);
             }
 
             return result.SetMethodSuccess();
@@ -758,48 +649,26 @@ public static class FileUtils
 
         try
         {
-            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
-            if (!validatePath.MethodSuccess)
+            if (content == null)
             {
-                throw validatePath.Exception;
+                content = Array.Empty<byte>();
             }
 
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
-
-            if (content == null || content.Length == 0)
+            if (!PrepareWrite(path, allowNoFileExtension, content.Length == 0, append))
             {
                 return result.SetMethodSuccess();
             }
 
-            var directory = Path.GetDirectoryName(path);
-            var createDir = DirectoryUtils.CreateDirectory(directory!);
-            if (!createDir.MethodSuccess)
+            var mode = FileMode.Create;
+
+            if (append)
             {
-                throw createDir.Exception;
+                mode = FileMode.Append;
             }
-
-            var mode = append ? FileMode.Append : FileMode.Create;
-
-            // 100 MB chunk size in bytes
-            int maxChunkSizeInBytes = 100 * 1024 * 1024;
-            int startIndex = 0;
 
             using (var stream = new FileStream(path, mode, FileAccess.Write, FileShare.None, 4096, useAsync: false))
             {
-                while (startIndex < content.Length)
-                {
-                    // Calculate how many bytes to write in this chunk
-                    int bytesLeft = content.Length - startIndex;
-                    int chunkSize = Math.Min(bytesLeft, maxChunkSizeInBytes);
-
-                    // Write the chunk directly from the array using an offset and count
-                    stream.Write(content, startIndex, chunkSize);
-
-                    startIndex += chunkSize;
-                }
+                stream.Write(content);
             }
 
             return result.SetMethodSuccess();
@@ -824,16 +693,7 @@ public static class FileUtils
         var result = new OperationResult<string[]>();
         try
         {
-            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
-            if (!validatePath.MethodSuccess)
-            {
-                throw validatePath.Exception;
-            }
-
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
+            RequireFilePath(path, allowNoFileExtension);
 
             string[] lines = File.ReadAllLines(path);
 
@@ -859,16 +719,7 @@ public static class FileUtils
         var result = new OperationResult<string>();
         try
         {
-            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
-            if (!validatePath.MethodSuccess)
-            {
-                throw validatePath.Exception;
-            }
-
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
+            RequireFilePath(path, allowNoFileExtension);
 
             string lines = File.ReadAllText(path);
 
@@ -896,16 +747,7 @@ public static class FileUtils
 
         try
         {
-            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
-            if (!validatePath.MethodSuccess)
-            {
-                throw validatePath.Exception;
-            }
-
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
+            RequireFilePath(path, allowNoFileExtension);
 
             // Read the file as raw binary data
             byte[] bytes = File.ReadAllBytes(path);
@@ -933,16 +775,7 @@ public static class FileUtils
 
         try
         {
-            var validatePath = IsStringValidFilePath(path, allowNoFileExtension);
-            if (!validatePath.MethodSuccess)
-            {
-                throw validatePath.Exception;
-            }
-
-            if (!validatePath.Result)
-            {
-                throw new ArgumentException(RequiredFilePathErrorMsg);
-            }
+            RequireFilePath(path, allowNoFileExtension);
 
             string extension = Path.GetExtension(path).Trim().ToLowerInvariant();
 
@@ -1021,7 +854,7 @@ public static class FileUtils
             var validateFile = GetExtension(filePath);
             if (!validateFile.MethodSuccess)
             {
-                throw validateFile.Exception;
+                ExceptionDispatchInfo.Throw(validateFile.Exception);
             }
 
             bool isCorrectExtension = false;

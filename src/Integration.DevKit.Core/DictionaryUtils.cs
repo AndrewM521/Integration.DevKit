@@ -30,7 +30,7 @@ public static class DictionaryUtils
     /// Retrieves a <see cref="List{T}"/> from the source using a key or dot-notation path.
     /// </summary>
     /// <typeparam name="T">The type of elements in the list.</typeparam>
-    /// <param name="dictionary">The source dictionary.</param>Laura
+    /// <param name="dictionary">The source dictionary.</param>
     /// <param name="keyPath">The key or dot-notation path to the list.</param>
     /// <returns>A <see cref="List{T}"/> if found and of the correct type; otherwise an empty <see cref="List{T}"/>.</returns>
     public static List<T> GetList<T>(Dictionary<string, object> dictionary, string keyPath)
@@ -41,7 +41,7 @@ public static class DictionaryUtils
     /// <summary>
     /// Retrieves a <see cref="List{Dictionary{string, object}}"/> from the source using a key or dot-notation path.
     /// </summary>
-    /// <param name="dictionary">The source dictionary.</param>Laura
+    /// <param name="dictionary">The source dictionary.</param>
     /// <param name="keyPath">The key or dot-notation path to the list.</param>
     /// <returns>A <see cref="List{Dictionary{string, object}}"/> if found and of correct type; otherwise an empty <see cref="List{Dictionary{string, object}}"/>.</returns>
     public static List<Dictionary<string, object>> GetDictionaryList(Dictionary<string, object> dictionary, string keyPath)
@@ -75,6 +75,11 @@ public static class DictionaryUtils
             {
                 currentObj = next;
             }
+            // A number steps into a list, like JsonUtils paths ("orders.0.id")
+            else if (currentObj is System.Collections.IList currentList && int.TryParse(key, out int index) && index >= 0 && index < currentList.Count)
+            {
+                currentObj = currentList[index];
+            }
             else
             {
                 return defaultValue;
@@ -107,6 +112,12 @@ public static class DictionaryUtils
                 {
                     if (item == null)
                     {
+                        // A List<int> can't hold null; treat it like any other failed conversion
+                        if (itemType.IsValueType && Nullable.GetUnderlyingType(itemType) == null)
+                        {
+                            return defaultValue;
+                        }
+
                         list.Add(null);
                         continue;
                     }
@@ -119,7 +130,16 @@ public static class DictionaryUtils
 
                     try
                     {
-                        var convertedItem = Convert.ChangeType(item, itemType);
+                        // Convert.ChangeType can't target Nullable<T> (e.g. List<int?>), so convert to the inner type
+                        Type conversionType = itemType;
+
+                        Type? nullableInnerType = Nullable.GetUnderlyingType(itemType);
+                        if (nullableInnerType != null)
+                        {
+                            conversionType = nullableInnerType;
+                        }
+
+                        object convertedItem = Convert.ChangeType(item, conversionType, System.Globalization.CultureInfo.InvariantCulture);
                         list.Add(convertedItem);
                     }
                     catch (Exception ex)
@@ -136,7 +156,7 @@ public static class DictionaryUtils
 
         try
         {
-            var converted = Convert.ChangeType(currentObj, underlyingType);
+            object converted = Convert.ChangeType(currentObj, underlyingType, System.Globalization.CultureInfo.InvariantCulture);
 
             return (T)converted;
         }

@@ -164,8 +164,7 @@ public class SQLUtilsTests
 
         var csv = reader.ToCsvContent();
 
-        Assert.DoesNotContain(",", csv[1][0]);
-        Assert.DoesNotContain("\"", csv[1][0]);
+        Assert.Equal("\"has, a comma and \"\"quotes\"\"\"", csv[1][0]);
     }
 
     [Fact]
@@ -181,6 +180,33 @@ public class SQLUtilsTests
     }
 
     [Fact]
+    public void ToCsvContent_OnCommaDecimalCulture_WritesNumbersInvariantlyAndDatesAsIso()
+    {
+        var table = new DataTable();
+        table.Columns.Add("Amount", typeof(decimal));
+        table.Columns.Add("When", typeof(DateTime));
+        table.Rows.Add(1234.5m, new DateTime(2026, 3, 4, 10, 0, 0));
+
+        var original = System.Globalization.CultureInfo.CurrentCulture;
+        System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+        try
+        {
+            using var reader = table.CreateDataReader();
+
+            var csv = reader.ToCsvContent();
+
+            // On a German-locale server this used to be "1234,5" (and quoted because of the comma)
+            Assert.Equal("1234.5", csv[1][0]);
+            // Year-month-day, so it can't be read as 3 April in one place and 4 March in another
+            Assert.Equal("2026-03-04T10:00:00.0000000", csv[1][1]);
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = original;
+        }
+    }
+
+    [Fact]
     public async Task ToCsvContentAsync_ProducesHeaderAndDataRows()
     {
         using var reader = Reader();
@@ -188,5 +214,19 @@ public class SQLUtilsTests
         var csv = await reader.ToCsvContentAsync();
 
         Assert.Equal(3, csv.Count);
+    }
+
+    [Fact]
+    public void ToCsvContent_EscapesHeaders()
+    {
+        // A comma in an alias used to split the header into two columns
+        var table = new DataTable();
+        table.Columns.Add("Total, USD", typeof(int));
+        table.Rows.Add(5);
+        using var reader = table.CreateDataReader();
+
+        var csv = reader.ToCsvContent();
+
+        Assert.Equal("\"Total, USD\"", csv[0][0]);
     }
 }

@@ -96,8 +96,8 @@ Registering the `"File"` provider also registers `ThreadLocks` for you automatic
 | Property | Default | Purpose |
 | --- | --- | --- |
 | `ApplicationName` | none | Application name for ASP.NET Core Data Protection. Apps sharing a key ring must use the same name to read each other's secrets. |
-| `SecretsFolder` | none | Folder where the encrypted secrets files are stored. |
-| `KeysFolder` | none | Folder where the Data Protection key ring is stored. Back this up; secrets can't be decrypted without it. |
+| `SecretsFolder` | none | Folder where the encrypted secrets files are stored. A relative path is resolved against the app's folder (`AppContext.BaseDirectory`), not the working directory. |
+| `KeysFolder` | none | Folder where the Data Protection key ring is stored. Back this up; secrets can't be decrypted without it. A relative path is resolved against the app's folder, like `SecretsFolder`. |
 
 `Provider` currently only supports `"File"` out of the box, delegating to the built-in `"File"` provider registration under the hood using the bound `Options` values (`ApplicationName`, `SecretsFolder`, `KeysFolder`) — an unsupported value throws `NotSupportedException` at registration time. Register a custom provider (e.g. a cloud secrets vault) via `Service_CredentialMgmt.RegisterProvider` before calling `AddCredentialMgmt`, and it becomes selectable the same way by name.
 
@@ -109,12 +109,12 @@ Think of `fileName` as a **container name** — a logical grouping of related se
 
 ### How `FileSecretStore` stores secrets
 
-- Each container (`fileName`) is written to its own file: `secretsDir/FileSecretStore_{fileName}.secret` (invalid filename characters in `fileName` are replaced with `_`).
+- Each container (`fileName`) is written to its own file: `secretsDir/{ApplicationName}_{fileName}.secret` (invalid filename characters in `fileName` are replaced with `_`).
 - All keys within a container are held as a single JSON dictionary, serialized, and then the **entire JSON blob is encrypted as one unit** using an ASP.NET Core Data Protection `IDataProtector` — only the resulting ciphertext is ever written to disk.
-- Writes are atomic: content is written to a temporary file first, then moved into place, so a crash mid-write can't leave a corrupted secrets file.
+- Writes are atomic: content is written to a temporary file, flushed to disk, then moved into place, so a crash or power cut mid-write can't leave a corrupted secrets file.
 - `GetKey` decrypts and re-parses the file on every call — there's no in-memory cache, so reads always reflect the latest state on disk (and updating a value is always visible to subsequent reads without a restart).
 - `DeleteKey` and `DeleteSecret` are idempotent — deleting a key or container that doesn't exist returns success rather than failing.
-- Values are trimmed of leading/trailing whitespace both when stored and when read back.
+- Values are stored exactly as given; only the encrypted blob as a whole is trimmed.
 
 ### Protect the encryption keys
 
@@ -310,7 +310,7 @@ Every `ISecretReader`/`ISecretStore` method returns `OperationResult<string>`/`N
 - Restrict file-system access to both `SecretsFolder` and `KeysFolder` to the accounts/processes that need them — losing either one alone is recoverable, losing both together is not.
 - Use one container (`fileName`) per logical group of secrets (e.g. per integration or per environment) rather than one giant container for everything.
 - Back up `KeysFolder` alongside your secrets — if the Data Protection key ring is lost, existing `.secret` files become permanently undecryptable.
-- Prefer this module (or a managed secret store) over plain values in `appsettings.json`, and reserve [`AesConfigProtector`](../Core/ConfigurationProtection.md) for lower-stakes obfuscation only.
+- Prefer this module (or a managed secret store) over plain values in `appsettings.json`.
 
 ## Changelog
 

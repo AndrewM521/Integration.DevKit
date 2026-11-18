@@ -49,8 +49,10 @@ public static class Service_CredentialMgmt
         ["File"] = (services, options, enableLogging, configuration) =>
         {
             var applicationName = options.GetRequiredOption<string>("ApplicationName", "File");
-            var secretsFolder = options.GetRequiredOption<string>("SecretsFolder", "File");
-            var keysFolder = options.GetRequiredOption<string>("KeysFolder", "File");
+            // Relative folders resolve against the app's folder, not the working directory: a Windows service starts in
+            // System32, and launching the app another way would otherwise create a fresh, empty key ring somewhere else
+            var secretsFolder = Path.GetFullPath(options.GetRequiredOption<string>("SecretsFolder", "File"), AppContext.BaseDirectory);
+            var keysFolder = Path.GetFullPath(options.GetRequiredOption<string>("KeysFolder", "File"), AppContext.BaseDirectory);
 
             // FileSecretStore needs an ThreadLockManager to serialize concurrent access to the same
             // container's file. TryAddSingleton means this is a no-op if the app already called

@@ -27,11 +27,11 @@ public class ApiManagerSettings
     /// A <see cref="ConcurrentDictionary{TKey, TValue}"/> where the key is the client name 
     /// and the value is the corresponding configuration.
     /// </value>
-    public ConcurrentDictionary<string, ApiClientSettings> Clients { get; set; } = new ConcurrentDictionary<string, ApiClientSettings>();
+    public ConcurrentDictionary<string, ApiClientSettings> Clients { get; set; } = new ConcurrentDictionary<string, ApiClientSettings>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets or sets whether this module logs through the logger factory supplied at registration.
-    /// Defaults to <see langword="true"/>. Can be flipped at runtime via <see cref="IApiManager.RuntimeSettings"/>
+    /// Defaults to <see langword="true"/>. Can be flipped at runtime via <see cref="ApiManager.RuntimeSettings"/>
     /// to silence/resume this module's logging without removing the app's logger.
     /// </summary>
     public bool EnableLogging { get; set; } = true;
@@ -45,7 +45,8 @@ public class ApiManagerSettings
     {
         return new ApiManagerSettings {
             Default_HttpTimeout_Seconds = Default_HttpTimeout_Seconds,
-            Clients = new ConcurrentDictionary<string, ApiClientSettings>(Clients),
+            // Case-insensitive like the client cache, so "testclient" finds "TestClient"
+            Clients = new ConcurrentDictionary<string, ApiClientSettings>(Clients, StringComparer.OrdinalIgnoreCase),
             EnableLogging = EnableLogging
         };
     }

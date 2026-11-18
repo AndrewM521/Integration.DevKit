@@ -112,4 +112,52 @@ public class SQLClientTests
 
         client.Dispose();
     }
+
+    [Fact]
+    public async Task SingleConnection_CanceledLockWait_ReturnsFailureInsteadOfThrowing()
+    {
+        // The lock wait used to sit outside the try, so a canceled token threw out of a result-returning method
+        var client = new SQLClient("TestClient", new SQLClientSettings { ConnectionString = "Server=default;", UseSingleConnection = true });
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        var result = await client.RunNonQueryCommandAsync("SELECT 1;", System.Data.CommandType.Text, cancellationToken: cts.Token);
+
+        Assert.False(result.MethodSuccess);
+        Assert.IsAssignableFrom<OperationCanceledException>(result.Exception);
+    }
+
+    [Fact]
+    public void SecretStore_UsesASqlClientContainerName()
+    {
+        // It used to be "ApiClient(name)", a leftover from the REST client
+        var client = CreateClient("Main");
+        var store = new Mock<ISecretStore>();
+        store.Setup(s => s.SetKey("SQLClient(Main)", "ConnectionString", "x")).Returns(new NullOperationResult().SetMethodSuccess());
+        client.SetSecretStore(store.Object);
+
+        Assert.True(client.SetSecretStoreCredentials("x").MethodSuccess);
+        store.Verify(s => s.SetKey("SQLClient(Main)", "ConnectionString", "x"), Times.Once);
+    }
+
+    [Fact]
+    public async Task SecretStoreConnectionString_IsReadOnceAndReloadedWhenTheStoreChanges()
+    {
+        // Every query used to read and decrypt the secret file before connecting
+        var client = CreateClient("Main");
+        var store = new Mock<ISecretStore>();
+        store.Setup(s => s.GetKey("SQLClient(Main)", "ConnectionString")).Returns(new OperationResult<string>().SetMethodSuccess("Server=from-store;"));
+        client.SetSecretStore(store.Object);
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        // A canceled token stops each call at OpenAsync, after the connection string was resolved
+        await client.RunNonQueryCommandAsync("SELECT 1;", System.Data.CommandType.Text, cancellationToken: cts.Token);
+        await client.RunNonQueryCommandAsync("SELECT 1;", System.Data.CommandType.Text, cancellationToken: cts.Token);
+        store.Verify(s => s.GetKey("SQLClient(Main)", "ConnectionString"), Times.Once);
+
+        client.SetSecretStore(store.Object);
+        await client.RunNonQueryCommandAsync("SELECT 1;", System.Data.CommandType.Text, cancellationToken: cts.Token);
+        store.Verify(s => s.GetKey("SQLClient(Main)", "ConnectionString"), Times.Exactly(2));
+    }
 }

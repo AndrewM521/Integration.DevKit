@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using Integration.DevKit.Core;
+using Integration.DevKit.Core.Logging;
 using Integration.DevKit.TaskMgmt.Settings;
 
 namespace Integration.DevKit.TaskMgmt;
@@ -36,7 +37,7 @@ internal class TaskRegistryRuntime
         _taskRegistry = taskRegistry;
         _taskManager = taskManager;
 
-        _logger = loggerFactory?.CreateLogger("Managed Task Registry");
+        _logger = loggerFactory?.CreateConditionalLogger("Managed Task Registry", () => taskManager.RuntimeSettings.EnableLogging);
     }
 
     /// <summary>
@@ -56,8 +57,11 @@ internal class TaskRegistryRuntime
             string taskKey = managedTaskRuntime.UserTask.TaskKey;
             bool isNewTask = !_taskRegistry.Snapshots.ContainsKey(taskKey);
 
+            // A new run of a key starts a fresh snapshot, or it keeps the old run's settings and iteration records
+            bool isNewRun = iterationRuntime == null && managedTaskRuntime.State == ManagedTaskState.Starting;
+
             // 1. Get or Create the Main Task Snapshot
-            if (!_taskRegistry.Snapshots.TryGetValue(taskKey, out ManagedTaskSnapshot? existingSnapshot) || existingSnapshot == null)
+            if (isNewRun || !_taskRegistry.Snapshots.TryGetValue(taskKey, out ManagedTaskSnapshot? existingSnapshot) || existingSnapshot == null)
             {
                 existingSnapshot = new ManagedTaskSnapshot(taskKey, managedTaskRuntime.RuntimeSettings.Clone());
             }
@@ -75,45 +79,56 @@ internal class TaskRegistryRuntime
             // 3. Handle Iteration History (The new part)
             if (iterationRuntime != null)
             {
-                long iterNum = iterationRuntime.IterationNumber;
-
-                // Check if we already have this iteration recorded
-                if (snapshot.IterationHistory.TryGetValue(iterNum, out var existingIter))
+                // SortedDictionary is not thread-safe, and parallel iterations upsert concurrently.
+                lock (snapshot.IterationHistory)
                 {
-                    // Update the existing record (Cast to the concrete class to set properties)
-                    var recordToUpdate = (ManagedTaskIterationSnapshot)existingIter;
+                    long iterNum = iterationRuntime.IterationNumber;
 
-                    recordToUpdate.State = iterationRuntime.State;
-                    recordToUpdate.EndDTM = iterationRuntime.EndDTM;
-                    recordToUpdate.Runtime = iterationRuntime.Runtime;
-                    recordToUpdate.Exception = iterationException;
-
-                    _logger?.LogTrace("Updated existing iteration {IterNum} for Task: {TaskKey}", iterNum, taskKey);
-                }
-                else
-                {
-                    // Create and Add new record
-                    var newRecord = new ManagedTaskIterationSnapshot(iterationRuntime, iterationException);
-                    newRecord.IterationNumber = iterationRuntime.IterationNumber;
-                    newRecord.State = iterationRuntime.State;
-                    newRecord.StartDTM = iterationRuntime.StartDTM;
-                    newRecord.EndDTM = iterationRuntime.EndDTM;
-                    newRecord.Runtime = iterationRuntime.Runtime;
-                    newRecord.Exception = iterationException;
-
-                    snapshot.IterationHistory.Add(iterNum, newRecord);
-
-                    // 4. Efficient Internal Trimming
-                    int maxIterations = _taskManager.RuntimeSettings.MaxTaskIterationRegistryCount;
-                    if (snapshot.IterationHistory.Count > maxIterations)
+                    // Check if we already have this iteration recorded
+                    if (snapshot.IterationHistory.TryGetValue(iterNum, out var existingIter))
                     {
-                        _logger?.LogDebug($"Trimming iteration history for Task: {taskKey}. Current count: {snapshot.IterationHistory.Count}, Max allowed: {maxIterations}");
+                        // Update the existing record (Cast to the concrete class to set properties)
+                        var recordToUpdate = (ManagedTaskIterationSnapshot)existingIter;
 
-                        // SortedDictionary keeps keys in order, so the first key is the oldest iteration
-                        while (snapshot.IterationHistory.Count > maxIterations)
+                        recordToUpdate.State = iterationRuntime.State;
+                        recordToUpdate.EndDTM = iterationRuntime.EndDTM;
+                        recordToUpdate.Runtime = iterationRuntime.Runtime;
+                        recordToUpdate.Exception = iterationException;
+
+                        _logger?.LogTrace("Updated existing iteration {IterNum} for Task: {TaskKey}", iterNum, taskKey);
+                    }
+                    else
+                    {
+                        // Create and Add new record
+                        var newRecord = new ManagedTaskIterationSnapshot(iterationRuntime, iterationException);
+                        newRecord.IterationNumber = iterationRuntime.IterationNumber;
+                        newRecord.State = iterationRuntime.State;
+                        newRecord.StartDTM = iterationRuntime.StartDTM;
+                        newRecord.EndDTM = iterationRuntime.EndDTM;
+                        newRecord.Runtime = iterationRuntime.Runtime;
+                        newRecord.Exception = iterationException;
+
+                        snapshot.IterationHistory.Add(iterNum, newRecord);
+
+                        // 4. Efficient Internal Trimming
+                        int maxIterations = _taskManager.RuntimeSettings.MaxTaskIterationRegistryCount;
+                        if (snapshot.IterationHistory.Count > maxIterations)
                         {
-                            var oldestIterKey = snapshot.IterationHistory.Keys.First();
-                            snapshot.IterationHistory.Remove(oldestIterKey);
+                            _logger?.LogDebug($"Trimming iteration history for Task: {taskKey}. Current count: {snapshot.IterationHistory.Count}, Max allowed: {maxIterations}");
+
+                            // SortedDictionary keeps keys in order, so the first key is the oldest iteration
+                            while (snapshot.IterationHistory.Count > maxIterations)
+                            {
+                                long oldestIterKey = 0;
+
+                                foreach (long iterKey in snapshot.IterationHistory.Keys)
+                                {
+                                    oldestIterKey = iterKey;
+                                    break; // first key is the oldest
+                                }
+
+                                snapshot.IterationHistory.Remove(oldestIterKey);
+                            }
                         }
                     }
                 }
@@ -129,9 +144,10 @@ internal class TaskRegistryRuntime
                 _insertionOrder.Enqueue(taskKey);
             }
 
-            int taskHistoryCount = _taskRegistry.Snapshots.Count;
             int maxTaskHistory = _taskManager.RuntimeSettings.MaxTaskRegistryCount;
-            while (taskHistoryCount > maxTaskHistory && _insertionOrder.TryDequeue(out var oldestKey))
+
+            // Re-read the count every pass, or going one over the limit empties the whole registry
+            while (_taskRegistry.Snapshots.Count > maxTaskHistory && _insertionOrder.TryDequeue(out var oldestKey))
             {
                 try
                 {

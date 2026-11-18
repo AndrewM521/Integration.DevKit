@@ -17,31 +17,31 @@ public class CoreClassesDemo : IDemo
     {
         OperationResult<string> json;
 
-        //json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json1.txt");
+        //json = await FileUtils.ReadFileTextAsync(Path.Combine(AppContext.BaseDirectory, "Junk", "Json1.txt"));
         //if (!json.MethodSuccess)
         //{
         //    throw json.Exception;
         //}
 
-        //json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json2.txt");
+        //json = await FileUtils.ReadFileTextAsync(Path.Combine(AppContext.BaseDirectory, "Junk", "Json2.txt"));
         //if (!json.MethodSuccess)
         //{
         //    throw json.Exception;
         //}
 
-        //json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json3.txt");
+        //json = await FileUtils.ReadFileTextAsync(Path.Combine(AppContext.BaseDirectory, "Junk", "Json3.txt"));
         //if (!json.MethodSuccess)
         //{
         //    throw json.Exception;
         //}
 
-        json = await FileUtils.ReadFileTextAsync("C:\\NAS\\Home Drive\\Projects\\Junk\\Json4.txt");
+        json = await FileUtils.ReadFileTextAsync(Path.Combine(AppContext.BaseDirectory, "Junk", "Json4.txt"));
         if (!json.MethodSuccess)
         {
             throw json.Exception;
         }
 
-        object result = null;
+        object? result = null;
 
 
         //----Get Dictionary by single path----

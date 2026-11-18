@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2026 AndrewM5
  * Licensed under the MIT License.
  * See LICENSE file in the project root for full license information.
@@ -49,6 +49,9 @@ public class CompositeSecretReader : ISecretReader
     {
         var result = new OperationResult<string>();
 
+        // Keep each reader's error so a real failure (e.g. a lost DataProtection key ring) isn't reported as just "not found"
+        List<Exception> errors = new List<Exception>();
+
         foreach (var reader in _readers)
         {
             var readerResult = reader.GetKey(fileName, key);
@@ -56,9 +59,11 @@ public class CompositeSecretReader : ISecretReader
             {
                 return readerResult;
             }
+
+            errors.Add(readerResult.Exception);
         }
 
         return result.SetMethodFailure(
-            new KeyNotFoundException($"Secret '{key}' not found in container '{fileName}' in any of {_readers.Count} configured reader(s)"));
+            new KeyNotFoundException($"Secret '{key}' not found in container '{fileName}' in any of {_readers.Count} configured reader(s)", new AggregateException(errors)));
     }
 }

@@ -23,26 +23,9 @@ public static class ApiRequest
     /// <paramref name="client"/> is used, so absolute URLs on a different host also receive its default headers.
     /// </param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> GetAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null, IAuthClient? authClient = null)
+    public static Task<ApiOperationResult<string>> GetAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null, IAuthClient? authClient = null)
     {
-        var finalUri = ResolveUri(client, endpointUrl);
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, finalUri);
-
-        if (content != null)
-        {
-            request.Content = content;
-        }
-
-        AddHeadersToRequest(request, headers);
-
-        var applyAuthResult = await ApplyAuthAsync(request, client, authStrategy, authClient);
-        if (applyAuthResult != null)
-        {
-            return applyAuthResult;
-        }
-
-        return await SendRequestAsync(client, request);
+        return BuildAndSendAsync(HttpMethod.Get, client, endpointUrl, content, headers, authStrategy, authClient);
     }
 
     /// <summary>
@@ -58,26 +41,9 @@ public static class ApiRequest
     /// <paramref name="client"/> is used, so absolute URLs on a different host also receive its default headers.
     /// </param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> PostAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null, IAuthClient? authClient = null)
+    public static Task<ApiOperationResult<string>> PostAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null, IAuthClient? authClient = null)
     {
-        var finalUri = ResolveUri(client, endpointUrl);
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, finalUri);
-
-        if (content != null)
-        {
-            request.Content = content;
-        }
-
-        AddHeadersToRequest(request, headers);
-
-        var applyAuthResult = await ApplyAuthAsync(request, client, authStrategy, authClient);
-        if (applyAuthResult != null)
-        {
-            return applyAuthResult;
-        }
-
-        return await SendRequestAsync(client, request);
+        return BuildAndSendAsync(HttpMethod.Post, client, endpointUrl, content, headers, authStrategy, authClient);
     }
 
     /// <summary>
@@ -93,21 +59,9 @@ public static class ApiRequest
     /// <paramref name="client"/> is used, so absolute URLs on a different host also receive its default headers.
     /// </param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> PutAsync(HttpClient client, string endpointUrl, HttpContent content, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null, IAuthClient? authClient = null)
+    public static Task<ApiOperationResult<string>> PutAsync(HttpClient client, string endpointUrl, HttpContent content, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null, IAuthClient? authClient = null)
     {
-        var finalUri = ResolveUri(client, endpointUrl);
-
-        using var request = new HttpRequestMessage(HttpMethod.Put, finalUri) { Content = content };
-
-        AddHeadersToRequest(request, headers);
-
-        var applyAuthResult = await ApplyAuthAsync(request, client, authStrategy, authClient);
-        if (applyAuthResult != null)
-        {
-            return applyAuthResult;
-        }
-
-        return await SendRequestAsync(client, request);
+        return BuildAndSendAsync(HttpMethod.Put, client, endpointUrl, content, headers, authStrategy, authClient);
     }
 
     /// <summary>
@@ -123,26 +77,36 @@ public static class ApiRequest
     /// <paramref name="client"/> is used, so absolute URLs on a different host also receive its default headers.
     /// </param>
     /// <returns>A task representing the asynchronous operation, containing an <see cref="ApiOperationResult{T}"/> with the response string.</returns>
-    public static async Task<ApiOperationResult<string>> DeleteAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null, IAuthClient? authClient = null)
+    public static Task<ApiOperationResult<string>> DeleteAsync(HttpClient client, string endpointUrl, HttpContent? content = null, Dictionary<string, string>? headers = null, IAuthStrategy? authStrategy = null, IAuthClient? authClient = null)
+    {
+        return BuildAndSendAsync(HttpMethod.Delete, client, endpointUrl, content, headers, authStrategy, authClient);
+    }
+
+    /// <summary>
+    /// Builds the request (content, per-request headers, auth) and sends it. Shared by the verb methods above.
+    /// </summary>
+    private static async Task<ApiOperationResult<string>> BuildAndSendAsync(HttpMethod method, HttpClient client, string endpointUrl,
+        HttpContent? content, Dictionary<string, string>? headers, IAuthStrategy? authStrategy, IAuthClient? authClient)
     {
         var finalUri = ResolveUri(client, endpointUrl);
 
-        using var request = new HttpRequestMessage(HttpMethod.Delete, finalUri);
+        using var request = new HttpRequestMessage(method, finalUri) { Content = content };
 
-        if (content != null)
+        var addHeaders = AddHeadersToRequest(request, headers);
+        if (!addHeaders.MethodSuccess)
         {
-            request.Content = content;
+            // Don't send a request that silently lacks headers the caller asked for
+            return new ApiOperationResult<string>()
+                .SetApiFailure(HttpStatusCode.BadRequest, addHeaders.Exception, null, "One or more request headers could not be applied");
         }
 
-        AddHeadersToRequest(request, headers);
-
-        var applyAuthResult = await ApplyAuthAsync(request, client, authStrategy, authClient);
+        var applyAuthResult = await ApplyAuthAsync(request, client, authStrategy, authClient).ConfigureAwait(false);
         if (applyAuthResult != null)
         {
             return applyAuthResult;
         }
 
-        return await SendRequestAsync(client, request);
+        return await SendRequestAsync(client, request).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -159,9 +123,9 @@ public static class ApiRequest
 
         try
         {
-            using (HttpResponseMessage response = await httpClient.SendAsync(request))
+            using (HttpResponseMessage response = await httpClient.SendAsync(request).ConfigureAwait(false))
             {
-                string responseBody = await response.Content.ReadAsStringAsync();
+                string responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 HttpStatusCode statusEnum = response.StatusCode;
                 int statusCode = (int)statusEnum;
 
@@ -169,7 +133,7 @@ public static class ApiRequest
                 {
                     response.EnsureSuccessStatusCode();
 
-                    return result.SetApiSuccess(responseBody, statusEnum, $"HTTP {statusCode} {statusEnum}");
+                    return result.SetApiSuccess(responseBody, statusEnum, responseBody, $"HTTP {statusCode} {statusEnum}");
                 }
                 catch (HttpRequestException ex)
                 {
@@ -180,6 +144,11 @@ public static class ApiRequest
         catch (HttpRequestException ex)
         {
             return result.SetApiFailure(ex.StatusCode ?? HttpStatusCode.ServiceUnavailable, ex, null, "Network or protocol error");
+        }
+        catch (TaskCanceledException ex)
+        {
+            // HttpClient.Timeout and caller cancellation both surface as TaskCanceledException
+            return result.SetApiFailure(HttpStatusCode.RequestTimeout, ex, null, "Request timed out or was canceled");
         }
         catch (Exception ex)
         {
@@ -237,7 +206,7 @@ public static class ApiRequest
         // HttpClient. It has no header-free client, so absolute URLs on another host share its default headers.
         authClient ??= new AuthClient(client);
 
-        var applyResult = await authStrategy.ApplyAsync(request, authClient);
+        var applyResult = await authStrategy.ApplyAsync(request, authClient).ConfigureAwait(false);
         if (!applyResult.MethodSuccess)
         {
             return new ApiOperationResult<string>()
@@ -278,29 +247,15 @@ public static class ApiRequest
                                 request.Content.Headers.ContentType = new MediaTypeHeaderValue(value);
                                 break;
                             case "authorization":
-                                // Check for common schemes: Basic, Bearer, Digest, or custom
-                                switch (value)
+                                // "Scheme parameter" (Basic, Bearer, Digest or custom); a bare token is treated as Bearer
+                                int split = value.IndexOf(' ');
+                                if (split > 0)
                                 {
-                                    case "basic":
-                                        request.Headers.Authorization = new AuthenticationHeaderValue("Basic", value.Substring(6));
-                                        break;
-                                    case "bearer":
-                                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", value.Substring(7));
-                                        break;
-                                    default:
-                                        var split = value.IndexOf(' ');
-                                        if (split > 0)
-                                        {
-                                            var scheme = value.Substring(0, split);
-                                            var parameter = value.Substring(split + 1);
-                                            request.Headers.Authorization = new AuthenticationHeaderValue(scheme, parameter);
-                                        }
-                                        else
-                                        {
-                                            // If only a token without scheme, treat as Bearer
-                                            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", value);
-                                        }
-                                        break;
+                                    request.Headers.Authorization = new AuthenticationHeaderValue(value.Substring(0, split), value.Substring(split + 1));
+                                }
+                                else
+                                {
+                                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", value);
                                 }
                                 break;
                             case "user-agent":

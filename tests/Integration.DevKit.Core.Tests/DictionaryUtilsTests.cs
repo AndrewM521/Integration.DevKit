@@ -1,4 +1,4 @@
-namespace Integration.DevKit.Core.Tests;
+﻿namespace Integration.DevKit.Core.Tests;
 
 public class DictionaryUtilsTests
 {
@@ -190,5 +190,47 @@ public class DictionaryUtilsTests
         var result = DictionaryUtils.FlattenListByKey(source, "Missing");
 
         Assert.Empty(result.Result);
+    }
+
+    [Fact]
+    public void GetValue_NumberStringOnCommaDecimalCulture_ParsesInvariantly()
+    {
+        // Under de-DE the current culture reads "1.5" as 15
+        var original = System.Globalization.CultureInfo.CurrentCulture;
+        System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+        try
+        {
+            var dict = new Dictionary<string, object> { ["price"] = "1.5" };
+
+            Assert.Equal(1.5, DictionaryUtils.GetValue<double>(dict, "price"));
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = original;
+        }
+    }
+
+    [Fact]
+    public void GetList_NullInAValueTypeList_ReturnsTheDefaultInsteadOfThrowing()
+    {
+        // A null was added to a List<int>, which threw although the method promises never to throw
+        var source = new Dictionary<string, object> { ["ids"] = new List<object?> { 1, null, 3 } };
+
+        var ids = DictionaryUtils.GetList<int>(source, "ids");
+
+        Assert.Empty(ids);
+    }
+
+    [Fact]
+    public void GetValue_NumberInThePath_StepsIntoTheList()
+    {
+        // JsonUtils paths allow "orders.0.id"; DictionaryUtils used to return the default for them
+        var source = new Dictionary<string, object>
+        {
+            ["orders"] = new List<object> { new Dictionary<string, object> { ["id"] = 7 } }
+        };
+
+        Assert.Equal(7, DictionaryUtils.GetValue<int>(source, "orders.0.id"));
+        Assert.Equal(-1, DictionaryUtils.GetValue(source, "orders.5.id", -1));
     }
 }

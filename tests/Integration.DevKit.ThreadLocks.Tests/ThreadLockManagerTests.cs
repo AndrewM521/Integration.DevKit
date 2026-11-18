@@ -1,4 +1,4 @@
-using Integration.DevKit.Core;
+﻿using Integration.DevKit.Core;
 using Integration.DevKit.ThreadLocks.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -262,5 +262,69 @@ public class ThreadLockManagerTests
         manager.TryExitSyncLock("key3");
 
         Assert.True(loggerFactory.Logger.LogCount > countWhileEnabled);
+    }
+
+    [Fact]
+    public async Task AsyncLock_UnderContention_NeverAdmitsTwoHolders()
+    {
+        // Repeated release-to-zero and re-enter used to let a third caller in on a fresh lock object.
+        var manager = new ThreadLockManager();
+        int inside = 0;
+        int maxInside = 0;
+
+        async Task Worker()
+        {
+            for (int i = 0; i < 300; i++)
+            {
+                var enter = await manager.TryEnterAsyncLock("contended");
+                Assert.True(enter.MethodSuccess);
+
+                int now = Interlocked.Increment(ref inside);
+                InterlockedMax(ref maxInside, now);
+                await Task.Yield();
+                Interlocked.Decrement(ref inside);
+
+                Assert.True(manager.TryExitAsyncLock("contended").MethodSuccess);
+            }
+        }
+
+        await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => Task.Run(Worker)));
+
+        Assert.Equal(1, maxInside);
+    }
+
+    [Fact]
+    public async Task SyncLock_UnderContention_NeverAdmitsTwoHolders()
+    {
+        var manager = new ThreadLockManager();
+        int inside = 0;
+        int maxInside = 0;
+
+        void Worker()
+        {
+            for (int i = 0; i < 300; i++)
+            {
+                Assert.True(manager.TryEnterSyncLock("contended").MethodSuccess);
+
+                int now = Interlocked.Increment(ref inside);
+                InterlockedMax(ref maxInside, now);
+                Thread.Yield();
+                Interlocked.Decrement(ref inside);
+
+                Assert.True(manager.TryExitSyncLock("contended").MethodSuccess);
+            }
+        }
+
+        await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => Task.Run(Worker)));
+
+        Assert.Equal(1, maxInside);
+    }
+
+    private static void InterlockedMax(ref int target, int value)
+    {
+        int current;
+        while (value > (current = Volatile.Read(ref target)) && Interlocked.CompareExchange(ref target, value, current) != current)
+        {
+        }
     }
 }

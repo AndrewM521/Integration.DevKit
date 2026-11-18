@@ -22,7 +22,7 @@ public class SQLManagerSettings
     /// A <see cref="ConcurrentDictionary{TKey, TValue}"/> where the key is the client's unique name 
     /// and the value is its corresponding <see cref="SQLClientSettings"/>.
     /// </value>
-    public ConcurrentDictionary<string, SQLClientSettings> Clients { get; set; } = new ConcurrentDictionary<string, SQLClientSettings>();
+    public ConcurrentDictionary<string, SQLClientSettings> Clients { get; set; } = new ConcurrentDictionary<string, SQLClientSettings>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets or sets whether this module logs through the logger factory supplied at registration.
@@ -39,7 +39,8 @@ public class SQLManagerSettings
     {
         return new SQLManagerSettings
         {
-            Clients = new ConcurrentDictionary<string, SQLClientSettings> (Clients),
+            // Case-insensitive like the client cache, so "testclient" finds "TestClient"
+            Clients = new ConcurrentDictionary<string, SQLClientSettings>(Clients, StringComparer.OrdinalIgnoreCase),
             EnableLogging = EnableLogging
         };
     }

@@ -67,23 +67,11 @@ public class ManagedProcessConfig
     public int TimeoutSeconds { get; set; } = -1;
 
     /// <summary>
-    /// Gets a value indicating whether standard output and error streams should be captured and logged.
+    /// Gets the maximum number of lines kept for each of standard output and standard error.
     /// </summary>
     /// <value>
-    /// Enables standard stream capture. Defaults to <see langword="true"/>.
+    /// Defaults to 10,000. When the limit is reached the oldest lines are dropped.
+    /// Zero or negative keeps every line, which grows without limit for long-running, chatty processes.
     /// </value>
-    /// <remarks>
-    /// When enabled, the process manager will hook into the STDOUT and STDERR streams,
-    /// allowing the data to be retrieved via <see cref="ManagedProcess.GetOutput"/>.
-    /// </remarks>
-    public bool EnableProcessLogging { get; set; } = true;
-
-    /// <summary>
-    /// Reserved for future use; currently has no effect on process behavior — there is no auto-restart
-    /// logic implemented anywhere in this module. Don't rely on it.
-    /// </summary>
-    /// <value>
-    /// Reserved for future use; currently has no effect on process behavior. Defaults to <see langword="false"/>.
-    /// </value>
-    public bool AutoRestartOnFailure { get; set; } = false;
+    public int MaxOutputLines { get; set; } = 10_000;
 }

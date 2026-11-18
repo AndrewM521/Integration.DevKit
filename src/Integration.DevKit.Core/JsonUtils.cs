@@ -1,9 +1,6 @@
-﻿using Microsoft.VisualBasic;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
+using System.Runtime.ExceptionServices;
 
 namespace Integration.DevKit.Core;
 
@@ -190,7 +187,7 @@ public static class JsonUtils
             var parseResult = InternalParseAndFilterJson(rawJson, keys, layout, out var commonParentPath);
             if (!parseResult.MethodSuccess)
             {
-                throw parseResult.Exception!;
+                ExceptionDispatchInfo.Throw(parseResult.Exception!);
             }
 
             var parsedObject = parseResult.Result;
@@ -212,9 +209,30 @@ public static class JsonUtils
                     return result.SetMethodSuccess(emptyDict);
                 }
 
-                // 3. Fallback for primitive or regular types: return default(T)
-                // (e.g., null for string/nullable types, 0 for int, false for bool)
+                // 3. Value types get default(T) (0 for int, false for bool). OperationResult can't hold null,
+                // so for strings, nullable and other reference types say the path wasn't found instead of
+                // letting SetMethodSuccess(null) fail with a confusing "Result cannot be null" error.
+                if (default(T) == null)
+                {
+                    string pathStr = "(root)";
+
+                    if (keys != null && keys.Count > 0)
+                    {
+                        pathStr = string.Join(", ", keys);
+                    }
+
+                    return result.SetMethodFailure(new KeyNotFoundException($"No value found at JSON path '{pathStr}'."));
+                }
+
                 return result.SetMethodSuccess(default(T)!);
+            }
+
+            // The first key path names wrapped values below (e.g. "id" from "data.activities.0.id")
+            string? firstKeyPath = null;
+
+            if (keys != null && keys.Count > 0)
+            {
+                firstKeyPath = keys[0];
             }
 
             // Target requested a single Dictionary and matched a Dictionary
@@ -227,63 +245,37 @@ public static class JsonUtils
             // Target requested a single Dictionary, but path points to a List/Array
             if (typeof(T) == typeof(Dictionary<string, object>) && parsedObject is List<object?> looseListForDict)
             {
-                // Clean up the list internal elements first
-                var cleanedList = new List<object?>();
-                foreach (var item in looseListForDict)
-                {
-                    if (item is Dictionary<string, object?> itemDict)
-                    {
-                        cleanedList.Add(ConvertToStronglyTypedDictionary(itemDict, removeNulls));
-                    }
-                    else
-                    {
-                        cleanedList.Add(item);
-                    }
-                }
+                // Same cleanup as nested lists, so removeNulls applies to the items and any lists inside them
+                var cleanedList = ConvertToStronglyTypedList(looseListForDict, removeNulls);
 
-                // Determine the correct property name key
-                string fallbackKey = "items";
+                // Named after the common parent (e.g. "activities" from "data.activities"), else the first key path
+                string fallbackKey = LastSegment(firstKeyPath, "items");
 
-                // 1. Check if we used a common parent path prefix (e.g., "data.activities")
                 if (!string.IsNullOrEmpty(commonParentPath))
                 {
-                    var parentSegments = commonParentPath.Split('.', StringSplitOptions.RemoveEmptyEntries);
-                    if (parentSegments.Length > 0)
-                    {
-                        fallbackKey = parentSegments[^1]; // Captures "activities"
-                    }
-                }
-                // 2. Fall back to evaluating the first single key path if no common parent prefix exists
-                else if (keys != null && keys.Count > 0)
-                {
-                    var pathSegments = keys[0].Split('.', StringSplitOptions.RemoveEmptyEntries);
-                    fallbackKey = pathSegments.Length > 0 ? pathSegments[^1] : "items";
+                    fallbackKey = LastSegment(commonParentPath, "items");
                 }
 
-                // Synthesise the wrapper dictionary
-                var synthesisedDict = new Dictionary<string, object>
-                    {
-                        { fallbackKey, cleanedList }
-                    };
+                Dictionary<string, object> synthesisedDict = new Dictionary<string, object> { { fallbackKey, cleanedList } };
 
                 return result.SetMethodSuccess((T)(object)synthesisedDict);
             }
 
-            // Target requested a single Dictionary, but path pointed to a primitive value or string
-            if (typeof(T) == typeof(Dictionary<string, object>) && parsedObject is not null &&
-                (parsedObject is string || parsedObject is not System.Collections.IEnumerable))
+            // Path pointed to a primitive value or string: wrap it as { lastSegment: value } (e.g. "id" from "data.activities.0.id").
+            // No keys means the root itself was a primitive, so it goes under "value".
+            // Only built when the caller asked for one of the dictionary shapes
+            bool wantsDictionaryShape = typeof(T) == typeof(Dictionary<string, object>) || typeof(T) == typeof(List<Dictionary<string, object>>);
+            bool isPrimitive = parsedObject is string || !(parsedObject is System.Collections.IEnumerable);
+            Dictionary<string, object>? primitiveDict = null;
+
+            if (wantsDictionaryShape && isPrimitive)
             {
-                // Extract the last property name from the path to act as our dictionary key (e.g., "id" from "data.activities.0.id")
-                var pathSegments = keys![0].Split('.', StringSplitOptions.RemoveEmptyEntries);
-                var fallbackKey = pathSegments.Length > 0 ? pathSegments[^1] : "value";
+                primitiveDict = new Dictionary<string, object> { { LastSegment(firstKeyPath, "value"), parsedObject } };
+            }
 
-                // Build a single-property dictionary containing the primitive value
-                var synthesisedDict = new Dictionary<string, object>
-                    {
-                        { fallbackKey, parsedObject }
-                    };
-
-                return result.SetMethodSuccess((T)(object)synthesisedDict);
+            if (typeof(T) == typeof(Dictionary<string, object>) && primitiveDict != null)
+            {
+                return result.SetMethodSuccess((T)(object)primitiveDict);
             }
 
             // Target requested a Dictionary List, and matched an actual array of items
@@ -311,30 +303,26 @@ public static class JsonUtils
             }
 
             // Target requested a List of Dictionaries, but path pointed to a primitive value
-            if (typeof(T) == typeof(List<Dictionary<string, object>>) && parsedObject is not null &&
-                (parsedObject is string || parsedObject is not System.Collections.IEnumerable))
+            if (typeof(T) == typeof(List<Dictionary<string, object>>) && primitiveDict != null)
             {
-                // Extract the last property name from the path to act as our dictionary key (e.g., "id" from "data.activities.0.id")
-                var pathSegments = keys![0].Split('.', StringSplitOptions.RemoveEmptyEntries);
-                var fallbackKey = pathSegments.Length > 0 ? pathSegments[^1] : "value";
-
-                // Build a single-property dictionary containing the primitive value
-                var synthesisedDict = new Dictionary<string, object>
-                    {
-                        { fallbackKey, parsedObject }
-                    };
-
-                var wrappedList = new List<Dictionary<string, object>> { synthesisedDict };
-                return result.SetMethodSuccess((T)(object)wrappedList);
+                return result.SetMethodSuccess((T)(object)new List<Dictionary<string, object>> { primitiveDict });
             }
 
-
-            var tmp = parsedObject is List<object?>;
 
             // Target is requested a flat List of type T, but path pointed to a primitive value
             if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(List<>))
             {
                 var underlyingType = typeof(T).GetGenericArguments()[0];
+
+                // Convert.ChangeType can't target Nullable<T> (e.g. List<int?>), so convert to the inner type
+                Type conversionType = underlyingType;
+
+                Type? nullableInnerType = Nullable.GetUnderlyingType(underlyingType);
+                if (nullableInnerType != null)
+                {
+                    conversionType = nullableInnerType;
+                }
+
                 var typedListInstance = (System.Collections.IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(underlyingType))!;
 
                 if (parsedObject is not null)
@@ -346,7 +334,7 @@ public static class JsonUtils
                         {
                             if (item != null)
                             {
-                                typedListInstance.Add(Convert.ChangeType(item, underlyingType));
+                                typedListInstance.Add(Convert.ChangeType(item, conversionType, System.Globalization.CultureInfo.InvariantCulture));
                             }
                             else if (!removeNulls)
                             {
@@ -358,7 +346,7 @@ public static class JsonUtils
                     else
                     {
                         // Case B: It's a single standalone primitive value (e.g., an int or string)
-                        typedListInstance.Add(Convert.ChangeType(parsedObject, underlyingType));
+                        typedListInstance.Add(Convert.ChangeType(parsedObject, conversionType, System.Globalization.CultureInfo.InvariantCulture));
                     }
                 }
 
@@ -422,10 +410,29 @@ public static class JsonUtils
                 return element.GetString();
 
             case JsonValueKind.Number:
-                if (element.TryGetInt32(out int intVal)) return intVal;
-                if (element.TryGetInt64(out long longVal)) return longVal;
-                if (element.TryGetDouble(out double doubleVal)) return doubleVal;
-                return element.GetRawText(); // Fallback for very large decimals/exponents
+                if (element.TryGetInt32(out int intVal))
+                {
+                    return intVal;
+                }
+
+                if (element.TryGetInt64(out long longVal))
+                {
+                    return longVal;
+                }
+
+                // decimal before double: double keeps ~15-16 digits, so amounts like 12345678901234.5678 would lose precision.
+                // A scale of 28 (decimal's max) means TryGetDecimal may have rounded a tiny value like 1.23e-30 down to 0, so those go to double.
+                if (element.TryGetDecimal(out decimal decimalVal) && decimalVal.Scale < 28)
+                {
+                    return decimalVal;
+                }
+
+                if (element.TryGetDouble(out double doubleVal))
+                {
+                    return doubleVal;
+                }
+
+                return element.GetRawText(); // Fallback for numbers beyond double range (e.g. 1e400)
 
             case JsonValueKind.True:
                 return true;
@@ -454,7 +461,7 @@ public static class JsonUtils
             var normalizeJson = NormalizeJsonKeys(rawJSON);
             if (!normalizeJson.MethodSuccess)
             {
-                throw normalizeJson.Exception;
+                ExceptionDispatchInfo.Throw(normalizeJson.Exception);
             }
 
             rawJSON = normalizeJson.Result;
@@ -770,8 +777,27 @@ public static class JsonUtils
         }
 
         // Parse it back into a detached JsonDocument
-        var doc = JsonDocument.Parse(stream.ToArray());
+        using var doc = JsonDocument.Parse(stream.ToArray());
         return doc.RootElement.Clone(); // Clone to keep alive outside the using scope
+    }
+
+    /// <summary>
+    /// Last segment of a dot path ("activities" from "data.activities"), or <paramref name="fallback"/> when there is none.
+    /// </summary>
+    private static string LastSegment(string? path, string fallback)
+    {
+        string lastSegment = fallback;
+
+        if (path != null)
+        {
+            string[] segments = path.Split('.', StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length > 0)
+            {
+                lastSegment = segments[segments.Length - 1];
+            }
+        }
+
+        return lastSegment;
     }
 
     private static Dictionary<string, object> ConvertToStronglyTypedDictionary(Dictionary<string, object?> looseDict, bool removeNulls)
@@ -838,8 +864,14 @@ public static class JsonUtils
                 return operationResult.SetMethodSuccess(rawJSON);
             }
 
-            JsonNode? root = JsonNode.Parse(rawJSON, nodeOptions: null,
-                documentOptions: new JsonDocumentOptions { AllowTrailingCommas = true });
+            // Most documents have no dotted keys; a read-only scan is far cheaper than parsing,
+            // rewriting and re-serializing the whole tree
+            if (!HasDottedPropertyName(rawJSON))
+            {
+                return operationResult.SetMethodSuccess(rawJSON);
+            }
+
+            JsonNode? root = JsonNode.Parse(rawJSON);
 
             JsonNode? normalized = NormalizeNode(root);
 
@@ -856,6 +888,38 @@ public static class JsonUtils
         }
     }
 
+    private static bool HasDottedPropertyName(string rawJSON)
+    {
+        Utf8JsonReader reader = new Utf8JsonReader(System.Text.Encoding.UTF8.GetBytes(rawJSON));
+
+        while (reader.Read())
+        {
+            if (reader.TokenType != JsonTokenType.PropertyName)
+            {
+                continue;
+            }
+
+            bool hasDot = false;
+
+            // Escaped names (e.g. .) must be decoded before checking
+            if (reader.ValueIsEscaped)
+            {
+                hasDot = reader.GetString()!.Contains('.');
+            }
+            else
+            {
+                hasDot = reader.ValueSpan.IndexOf((byte)'.') >= 0;
+            }
+
+            if (hasDot)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static JsonNode? NormalizeNode(JsonNode? node)
     {
         switch (node)
@@ -866,19 +930,20 @@ public static class JsonUtils
                     var newObj = new JsonObject();
                     foreach (var kvp in obj)
                     {
-                        string key = kvp.Key;
-                        string newKey = key.Contains('.') ? key.Replace(".", "_") : key;
+                        string newKey = kvp.Key;
 
-                        // Detach child from old parent before reassigning (JsonNode allows only one parent)
-                        JsonNode? child = kvp.Value;
-                        if (child != null)
+                        if (kvp.Key.Contains('.'))
                         {
-                            // Clone via re-parse of ToJsonString to safely detach, or use child.GetValueKind()
-                            child = child.DeepClone();
+                            newKey = kvp.Key.Replace(".", "_");
                         }
 
-                        JsonNode? normalizedChild = NormalizeNode(child);
-                        newObj[newKey] = normalizedChild;
+                        // "a.b" next to an existing "a_b": keep the dotted key instead of overwriting the other value
+                        if (newKey != kvp.Key && (obj.ContainsKey(newKey) || newObj.ContainsKey(newKey)))
+                        {
+                            newKey = kvp.Key;
+                        }
+
+                        newObj[newKey] = NormalizeNode(kvp.Value);
                     }
                     return newObj;
                 }
@@ -887,18 +952,21 @@ public static class JsonUtils
                     var newArr = new JsonArray();
                     foreach (var item in arr)
                     {
-                        JsonNode? cloned = item?.DeepClone();
-                        newArr.Add(NormalizeNode(cloned));
+                        newArr.Add(NormalizeNode(item));
                     }
                     return newArr;
                 }
             default:
-                // JsonValue (string/number/bool/null) — leave untouched
-                return node;
+                // Containers are rebuilt, so only leaf values need copying (a node can only have one parent).
+                // Copying here, once per leaf, replaces deep-copying every subtree at every level.
+                return node?.DeepClone();
         }
     }
 }
 
+/// <summary>
+/// The shape of the result when extracting paths with <see cref="JsonUtils"/>.
+/// </summary>
 public enum JsonExtractionLayout
 {
     /// <summary>

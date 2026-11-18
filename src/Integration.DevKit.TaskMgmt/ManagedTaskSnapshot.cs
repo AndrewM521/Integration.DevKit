@@ -63,13 +63,25 @@ public sealed class ManagedTaskSnapshot
     public Exception? Exception { get; internal set; }
 
     /// <summary>
-    /// Gets a historical record of individual iterations completed by this task.
+    /// The live iteration history, keyed by iteration number. Parallel iterations update it concurrently,
+    /// so every access must <see langword="lock"/> it; callers outside the runtime use <see cref="GetIterationHistory"/>.
     /// </summary>
-    /// <value>
-    /// A <see cref="SortedDictionary{Int64, IManagedTaskIterationSnapshot}"/> where the key
-    /// is the iteration index and the value is the performance data for that specific cycle.
-    /// </value>
-    public SortedDictionary<long, IManagedTaskIterationSnapshot> IterationHistory { get; } = new();
+    internal SortedDictionary<long, IManagedTaskIterationSnapshot> IterationHistory { get; } = new SortedDictionary<long, IManagedTaskIterationSnapshot>();
+
+    /// <summary>
+    /// Gets a copy of the iterations recorded for this task, oldest first.
+    /// </summary>
+    /// <returns>
+    /// A point-in-time copy, safe to enumerate while the task is still running. The number kept is limited by
+    /// <see cref="Settings.TaskManagerSettings.MaxTaskIterationRegistryCount"/>.
+    /// </returns>
+    public IReadOnlyList<IManagedTaskIterationSnapshot> GetIterationHistory()
+    {
+        lock (IterationHistory)
+        {
+            return new List<IManagedTaskIterationSnapshot>(IterationHistory.Values);
+        }
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ManagedTaskSnapshot"/> class.
@@ -85,7 +97,7 @@ public sealed class ManagedTaskSnapshot
     /// <summary>
     /// Generates a formatted string summarizing the current state and metrics of the task.
     /// </summary>
-    /// <param name="showIterations">If <see langword="true"/>, includes detailed history from <see cref="IterationHistory"/> in the output.</param>
+    /// <param name="showIterations">If <see langword="true"/>, includes detailed history from <see cref="GetIterationHistory"/> in the output.</param>
     /// <returns>A human-readable string containing the snapshot details.</returns>
     public string GetSnapshotInfo(bool showIterations = false)
     {
@@ -103,9 +115,13 @@ public sealed class ManagedTaskSnapshot
 
         if (showIterations)
         {
-            foreach (var iteration in IterationHistory.Values)
+            // Same lock the registry takes while it updates the history.
+            lock (IterationHistory)
             {
-                msg += iteration.GetIterationInfo(true);
+                foreach (var iteration in IterationHistory.Values)
+                {
+                    msg += iteration.GetIterationInfo(true);
+                }
             }
         }
 

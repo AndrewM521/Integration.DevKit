@@ -6,12 +6,15 @@
     <Nullable>enable</Nullable>
     <Title>DevKit.ThreadLocks</Title>
     <RootNamespace>Integration.DevKit.ThreadLocks</RootNamespace>
-    <Version>2.1.1.0</Version>
+    <Version>2.1.2.0</Version>
     <PackageId>Integration.DevKit.ThreadLocks</PackageId>
     <PackageProjectUrl>https://www.nuget.org/packages/Integration.DevKit.ThreadLocks</PackageProjectUrl>
     <DevKitDocsFolder>ThreadLocks</DevKitDocsFolder>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.14" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Integration.DevKit.Core\Integration.DevKit.Core.csproj" />
   </ItemGroup>

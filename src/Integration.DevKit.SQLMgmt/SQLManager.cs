@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
-using System.Reflection;
 using Integration.DevKit.Core.Logging;
 using Integration.DevKit.SQLMgmt.Settings;
 
@@ -50,57 +49,21 @@ public class SQLManager : IAsyncDisposable
     /// </summary>
     /// <param name="clientName">The unique identifier or key of the client to retrieve.</param>
     /// <returns>
-    /// An instance of <see cref="SQLClient"/> configured for the specified name. If
-    /// <paramref name="clientName"/> is not found in <see cref="RuntimeSettings"/>, a warning is
-    /// logged and a client backed by default settings is returned instead — this method does not throw.
+    /// An instance of <see cref="SQLClient"/> configured for the specified name (matched case-insensitively).
     /// </returns>
     /// <remarks>
-    /// This method uses a thread-safe factory approach. If the specified <paramref name="clientName"/>
-    /// is not found in <see cref="RuntimeSettings"/>, a warning is logged and a client is
-    /// generated using an empty <see cref="SQLClientSettings"/> instance.
+    /// This method uses a thread-safe factory approach: the client is created on first use and cached.
     /// </remarks>
+    /// <exception cref="KeyNotFoundException">Thrown if <paramref name="clientName"/> is not in <see cref="SQLManagerSettings.Clients"/>.</exception>
     public SQLClient GetClient(string clientName)
     {
         if (!RuntimeSettings.Clients.TryGetValue(clientName, out var clientSettings))
         {
-            _logger?.LogWarning($"SqlDB Client '{clientName}' is not configured. Using default settings instead");
-            
-            clientSettings = new SQLClientSettings();
+            // Never fall back to defaults: a misspelled name would otherwise be cached with empty settings
+            throw new KeyNotFoundException($"SQL client '{clientName}' is not configured. Add it under Integration.DevKit:SQLManagement:Clients.");
         }
 
         return _clients.GetOrAdd(clientName, _ => { return new SQLClient(clientName, clientSettings, _logger); });
-    }
-
-    /// <summary>
-    /// Logging method to output current <see cref="SQLManagerSettings"/> to the logs.
-    /// </summary>
-    public void LogRuntimeSettings()
-    {
-        _logger?.LogDebug($"--- SqlDB Manager Settings ---");
-
-        Type type = RuntimeSettings.GetType();
-        PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-        foreach (var property in properties)
-        {
-            object? value = property.GetValue(RuntimeSettings);
-
-            if (value is ConcurrentDictionary<string, SQLClientSettings> dict)
-            {
-                _logger?.LogTrace($"  {property.Name}:");
-
-                foreach (var kvp in dict)
-                {
-                    var client = GetClient(kvp.Key);
-
-                    client.LogRuntimeSettings(true);
-                }
-            }
-            else
-            {
-                _logger?.LogTrace($"  {property.Name}: {value}");
-            }
-        }
     }
 
     /// <summary>

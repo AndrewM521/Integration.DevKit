@@ -20,10 +20,12 @@ public class ThreadSafeItemsDemo : IDemo
         Console.WriteLine("----|----|Thread Safe FileIO |----|----");
 
         var _threadSafeFileIO = Service_ThreadSafeItems.ThreadSafeFileIO;
-        string filePath = "C:\\Users\\andre\\Projects\\Junk\\ThreadSafeTest.txt";
-        string filePath_AsyncLock = "C:\\Users\\andre\\Projects\\Junk\\ThreadSafeTest_AsyncLock.txt";
-        string filePath_SyncLock = "C:\\Users\\andre\\Projects\\Junk\\ThreadSafeTest_SyncLock.txt";
-        string filePath_HybridLock = "C:\\Users\\andre\\Projects\\Junk\\ThreadSafeTest_HybridLock.txt";
+        // Next to the app's output so the demo works on any machine
+        string junkDir = Path.Combine(AppContext.BaseDirectory, "Junk");
+        string filePath = Path.Combine(junkDir, "ThreadSafeTest.txt");
+        string filePath_AsyncLock = Path.Combine(junkDir, "ThreadSafeTest_AsyncLock.txt");
+        string filePath_SyncLock = Path.Combine(junkDir, "ThreadSafeTest_SyncLock.txt");
+        string filePath_HybridLock = Path.Combine(junkDir, "ThreadSafeTest_HybridLock.txt");
 
         NullOperationResult writeFile;
         OperationResult<string[]> readFile;
@@ -189,7 +191,7 @@ public class ThreadSafeItemsDemo : IDemo
 
         var finalRead_sync = _threadSafeFileIO.ReadFileLines(filePath_SyncLock);
 
-        if (finalRead.MethodSuccess && finalRead_sync.Result.Length == totalWrites)
+        if (finalRead_sync.MethodSuccess && finalRead_sync.Result.Length == totalWrites)
         {
             Console.WriteLine($"SYNC SUCCESS: {finalRead_sync.Result.Length}/{totalWrites} lines written.");
         }
@@ -228,7 +230,7 @@ public class ThreadSafeItemsDemo : IDemo
         var finalRead_hybrid = await _threadSafeFileIO.ReadFileLinesAsync(filePath_HybridLock);
         int expectedLines_hybrid = iterations * 2;
 
-        if (finalRead.MethodSuccess && finalRead_hybrid.Result.Length == expectedLines_hybrid)
+        if (finalRead_hybrid.MethodSuccess && finalRead_hybrid.Result.Length == expectedLines_hybrid)
         {
             Console.WriteLine($"HYBRID SUCCESS: {finalRead_hybrid.Result.Length} total lines written.");
         }

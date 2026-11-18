@@ -4,6 +4,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
+using Microsoft.Extensions.Configuration;
 using TestApp.Demos;
 using TestApp.HostSetup;
 
@@ -13,7 +14,7 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        var decryptedConfig = new ConfigurationSetup().BuildDecryptedConfiguration();
+        var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json", false).Build();
 
         // Defaults to the standard Microsoft.Extensions.Logging pipeline (both host setups below
         // wire up Console logging on their own without this). Uncomment these two lines to opt
@@ -29,9 +30,9 @@ public class Program
             // only in the mechanism used to build/host the underlying IServiceProvider. Toggle the
             // matching StopAsync() call below together with whichever one you start.
             var regularHost = new RegularHostSetup();
-            await regularHost.StartAsync(args, decryptedConfig, serilogSetup);
+            await regularHost.StartAsync(args, configuration, serilogSetup);
             //var onDemandHost = new OnDemandHostSetup();
-            //await onDemandHost.StartAsync(decryptedConfig, serilogSetup);
+            //await onDemandHost.StartAsync(configuration, serilogSetup);
 
             // 2. Pick one demo to run by uncommenting it — each one reaches into its own
             // Service_Xxx static facade for whatever it needs (same modules Initialize()'d above).

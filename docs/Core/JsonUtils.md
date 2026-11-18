@@ -1,4 +1,4 @@
-# JSON utilities
+﻿# JSON utilities
 
 Part of [Integration.DevKit.Core](README.md).
 
@@ -20,6 +20,7 @@ Both live in the `Integration.DevKit.Core` namespace:
 - **Key paths** use dot notation (`"data.activities.name"`), including numeric indices for array elements (`"data.activities.0.id"`).
 - **Layout:** `ExtractParent` (default) returns a flat structure starting at the closest shared parent container. `PreserveRoot` rebuilds the full nested tree from the document root.
 - **Nulls:** `removeNulls` (default `true`) drops null values from the result.
+- **Strict JSON:** trailing commas (`{"a":1,}`) are rejected.
 - **On failure**, the failed `OperationResult<T>` still holds a usable empty `Dictionary<string, object>` or `List<T>`, so callers can iterate the result without an extra null check.
 
 ## How to
@@ -72,6 +73,7 @@ public static class JsonUtils
     OperationResult<Dictionary<string, object>> GetDictionary(string json, List<string>? keyPaths = null, JsonExtractionLayout layout = JsonExtractionLayout.ExtractParent, bool removeNulls = true);
 
     OperationResult<List<T>> GetList<T>(string json, string keyPath, JsonExtractionLayout layout = JsonExtractionLayout.ExtractParent, bool removeNulls = true);
+    // T may be nullable (e.g. List<int?>); values are converted with the invariant culture
     OperationResult<List<T>> GetList<T>(string json, List<string>? keyPaths = null, JsonExtractionLayout layout = JsonExtractionLayout.ExtractParent, bool removeNulls = true);
 
     OperationResult<List<Dictionary<string, object>>> GetDictionaryList(string json, string keyPath, JsonExtractionLayout layout = JsonExtractionLayout.ExtractParent, bool removeNulls = true);

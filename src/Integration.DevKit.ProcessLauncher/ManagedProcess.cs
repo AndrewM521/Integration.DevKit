@@ -15,8 +15,10 @@ public class ManagedProcess : IAsyncDisposable
     private readonly ILogger? _logger;
 
     internal readonly ProcessStartInfo _startInfo;
-    internal readonly StringBuilder _stdout = new StringBuilder();
-    internal readonly StringBuilder _stderr = new StringBuilder();
+    // Lines arrive on background threads while GetOutput/GetError may be reading, so every access is locked
+    private readonly Queue<string> _stdout = new Queue<string>();
+    private readonly Queue<string> _stderr = new Queue<string>();
+    private readonly int _maxOutputLines;
     internal readonly TimeSpan? _timeout;
     internal readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
@@ -57,6 +59,7 @@ public class ManagedProcess : IAsyncDisposable
 
         ProcessKey = config.ProcessKey;
         _timeout = config.TimeoutSeconds <= 0 ? null : TimeSpan.FromSeconds(config.TimeoutSeconds);
+        _maxOutputLines = config.MaxOutputLines;
 
         _startInfo = new ProcessStartInfo
         {
@@ -153,7 +156,7 @@ public class ManagedProcess : IAsyncDisposable
 
         try
         {
-            return result.SetMethodSuccess(_stdout.ToString());
+            return result.SetMethodSuccess(ReadLines(_stdout));
         }
         catch (Exception ex)
         {
@@ -171,12 +174,57 @@ public class ManagedProcess : IAsyncDisposable
 
         try
         {
-            return result.SetMethodSuccess(_stderr.ToString());
+            return result.SetMethodSuccess(ReadLines(_stderr));
         }
         catch (Exception ex)
         {
             return result.SetMethodFailure(ex);
         }
+    }
+
+    /// <summary>
+    /// Adds a line of standard output, dropping the oldest line once <see cref="ManagedProcessConfig.MaxOutputLines"/> is reached.
+    /// </summary>
+    internal void AppendOutput(string line)
+    {
+        AppendLine(_stdout, line);
+    }
+
+    /// <summary>
+    /// Adds a line of standard error, dropping the oldest line once <see cref="ManagedProcessConfig.MaxOutputLines"/> is reached.
+    /// </summary>
+    internal void AppendError(string line)
+    {
+        AppendLine(_stderr, line);
+    }
+
+    private void AppendLine(Queue<string> lines, string line)
+    {
+        lock (lines)
+        {
+            lines.Enqueue(line);
+
+            // Drop the oldest lines so a long-running process can't grow memory without limit
+            while (_maxOutputLines > 0 && lines.Count > _maxOutputLines)
+            {
+                lines.Dequeue();
+            }
+        }
+    }
+
+    private static string ReadLines(Queue<string> lines)
+    {
+        StringBuilder builder = new StringBuilder();
+
+        lock (lines)
+        {
+            foreach (var line in lines)
+            {
+                builder.AppendLine(line);
+            }
+        }
+
+        return builder.ToString();
     }
 
     /// <summary>

@@ -92,7 +92,7 @@ Every module binds its settings from a section under `Integration.DevKit` in you
 | Process Launcher | `Integration.DevKit:ProcessLauncher` | Only setting is `EnableLogging`; every process is still configured per-call. |
 | Credential Management | `Integration.DevKit:CredentialManagement` | `Provider` selects the backend; provider-specific settings go under `Options`. See [Credential Management](CredentialMgmt/README.md). |
 
-Values can be encrypted at rest inside the JSON file itself using [configuration protection](Core/ConfigurationProtection.md), or you can plug REST/SQL clients into the [file-based secret store](CredentialMgmt/README.md) for credentials specifically.
+For credentials, plug REST/SQL clients into the [file-based secret store](CredentialMgmt/README.md) instead of keeping them in the JSON file.
 
 ## Error handling
 
@@ -115,7 +115,7 @@ See [Core → Result types](Core/ResultTypes.md) for the full set of variants an
 
 - Check `MethodSuccess` before reading `Result` — don't assume a sensible default on failure unless a method's docs say otherwise.
 - Follow the register → build → initialize order for every module, respecting the ordering dependencies noted above and on each module's page.
-- Keep secrets out of `appsettings.json` in plain text — use [Credential Management](CredentialMgmt/README.md) or, at minimum, [configuration protection](Core/ConfigurationProtection.md).
+- Keep secrets out of `appsettings.json` in plain text — use [Credential Management](CredentialMgmt/README.md) or another secret store.
 - Use the SDK's logger consistently for diagnostics rather than `Console.WriteLine` in production code paths — see [Logging](logging.md) for how to plug in your own `ILogger`-based provider.
 
 ## FAQ

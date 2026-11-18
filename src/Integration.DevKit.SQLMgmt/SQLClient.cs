@@ -7,10 +7,10 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using System.Data;
-using System.Reflection;
 using Integration.DevKit.Core;
 using Integration.DevKit.CredentialMgmt.Contracts;
 using Integration.DevKit.SQLMgmt.Settings;
+using System.Runtime.ExceptionServices;
 
 namespace Integration.DevKit.SQLMgmt;
 
@@ -40,6 +40,9 @@ public class SQLClient : IDisposable
     private ISecretStore? _secretStore;
      
     private SqlConnection? _mainSqlConnection;
+
+    // Connection string read from the secret store; cleared whenever the store or its value changes through this client
+    private string? _cachedConnectionString;
     private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
 
     /// <summary>
@@ -52,7 +55,7 @@ public class SQLClient : IDisposable
     {
         ClientName = clientName;
 
-        _secretStoreFileName = $"ApiClient({ClientName})";
+        _secretStoreFileName = $"SQLClient({ClientName})";
         _logger = logger;
 
         RuntimeSettings = settings;
@@ -65,6 +68,7 @@ public class SQLClient : IDisposable
     public void SetSecretStore(ISecretStore secretStore)
     {
         _secretStore = secretStore;
+        _cachedConnectionString = null;
     }
 
     #region Asyncronous Methods
@@ -77,56 +81,14 @@ public class SQLClient : IDisposable
     {
         var result = new OperationResult<bool>();
 
-        var getConnection = GetConnection();
-        if (!getConnection.MethodSuccess)
+        // A tiny query proves the server is actually responding, not just that a pooled connection exists
+        var run = await ExecuteAsync("SELECT 1;", CommandType.Text, 30, cmd => cmd.ExecuteScalarAsync(cancellationToken), null, cancellationToken).ConfigureAwait(false);
+        if (!run.MethodSuccess)
         {
-            return result.SetMethodFailure(getConnection.Exception);
+            return result.SetMethodFailure(run.Exception);
         }
 
-        var conn = getConnection.Result;
-        bool wasAlreadyOpen = conn.State == ConnectionState.Open;
-        
-        bool lockAcquired = false;
-        if (RuntimeSettings.UseSingleConnection)
-        {
-            // Wait for the previous query to finish before jumping in
-            await _connectionLock.WaitAsync(cancellationToken);
-            lockAcquired = true;
-        }
-
-        try
-        {
-            // Only open it if it's currently closed
-            if (!wasAlreadyOpen)
-            {
-                await conn.OpenAsync(cancellationToken);
-            }
-
-            // If we just want to verify it works, executing a tiny query 
-            // ensures the server is actually responding, not just pooled.
-            await using var cmd = new SqlCommand("SELECT 1;", conn);
-            await cmd.ExecuteScalarAsync(cancellationToken);
-
-            // If it was already open, leave it open 
-            // Otherwise, close it back down if we are pooling.
-            if (!wasAlreadyOpen && !RuntimeSettings.UseSingleConnection)
-            {
-                await conn.CloseAsync();
-            }
-
-            return result.SetMethodSuccess(true);
-        }
-        catch (Exception ex)
-        {
-            return result.SetMethodFailure(ex);
-        }
-        finally 
-        { 
-            if (!RuntimeSettings.UseSingleConnection)
-            {
-                await conn.DisposeAsync();
-            }
-        }
+        return result.SetMethodSuccess(true);
     }
 
     /// <summary>
@@ -138,65 +100,10 @@ public class SQLClient : IDisposable
     /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the success or failure of the operation.</returns>
-    public async Task<NullOperationResult> RunCustomCommandAsync(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand,
+    public Task<NullOperationResult> RunCustomCommandAsync(string sqlStatement, CommandType commandType, Func<SqlCommand, Task> processCommand,
             int commandTimeoutSeconds = 30, CancellationToken cancellationToken = default)
     {
-        var result = new NullOperationResult();
-
-        var getConnection = GetConnection();
-        if (!getConnection.MethodSuccess)
-        {
-            return result.SetMethodFailure(getConnection.Exception);
-        }
-
-        var conn = getConnection.Result;
-
-        await using var cmd = new SqlCommand(sqlStatement, conn)
-        {
-            CommandType = commandType
-        };
-
-        cmd.CommandTimeout = commandTimeoutSeconds;
-
-        bool lockAcquired = false;
-        if (RuntimeSettings.UseSingleConnection)
-        {
-            // Wait for the previous query to finish before jumping in
-            await _connectionLock.WaitAsync(cancellationToken);
-            lockAcquired = true;
-        }
-
-        try
-        {
-            if (conn.State != ConnectionState.Open)
-            {
-                await conn.OpenAsync(cancellationToken);
-            }
-
-            await processCommand(cmd).ConfigureAwait(false);
-
-            return result.SetMethodSuccess();
-        }
-        catch (Exception ex)
-        {
-            return result.SetMethodFailure(ex);
-        }
-        finally
-        {
-            cmd.Parameters.Clear();
-
-            if (!RuntimeSettings.UseSingleConnection)
-            {
-                await conn.DisposeAsync();
-            }
-
-            if (lockAcquired)
-            {
-                _connectionLock.Release();
-            }
-
-            await GCManager.CallGC_Collect("SQL NonQuery Command");
-        }
+        return ExecuteAsync(sqlStatement, commandType, commandTimeoutSeconds, processCommand, "SQL Custom Command", cancellationToken);
     }
 
     /// <summary>
@@ -212,63 +119,21 @@ public class SQLClient : IDisposable
         Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30, CancellationToken cancellationToken = default)
     {
         var result = new OperationResult<int>();
+        int count = 0;
 
-        var getConnection = GetConnection();
-        if (!getConnection.MethodSuccess)
+        var run = await ExecuteAsync(sqlStatement, commandType, commandTimeoutSeconds, async cmd =>
         {
-            return result.SetMethodFailure(getConnection.Exception);
-        }
-
-        var conn = getConnection.Result;
-
-        await using var cmd = new SqlCommand(sqlStatement, conn)
-        {
-            CommandType = commandType
-        };
-
-        cmd.CommandTimeout = commandTimeoutSeconds;
-
-        bool lockAcquired = false;
-        if (RuntimeSettings.UseSingleConnection)
-        {
-            // Wait for the previous query to finish before jumping in
-            await _connectionLock.WaitAsync(cancellationToken);
-            lockAcquired = true;
-        }
-
-        try
-        {
-            if (conn.State != ConnectionState.Open)
-            {
-                await conn.OpenAsync(cancellationToken);
-            }
-
             configureParameters?.Invoke(cmd.Parameters);
 
-            int count = await cmd.ExecuteNonQueryAsync(cancellationToken);
+            count = await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }, "SQL NonQuery Command", cancellationToken).ConfigureAwait(false);
 
-            return result.SetMethodSuccess(count);
-        }
-        catch (Exception ex)
+        if (!run.MethodSuccess)
         {
-            return result.SetMethodFailure(ex);
+            return result.SetMethodFailure(run.Exception);
         }
-        finally
-        {
-            cmd.Parameters.Clear();
 
-            if (!RuntimeSettings.UseSingleConnection)
-            {
-                await conn.DisposeAsync();
-            }
-
-            if (lockAcquired)
-            {
-                _connectionLock.Release();
-            }
-
-            await GCManager.CallGC_Collect("SQL NonQuery Command");
-        }
+        return result.SetMethodSuccess(count);
     }
 
     /// <summary>
@@ -281,50 +146,72 @@ public class SQLClient : IDisposable
     /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the success or failure of the operation.</returns>
-    public async Task<NullOperationResult> RunDataReaderAsync(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader,
+    public Task<NullOperationResult> RunDataReaderAsync(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader,
         Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30, CancellationToken cancellationToken = default)
+    {
+        return ExecuteAsync(sqlStatement, commandType, commandTimeoutSeconds, async cmd =>
+        {
+            configureParameters?.Invoke(cmd.Parameters);
+
+            // The caller gets access to the reader but not ownership of it, so it is always disposed here
+            var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            await using var readerScope = reader.ConfigureAwait(false);
+
+            await processReader(reader).ConfigureAwait(false);
+        }, "SQL Data Reader", cancellationToken);
+    }
+
+    /// <summary>
+    /// Runs <paramref name="work"/> against an open command: takes the shared-connection lock when
+    /// <see cref="SQLClientSettings.UseSingleConnection"/> is on, opens the connection, and always cleans up.
+    /// </summary>
+    /// <remarks><c>gcLabel</c> names the forced garbage collection after the call; <see langword="null"/> skips it.</remarks>
+    /// <returns>A failed result for any error, including a canceled wait for the lock; it never throws.</returns>
+    private async Task<NullOperationResult> ExecuteAsync(string sqlStatement, CommandType commandType, int commandTimeoutSeconds,
+        Func<SqlCommand, Task> work, string? gcLabel, CancellationToken cancellationToken)
     {
         var result = new NullOperationResult();
 
-        var getConnection = GetConnection();
-        if (!getConnection.MethodSuccess)
-        {
-            return result.SetMethodFailure(getConnection.Exception);
-        }
-
-        var conn = getConnection.Result;
-
-        await using var cmd = new SqlCommand(sqlStatement, conn)
-        {
-            CommandType = commandType
-        };
-
-        cmd.CommandTimeout = commandTimeoutSeconds;
-
         bool lockAcquired = false;
-        if (RuntimeSettings.UseSingleConnection)
-        {
-            // Wait for the previous query to finish before jumping in
-            await _connectionLock.WaitAsync(cancellationToken);
-            lockAcquired = true;
-        }
+        SqlConnection? conn = null;
 
         try
         {
-            if (conn.State != ConnectionState.Open)
+            // Take the lock before touching the shared connection, or another caller can dispose it under us.
+            if (RuntimeSettings.UseSingleConnection)
             {
-                await conn.OpenAsync(cancellationToken);
+                await _connectionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                lockAcquired = true;
             }
 
-            configureParameters?.Invoke(cmd.Parameters);
+            var getConnection = GetConnection();
+            if (!getConnection.MethodSuccess)
+            {
+                ExceptionDispatchInfo.Throw(getConnection.Exception);
+            }
 
-            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            conn = getConnection.Result;
 
-            // The inner processReader method exists so that the caller access to the reader but not ownership of it.
-            // The reader is then disposed automatically when the callback completes ensuring the reader is released,
-            // preventing leaks.
+            SqlCommand cmd = new SqlCommand(sqlStatement, conn)
+            {
+                CommandType = commandType,
+                CommandTimeout = commandTimeoutSeconds
+            };
+            await using var cmdScope = cmd.ConfigureAwait(false);
 
-            await processReader(reader).ConfigureAwait(false);
+            try
+            {
+                if (conn.State != ConnectionState.Open)
+                {
+                    await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
+                }
+
+                await work(cmd).ConfigureAwait(false);
+            }
+            finally
+            {
+                cmd.Parameters.Clear();
+            }
 
             return result.SetMethodSuccess();
         }
@@ -334,19 +221,20 @@ public class SQLClient : IDisposable
         }
         finally
         {
-            cmd.Parameters.Clear();
-
-            if (!RuntimeSettings.UseSingleConnection)
+            if (conn != null && !RuntimeSettings.UseSingleConnection)
             {
-                await conn.DisposeAsync();
+                await conn.DisposeAsync().ConfigureAwait(false);
             }
-            
+
             if (lockAcquired)
             {
                 _connectionLock.Release();
             }
 
-            await GCManager.CallGC_Collect("SQL Data Reader");
+            if (gcLabel != null)
+            {
+                await GCManager.CallGC_Collect(gcLabel).ConfigureAwait(false);
+            }
         }
     }
     #endregion
@@ -372,7 +260,7 @@ public class SQLClient : IDisposable
     public NullOperationResult RunCustomCommand(string sqlStatement, CommandType commandType,
         Func<SqlCommand, Task> processCommand, int commandTimeoutSeconds = 30)
     {
-        return RunCustomCommandAsync(sqlStatement, commandType, command => processCommand(command)).GetAwaiter().GetResult();
+        return RunCustomCommandAsync(sqlStatement, commandType, command => processCommand(command), commandTimeoutSeconds).GetAwaiter().GetResult();
     }
 
     /// <summary>
@@ -386,7 +274,7 @@ public class SQLClient : IDisposable
     public OperationResult<int> RunNonQueryCommand(string sqlStatement, CommandType commandType,
         Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30)
     {
-        return RunNonQueryCommandAsync(sqlStatement, commandType, configureParameters).GetAwaiter().GetResult();
+        return RunNonQueryCommandAsync(sqlStatement, commandType, configureParameters, commandTimeoutSeconds).GetAwaiter().GetResult();
     }
 
     /// <summary>
@@ -398,11 +286,11 @@ public class SQLClient : IDisposable
     /// <param name="configureParameters">An optional action to populate the <see cref="SqlParameterCollection"/>.</param>
     /// <param name="commandTimeoutSeconds">An optional command timeout in seconds. Defaults to 30 seconds</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating success or failure.</returns>
-    public NullOperationResult RunDataReader(string sql, CommandType commandType, Func<SqlDataReader, Task> processReader,
+    public NullOperationResult RunDataReader(string sqlStatement, CommandType commandType, Func<SqlDataReader, Task> processReader,
         Action<SqlParameterCollection>? configureParameters = null, int commandTimeoutSeconds = 30)
     {
-        return RunDataReaderAsync(sql, commandType, 
-            reader => processReader(reader), configureParameters).GetAwaiter().GetResult();
+        return RunDataReaderAsync(sqlStatement, commandType, 
+            reader => processReader(reader), configureParameters, commandTimeoutSeconds).GetAwaiter().GetResult();
     }
     #endregion
 
@@ -426,8 +314,10 @@ public class SQLClient : IDisposable
             var setServerKey = _secretStore.SetKey(_secretStoreFileName, ConnectionStringKey, connectionString);
             if (!setServerKey.MethodSuccess)
             {
-                throw setServerKey.Exception;
+                ExceptionDispatchInfo.Throw(setServerKey.Exception);
             }
+
+            _cachedConnectionString = null;
 
             return result.SetMethodSuccess();
         }
@@ -453,6 +343,8 @@ public class SQLClient : IDisposable
                 throw new ArgumentNullException(NoSecretStore);
             }
 
+            _cachedConnectionString = null;
+
             return _secretStore.DeleteKey(_secretStoreFileName, key);
         }
         catch (Exception ex)
@@ -475,6 +367,8 @@ public class SQLClient : IDisposable
             {
                 throw new ArgumentNullException(NoSecretStore);
             }
+
+            _cachedConnectionString = null;
 
             return _secretStore.DeleteSecret(_secretStoreFileName);
         }
@@ -501,7 +395,7 @@ public class SQLClient : IDisposable
                 var getKey = _secretStore.GetKey(_secretStoreFileName, key);
                 if (!getKey.MethodSuccess)
                 {
-                    throw getKey.Exception;
+                    ExceptionDispatchInfo.Throw(getKey.Exception);
                 }
 
                 return result.SetMethodSuccess(getKey.Result);
@@ -543,7 +437,7 @@ public class SQLClient : IDisposable
                     var getConnectionStr = GetConnectionString();
                     if (!getConnectionStr.MethodSuccess)
                     {
-                        throw getConnectionStr.Exception;
+                        ExceptionDispatchInfo.Throw(getConnectionStr.Exception);
                     }
 
                     _mainSqlConnection = new SqlConnection(getConnectionStr.Result);
@@ -556,7 +450,7 @@ public class SQLClient : IDisposable
                 var getConnectionStr = GetConnectionString();
                 if (!getConnectionStr.MethodSuccess)
                 {
-                    throw getConnectionStr.Exception;
+                    ExceptionDispatchInfo.Throw(getConnectionStr.Exception);
                 }
 
                 return result.SetMethodSuccess(new SqlConnection(getConnectionStr.Result));
@@ -579,10 +473,22 @@ public class SQLClient : IDisposable
 
         try
         {
-            var getConnectionString = GetCredentials("ConnectionString", RuntimeSettings.ConnectionString);
+            // Read the secret store once: otherwise every query reads and decrypts the secret file first
+            string? cached = _cachedConnectionString;
+            if (cached != null)
+            {
+                return result.SetMethodSuccess(cached);
+            }
+
+            var getConnectionString = GetCredentials(ConnectionStringKey, RuntimeSettings.ConnectionString);
             if (!getConnectionString.MethodSuccess)
             {
-                throw getConnectionString.Exception;
+                ExceptionDispatchInfo.Throw(getConnectionString.Exception);
+            }
+
+            if (_secretStore != null)
+            {
+                _cachedConnectionString = getConnectionString.Result;
             }
 
             return result.SetMethodSuccess(getConnectionString.Result);
@@ -590,38 +496,6 @@ public class SQLClient : IDisposable
         catch (Exception ex)
         {
             return result.SetMethodFailure(ex);
-        }
-    }
-
-    /// <summary>
-    /// Logging method to output current <see cref="SQLClientSettings"/> to the logs.
-    /// </summary>
-    /// <param name="calledFromManager">Indicates if the call originated from a management orchestrator.</param>
-    public void LogRuntimeSettings(bool calledFromManager = false)
-    {
-        string indent;
-
-        if (!calledFromManager)
-        {
-            _logger?.LogDebug($"--- SqlDB Client Settings ---");
-            indent = "";
-        }
-        else
-        {
-            indent = "    ";
-        }
-
-        _logger?.LogDebug($"{indent}Client: {ClientName}");
-
-        indent += "  ";
-
-        Type type = RuntimeSettings.GetType();
-        PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-        foreach (var property in properties)
-        {
-            object? value = property.GetValue(RuntimeSettings);
-            _logger?.LogTrace($"{indent}{property.Name}: {value}");
         }
     }
 

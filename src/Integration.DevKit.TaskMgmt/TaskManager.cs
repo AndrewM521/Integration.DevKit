@@ -2,13 +2,13 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
-using System.Reflection;
 using Integration.DevKit.Core;
 using Integration.DevKit.Core.Logging;
 using Integration.DevKit.TaskMgmt.Settings;
 using Integration.DevKit.TaskMgmt.Models;
 using Integration.DevKit.TaskMgmt.Abstractions;
 using Integration.DevKit.TaskMgmt.Interfaces;
+using System.Runtime.ExceptionServices;
 
 namespace Integration.DevKit.TaskMgmt;
 
@@ -73,7 +73,7 @@ public class TaskManager
         RuntimeSettings = settings.Value.Clone();
 
         _logger = loggerFactory?.CreateConditionalLogger(nameof(TaskManager), () => RuntimeSettings.EnableLogging);
-        _taskRegistryRuntime = new TaskRegistryRuntime(this, taskRegistry);
+        _taskRegistryRuntime = new TaskRegistryRuntime(this, taskRegistry, loggerFactory);
 
         Initialize();
     }
@@ -95,7 +95,8 @@ public class TaskManager
 
         try
         {
-            if (RuntimeSettings.MaxConcurrentTasks < 0)
+            // 0 would make a semaphore with no slots, so every task would wait forever
+            if (RuntimeSettings.MaxConcurrentTasks <= 0)
             {
                 RuntimeSettings.MaxConcurrentTasks = int.MaxValue;
             }
@@ -110,9 +111,9 @@ public class TaskManager
                 RuntimeSettings.MaxTaskIterationRegistryCount = int.MaxValue;
             }
 
-            var oldTaskLimiter = _taskLimiter;
+            // Not disposed: running tasks still release the limiter they acquired, and waiters on it would fault.
+            // SemaphoreSlim only needs disposing when AvailableWaitHandle is used, which it isn't here.
             _taskLimiter = new SemaphoreSlim(RuntimeSettings.MaxConcurrentTasks);
-            oldTaskLimiter?.Dispose();
 
             return result.SetMethodSuccess();
         }
@@ -153,19 +154,62 @@ public class TaskManager
                 runtimeSettings = settings;
             }
 
-            managedTaskRuntime = new ManagedTaskRuntime(managedTask, runtimeSettings, cancellationToken);
-
-            if (!_tasks.TryAdd(managedTask.TaskKey, managedTaskRuntime))
+            // Nothing would ever make the iteration loop wait: it would start DoTaskWork without end until memory runs out
+            bool runsIterationsInParallel = runtimeSettings.IterationExecutionMode == ManagedTaskExecutionMode.Parallel || runtimeSettings.AllowParallelIterationExecution;
+            if (runsIterationsInParallel &&
+                runtimeSettings.MaxConcurrentParallelTasks <= 0 &&
+                runtimeSettings.MaxIterations <= 0 &&
+                runtimeSettings.IterationStrategy.GetType() == typeof(BaseIterationStrategy))
             {
-                throw new InvalidOperationException($"A managed task with key '{managedTask.TaskKey}' is already running.");
+                throw new ArgumentException(
+                    $"Task '{managedTask.TaskKey}' runs iterations in parallel with no concurrency limit, no iteration limit and no iteration strategy, so it would start iterations without end. " +
+                    $"Set {nameof(ManagedTaskSettings.MaxConcurrentParallelTasks)}, {nameof(ManagedTaskSettings.MaxIterations)} or an {nameof(ManagedTaskSettings.IterationStrategy)}.");
             }
+
+            var newRuntime = new ManagedTaskRuntime(managedTask, runtimeSettings, cancellationToken);
+
+            // Locked so two starts can't both pass the shared-strategy check before either is added
+            lock (_tasks)
+            {
+                // A time strategy remembers its last run, so two tasks sharing one instance each skip every other slot
+                bool isStrategyShared = false;
+
+                if (runtimeSettings.IterationStrategy is Time_IterationStrategy)
+                {
+                    foreach (var runningTask in _tasks.Values)
+                    {
+                        if (runningTask.UserTask.TaskKey != managedTask.TaskKey && ReferenceEquals(runningTask.RuntimeSettings.IterationStrategy, runtimeSettings.IterationStrategy))
+                        {
+                            isStrategyShared = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isStrategyShared)
+                {
+                    newRuntime.Dispose();
+
+                    throw new InvalidOperationException($"The iteration strategy given to task '{managedTask.TaskKey}' is already used by another running task. Give each task its own strategy instance.");
+                }
+
+                if (!_tasks.TryAdd(managedTask.TaskKey, newRuntime))
+                {
+                    // Leave the running task's entry and snapshot alone; only this unused runtime is discarded
+                    newRuntime.Dispose();
+
+                    throw new InvalidOperationException($"A managed task with key '{managedTask.TaskKey}' is already running.");
+                }
+            }
+
+            managedTaskRuntime = newRuntime;
 
             managedTaskRuntime.State = ManagedTaskState.Starting;
 
             var upsert = _taskRegistryRuntime.Upsert(managedTaskRuntime);
             if (!upsert.MethodSuccess)
             {
-                throw upsert.Exception;
+                ExceptionDispatchInfo.Throw(upsert.Exception);
             }
 
             managedTaskRuntime.LifecycleTask = RunManagedTaskAsync(managedTaskRuntime);
@@ -181,14 +225,14 @@ public class TaskManager
         {
             if (managedTaskRuntime != null)
             {
-                _tasks.TryRemove(managedTask.TaskKey, out _);
+                _tasks.TryRemove(new KeyValuePair<string, ManagedTaskRuntime>(managedTask.TaskKey, managedTaskRuntime));
 
                 managedTaskRuntime.State = ManagedTaskState.Faulted;
 
                 var upsert = _taskRegistryRuntime.Upsert(managedTaskRuntime);
                 if (!upsert.MethodSuccess)
                 {
-                    throw upsert.Exception;
+                    ExceptionDispatchInfo.Throw(upsert.Exception);
                 }
             }
 
@@ -219,7 +263,7 @@ public class TaskManager
                 var upsert = _taskRegistryRuntime.Upsert(managedTaskRuntime);
                 if (!upsert.MethodSuccess)
                 {
-                    throw upsert.Exception;
+                    ExceptionDispatchInfo.Throw(upsert.Exception);
                 }
             }
 
@@ -298,47 +342,24 @@ public class TaskManager
         return _tasks.Keys;
     }
 
-    /// <summary>
-    /// Returns a task that completes when all provided tasks in the list have finished execution.
-    /// </summary>
-    /// <param name="tasksList">A list of <see cref="Task"/> objects to monitor.</param>
-    /// <returns>A <see cref="Task"/> representing the completion of all input tasks.</returns>
-    public async Task AwaitAllTasksToFinish(List<Task> tasksList)
-    {
-        await Task.WhenAll(tasksList).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// Logging method to output current <see cref="TaskManagerSettings"/> to the logs.
-    /// </summary>
-    public void LogRuntimeSettings()
-    {
-        _logger?.LogDebug($"--- Task Manager Settings ---");
-
-        Type type = RuntimeSettings.GetType();
-        PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-        foreach (var property in properties)
-        {
-            object? value = property.GetValue(RuntimeSettings);
-            _logger?.LogTrace($"  {property.Name}: {value}");
-        }
-    }
-
 
     #region Helpers
     private async Task RunManagedTaskAsync(ManagedTaskRuntime managedTaskRuntime)
     {
         ConcurrentQueue<Exception> exceptions = new ConcurrentQueue<Exception>();
-        ConcurrentBag<Task> parallelIterations = new ConcurrentBag<Task>();
+        // Only this loop touches it. Holds iterations the loop doesn't wait for, so shutdown can wait for them.
+        List<Task> parallelIterations = new List<Task>();
 
         var runtimeSettings = managedTaskRuntime.RuntimeSettings;
         var taskHandle = managedTaskRuntime.Handle;
         var taskKey = managedTaskRuntime.UserTask.TaskKey;
 
+        // Captured so a concurrent Initialize() swapping the limiter can't make this release the wrong one
+        SemaphoreSlim taskLimiter = _taskLimiter;
+
         try
         {
-            await _taskLimiter.WaitAsync();
+            await taskLimiter.WaitAsync();
 
             managedTaskRuntime.StartDTM = DateTime.UtcNow;
             managedTaskRuntime.State = ManagedTaskState.Running;
@@ -346,7 +367,7 @@ public class TaskManager
             var upsert = _taskRegistryRuntime.Upsert(managedTaskRuntime);
             if (!upsert.MethodSuccess)
             {
-                throw upsert.Exception;
+                ExceptionDispatchInfo.Throw(upsert.Exception);
             }
 
             ManagedTaskIterationHandle? lastIterationHandle = null;
@@ -378,7 +399,19 @@ public class TaskManager
                     }
                 }
 
-                // Create the runtime now before creating the parallelTask. This needs to be called on this thread so that the 
+                // Wait for a concurrency slot here, not inside the iteration. Otherwise nothing in this loop ever waits,
+                // so a parallel task with no iteration limit spins on the caller's thread and queues iterations without end.
+                try
+                {
+                    await managedTaskRuntime._concurrencyLock.WaitAsync(managedTaskRuntime._lifecycleCTS.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Break instead of throwing, so the iterations already running are still awaited below
+                    break;
+                }
+
+                // Create the runtime now before creating the parallelTask. This needs to be called on this thread so that the
                 // iteration count increases immediatly. If not a race condition will happen where this while loop goes past
                 // the MaxIteration count since its not increased each time this while loop goes
                 var iterationRuntime = managedTaskRuntime.CreateIterationRuntime();
@@ -388,34 +421,32 @@ public class TaskManager
                 {
                     try
                     {
-                        // Wait for a concurrency slot to open up
-                        await managedTaskRuntime._concurrencyLock.WaitAsync(managedTaskRuntime._lifecycleCTS.Token);
-
-                        try
-                        {
-                            await RunTaskIteration(managedTaskRuntime, iterationRuntime, exceptions);
-                        }
-                        finally
-                        {
-                            managedTaskRuntime._concurrencyLock.Release();
-                        }
+                        await RunTaskIteration(managedTaskRuntime, iterationRuntime, exceptions);
                     }
                     finally
                     {
+                        // The slot was taken by the loop above
+                        managedTaskRuntime._concurrencyLock.Release();
+
                         iterationRuntime.Dispose();
                     }
                 });
                 
-                parallelIterations.Add(iterationTask);
-
                 // We only block the loop if we are in Sequential mode without parallel execution.
                 if (runtimeSettings.IterationExecutionMode == ManagedTaskExecutionMode.Sequential && !runtimeSettings.AllowParallelIterationExecution)
                 {
                     await iterationTask;
                 }
+                else
+                {
+                    // Drop the ones that finished cleanly, or a long-running task keeps every iteration it ever ran.
+                    // Faulted or canceled ones stay so the WhenAll below still reports them.
+                    parallelIterations.RemoveAll(t => t.IsCompletedSuccessfully);
+                    parallelIterations.Add(iterationTask);
+                }
             }
 
-            if (!parallelIterations.IsEmpty)
+            if (parallelIterations.Count > 0)
             {
                 _logger?.LogDebug($"Task '{taskKey}' waiting for {parallelIterations.Count} iterations to finish...");
 
@@ -440,7 +471,7 @@ public class TaskManager
         }
         catch (Exception ex)
         {
-            exceptions.Enqueue(ex);
+            RecordException(exceptions, ex);
 
             managedTaskRuntime.State = ManagedTaskState.Faulted;
 
@@ -470,14 +501,15 @@ public class TaskManager
             }
 
             // Final Registry Update
+            // Log instead of throwing, so the global slot below is always released.
             var upsert = _taskRegistryRuntime.Upsert(managedTaskRuntime, null, finalEx);
             if (!upsert.MethodSuccess)
             {
-                throw upsert.Exception;
+                _logger?.LogError(upsert.Exception, $"Task '{taskKey}' final registry update failed.");
             }
 
             // Release the global slot
-            _taskLimiter.Release();
+            taskLimiter.Release();
 
             // Clean up the runtime resources
             managedTaskRuntime.Dispose();
@@ -502,27 +534,36 @@ public class TaskManager
         var upsert = _taskRegistryRuntime.Upsert(managedTaskRuntime, iterationRuntime);
         if (!upsert.MethodSuccess)
         {
-            throw upsert.Exception;
+            ExceptionDispatchInfo.Throw(upsert.Exception);
         }
+
+        // Once per iteration, not per attempt: each one stays alive until the iteration ends
+        Task cancelWatchdog = Task.Run(async() => {
+            //Watch for the cancelation token call. Caught, or the throw skips the grace delay below.
+            try
+            {
+                await Task.Delay(Timeout.Infinite, linkedToken);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
+            //Wait a small amount of time to prevent a false positive "still running" warning
+            await Task.Delay(1000);
+        });
 
         while (!linkedToken.IsCancellationRequested && (firstRun || needRetry))
         {
             firstRun = false;
             needRetry = false;
 
+            // Reset per attempt so a retry never re-evaluates the previous attempt's task
+            workerTask = null;
+
             try
             {
                 // 1. Start the actual work
                 workerTask = managedTaskRuntime.UserTask.DoTaskWork(iterationRuntime.IterationHandle);
-
-                // 2. Setup the Cancel Watchdog
-                Task cancelWatchdog = Task.Run(async() => {
-                    //Watch for the cancelation token call
-                    await Task.Delay(Timeout.Infinite, linkedToken);
-
-                    //Wait a small amount of time to prevent a false positive "still running" warning
-                    await Task.Delay(1000);
-                });
 
                 // 3. Setup the Timeout Watchdog if a timeout is defined
                 Task? timeoutWatchdog = null;
@@ -574,9 +615,13 @@ public class TaskManager
             {
                 // Catch TaskCanceledException so its not concidered an error, but State is changed below
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Catch-all for any errors during startup before the task even returns a Task object or after
+                // DoTaskWork threw before returning a Task. Wrap it so the faulted branch below logs, records and retries it.
+                if (workerTask == null)
+                {
+                    workerTask = Task.FromException(ex);
+                }
             }
             finally
             {
@@ -606,7 +651,7 @@ public class TaskManager
                         }
 
                         // Add to the central queue (for the final Registry update)
-                        centralExceptions.Enqueue(iterationException!);
+                        RecordException(centralExceptions, iterationException!);
 
                         _logger?.LogError(iterationException, $"Task '{taskKey}' iteration {iterationRuntime.IterationNumber} faulted.");
 
@@ -636,8 +681,8 @@ public class TaskManager
                         {
                             _logger?.LogWarning($"Task '{taskKey}' stopped due to execution policy. ({nameof(runtimeSettings.StopIteratingOnException)})");
 
+                            // No break: the canceled token ends the loop after the registry update below records the fault.
                             managedTaskRuntime.Cancel(); // Kills the lifecycle
-                            break;
                         }
                     }
                     else if (workerTask.IsCanceled)
@@ -662,7 +707,22 @@ public class TaskManager
             var upsert1 = _taskRegistryRuntime.Upsert(managedTaskRuntime, iterationRuntime, null, iterationException);
             if (!upsert1.MethodSuccess)
             {
-                throw upsert1.Exception;
+                ExceptionDispatchInfo.Throw(upsert1.Exception);
+            }
+
+            if (needRetry)
+            {
+                // Back off 1s, 2s, 4s ... up to 60s so a broken dependency isn't hit 20 times a second
+                TimeSpan backoff = TimeSpan.FromSeconds(Math.Min(60, 1 << Math.Min(retryCount - 1, 6)));
+
+                try
+                {
+                    await Task.Delay(backoff, linkedToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Canceled while waiting; the loop condition ends the retries
+                }
             }
         }
 
@@ -670,6 +730,26 @@ public class TaskManager
     }
 
     
+    /// <summary>
+    /// Adds an exception to the task's list, dropping the oldest ones once it holds more than the iteration history keeps.
+    /// </summary>
+    private void RecordException(ConcurrentQueue<Exception> exceptions, Exception ex)
+    {
+        exceptions.Enqueue(ex);
+
+        // Bounded like the iteration history (at least 1, so a fault is never lost), or a task that keeps failing grows memory forever
+        int maxExceptions = Math.Max(1, RuntimeSettings.MaxTaskIterationRegistryCount);
+
+        while (exceptions.Count > maxExceptions)
+        {
+            // Parallel iterations trim the same queue, so stop if another one already took the last extra item
+            if (!exceptions.TryDequeue(out _))
+            {
+                break;
+            }
+        }
+    }
+
     /// <summary>
     /// Evaluates if a task should proceed to its next scheduled iteration.
     /// </summary>

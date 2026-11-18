@@ -1,4 +1,4 @@
-# Integration.DevKit.TaskMgmt
+﻿# Integration.DevKit.TaskMgmt
 
 Run recurring or long-running background work as managed tasks with retries, iteration schedules, timeouts, cancellation, and a queryable run history.
 
@@ -105,7 +105,7 @@ await handle.RunningTask!;   // await the whole task's lifetime (Asyncronous mod
 
 | Property | Default | Purpose |
 | --- | --- | --- |
-| `MaxConcurrentTasks` | `int.MaxValue` | Upper bound on tasks running at once across the manager. |
+| `MaxConcurrentTasks` | `int.MaxValue` | Upper bound on tasks running at once across the manager. `0` or less means no limit. |
 | `MaxTaskRegistryCount` | `2000` | How many completed task snapshots the registry retains before evicting the oldest (FIFO). |
 | `MaxTaskIterationRegistryCount` | `100` | How many iteration snapshots are retained per task before older ones are evicted. |
 | `EnableLogging` | `true` | Turns this module's logging on or off. Change it at runtime with `taskManager.RuntimeSettings.EnableLogging = false;`; see [Conditional logging](../Core/ConditionalLogging.md) for how this works. |
@@ -119,14 +119,14 @@ Passed to `StartTask` to control how that specific task instance runs:
 | Property | Default | Notes |
 | --- | --- | --- |
 | `MaxIterations` | `1` | Values `<= 0` are normalized to `-1` (run forever, until cancelled). |
-| `MaxRetryCount` | `1` | Values `<= 0` are normalized to `-1` (unlimited retries). |
+| `MaxRetryCount` | `1` | Values `<= 0` are normalized to `-1` (unlimited retries). Retries wait 1s, 2s, 4s and so on, up to 60s, between attempts. |
 | `RetryOnException` | `false` | Whether a failed iteration is retried. |
 | `StopIteratingOnException` | `true` | Whether an exception ends the task entirely (after any retries) rather than continuing to the next iteration. |
 | `StopIterationAfterMaxRetries` | `true` | Whether hitting `MaxRetryCount` stops the task rather than moving on. |
 | `IterationExecutionMode` | `ManagedTaskExecutionMode.Sequential` | `Sequential` or `Parallel`. |
 | `IterationStrategy` | `new BaseIterationStrategy()` | Governs the delay between iterations — see [Schedule iterations](#schedule-iterations) below. |
 | `AllowParallelIterationExecution` | `false` | Allows more than one iteration of the same task to run concurrently. |
-| `MaxConcurrentParallelTasks` | `2` | Cap when parallel iteration execution is enabled. |
+| `MaxConcurrentParallelTasks` | `2` | Most iterations of this task running at once. `0` or less means no limit; `StartTask` then rejects a parallel task that also has no `MaxIterations` and no iteration strategy, since nothing would make it wait. |
 | `Timeout` | `null` | Optional overall wall-clock timeout for the task; exceeding it cancels the task. |
 
 ## How to
@@ -152,6 +152,8 @@ var settings = new ManagedTaskSettings
 };
 ```
 
+Give each task its own strategy instance. A time strategy remembers when it last ran, so `StartTask` refuses one that another running task is already using.
+
 Three concrete strategies ship out of the box, all constructed with a `TimeStrategySettings`:
 
 - `TimeStrategy_Interval(TimeSpan interval, TimeStrategySettings settings)` — run every fixed interval.
@@ -162,10 +164,10 @@ Three concrete strategies ship out of the box, all constructed with a `TimeStrat
 
 | Property | Default | Purpose |
 | --- | --- | --- |
-| `SkipFirstIterationWait` | `true` | Run the first iteration immediately instead of waiting one full interval first. |
-| `FastForwardToPresent` | `true` | If the computed next run time is already in the past (e.g. after downtime), jump to now instead of running every missed interval back-to-back. |
+| `SkipFirstIterationWait` | `false` | Run the first iteration immediately instead of waiting one full interval first. |
+| `FastForwardToPresent` | `false` | If the computed next run time is already in the past (e.g. after downtime), jump to now instead of running every missed interval back-to-back. |
 | `CustomStartDate` | `null` | Anchor date for the schedule. |
-| `CustomStartTime` | `null` | Anchor time-of-day for the schedule. |
+| `CustomStartTime` | `null` | Anchor time-of-day for the schedule. If the start is still ahead when the task starts, that start is the first run. |
 
 ### Implement your own iteration strategy
 
@@ -220,7 +222,7 @@ if (snapshot.MethodSuccess && snapshot.Result != null)
 }
 ```
 
-`ManagedTaskSnapshot` exposes `TaskKey`, `State`, `IterationCount`, `StartDTM`/`EndDTM`/`Runtime`, `Exception`, and a per-iteration `IterationHistory`; each `IManagedTaskIterationSnapshot` exposes the same shape (`State`, timing, `Exception`) for one iteration (`IManagedTaskIterationSnapshot` is still an interface, in `Integration.DevKit.TaskMgmt.Interfaces` — its concrete implementation is internal to the runtime). Both are read-only, framework-constructed types — you retrieve them from the registry, you don't build them yourself.
+`ManagedTaskSnapshot` exposes `TaskKey`, `State`, `IterationCount`, `StartDTM`/`EndDTM`/`Runtime`, `Exception`, and `GetIterationHistory()`, which returns a copy of the per-iteration records (safe to enumerate while the task is running); each `IManagedTaskIterationSnapshot` exposes the same shape (`State`, timing, `Exception`) for one iteration (`IManagedTaskIterationSnapshot` is still an interface, in `Integration.DevKit.TaskMgmt.Interfaces` — its concrete implementation is internal to the runtime). Both are read-only, framework-constructed types — you retrieve them from the registry, you don't build them yourself.
 
 ## API reference
 
@@ -268,8 +270,6 @@ public class TaskManager
     NullOperationResult CancelAllTasks();
     OperationResult<bool> IsTaskRunning(string taskKey);
     IEnumerable<string> GetAllRunningTaskKeys();
-    Task AwaitAllTasksToFinish(List<Task> tasksList);
-    void LogRuntimeSettings();
 }
 ```
 

@@ -21,8 +21,15 @@ public sealed class TimeStrategy_Interval : Time_IterationStrategy
     /// </summary>
     /// <param name="interval">The amount of time to wait between the start of each execution cycle.</param>
     /// <param name="settings">The time-specific configuration used for start-time resolution and catch-up policies.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="interval"/> is zero or negative.</exception>
     public TimeStrategy_Interval(TimeSpan interval, TimeStrategySettings settings) : base(settings)
     {
+        // A non-positive interval never moves the target forward, so the catch-up loop would spin forever
+        if (interval <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(interval), "Interval must be greater than zero.");
+        }
+
         _interval = interval;
     }
 
@@ -39,6 +46,23 @@ public sealed class TimeStrategy_Interval : Time_IterationStrategy
     /// </remarks>
     protected override DateTime ComputeNextTargetDTM(long iteration)
     {
-        return LastTargetDTM.Add(_interval);
+        // Add in UTC so daylight-saving changes do not stretch or shrink the interval
+        return LastTargetDTM.ToUniversalTime().Add(_interval).ToLocalTime();
+    }
+
+    /// <inheritdoc />
+    protected override DateTime SkipToPresent(DateTime target, long currentIteration, CancellationToken cancellationToken)
+    {
+        TimeSpan behind = DateTime.UtcNow - target.ToUniversalTime();
+        if (behind < TimeSpan.Zero)
+        {
+            return target;
+        }
+
+        // Jump straight to the last missed slot: stepping one by one takes millions of loops for small intervals and old start dates
+        long missedSlots = behind.Ticks / _interval.Ticks;
+        LastTargetDTM = target.ToUniversalTime().AddTicks(missedSlots * _interval.Ticks).ToLocalTime();
+
+        return ComputeNextTargetDTM(currentIteration);
     }
 }

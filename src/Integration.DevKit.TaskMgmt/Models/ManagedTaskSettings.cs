@@ -107,7 +107,7 @@ public class ManagedTaskSettings
     /// Gets or sets the maximum number of concurrent iterations allowed when 
     /// <see cref="AllowParallelIterationExecution"/> is enabled.
     /// </summary>
-    /// <value>Default is 2.</value>
+    /// <value>Default is 2. Zero or negative means no limit.</value>
     public int MaxConcurrentParallelTasks { get; set; } = 2;
 
     /// <summary>

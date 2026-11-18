@@ -1,8 +1,22 @@
-# Changelog — Integration.DevKit.CredentialMgmt
+﻿# Changelog — Integration.DevKit.CredentialMgmt
 
 This changelog covers only the `Integration.DevKit.CredentialMgmt` package. See the [root changelog](../CHANGELOG.md) for the full SDK release notes.
 
-## [2.1.1.0] - 2026-10-30 (current)
+## [2.1.2.0] - 2026-11-16 (current)
+
+### Fixed
+- `CompositeSecretReader` threw away each reader's error, so a real failure (e.g. a `CryptographicException` from a lost DataProtection key ring) was reported only as "not found". The returned `KeyNotFoundException` now carries an `AggregateException` with every reader's error as its inner exception.
+- `CredentialMgmtUtils.GetRequiredOption<T>` converted with the machine's culture and failed for nullable `T`. It now uses the invariant culture and the underlying type.
+- `FileSecretStore` locked on the container name as given but saved to a cleaned-up file name, so names like `a/b` and `a_b` (or `App:Prod` and `App_Prod` on Windows) wrote the same file under different locks, and parallel writes could lose each other's keys. The lock is now keyed on the file path.
+- `FileSecretStore` writes were atomic but not durable: the temporary file was not flushed to disk before being moved into place, so a power cut could leave an empty `.secret` file and lose every key in that container. Writes now flush to disk first.
+- README: the secret file name is `{ApplicationName}_{fileName}.secret` (it said `FileSecretStore_{fileName}.secret`), and values are stored as given (it said they were trimmed).
+
+### Changed
+- Errors passed up inside the module keep their original stack trace (see the Core changelog).
+- **Behavior change:** relative `SecretsFolder` and `KeysFolder` paths are now resolved against the app's folder (`AppContext.BaseDirectory`) instead of the working directory. A Windows service starts in `C:\Windows\System32`, and launching the app another way (e.g. `dotnet run` versus the `.exe`) created a separate, empty key ring, so stored secrets could no longer be decrypted. Absolute paths are unchanged. If you used relative paths and the app was not started from its own folder, move the existing `SecretsFolder` and `KeysFolder` contents next to the app before upgrading.
+- Version bumped from `2.1.1.0` to `2.1.2.0`.
+
+## [2.1.1.0] - 2026-10-30
 
 ### Added
 - The NuGet package now includes this module's README (`docs/CredentialMgmt/README.md`), shown on the package's nuget.org page.

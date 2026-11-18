@@ -8,7 +8,7 @@ using Integration.DevKit.Core;
 using Integration.DevKit.RESTApiMgmt.Interfaces;
 using Integration.DevKit.RESTApiMgmt.Settings;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Text;
 
 namespace Integration.DevKit.RESTApiMgmt;
@@ -34,14 +34,19 @@ public class ApiClient : IAsyncDisposable
     /// </summary>
     public ApiClientMetrics ClientMetrics => _metrics;
 
-    private readonly HttpClient _httpClient;
+    private HttpClient _httpClient;
     private readonly ApiManager _apiManager;
     private SemaphoreSlim _rateLimiter = null!;
     private readonly ApiClientMetrics _metrics;
     private readonly ILogger? _logger;
 
     private IAuthStrategy? _authStrategy;
-    private readonly AuthClient _authClient;
+    private AuthClient _authClient;
+
+    private readonly object _initializeLock = new object();
+    // The settings headers last applied (name -> value), so Initialize can tell whether they changed
+    private readonly Dictionary<string, string> _appliedSettingsHeaders = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    private bool _isSetUp;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ApiClient"/> class.
@@ -63,7 +68,12 @@ public class ApiClient : IAsyncDisposable
         _metrics = new ApiClientMetrics();
         _authClient = new AuthClient(_httpClient, CreateHeaderFreeHttpClient);
 
-        Initialize();
+        // A failed setup leaves no rate limiter, so the first request would crash with a NullReferenceException
+        var initialize = Initialize();
+        if (!initialize.MethodSuccess)
+        {
+            ExceptionDispatchInfo.Throw(initialize.Exception);
+        }
     }
 
     /// <summary>
@@ -83,42 +93,11 @@ public class ApiClient : IAsyncDisposable
 
         try
         {
-            if (RuntimeSettings.MaxConcurrentRequests < 0)
+            // Serialized so two concurrent calls can't both swap the HttpClient or interleave header edits
+            lock (_initializeLock)
             {
-                RuntimeSettings.MaxConcurrentRequests = int.MaxValue;
+                InitializeCore();
             }
-
-            if (RuntimeSettings.HttpTimeout_Seconds != null)
-            {
-                if (RuntimeSettings.HttpTimeout_Seconds < 0)
-                {
-                    RuntimeSettings.HttpTimeout_Seconds = 0;
-                }
-            }
-            else
-            {
-                RuntimeSettings.HttpTimeout_Seconds = _apiManager.RuntimeSettings.Default_HttpTimeout_Seconds;
-            }
-
-            _httpClient.BaseAddress = new Uri(RuntimeSettings.BaseUrl);
-
-            if (RuntimeSettings.HttpTimeout_Seconds != 0)
-            {
-                _httpClient.Timeout = TimeSpan.FromSeconds((double)RuntimeSettings.HttpTimeout_Seconds);
-            }
-            else
-            {
-                _httpClient.Timeout = Timeout.InfiniteTimeSpan;
-            }
-
-            foreach (var header in RuntimeSettings.DefaultHeaders)
-            {
-                AddDefaultHeader(header.Key, header.Value);
-            }
-
-            var oldRateLimiter = _rateLimiter;
-            _rateLimiter = new SemaphoreSlim(RuntimeSettings.MaxConcurrentRequests);
-            oldRateLimiter?.Dispose();
 
             return result.SetMethodSuccess();
         }
@@ -126,6 +105,128 @@ public class ApiClient : IAsyncDisposable
         {
             return result.SetMethodFailure(ex);
         }
+    }
+
+    private void InitializeCore()
+    {
+        // 0 would make a semaphore with no slots, so every request would wait forever
+        if (RuntimeSettings.MaxConcurrentRequests <= 0)
+        {
+            RuntimeSettings.MaxConcurrentRequests = int.MaxValue;
+        }
+
+        if (RuntimeSettings.HttpTimeout_Seconds != null)
+        {
+            if (RuntimeSettings.HttpTimeout_Seconds < 0)
+            {
+                RuntimeSettings.HttpTimeout_Seconds = 0;
+            }
+        }
+        else
+        {
+            RuntimeSettings.HttpTimeout_Seconds = _apiManager.RuntimeSettings.Default_HttpTimeout_Seconds;
+        }
+
+        Uri baseAddress = new Uri(RuntimeSettings.BaseUrl);
+
+        // 0 means no timeout
+        TimeSpan timeout = Timeout.InfiniteTimeSpan;
+
+        if (RuntimeSettings.HttpTimeout_Seconds != 0)
+        {
+            timeout = TimeSpan.FromSeconds((double)RuntimeSettings.HttpTimeout_Seconds!);
+        }
+
+        if (!_isSetUp)
+        {
+            // Called from the constructor: no request has used this client yet, so it can be set up in place
+            _httpClient.BaseAddress = baseAddress;
+            _httpClient.Timeout = timeout;
+            ApplySettingsHeaders(_httpClient);
+            _isSetUp = true;
+        }
+        else if (_httpClient.BaseAddress != baseAddress || _httpClient.Timeout != timeout || !SettingsHeadersMatch())
+        {
+            SwapInNewHttpClient(baseAddress, timeout);
+        }
+
+        // Not disposed: in-flight requests still release the limiter they captured.
+        // SemaphoreSlim only needs disposing when AvailableWaitHandle is used, which it isn't here.
+        _rateLimiter = new SemaphoreSlim(RuntimeSettings.MaxConcurrentRequests);
+    }
+
+    /// <summary>
+    /// Builds a complete new <see cref="HttpClient"/> from the factory and only then makes it the current one.
+    /// Requests may be in flight on the current client: <see cref="HttpClient"/> refuses base address and timeout
+    /// changes after its first request, and its default headers are not safe to edit while requests are being sent.
+    /// </summary>
+    private void SwapInNewHttpClient(Uri baseAddress, TimeSpan timeout)
+    {
+        var newClient = _apiManager.CreateHeaderFreeHttpClient();
+        newClient.BaseAddress = baseAddress;
+        newClient.Timeout = timeout;
+
+        // Keep headers added through AddDefaultHeader. Settings headers are applied fresh from the current
+        // settings below, so ones deleted from the settings are dropped.
+        foreach (var header in _httpClient.DefaultRequestHeaders)
+        {
+            if (!_appliedSettingsHeaders.ContainsKey(header.Key))
+            {
+                newClient.DefaultRequestHeaders.TryAddWithoutValidation(header.Key, header.Value);
+            }
+        }
+
+        ApplySettingsHeaders(newClient);
+
+        // The old client is not disposed: requests already in flight may still be using it. Factory-made clients
+        // don't own their pooled handler, so dropping the old one releases nothing that needs disposing.
+        _authClient = new AuthClient(newClient, CreateHeaderFreeHttpClient);
+        _httpClient = newClient;
+
+        _logger?.LogDebug($"Api client '{ClientName}' switched to a new HttpClient for base address '{baseAddress}' and timeout {timeout}.");
+    }
+
+    /// <summary>
+    /// Adds every header from <see cref="ApiClientSettings.DefaultHeaders"/> to <paramref name="client"/>
+    /// and remembers them, so a later <see cref="Initialize"/> can tell whether they changed.
+    /// </summary>
+    private void ApplySettingsHeaders(HttpClient client)
+    {
+        _appliedSettingsHeaders.Clear();
+
+        foreach (var header in RuntimeSettings.DefaultHeaders)
+        {
+            // Remembered even if it can't be applied, or every Initialize would see a change and swap clients
+            _appliedSettingsHeaders[header.Key] = header.Value;
+
+            var addHeader = SetDefaultHeader(client, header.Key, header.Value);
+            if (!addHeader.MethodSuccess)
+            {
+                // e.g. Content-Type belongs on the request content, so HttpClient refuses it as a default header
+                _logger?.LogWarning(addHeader.Exception, $"Api client '{ClientName}' could not apply default header '{header.Key}'; requests are sent without it.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Whether <see cref="ApiClientSettings.DefaultHeaders"/> still holds exactly the headers last applied.
+    /// </summary>
+    private bool SettingsHeadersMatch()
+    {
+        if (RuntimeSettings.DefaultHeaders.Count != _appliedSettingsHeaders.Count)
+        {
+            return false;
+        }
+
+        foreach (var header in RuntimeSettings.DefaultHeaders)
+        {
+            if (!_appliedSettingsHeaders.TryGetValue(header.Key, out var appliedValue) || appliedValue != header.Value)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     #region Asyncronous Methods
@@ -139,7 +240,7 @@ public class ApiClient : IAsyncDisposable
     public async Task<ApiOperationResult<string>> GetAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Get, () =>
-            ApiRequest.GetAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient));
+            ApiRequest.GetAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -152,7 +253,7 @@ public class ApiClient : IAsyncDisposable
     public async Task<ApiOperationResult<string>> PutAsync(string endpointUrl, HttpContent httpContent, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Put, () =>
-            ApiRequest.PutAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient));
+            ApiRequest.PutAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -165,7 +266,7 @@ public class ApiClient : IAsyncDisposable
     public async Task<ApiOperationResult<string>> PostAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Post, () =>
-            ApiRequest.PostAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient));
+            ApiRequest.PostAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -178,7 +279,7 @@ public class ApiClient : IAsyncDisposable
     public async Task<ApiOperationResult<string>> DeleteAsync(string endpointUrl, HttpContent? httpContent = null, Dictionary<string, string>? requestHeaders = null)
     {
         return await SendRequestOrchestratorAsync(HttpMethod.Delete, () =>
-            ApiRequest.DeleteAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient));
+            ApiRequest.DeleteAsync(_httpClient, endpointUrl, httpContent, requestHeaders, _authStrategy, _authClient)).ConfigureAwait(false);
     }
 
     // A generic wrapper to handle the "Orchestration" (Metrics + Rate Limiting)
@@ -186,11 +287,13 @@ public class ApiClient : IAsyncDisposable
     {
         HttpMetricNames metricName = GetMetricName(method);
         
-        await _rateLimiter.WaitAsync();
+        // Capture it so a concurrent Initialize() swapping the limiter can't make this release the wrong one
+        var rateLimiter = _rateLimiter;
+        await rateLimiter.WaitAsync().ConfigureAwait(false);
 
         try
         {
-            var result = await action();
+            var result = await action().ConfigureAwait(false);
 
             _metrics.IncrementMetric(metricName);
 
@@ -203,9 +306,9 @@ public class ApiClient : IAsyncDisposable
         }
         finally
         {
-            _rateLimiter.Release();
+            rateLimiter.Release();
 
-            await GCManager.CallGC_Collect("API Request");
+            await GCManager.CallGC_Collect("API Request").ConfigureAwait(false);
         }
     }
     #endregion
@@ -302,7 +405,7 @@ public class ApiClient : IAsyncDisposable
             var getMediaTypeStr = GetMediaTypeString(mediaType);
             if (!getMediaTypeStr.MethodSuccess)
             {
-                throw getMediaTypeStr.Exception;
+                ExceptionDispatchInfo.Throw(getMediaTypeStr.Exception);
             }
 
             StringContent content = new StringContent(data, encoding, getMediaTypeStr.Result);
@@ -332,18 +435,28 @@ public class ApiClient : IAsyncDisposable
     /// <param name="key">The header name.</param>
     /// <param name="value">The header value.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating success.</returns>
+    /// <remarks>
+    /// This edits the live <see cref="HttpClient"/>, which is not safe while requests are being sent. Call it before
+    /// the client is in use, or put the header in <see cref="ApiClientSettings.DefaultHeaders"/> and call
+    /// <see cref="Initialize"/>, which swaps in a new client safely.
+    /// </remarks>
     public NullOperationResult AddDefaultHeader(string key, string value)
+    {
+        return SetDefaultHeader(_httpClient, key, value);
+    }
+
+    private static NullOperationResult SetDefaultHeader(HttpClient client, string key, string value)
     {
         var result = new NullOperationResult();
 
         try
         {
-            if (_httpClient.DefaultRequestHeaders.Contains(key))
+            if (client.DefaultRequestHeaders.Contains(key))
             {
-                _httpClient.DefaultRequestHeaders.Remove(key);
+                client.DefaultRequestHeaders.Remove(key);
             }
 
-            _httpClient.DefaultRequestHeaders.Add(key, value);
+            client.DefaultRequestHeaders.Add(key, value);
 
             return result.SetMethodSuccess();
         }
@@ -425,51 +538,6 @@ public class ApiClient : IAsyncDisposable
         }
 
         return HttpMetricNames.Other;
-    }
-
-    /// <summary>
-    /// Logging method to output current <see cref="ApiClientSettings"/> to the logs.
-    /// </summary>
-    /// <param name="calledFromManager">Indicates if the call originated from a management orchestrator.</param>
-    public void LogRuntimeSettings(bool calledFromManager = false)
-    {
-        string indent;
-
-        if (!calledFromManager)
-        {
-            _logger?.LogDebug($"--- Api Client Settings ---");
-            indent = "";
-        }
-        else
-        {
-            indent = "    ";
-        }
-
-        _logger?.LogDebug($"{indent}Client: {ClientName}");
-
-        indent += "  ";
-
-        Type type = RuntimeSettings.GetType();
-        PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
-        foreach (var property in properties)
-        {
-            object? value = property.GetValue(RuntimeSettings);
-
-            if (value is Dictionary<string, string> dict)
-            {
-                _logger?.LogTrace($"{indent}{property.Name}:");
-
-                foreach (var kvp in dict)
-                {
-                    _logger?.LogTrace($"{indent}  {kvp.Key}: {kvp.Value}");
-                }
-            }
-            else
-            {
-                _logger?.LogTrace($"{indent}{property.Name}: {value}");
-            }
-        }
     }
 
     /// <summary>

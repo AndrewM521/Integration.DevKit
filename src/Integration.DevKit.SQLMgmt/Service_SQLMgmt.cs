@@ -59,7 +59,7 @@ public static class Service_SQLMgmt
         _sqlManager = sp.GetService<SQLManager>();
         if (_sqlManager == null)
         {
-            throw new InvalidOperationException($"{nameof(SQLManager)} is not registered. Make sure you call AddSqlDBManagement() when configuring services.");
+            throw new InvalidOperationException($"{nameof(SQLManager)} is not registered. Make sure you call {nameof(AddSQLMgmt)}() when configuring services.");
         }
     }
 

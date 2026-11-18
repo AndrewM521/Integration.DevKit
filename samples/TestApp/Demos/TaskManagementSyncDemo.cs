@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2026 AndrewM5
  * Licensed under the MIT License.
  * See LICENSE file in the project root for full license information.
@@ -25,11 +25,10 @@ public class TaskManagementSyncDemo : IDemo
 
         var _taskManager = Service_TaskMgmt.TaskManager;
         var _taskRegistry = Service_TaskMgmt.TaskRegistry;
-        _taskManager.LogRuntimeSettings();
 
         OperationResult<IManagedTaskHandle> createTask;
         var settings = new ManagedTaskSettings();
-        var strategySettings = new TimeStrategySettings();
+        var strategySettings = new TimeStrategySettings { SkipFirstIterationWait = true, FastForwardToPresent = true };
 
         Console.WriteLine("\n==Test 1: Synchronous (Default Settings)==");
         createTask = await _taskManager.StartTask(new SimpleShortTask(), TaskExecutionMode.Syncronous, settings);
@@ -126,7 +125,7 @@ public class TaskManagementSyncDemo : IDemo
         }
 
         settings = new ManagedTaskSettings();
-        strategySettings = new TimeStrategySettings();
+        strategySettings = new TimeStrategySettings { SkipFirstIterationWait = true, FastForwardToPresent = true };
 
         Console.WriteLine("\n==Test 7: Synchronous (Custom Settings)==");
         Console.WriteLine("NOTE: Look at output logs");
@@ -149,7 +148,7 @@ public class TaskManagementSyncDemo : IDemo
         }
 
         settings = new ManagedTaskSettings();
-        strategySettings = new TimeStrategySettings();
+        strategySettings = new TimeStrategySettings { SkipFirstIterationWait = true, FastForwardToPresent = true };
 
         Console.WriteLine("\n==Test 8: Synchronous (Custom Settings)==");
         Console.WriteLine("NOTE: Look at output logs");
@@ -175,7 +174,7 @@ public class TaskManagementSyncDemo : IDemo
         }
 
         settings = new ManagedTaskSettings();
-        strategySettings = new TimeStrategySettings();
+        strategySettings = new TimeStrategySettings { SkipFirstIterationWait = true, FastForwardToPresent = true };
 
         Console.WriteLine("\n==Test 9: Synchronous (Custom Settings)==");
         Console.WriteLine("NOTE: Look at output logs");
@@ -202,7 +201,7 @@ public class TaskManagementSyncDemo : IDemo
         }
 
         settings = new ManagedTaskSettings();
-        strategySettings = new TimeStrategySettings();
+        strategySettings = new TimeStrategySettings { SkipFirstIterationWait = true, FastForwardToPresent = true };
 
         Console.WriteLine("\n==Test 10: Synchronous (Custom Settings)==");
         Console.WriteLine("NOTE: Look at output logs");

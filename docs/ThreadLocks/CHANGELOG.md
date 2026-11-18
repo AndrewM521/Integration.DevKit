@@ -2,7 +2,16 @@
 
 This changelog covers only the `Integration.DevKit.ThreadLocks` package. See the [root changelog](../CHANGELOG.md) for the full SDK release notes.
 
-## [2.1.1.0] - 2026-10-30 (current)
+## [2.1.2.0] - 2026-11-16 (current)
+
+### Fixed
+- Named locks (sync and async) could admit two holders at once. When the last holder released and removed the lock while a new caller was entering it, a third caller got a fresh lock object for the same key. The async path could also dispose a semaphore still in use. Reference counting and removal now happen atomically.
+
+### Changed
+- Removed the internal `LastAccessTime` timestamp kept on every lock. It was written on each lock and unlock but never read; unused locks are cleaned up by reference count. No public API change.
+- Version bumped from `2.1.1.0` to `2.1.2.0`.
+
+## [2.1.1.0] - 2026-10-30
 
 ### Added
 - The NuGet package now includes this module's README (`docs/ThreadLocks/README.md`), shown on the package's nuget.org page.

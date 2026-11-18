@@ -1,4 +1,4 @@
-# File and directory utilities
+﻿# File and directory utilities
 
 Part of [Integration.DevKit.Core](README.md).
 
@@ -17,7 +17,9 @@ Both are static classes in the `Integration.DevKit.Core` namespace:
 
 - **Path validation:** each method checks its path with `IsStringValidFilePath` or `IsStringValidDirectoryPath` before touching the disk.
 - **File extensions:** by default, a path must end in an extension (e.g. `.txt`) to count as a valid *file* path. Pass `allowNoFileExtension: true` for extension-less files such as `Dockerfile` or `LICENSE`.
-- **Writes:** create any missing parent directory automatically, and append a trailing newline if the content doesn't already end with one.
+- **Writes:** create any missing parent directory automatically. Text writes append a trailing newline if non-empty content doesn't already end with one. Writing empty content (text or bytes) without `append` truncates the file to empty; appending empty content is a no-op.
+- **Copy and move destinations:** a destination that is an existing folder is always treated as a folder, even when its name has a dot (e.g. `v1.2`). Otherwise the name decides: an extension means a file path, no extension means a folder.
+- **`DeleteFiles`:** succeeds without doing anything if the folder doesn't exist (it never creates it), and deletes matching files whether or not they have an extension.
 
 ## How to
 
@@ -43,6 +45,7 @@ Every read and write has an async version (`WriteToFileAsync`, `ReadFileTextAsyn
 ```csharp
 FileUtils.CopyFile(source, destination, overwrite: true);
 FileUtils.MoveFile(source, archivePath);
+FileUtils.MoveFile(source, Path.Combine(outputFolder, "LICENSE"), allowNoFileExtension: true); // new name without an extension
 FileUtils.DeleteFiles(logFolder, "*.tmp");
 ```
 
@@ -85,7 +88,7 @@ public static class FileUtils
     // Manage
     NullOperationResult CreateFile(string path, bool allowNoFileExtension = false);
     NullOperationResult DeleteFile(string path, bool allowNoFileExtension = false);
-    NullOperationResult DeleteFiles(string path, string searchPattern, bool allowNoFileExtension = false);
+    NullOperationResult DeleteFiles(string path, string searchPattern);
     NullOperationResult CopyFile(string sourcePath, string destinationPath, bool overwrite = false, bool allowNoFileExtension = false);
     NullOperationResult MoveFile(string sourcePath, string destinationPath, bool overwrite = false, bool allowNoFileExtension = false);
 

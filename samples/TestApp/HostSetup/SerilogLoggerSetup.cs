@@ -29,7 +29,7 @@ public class SerilogLoggerSetup
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Console()
-            .WriteTo.File("C:\\NAS\\Home Drive\\Projects\\Junk\\.Keep\\serilog-log.txt", rollingInterval: RollingInterval.Day)
+            .WriteTo.File(Path.Combine(AppContext.BaseDirectory, "Junk", "Logs", "serilog-log.txt"), rollingInterval: RollingInterval.Day)
             .CreateLogger();
     }
 

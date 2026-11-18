@@ -1,4 +1,4 @@
-namespace Integration.DevKit.Core.Tests;
+﻿namespace Integration.DevKit.Core.Tests;
 
 public class JsonUtilsTests
 {
@@ -98,6 +98,21 @@ public class JsonUtilsTests
     }
 
     [Fact]
+    public void GetDictionary_ArrayPath_RemoveNullsAppliesToTheWrappedItems()
+    {
+        // The array branch used to keep null items and nested nulls even with removeNulls on
+        string json = "{\"items\":[{\"a\":1},null,[2,null]]}";
+
+        var removed = JsonUtils.GetDictionary(json, "items", removeNulls: true);
+        var kept = JsonUtils.GetDictionary(json, "items", removeNulls: false);
+
+        var removedItems = Assert.IsType<List<object>>(removed.Result["items"]);
+        Assert.Equal(2, removedItems.Count);
+        Assert.Single(Assert.IsType<List<object>>(removedItems[1]));
+        Assert.Equal(3, Assert.IsType<List<object>>(kept.Result["items"]).Count);
+    }
+
+    [Fact]
     public void GetDictionary_RemoveNullsFalse_PreservesNullFields()
     {
         var result = JsonUtils.GetDictionary(SampleJson, keyPaths: null, removeNulls: false);
@@ -165,5 +180,77 @@ public class JsonUtilsTests
         var data = Assert.IsType<Dictionary<string, object>>(result.Result["data"]);
         var owner = Assert.IsType<Dictionary<string, object>>(data["owner"]);
         Assert.Equal("Alice", owner["name"]);
+    }
+
+    [Fact]
+    public void GetList_NullableItemType_KeepsNullsAndConvertsValues()
+    {
+        // Convert.ChangeType can't target int?, so this used to fail for every nullable list
+        var list = JsonUtils.GetList<int?>("{\"ids\":[1,null,3]}", "ids", removeNulls: false);
+
+        Assert.True(list.MethodSuccess);
+        Assert.Equal(new int?[] { 1, null, 3 }, list.Result);
+    }
+
+    [Fact]
+    public void DeserializeJsonToObject_PreciseNumber_KeepsEveryDigit()
+    {
+        // As a double this became 12345678901234.568
+        var parsed = JsonUtils.DeserializeJsonToObject("{\"amount\":12345678901234.5678}");
+
+        var dict = Assert.IsType<Dictionary<string, object?>>(parsed.Result);
+        Assert.Equal(12345678901234.5678m, dict["amount"]);
+    }
+
+    [Fact]
+    public void DeserializeJsonToObject_TinyExponentNumber_IsNotRoundedToZero()
+    {
+        // As a decimal this became 0
+        var parsed = JsonUtils.DeserializeJsonToObject("{\"tiny\":1.23e-30,\"plain\":0.1,\"preciseExponent\":1.2345678901234567e5}");
+
+        var dict = Assert.IsType<Dictionary<string, object?>>(parsed.Result);
+        Assert.Equal(1.23e-30, dict["tiny"]);
+        Assert.Equal(0.1m, dict["plain"]);
+        // An exponent alone doesn't force double: decimal keeps all 17 digits here
+        Assert.Equal(123456.78901234567m, dict["preciseExponent"]);
+    }
+
+    [Fact]
+    public void ParseAndFilterJson_NoKeysAndPrimitiveRoot_WrapsUnderValueKey()
+    {
+        // keys![0] used to throw NullReferenceException here
+        var result = JsonUtils.ParseAndFilterJson<Dictionary<string, object>>("42");
+
+        Assert.True(result.MethodSuccess);
+        Assert.Equal(42, result.Result["value"]);
+    }
+
+    [Fact]
+    public void ParseAndFilterJson_MissingPathForReferenceType_SaysPathNotFound()
+    {
+        var result = JsonUtils.ParseAndFilterJson<string>("{\"a\":1}", new List<string> { "missing" });
+
+        Assert.False(result.MethodSuccess);
+        Assert.IsType<KeyNotFoundException>(result.Exception);
+    }
+
+    [Fact]
+    public void ParseAndFilterJson_DottedKeyNextToUnderscoredKey_KeepsBothValues()
+    {
+        // Renaming "a.b" to "a_b" used to overwrite the existing "a_b"
+        var result = JsonUtils.ParseAndFilterJson<Dictionary<string, object>>("{\"a.b\":1,\"a_b\":2,\"c.d\":3}");
+
+        Assert.True(result.MethodSuccess);
+        Assert.Equal(2, result.Result["a_b"]);
+        Assert.Equal(1, result.Result["a.b"]);
+        Assert.Equal(3, result.Result["c_d"]);
+    }
+
+    [Fact]
+    public void TrailingComma_IsRejectedWhetherOrNotKeysHaveDots()
+    {
+        // Only JSON with a dotted key went through the lenient parser, so the same mistake passed or failed by key name
+        Assert.False(JsonUtils.GetDictionary("{\"a\":1,}").MethodSuccess);
+        Assert.False(JsonUtils.GetDictionary("{\"a.b\":1,}").MethodSuccess);
     }
 }

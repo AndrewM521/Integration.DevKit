@@ -2,7 +2,7 @@
 
 Part of [Integration.DevKit.Core](README.md).
 
-`OnDemandHost` is a minimal static host for applications that want DevKit's DI-based modules (task management, SQL, etc.) without building a full `Microsoft.Extensions.Hosting` generic host. It exists for console tools, plugins and legacy code that don't otherwise have a hosting/DI pipeline.
+`OnDemandHost` is a minimal host for applications that want DevKit's DI-based modules (task management, SQL, etc.) without building a full `Microsoft.Extensions.Hosting` generic host. It exists for console tools, plugins and legacy code that don't otherwise have a hosting/DI pipeline.
 
 Most applications that already use `Host.CreateDefaultBuilder` do **not** need it.
 
@@ -12,21 +12,22 @@ All types live in the `Integration.DevKit.Core.OnDemand` namespace:
 
 | Type | What it does |
 | --- | --- |
-| `OnDemandHost` | Static entry point: register services, start, stop. |
-| `OnDemand_Registry` | Holds the shared `IServiceCollection` and builds the `IServiceProvider`. |
-| `OnDemand_Lifetime` | Minimal `IHostApplicationLifetime` implementation, so modules that need one (such as Task Management) work without a generic host. |
+| `OnDemandHost` | Register services, start, stop. Each instance owns its own service collection and lifetime. |
+
+The host registers its own internal `IHostApplicationLifetime`, so modules that need one (such as Task Management) work without a generic host. Resolve it through the `IHostApplicationLifetime` interface.
 
 ## How it works
 
-`ConfigureServices` registers `OnDemand_Lifetime` as the app's `IHostApplicationLifetime` (unless one is already registered), then adds your services to a shared, static `IServiceCollection` (`OnDemand_Registry.ServiceCollection`). `Start`/`StartAsync`:
+`ConfigureServices` adds your services to the host's own `IServiceCollection`. `Start`/`StartAsync`:
 
-1. Builds the service provider.
-2. Registers a shutdown hook on `AppDomain.CurrentDomain.ProcessExit`.
-3. Starts every registered `IHostedService`.
+1. Registers the `configuration` you pass as `IConfiguration`, if none is registered yet.
+2. Creates a new `IHostApplicationLifetime` and builds a new service provider.
+3. Starts every registered `IHostedService`, one at a time in registration order (like the generic host).
+4. Signals `ApplicationStarted`, and registers a shutdown hook on `AppDomain.CurrentDomain.ProcessExit` (once per host).
 
-Calling `Start` again while the host is running does nothing.
+`Stop`/`StopAsync` signals `ApplicationStopping`, stops the hosted services in reverse order, signals `ApplicationStopped`, and disposes the service provider. That releases singletons such as SQL connections and HTTP clients. A hosted service can also stop the host by calling `IHostApplicationLifetime.StopApplication()`, as with the generic host.
 
-`Stop`/`StopAsync` signals `OnDemand_Lifetime` and stops those hosted services.
+A host can be started again after it was stopped; each run gets a fresh provider and lifetime. Calling `Start` while running, or `Stop` while stopped, does nothing. If a hosted service fails to start, the provider is disposed and the exception is rethrown.
 
 ## How to
 
@@ -35,47 +36,57 @@ Calling `Start` again while the host is running does nothing.
 ```csharp
 using Integration.DevKit.Core.OnDemand;
 
-OnDemandHost.ConfigureServices(services =>
+await using var host = new OnDemandHost();
+
+host.ConfigureServices(services =>
 {
     services.AddSQLMgmt(configuration);
     services.AddTaskMgmt(configuration);
 });
 
-await OnDemandHost.StartAsync(configuration);
+await host.StartAsync(configuration);
 
-Service_SQLMgmt.Initialize(OnDemandHost.Services);
-Service_TaskMgmt.Initialize(OnDemandHost.Services);
+Service_SQLMgmt.Initialize(host.Services);
+Service_TaskMgmt.Initialize(host.Services);
 
 // later
-await OnDemandHost.StopAsync();
+await host.StopAsync();
 ```
 
-Call `ConfigureServices` before `Start`/`StartAsync`. `Services` throws until the host has started.
+Call `ConfigureServices` before `StartAsync`; registrations added while the host is running take effect on the next start. `Services` throws while the host is not running.
+
+### Restart the host
+
+```csharp
+await host.StopAsync();
+await host.StartAsync(configuration);
+
+// The old provider was disposed, so re-initialize the static facades from the new one
+Service_SQLMgmt.Initialize(host.Services);
+Service_TaskMgmt.Initialize(host.Services);
+```
 
 ## API reference
 
 ```csharp
-public static class OnDemandHost
+public sealed class OnDemandHost : IAsyncDisposable
 {
-    public static IServiceProvider Services { get; }   // throws InvalidOperationException until Start/StartAsync has run
+    public OnDemandHost();
 
-    public static void ConfigureServices(Action<IServiceCollection> configureAction);
-    public static Task StartAsync(IConfiguration? configuration = null, CancellationToken cancellationToken = default);
-    public static void Start(IConfiguration? configuration = null);   // blocks on StartAsync
-    public static Task StopAsync();
-    public static void Stop();                                        // blocks on StopAsync
+    public IServiceProvider Services { get; }   // throws InvalidOperationException while not running
+    public bool IsRunning { get; }
+
+    public OnDemandHost ConfigureServices(Action<IServiceCollection> configureAction);   // returns this, for chaining
+    public Task StartAsync(IConfiguration? configuration = null, CancellationToken cancellationToken = default);
+    public void Start(IConfiguration? configuration = null);   // blocks on StartAsync
+    public Task StopAsync();
+    public void Stop();                                        // blocks on StopAsync
+    public ValueTask DisposeAsync();                           // stops the host and removes its ProcessExit hook
 }
-
-public static class OnDemand_Registry
-{
-    public static IServiceCollection ServiceCollection { get; }
-    public static IServiceProvider GetServiceProvider(IConfiguration? configuration = null, bool forceRebuild = false);
-}
-
-public class OnDemand_Lifetime : IHostApplicationLifetime
 ```
 
 ## Best practices
 
 - Use `OnDemandHost` only when your app has no generic host. If it already uses `Host.CreateDefaultBuilder`, register modules there instead.
-- Call `Stop`/`StopAsync` on shutdown so hosted services and running tasks stop cleanly. The `ProcessExit` hook is a fallback, not a replacement.
+- Call `StopAsync` (or dispose the host) on shutdown so hosted services and running tasks stop cleanly. The `ProcessExit` hook is a fallback, not a replacement.
+- After a restart, call each module's `Service_<Module>.Initialize(host.Services)` again: the services from the previous run were disposed.

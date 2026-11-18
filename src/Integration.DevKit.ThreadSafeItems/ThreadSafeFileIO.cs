@@ -63,34 +63,9 @@ public class ThreadSafeFileIO
     /// <param name="encoding">The character encoding to use. Defaults to UTF-8 if null.</param>
     /// <param name="lockTimeoutMs">Maximum time in milliseconds to wait for the file lock.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the outcome of the operation.</returns>
-    public async Task<NullOperationResult> WriteToFileAsync(string path, string content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
+    public Task<NullOperationResult> WriteToFileAsync(string path, string content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
     {
-        var result = new NullOperationResult();
-
-        try
-        {
-            var lockResult = await _threadLockManager.TryEnterAsyncLock(path, lockTimeoutMs);
-            if (!lockResult.MethodSuccess)
-            {
-                throw lockResult.Exception;
-            }
-
-            return await FileUtils.WriteToFileAsync(path, content, append, allowNoFileExtension, encoding);
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, $"File operation failed for '{path}'.");
-
-            return result.SetMethodFailure(ex);
-        }
-        finally
-        {
-            var exitLock = _threadLockManager.TryExitAsyncLock(path);
-            if (!exitLock.MethodSuccess)
-            {
-                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
-            }
-        }
+        return WithLockAsync(path, lockTimeoutMs, () => FileUtils.WriteToFileAsync(path, content, append, allowNoFileExtension, encoding), ex => new NullOperationResult().SetMethodFailure(ex));
     }
 
     /// <summary>
@@ -106,34 +81,9 @@ public class ThreadSafeFileIO
     /// <param name="encoding">The character encoding to use. Defaults to UTF-8 if <see langword="null"/>.</param>
     /// <param name="lockTimeoutMs">The maximum time in milliseconds to wait for the file lock. Defaults to 5000ms.</param>
     /// <returns>A <see cref="NullOperationResult"/> indicating the outcome of the operation.</returns>
-    public async Task<NullOperationResult> WriteToFileAsync(string path, string[] content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
+    public Task<NullOperationResult> WriteToFileAsync(string path, string[] content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
     {
-        var result = new NullOperationResult();
-
-        try
-        {
-            var lockResult = await _threadLockManager.TryEnterAsyncLock(path, lockTimeoutMs);
-            if (!lockResult.MethodSuccess)
-            {
-                throw lockResult.Exception;
-            }
-
-            return await FileUtils.WriteToFileAsync(path, content, append, allowNoFileExtension, encoding);
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, $"File operation failed for '{path}'.");
-
-            return result.SetMethodFailure(ex);
-        }
-        finally
-        {
-            var exitLock = _threadLockManager.TryExitAsyncLock(path);
-            if (!exitLock.MethodSuccess)
-            {
-                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
-            }
-        }
+        return WithLockAsync(path, lockTimeoutMs, () => FileUtils.WriteToFileAsync(path, content, append, allowNoFileExtension, encoding), ex => new NullOperationResult().SetMethodFailure(ex));
     }
 
     /// <summary>
@@ -141,41 +91,11 @@ public class ThreadSafeFileIO
     /// </summary>
     /// <param name="path">The full path to the file.</param>
     /// <param name="lockTimeoutMs">The maximum time in milliseconds to wait for the file lock. Defaults to 5000ms.</param>
+    /// <param name="allowNoFileExtension">Allows file names without an extension (e.g. 'LICENSE').</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the array of lines read from the file.</returns>
-    public async Task<OperationResult<string[]>> ReadFileLinesAsync(string path, int lockTimeoutMs = 5000)
+    public Task<OperationResult<string[]>> ReadFileLinesAsync(string path, int lockTimeoutMs = 5000, bool allowNoFileExtension = false)
     {
-        var result = new OperationResult<string[]>();
-
-        try
-        {
-            var lockResult = await _threadLockManager.TryEnterAsyncLock(path, lockTimeoutMs);
-            if (!lockResult.MethodSuccess)
-            {
-                throw lockResult.Exception;
-            }
-
-            var readResult = await FileUtils.ReadFileLinesAsync(path);
-            if (!readResult.MethodSuccess)
-            {
-                throw readResult.Exception;
-            }
-
-            return result.SetMethodSuccess(readResult.Result);
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, $"File operation failed for '{path}'.");
-
-            return result.SetMethodFailure(ex);
-        }
-        finally
-        {
-            var exitLock = _threadLockManager.TryExitAsyncLock(path);
-            if (!exitLock.MethodSuccess)
-            {
-                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
-            }
-        }
+        return WithLockAsync(path, lockTimeoutMs, () => FileUtils.ReadFileLinesAsync(path, allowNoFileExtension), ex => new OperationResult<string[]>().SetMethodFailure(ex));
     }
 
     /// <summary>
@@ -183,41 +103,11 @@ public class ThreadSafeFileIO
     /// </summary>
     /// <param name="path">The full path to the file.</param>
     /// <param name="lockTimeoutMs">The maximum time in milliseconds to wait for the file lock. Defaults to 5000ms.</param>
+    /// <param name="allowNoFileExtension">Allows file names without an extension (e.g. 'LICENSE').</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the file text.</returns>
-    public async Task<OperationResult<string>> ReadFileTextAsync(string path, int lockTimeoutMs = 5000)
+    public Task<OperationResult<string>> ReadFileTextAsync(string path, int lockTimeoutMs = 5000, bool allowNoFileExtension = false)
     {
-        var result = new OperationResult<string>();
-
-        try
-        {
-            var lockResult = await _threadLockManager.TryEnterAsyncLock(path, lockTimeoutMs);
-            if (!lockResult.MethodSuccess)
-            {
-                throw lockResult.Exception;
-            }
-
-            var readResult = await FileUtils.ReadFileTextAsync(path);
-            if (!readResult.MethodSuccess)
-            {
-                throw readResult.Exception;
-            }
-
-            return result.SetMethodSuccess(readResult.Result);
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, $"File operation failed for '{path}'.");
-
-            return result.SetMethodFailure(ex);
-        }
-        finally
-        {
-            var exitLock = _threadLockManager.TryExitAsyncLock(path);
-            if (!exitLock.MethodSuccess)
-            {
-                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
-            }
-        }
+        return WithLockAsync(path, lockTimeoutMs, () => FileUtils.ReadFileTextAsync(path, allowNoFileExtension), ex => new OperationResult<string>().SetMethodFailure(ex));
     }
     #endregion
 
@@ -237,32 +127,7 @@ public class ThreadSafeFileIO
     /// <returns>A <see cref="NullOperationResult"/> indicating the outcome of the operation.</returns>
     public NullOperationResult WriteToFile(string path, string content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
     {
-        var result = new NullOperationResult();
-
-        try
-        {
-            var lockResult = _threadLockManager.TryEnterSyncLock(path, lockTimeoutMs);
-            if (!lockResult.MethodSuccess)
-            {
-                throw lockResult.Exception;
-            }
-
-            return FileUtils.WriteToFile(path, content, append, allowNoFileExtension, encoding);
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, $"File operation failed for '{path}'.");
-
-            return result.SetMethodFailure(ex);
-        }
-        finally
-        {
-            var exitLock = _threadLockManager.TryExitSyncLock(path);
-            if (!exitLock.MethodSuccess)
-            {
-                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
-            }
-        }
+        return WithLockSync(path, lockTimeoutMs, () => FileUtils.WriteToFile(path, content, append, allowNoFileExtension, encoding), ex => new NullOperationResult().SetMethodFailure(ex));
     }
 
     /// <summary>
@@ -280,32 +145,7 @@ public class ThreadSafeFileIO
     /// <returns>A <see cref="NullOperationResult"/> indicating the outcome of the operation.</returns>
     public NullOperationResult WriteToFile(string path, string[] content, bool append = false, bool allowNoFileExtension = false, Encoding? encoding = null, int lockTimeoutMs = 5000)
     {
-        var result = new NullOperationResult();
-
-        try
-        {
-            var lockResult = _threadLockManager.TryEnterSyncLock(path, lockTimeoutMs);
-            if (!lockResult.MethodSuccess)
-            {
-                throw lockResult.Exception;
-            }
-
-            return FileUtils.WriteToFile(path, content, append, allowNoFileExtension, encoding);
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, $"File operation failed for '{path}'.");
-
-            return result.SetMethodFailure(ex);
-        }
-        finally
-        {
-            var exitLock = _threadLockManager.TryExitSyncLock(path);
-            if (!exitLock.MethodSuccess)
-            {
-                _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
-            }
-        }
+        return WithLockSync(path, lockTimeoutMs, () => FileUtils.WriteToFile(path, content, append, allowNoFileExtension, encoding), ex => new NullOperationResult().SetMethodFailure(ex));
     }
 
     /// <summary>
@@ -313,36 +153,54 @@ public class ThreadSafeFileIO
     /// </summary>
     /// <param name="path">The full path to the file.</param>
     /// <param name="lockTimeoutMs">The maximum time in milliseconds to wait for the file lock. Defaults to 5000ms.</param>
+    /// <param name="allowNoFileExtension">Allows file names without an extension (e.g. 'LICENSE').</param>
     /// <returns>An <see cref="OperationResult{T}"/> containing the array of lines read from the file.</returns>
-    public OperationResult<string[]> ReadFileLines(string path, int lockTimeoutMs = 5000)
+    public OperationResult<string[]> ReadFileLines(string path, int lockTimeoutMs = 5000, bool allowNoFileExtension = false)
     {
-        var result = new OperationResult<string[]>();
+        return WithLockSync(path, lockTimeoutMs, () => FileUtils.ReadFileLines(path, allowNoFileExtension), ex => new OperationResult<string[]>().SetMethodFailure(ex));
+    }
+
+    /// <summary>
+    /// Synchronously reads the entire content of a file as a string with thread-safe locking.
+    /// </summary>
+    /// <param name="path">The full path to the file.</param>
+    /// <param name="lockTimeoutMs">The maximum time in milliseconds to wait for the file lock. Defaults to 5000ms.</param>
+    /// <param name="allowNoFileExtension">Allows file names without an extension (e.g. 'LICENSE').</param>
+    /// <returns>An <see cref="OperationResult{T}"/> containing the file text.</returns>
+    public OperationResult<string> ReadFileText(string path, int lockTimeoutMs = 5000, bool allowNoFileExtension = false)
+    {
+        return WithLockSync(path, lockTimeoutMs, () => FileUtils.ReadFileText(path, allowNoFileExtension), ex => new OperationResult<string>().SetMethodFailure(ex));
+    }
+    #endregion
+
+    /// <summary>
+    /// Runs <paramref name="work"/> while holding the async lock for <paramref name="path"/>.
+    /// The lock is only released if it was acquired, so a timeout never frees a lock owned by another caller.
+    /// </summary>
+    private async Task<T> WithLockAsync<T>(string path, int lockTimeoutMs, Func<Task<T>> work, Func<Exception, T> failure)
+    {
+        string lockKey = ToLockKey(path);
+        var lockResult = await _threadLockManager.TryEnterAsyncLock(lockKey, lockTimeoutMs);
+        if (!lockResult.MethodSuccess)
+        {
+            _logger?.LogError(lockResult.Exception, $"File operation failed for '{path}'.");
+
+            return failure(lockResult.Exception);
+        }
 
         try
         {
-            var lockResult = _threadLockManager.TryEnterSyncLock(path, lockTimeoutMs);
-            if (!lockResult.MethodSuccess)
-            {
-                throw lockResult.Exception;
-            }
-
-            var readResult = FileUtils.ReadFileLines(path);
-            if (!readResult.MethodSuccess)
-            {
-                throw readResult.Exception;
-            }
-
-            return result.SetMethodSuccess(readResult.Result);
+            return await work();
         }
         catch (Exception ex)
         {
             _logger?.LogError(ex, $"File operation failed for '{path}'.");
 
-            return result.SetMethodFailure(ex);
+            return failure(ex);
         }
         finally
         {
-            var exitLock = _threadLockManager.TryExitSyncLock(path);
+            var exitLock = _threadLockManager.TryExitAsyncLock(lockKey);
             if (!exitLock.MethodSuccess)
             {
                 _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
@@ -351,45 +209,59 @@ public class ThreadSafeFileIO
     }
 
     /// <summary>
-    /// Synchronously reads the entire content of a file as a string with thread-safe locking.
+    /// Runs <paramref name="work"/> while holding the sync lock for <paramref name="path"/>.
+    /// The lock is only released if it was acquired.
     /// </summary>
-    /// <param name="path">The full path to the file.</param>
-    /// <param name="lockTimeoutMs">The maximum time in milliseconds to wait for the file lock. Defaults to 5000ms.</param>
-    /// <returns>An <see cref="OperationResult{T}"/> containing the file text.</returns>
-    public OperationResult<string> ReadFileText(string path, int lockTimeoutMs = 5000)
+    private T WithLockSync<T>(string path, int lockTimeoutMs, Func<T> work, Func<Exception, T> failure)
     {
-        var result = new OperationResult<string>();
+        string lockKey = ToLockKey(path);
+        var lockResult = _threadLockManager.TryEnterSyncLock(lockKey, lockTimeoutMs);
+        if (!lockResult.MethodSuccess)
+        {
+            _logger?.LogError(lockResult.Exception, $"File operation failed for '{path}'.");
+
+            return failure(lockResult.Exception);
+        }
 
         try
         {
-            var lockResult = _threadLockManager.TryEnterSyncLock(path, lockTimeoutMs);
-            if (!lockResult.MethodSuccess)
-            {
-                throw lockResult.Exception;
-            }
-
-            var readResult = FileUtils.ReadFileText(path);
-            if (!readResult.MethodSuccess)
-            {
-                throw readResult.Exception;
-            }
-
-            return result.SetMethodSuccess(readResult.Result);
+            return work();
         }
         catch (Exception ex)
         {
             _logger?.LogError(ex, $"File operation failed for '{path}'.");
 
-            return result.SetMethodFailure(ex);
+            return failure(ex);
         }
         finally
         {
-            var exitLock = _threadLockManager.TryExitSyncLock(path);
+            var exitLock = _threadLockManager.TryExitSyncLock(lockKey);
             if (!exitLock.MethodSuccess)
             {
                 _logger?.LogError(exitLock.Exception, $"Failed to release lock for '{path}'.");
             }
         }
     }
-    #endregion
+
+    /// <summary>
+    /// Gets the lock key for <paramref name="path"/>: its full path, so <c>data\out.txt</c>, <c>.\data\out.txt</c>
+    /// and <c>C:\app\data\out.txt</c> share one lock instead of each getting their own.
+    /// </summary>
+    private static string ToLockKey(string path)
+    {
+        try
+        {
+            return Path.GetFullPath(path);
+        }
+        catch
+        {
+            // Not a usable path: the lock manager or the file call reports the error
+            if (path == null)
+            {
+                return "";
+            }
+
+            return path;
+        }
+    }
 }

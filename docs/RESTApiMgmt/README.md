@@ -1,4 +1,4 @@
-# Integration.DevKit.RESTApiMgmt
+﻿# Integration.DevKit.RESTApiMgmt
 
 Named, configuration-driven REST clients over `HttpClient` that return typed results instead of throwing, with built-in metrics and a pluggable authentication hook.
 
@@ -80,20 +80,18 @@ else
 
 | Property | Default | Purpose |
 | --- | --- | --- |
-| `Default_HttpTimeout_Seconds` | `30` | Request timeout used by any client that doesn't set its own `HttpTimeout_Seconds`. |
+| `Default_HttpTimeout_Seconds` | `30` | Request timeout used by any client that doesn't set its own `HttpTimeout_Seconds`. Same rules as `HttpTimeout_Seconds`: `0` or a negative value means no timeout. |
 | `EnableLogging` | `true` | Turns this module's logging on or off, including every `ApiClient` it hands out. Change it at runtime with `apiManager.RuntimeSettings.EnableLogging = false;`; see [Conditional logging](../Core/ConditionalLogging.md) for how this works. |
-| `Clients` | `{}` | Named client settings, keyed by client name. Each entry uses the `ApiClientSettings` properties below. A name that isn't listed gets a client with default settings and a logged warning. |
+| `Clients` | `{}` | Named client settings, keyed by client name. Each entry uses the `ApiClientSettings` properties below. Names are matched case-insensitively. `GetClient` throws `KeyNotFoundException` for a name that isn't listed. |
 
 ### `ApiClientSettings` (per named client)
 
 | Property | Default | Purpose |
 | --- | --- | --- |
 | `BaseUrl` | `"https://example.com"` | Base address for this client. Relative URLs passed to `GetAsync`/etc. are resolved against this. |
-| `MaxConcurrentRequests` | `int.MaxValue` | Maximum requests this client sends at once; extra calls wait. Negative values are coerced to `int.MaxValue`. |
+| `MaxConcurrentRequests` | `int.MaxValue` | Maximum requests this client sends at once; extra calls wait. Zero or negative values are coerced to `int.MaxValue` (no limit). |
 | `HttpTimeout_Seconds` | `null` | `null` falls back to the manager's `Default_HttpTimeout_Seconds`. **`0` means no timeout** (mapped to `Timeout.InfiniteTimeSpan`), not "time out immediately" — negative values are coerced to `0`. |
-| `DefaultHeaders` | `{}` | Headers applied to every request from this client. |
-| `Username` | `""` | Credential for your own auth code. `ApiClient` doesn't read it; get it from `client.RuntimeSettings.Username`, for example in an `IAuthStrategy`. |
-| `Password` | `""` | Credential for your own auth code, read the same way as `Username`. Prefer a secret store or [configuration protection](../Core/ConfigurationProtection.md) over plain text. |
+| `DefaultHeaders` | `{}` | Headers applied to every request from this client. A header `HttpClient` won't take as a default (e.g. `Content-Type`, which belongs on the request content) is skipped and logged as a warning. |
 
 All named clients share a single `IHttpClientFactory`-managed connection pool internally (they're all created via the fixed factory name `"ApiClient"`); per-client `BaseUrl`, headers, and timeout are applied on top of that shared handler when each `ApiClient` is constructed.
 
@@ -121,7 +119,6 @@ public class ApiClient : IAsyncDisposable
 
     OperationResult<HttpContent> CreateHttpContent(RESTApiMediaTypes mediaType, string data, Encoding? encoding = null);
     NullOperationResult AddDefaultHeader(string key, string value);
-    void LogRuntimeSettings(bool calledFromManager = false);
 
     void SetAuthStrategy(IAuthStrategy? authStrategy);
 }
@@ -144,7 +141,7 @@ A small helper for building endpoint URLs against a persistent base route, in on
 var endpoint = new ApiEndpoint("users/search");
 
 var queryUrl = endpoint.BuildQueryUrl(new() { ["name"] = "John Doe", ["age"] = 30 });
-// "users/search?name=John+Doe&age=30"
+// "users/search?name=John%20Doe&age=30"
 
 var slashUrl = new ApiEndpoint("products/filter").BuildSlashUrl(new() { ["category"] = "Laptops" });
 // "products/filter/category/Laptops"
@@ -157,16 +154,21 @@ var positionalUrl = new ApiEndpoint("orders/details").BuildPositionalUrl(new() {
 
 ### Re-initialize after changing `RuntimeSettings`
 
-`ApiClient` caches several things derived from `RuntimeSettings` at construction time: the underlying `HttpClient`'s base address, timeout, and default headers, plus a `SemaphoreSlim` sized from `MaxConcurrentRequests`. Mutating `RuntimeSettings` in place (e.g. `client.RuntimeSettings.BaseUrl = "..."`) has no effect until you call `Initialize()`, which re-derives all of it:
+`ApiClient` caches several things derived from `RuntimeSettings` at construction time: the underlying `HttpClient`'s base address, timeout, and default headers, plus a `SemaphoreSlim` sized from `MaxConcurrentRequests`. Mutating `RuntimeSettings` in place has no effect until you call `Initialize()`, which re-derives all of it. You can call it at any point in the app's lifetime:
 
 ```csharp
 var client = Service_RESTApiMgmt.ApiManager.GetClient("my-client");
 client.RuntimeSettings.BaseUrl = "https://api2.example.com/";
 client.RuntimeSettings.MaxConcurrentRequests = 20;
-client.Initialize();
+client.RuntimeSettings.DefaultHeaders.Remove("X-Old-Header");
+var init = client.Initialize();
 ```
 
-Requests already waiting on the old rate limiter when `Initialize()` runs will see it disposed out from under them — prefer calling this during a quiet period rather than under active load.
+What `Initialize()` does with each setting:
+
+- **`MaxConcurrentRequests`:** a new rate limiter is created. Requests already in flight finish against the old one; new requests use the new limit.
+- **`DefaultHeaders`:** headers are added or updated to match, and headers that came from `DefaultHeaders` but were removed since are no longer sent. Headers you added yourself with `AddDefaultHeader` are left alone.
+- **`BaseUrl` / `HttpTimeout_Seconds`:** if the client hasn't sent a request yet, its `HttpClient` is updated in place. After that, `HttpClient` refuses these changes, so `Initialize()` switches the client to a new `HttpClient` from `IHttpClientFactory` (which shares the same connection pool) and carries over every default header. Requests already in flight finish on the old `HttpClient`.
 
 ### Authenticate with `IAuthStrategy`
 
@@ -328,11 +330,10 @@ public class ApiManager : IAsyncDisposable
 {
     ApiManagerSettings RuntimeSettings { get; set; }
     ApiClient GetClient(string clientName);
-    void LogRuntimeSettings();
 }
 ```
 
-`GetClient` caches and reuses one `ApiClient` per name (case-insensitive) — calling it twice with the same name returns the same instance. If `clientName` isn't found in the configured `Clients` dictionary, it logs a warning and hands back a client built from default `ApiClientSettings` rather than throwing, so a typo in a client name fails silently at the HTTP layer (wrong base URL) rather than at `GetClient` — double-check the name against your configuration if requests are going to the wrong host.
+`GetClient` caches and reuses one `ApiClient` per name (case-insensitive) — calling it twice with the same name returns the same instance. It throws if the client's settings can't be applied (e.g. an invalid `BaseUrl`). Names are matched case-insensitively against the configured `Clients` (so `testclient` finds `TestClient`). A name that isn't configured throws `KeyNotFoundException` instead of falling back to defaults, so a typo can't send requests, and any credentials an auth strategy adds, to the default `https://example.com` base URL.
 
 `ApiManager` is a plain concrete class with no interface — nothing in this SDK substitutes or mocks a different `ApiManager` implementation, so an interface would be pure ceremony. See [Extending DevKit modules](../extending-modules.md).
 
@@ -382,7 +383,7 @@ public class ApiEndpoint
 public enum EndpointUrlStyle { Query, Slash, Positional }
 ```
 
-`BuildQueryUrl`/`BuildQueryUrlAsync` URL-encode via `FormUrlEncodedContent`; `BuildSlashUrl`/`BuildPositionalUrl` URL-encode each segment individually via `WebUtility.UrlEncode`. All four return a failed `OperationResult<string>` (rather than throwing) if encoding fails.
+All four builders encode with `Uri.EscapeDataString` (RFC 3986): a space becomes `%20`, never `+`, so it reads as a space on every server and in signed requests (e.g. AWS Signature V4, OAuth 1.0). `BuildQueryUrl`/`BuildQueryUrlAsync` add to a query the route already has (`search?type=all` becomes `search?type=all&q=x`). Values are formatted the same on every machine: numbers with the invariant culture (`1.5`, never `1,5`) and `DateTime`/`DateTimeOffset` as ISO 8601 round-trip (`2026-11-16T10:00:00.0000000Z`). All four return a failed `OperationResult<string>` (rather than throwing) if encoding fails.
 
 ### `ApiRequest`
 

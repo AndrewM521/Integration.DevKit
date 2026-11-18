@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  * Copyright (c) 2026 AndrewM5
  * Licensed under the MIT License.
  * See LICENSE file in the project root for full license information.
@@ -6,6 +6,7 @@
 
 using Integration.DevKit.Core;
 using Integration.DevKit.CredentialMgmt.Contracts;
+using System.Runtime.ExceptionServices;
 
 namespace Integration.DevKit.CredentialMgmt;
 
@@ -45,7 +46,16 @@ public static class CredentialMgmtUtils
 
         try
         {
-            return (T)Convert.ChangeType(value, typeof(T));
+            // Convert.ChangeType can't target Nullable<T> (e.g. int?), so convert to the inner type
+            Type conversionType = typeof(T);
+
+            Type? nullableInnerType = Nullable.GetUnderlyingType(typeof(T));
+            if (nullableInnerType != null)
+            {
+                conversionType = nullableInnerType;
+            }
+
+            return (T)Convert.ChangeType(value, conversionType, System.Globalization.CultureInfo.InvariantCulture);
         }
         catch (Exception ex)
         {
@@ -59,7 +69,7 @@ public static class CredentialMgmtUtils
     /// </summary>
     /// <remarks>
     /// Gives every backend the same one-time "seed the encrypted store" code path, regardless of
-    /// where the plaintext originally lives (env var, User Secrets, CI secret, etc.) — the plaintext
+    /// where the plaintext originally lives (env var, User Secrets, CI secret, etc.), the plaintext
     /// moment happens exactly once, at import time, through this single method.
     /// </remarks>
     /// <param name="target">The store to write the secret into.</param>
@@ -86,13 +96,13 @@ public static class CredentialMgmtUtils
             var readResult = source.GetKey(fileName, key);
             if (!readResult.MethodSuccess)
             {
-                throw readResult.Exception;
+                ExceptionDispatchInfo.Throw(readResult.Exception);
             }
 
             var setResult = target.SetKey(fileName, key, readResult.Result);
             if (!setResult.MethodSuccess)
             {
-                throw setResult.Exception;
+                ExceptionDispatchInfo.Throw(setResult.Exception);
             }
 
             return result.SetMethodSuccess();
